@@ -59,3 +59,4 @@ if (!_ready) {
 // ============================================================
 
 window.GEMINI_API_KEY = (typeof localStorage !== 'undefined' && localStorage.getItem('tf_gemini_dev_key')) || '';
+window.GEMINI_MODEL   = 'gemini-3.1-flash-lite';

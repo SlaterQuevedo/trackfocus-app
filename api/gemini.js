@@ -1,10 +1,4 @@
-// Vercel Function: proxy seguro a Gemini para análisis de material de estudio.
-// La clave vive en process.env.GEMINI_API_KEY (NUNCA en el cliente).
-//   POST /api/gemini/analyze          { fileName, mimeType, base64, context }  → { text }
-//   POST /api/gemini/answer-question  { question, mimeType, base64, analysis } → { answer }
-
-const GEMINI_MODEL = 'gemini-3.1-flash-lite';
-const GEMINI_BASE  = 'https://generativelanguage.googleapis.com/v1beta/models';
+import { GEMINI_MODEL, GEMINI_BASE, geminiHeaders } from './_lib.js';
 
 const ANALYZE_PROMPT = `Eres un tutor educativo para estudiantes de secundaria. Analiza el siguiente material de estudio y proporciona un análisis completo en español con este formato exacto:
 
@@ -46,7 +40,7 @@ async function callGemini(parts, generationConfig) {
   try {
     geminiRes = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+      headers: geminiHeaders(apiKey),
       body: JSON.stringify({ contents: [{ role: 'user', parts }], generationConfig })
     });
   } catch (err) {

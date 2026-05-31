@@ -169,7 +169,7 @@ const AudioTranscriber = (() => {
     const mimeType = audioBlob.type || 'audio/webm';
 
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${window.GEMINI_MODEL}:generateContent`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },

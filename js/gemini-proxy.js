@@ -2,7 +2,6 @@
 // Llama directamente a la API REST de Gemini con contenido base64
 const GeminiProxy = (() => {
 
-  const MODEL = 'gemini-3.1-flash-lite';
   const BASE  = 'https://generativelanguage.googleapis.com/v1beta/models';
 
   function getKey() {
@@ -89,7 +88,7 @@ Sugiere estrategias de estudio específicas para este material y menciona las á
   // ── Respaldo directo (dev local con clave en localStorage) ─────────
   async function _directAnalyze(cached, fileName, key) {
     try {
-      const res = await fetch(`${BASE}/${MODEL}:generateContent`, {
+      const res = await fetch(`${BASE}/${window.GEMINI_MODEL}:generateContent`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
         body: JSON.stringify({
@@ -119,7 +118,7 @@ REGLAS:
 - Responde siempre en español.
 - Al final plantea al menos una pregunta de seguimiento.`;
     try {
-      const res = await fetch(`${BASE}/${MODEL}:generateContent`, {
+      const res = await fetch(`${BASE}/${window.GEMINI_MODEL}:generateContent`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
         body: JSON.stringify({

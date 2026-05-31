@@ -1,9 +1,4 @@
-// Vercel Edge Function: Chat educativo con Gemini 3.1 Flash Lite
-// action "message"  → streaming SSE del tutor
-// action "finalize" → calcula métricas de concentración y aprendizaje
-
-const GEMINI_MODEL = 'gemini-3.1-flash-lite';
-const GEMINI_BASE  = 'https://generativelanguage.googleapis.com/v1beta/models';
+import { GEMINI_MODEL, GEMINI_BASE, geminiHeaders } from './_lib.js';
 
 export default async (req, res) => {
   if (req.method !== 'POST') {
@@ -152,7 +147,7 @@ async function handleMessage(req, res) {
   try {
     geminiRes = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+      headers: geminiHeaders(apiKey),
       body: JSON.stringify({
         contents,
         generationConfig: { temperature: 0.7, maxOutputTokens: 1024, thinkingConfig: { thinkingBudget: 0 } }
@@ -254,7 +249,7 @@ async function handleFinalize(req, res) {
     const evalUrl = `${GEMINI_BASE}/${GEMINI_MODEL}:generateContent`;
     const evalRes = await fetch(evalUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+      headers: geminiHeaders(apiKey),
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: buildEvaluationPrompt(history, metadata) }] }],
         generationConfig: { temperature: 0.1, maxOutputTokens: 256, thinkingConfig: { thinkingBudget: 0 } }

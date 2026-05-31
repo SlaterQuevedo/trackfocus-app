@@ -4,7 +4,6 @@
 // Gemini directamente como respaldo (no se usa clave en producción).
 const AiChatProxy = (() => {
 
-  const MODEL = 'gemini-3.1-flash-lite';
   const BASE  = 'https://generativelanguage.googleapis.com/v1beta/models';
 
   function getKey() {
@@ -118,7 +117,7 @@ const AiChatProxy = (() => {
       { role: 'user', parts: userParts }
     ];
 
-    const url = `${BASE}/${MODEL}:streamGenerateContent?alt=sse`;
+    const url = `${BASE}/${window.GEMINI_MODEL}:streamGenerateContent?alt=sse`;
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
@@ -142,7 +141,7 @@ const AiChatProxy = (() => {
 TRANSCRIPCIÓN:
 ${transcript}`;
 
-    const res = await fetch(`${BASE}/${MODEL}:generateContent`, {
+    const res = await fetch(`${BASE}/${window.GEMINI_MODEL}:generateContent`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
       body: JSON.stringify({
