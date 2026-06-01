@@ -1276,6 +1276,34 @@ const UIStudent = (() => {
     const patterns = Analytics.detectPatterns(sessions);
     const sum = Stats.summary(sessions);
 
+    // Perfil Cognitivo (Fase 6): 4 dimensiones a partir de las evaluaciones DECO.
+    const cog = Stats.cognitiveProfile(sessions);
+    const consistency = Math.max(0, Math.min(1, ((gam.streak || 0) / 7) * 0.5 + Math.min(sum.total, 10) / 10 * 0.5));
+    const cogDims = [
+      { key: 'comprehension', label: 'Comprensión', icon: '🔵', val: cog.comprehension },
+      { key: 'application',   label: 'Aplicación',  icon: '🟡', val: cog.application },
+      { key: 'analysis',      label: 'Análisis',    icon: '🔴', val: (cog.reasoning != null || cog.analysis != null)
+          ? Math.max(0, Math.min(1, ((cog.reasoning ?? 0) + (cog.analysis ?? 0)) / ((cog.reasoning != null ? 1 : 0) + (cog.analysis != null ? 1 : 0) || 1))) : null },
+      { key: 'consistency',   label: 'Constancia',  icon: '🟢', val: consistency }
+    ];
+    const cogBar = (d) => {
+      const pct = d.val != null ? Math.round(d.val * 100) : null;
+      return `<div class="cog-row">
+        <div class="cog-row-head"><span>${d.icon} ${d.label}</span><span class="muted">${pct != null ? pct + '%' : '—'}</span></div>
+        <div class="cog-bar-wrap"><div class="cog-bar" style="width:${pct != null ? pct : 0}%;"></div></div>
+      </div>`;
+    };
+    const cognitiveCard = cog.samples > 0 ? `
+      <div class="card cognitive-profile" style="margin-top:18px;">
+        <h3 style="margin:0 0 4px;">🧠 Tu Perfil Cognitivo</h3>
+        <p class="muted" style="margin:0 0 14px;font-size:13px;">Cómo aprendes, no solo cuánto estudias. Basado en tus evaluaciones DECO.</p>
+        ${cogDims.map(cogBar).join('')}
+      </div>` : `
+      <div class="card cognitive-profile" style="margin-top:18px;">
+        <h3 style="margin:0 0 4px;">🧠 Tu Perfil Cognitivo</h3>
+        <p class="muted" style="margin:0;font-size:13px;">Completa sesiones con la evaluación 🎯 DECO en Estudio IA para descubrir tus dimensiones cognitivas (comprensión, aplicación, análisis y constancia).</p>
+      </div>`;
+
     return `
       <h1>👤 Mi Perfil de Aprendizaje</h1>
 
@@ -1285,6 +1313,8 @@ const UIStudent = (() => {
         <h2 style="margin:0 0 8px;">${esc(profile.label)}</h2>
         <p class="muted">${esc(profile.desc)}</p>
       </div>` : `<div class="card"><p class="muted">Registra al menos 3 sesiones para ver tu perfil de aprendizaje.</p></div>`}
+
+      ${cognitiveCard}
 
       <div class="grid cols-3" style="margin-top:18px;">
         <div class="kpi">

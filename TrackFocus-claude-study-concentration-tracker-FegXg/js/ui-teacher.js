@@ -321,7 +321,7 @@ const UITeacher = (() => {
           ${students.length === 0 ? '<div class="empty">Aún no hay alumnos en esta aula. Los estudiantes se unen con el código del colegio.</div>' : `
           <table class="table">
             <thead><tr>
-              <th>Nombre</th><th>Nivel</th><th>XP</th><th>Racha</th><th>Conc. prom. (7d)</th><th>Última sesión</th><th>Estado</th><th></th>
+              <th>Nombre</th><th>Nivel</th><th>XP</th><th>Racha</th><th>Conc. prom. (7d)</th><th>Índice apr.</th><th>Última sesión</th><th>Estado</th><th></th>
             </tr></thead>
             <tbody>
               ${students.map(st => {
@@ -332,6 +332,13 @@ const UITeacher = (() => {
                 const avgRecent = recent.length
                   ? (recent.reduce((a, b) => a + b.concentration, 0) / recent.length).toFixed(1)
                   : '—';
+                // Índice de Aprendizaje promedio del alumno (de sus sesiones de Estudio IA).
+                const stIndices = stSessions
+                  .map(se => Stats.parseMetrics(se).learning_index)
+                  .filter(v => typeof v === 'number' && !isNaN(v));
+                const avgIndex = stIndices.length
+                  ? Math.round(stIndices.reduce((a, b) => a + b, 0) / stIndices.length)
+                  : null;
                 const lastSession = stSessions.sort((a, b) => b.datetime.localeCompare(a.datetime))[0];
                 const last5 = stSessions.slice(-5);
                 const avg5 = last5.length >= 5 ? last5.reduce((a, b) => a + b.concentration, 0) / last5.length : null;
@@ -343,6 +350,7 @@ const UITeacher = (() => {
                   <td>${gam.xp || 0}</td>
                   <td>🔥 ${gam.streak || 0}</td>
                   <td>${avgRecent}</td>
+                  <td>${avgIndex != null ? avgIndex + '/100' : '—'}</td>
                   <td>${lastSession ? new Date(lastSession.datetime).toLocaleDateString('es-PE') : '—'}</td>
                   <td>${isAtRisk ? '<span class="risk-badge">En riesgo</span>' : '<span class="ok-badge">OK</span>'}</td>
                   <td>
