@@ -313,14 +313,27 @@ const UIStudent = (() => {
   // Guarda para registrar el listener de borrado de archivos una sola vez
   let _aiDeleteBound = false;
 
-  function _startAiChat(metadata) {
-    _chatState = { metadata, history: [], startedAt: Date.now(), attachedFiles: [] };
+  async function _startAiChat(metadata) {
+    _chatState = {
+      metadata, history: [], startedAt: Date.now(), attachedFiles: [],
+      quizQuestions: [], preQuizScore: null
+    };
     const tabTutor = document.getElementById('tabTutor');
-    if (tabTutor) {
-      tabTutor.innerHTML = _renderChatScreen(metadata);
-      _wireChatScreen();
-      _sendAiMessage('Hola, estoy listo para comenzar. ¿Qué tema de ' + metadata.subject + ' vas a estudiar hoy?');
-    }
+    if (!tabTutor) return;
+    tabTutor.innerHTML = _renderChatScreen(metadata);
+    _wireChatScreen();
+
+    // Mini-quiz inicial (Fase C): punto de partida. Se reutilizan las mismas
+    // preguntas en el quiz final → la comparación pre/post es válida.
+    try {
+      const qs = await Quiz.generate(metadata, metadata.subject);
+      _chatState.quizQuestions = qs;
+      if (qs.length) {
+        _chatState.preQuizScore = await Quiz.present(qs, '📋 Quiz inicial — ' + metadata.subject);
+      }
+    } catch (_) { /* sin quiz → continuar sin bloquear */ }
+
+    _sendAiMessage('Hola, estoy listo para comenzar. ¿Qué tema de ' + metadata.subject + ' vas a estudiar hoy?');
   }
 
   // Lee un File como base64 (sin el prefijo data:...)
@@ -526,6 +539,43 @@ const UIStudent = (() => {
     document.getElementById('chatTyping')?.remove();
   }
 
+  // Contingencia del tutor (Fase B): si Gemini cae, no rompemos la sesión.
+  // Mostramos una tarjeta amable y ofrecemos seguir con el Pomodoro o reintentar.
+  function _showTutorContingency() {
+    const messages = document.getElementById('chatMessages');
+    if (!messages || messages.querySelector('.tutor-contingency')) return;
+    const card = document.createElement('div');
+    card.className = 'tutor-contingency';
+    card.innerHTML = `
+      <div class="tc-icon">🌿</div>
+      <div class="tc-title">El Tutor Socrático está tomando un respiro</div>
+      <div class="tc-text">No pudimos conectar con la IA en este momento. Tu sesión y tu progreso están a salvo. Mientras tanto puedes seguir estudiando:</div>
+      <div class="tc-actions">
+        <button class="primary" id="tcPomodoro">⏱️ Usar el temporizador Pomodoro</button>
+        <button class="ghost" id="tcRetry">🔄 Reintentar</button>
+      </div>`;
+    messages.appendChild(card);
+    messages.scrollTop = messages.scrollHeight;
+    card.querySelector('#tcPomodoro')?.addEventListener('click', () => {
+      window._showPomBar?.();
+      UI.flash?.('Temporizador listo. ¡Sigue concentrado! 🍅', 'success');
+    });
+    card.querySelector('#tcRetry')?.addEventListener('click', () => {
+      card.remove();
+      document.getElementById('chatInput')?.focus();
+      UI.flash?.('Puedes volver a enviar tu mensaje.', 'info');
+    });
+  }
+
+  // Registro del piloto (Fase C) con gate de consentimiento parental (Fase E):
+  // sin consentimiento explícito NO se registra ningún dato del piloto (LPDP).
+  function _recordPilot(data) {
+    if (typeof Pilot === 'undefined') return;
+    const u = (typeof Roles !== 'undefined') ? Roles.current() : null;
+    if (!u || u.parentalConsent !== true) return;
+    Pilot.record(data);
+  }
+
   async function _sendAiMessage(userTriggerText) {
     if (!_chatState) return;
 
@@ -561,8 +611,9 @@ const UIStudent = (() => {
       );
     } catch (err) {
       _removeTyping();
-      if (bubble) bubble.textContent = '⚠️ Error al contactar al tutor. Intenta de nuevo.';
-      UI.flash(err.message, 'error');
+      if (bubble) bubble.remove();
+      window.Monitor?.log?.('gemini', 'Tutor: fallo al iniciar respuesta', err?.message);
+      _showTutorContingency();
     } finally {
       if (sendBtn)  sendBtn.disabled = false;
       if (finalBtn) finalBtn.disabled = false;
@@ -606,9 +657,10 @@ const UIStudent = (() => {
       );
       _chatState.history.push({ role: 'model', content: fullText, timestamp: Date.now() });
     } catch (err) {
-      if (bubble) bubble.textContent = '⚠️ Error al contactar al tutor. Intenta de nuevo.';
-      UI.flash(err.message, 'error');
+      if (bubble) bubble.remove();
       _chatState.history.pop();
+      window.Monitor?.log?.('gemini', 'Tutor: fallo al responder', err?.message);
+      _showTutorContingency();
     } finally {
       if (sendBtn)  sendBtn.disabled = false;
       if (finalBtn) finalBtn.disabled = false;
@@ -656,9 +708,27 @@ const UIStudent = (() => {
         comment:          JSON.stringify(metrics)
       });
 
+      // Quiz final (Fase C): mismas preguntas que el inicial → mide aprendizaje real.
+      let postQuizScore = null;
+      if (_chatState.quizQuestions && _chatState.quizQuestions.length) {
+        postQuizScore = await Quiz.present(
+          _chatState.quizQuestions, '✅ Quiz final — ' + _chatState.metadata.subject
+        );
+      }
+      const timeSpentSeconds = (Date.now() - (_chatState.startedAt || Date.now())) / 1000;
+      const preQuizScore = _chatState.preQuizScore;
+
       _chatState = null;
+
+      // Registro anónimo del piloto (Fase C). Gateado por consentimiento en Fase E.
+      // Fire-and-forget: tiene su propia cola offline (Pilot.flushOutbox).
+      _recordPilot({ sessionId: record.id, focusScore: concentration, timeSpentSeconds, preQuizScore, postQuizScore });
+
       App.go('dashboard');
-      UI.flash(`Sesión guardada · Concentración deducida: ${concentration}/5 🎯`, 'success');
+      const mejora = (preQuizScore != null && postQuizScore != null)
+        ? ` · Quiz: ${preQuizScore}→${postQuizScore}`
+        : '';
+      UI.flash(`Sesión guardada · Concentración deducida: ${concentration}/5 🎯${mejora}`, 'success');
       showXpToast(gamResult.xpEarned, gamResult.newBadges);
     } catch (err) {
       UI.flash('Error al guardar la sesión: ' + err.message, 'error');

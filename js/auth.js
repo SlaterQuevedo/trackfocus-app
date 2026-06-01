@@ -3,8 +3,9 @@
 // el perfil en public.users automáticamente al primer login.
 const Auth = (() => {
 
-  const ADMIN_PASSWORD = 'Sl@terQvz#1';
-
+  // Seguridad (Fase F): el acceso de administrador está controlado por EMAIL
+  // (SUPER_ADMIN_EMAILS), no por contraseña. Se eliminó una contraseña
+  // hardcodeada que viajaba al navegador en un repo público.
   // Official super admin emails (email-gated access)
   const SUPER_ADMIN_EMAILS = [
     'trackfocus.owner@gmail.com',

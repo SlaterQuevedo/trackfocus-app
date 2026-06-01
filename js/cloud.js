@@ -25,6 +25,8 @@ const Cloud = (() => {
       badges:             u.gamification?.badges || [],
       challenge_progress: u.gamification?.challengeProgress || {},
       classroom_ids:      u.classroomIds || [],
+      parental_consent:   !!u.parentalConsent,
+      consent_at:         u.consentAt || null,
       updated_at:         new Date().toISOString()
     }),
     school: s => ({
@@ -91,6 +93,8 @@ const Cloud = (() => {
       institutionType: r.institution_type,
       approvalStatus: r.approval_status,
       classroomIds: r.classroom_ids || [],
+      parentalConsent: !!r.parental_consent,
+      consentAt: r.consent_at || null,
       createdAt: r.created_at,
       gamification: {
         xp: r.xp || 0,
@@ -229,7 +233,8 @@ const Cloud = (() => {
     const afterSids = new Set(after.sessions.map(s => s.id));
     for (const s of after.sessions) {
       const prev = before.sessions.find(x => x.id === s.id);
-      if (!prev) ops.push(window.SB.from('study_sessions').insert(toDb.session(s)));
+      // upsert (no insert) → idempotente: reintentar tras una caída de red no duplica filas
+      if (!prev) ops.push(window.SB.from('study_sessions').upsert(toDb.session(s)));
       else if (JSON.stringify(prev) !== JSON.stringify(s))
         ops.push(window.SB.from('study_sessions').upsert(toDb.session(s)));
     }
@@ -245,7 +250,7 @@ const Cloud = (() => {
       const curr = after.customSubjects[email]  || [];
       for (const sub of curr) {
         if (!prev.includes(sub))
-          ops.push(window.SB.from('custom_subjects').insert({ email, subject: sub }));
+          ops.push(window.SB.from('custom_subjects').upsert({ email, subject: sub }));
       }
       for (const sub of prev) {
         if (!curr.includes(sub))
@@ -268,7 +273,12 @@ const Cloud = (() => {
     const results = await Promise.allSettled(ops);
     const failures = results.filter(r => r.status === 'rejected' || (r.value && r.value.error));
     if (failures.length > 0) {
-      console.error('[Cloud] Sync errors:', failures.map(f => f.reason || f.value?.error));
+      const detail = failures.map(f => f.reason || f.value?.error);
+      console.error('[Cloud] Sync errors:', detail);
+      window.Monitor?.log?.('sync', `syncDiff: ${failures.length}/${ops.length} ops fallaron`, detail);
+      // Propagar el fallo para que Storage marque el estado como "pendiente de sync"
+      // y la cola de reconexión (connectivity.js) lo reintente.
+      throw new Error(`Cloud sync: ${failures.length} operación(es) fallaron`);
     }
   }
 
