@@ -66,6 +66,27 @@ const UIEureka = (() => {
     </div>`;
   }
 
+  // Gamificación integrada (Fase L): top de estudiantes reusando el motor
+  // existente (Gamification.getLeaderboard), sin modificarlo.
+  function _leaderboardCard() {
+    let lb = [];
+    try { lb = (Gamification.getLeaderboard('global', null, 'month') || []).slice(0, 5); } catch (_) {}
+    const medal = ['🥇', '🥈', '🥉'];
+    return `
+      <div class="card ek-card">
+        <h2 style="margin:0 0 4px;">🏅 Top estudiantes (este mes)</h2>
+        <p class="muted" style="margin:0 0 12px;font-size:13px;">Ranking por XP de sesiones — la gamificación que sostiene la motivación.</p>
+        <div class="ek-lb">
+          ${lb.length ? lb.map((e, i) => `
+            <div class="ek-lb-row">
+              <span class="ek-lb-rank">${medal[i] || ('#' + (i + 1))}</span>
+              <span class="ek-lb-name">${esc(e.name)}</span>
+              <span class="ek-lb-meta">Nv.${e.level} · 🔥${e.streak} · ${e.xp} XP</span>
+            </div>`).join('') : '<p class="muted">Aún no hay datos suficientes para el ranking.</p>'}
+        </div>
+      </div>`;
+  }
+
   function screenEureka() {
     const g = _gather();
     return `
@@ -97,6 +118,8 @@ const UIEureka = (() => {
           <h2 style="margin:0 0 4px;">📈 Aprendizaje (quiz pre vs post)</h2>
           <p class="muted" id="ekImpactText" style="margin:0;font-size:13px;">Cargando resultados del piloto…</p>
         </div>
+
+        ${_leaderboardCard()}
 
         <div style="text-align:center;margin-top:8px;">
           <button class="ghost" id="ekBack">← Volver</button>
