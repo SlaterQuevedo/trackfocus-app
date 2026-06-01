@@ -9,9 +9,48 @@ export default async (req, res) => {
 
   if (action === 'message')  return handleMessage(req, res);
   if (action === 'finalize') return handleFinalize(req, res);
+  if (action === 'quiz')     return handleQuiz(req, res);
 
-  return res.status(400).json({ error: 'action debe ser "message" o "finalize"' });
+  return res.status(400).json({ error: 'action debe ser "message", "finalize" o "quiz"' });
 };
+
+// ── Handler: generar mini-quiz (Fase C) ──────────────────────────────────────
+// Devuelve 3 preguntas de opción múltiple en JSON. Ante cualquier fallo responde
+// { questions: [] } (200) para que el cliente degrade con elegancia, sin romper el flujo.
+async function handleQuiz(req, res) {
+  const { metadata, topic } = req.body || {};
+  if (!metadata) return res.status(400).json({ error: 'metadata requerido' });
+
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return res.status(200).json({ questions: [] });
+
+  const prompt = `Genera un mini-quiz de exactamente 3 preguntas de opción múltiple para evaluar el conocimiento de un estudiante de ${metadata.grade} de secundaria sobre "${topic || metadata.subject}" (materia: ${metadata.subject}).
+Devuelve SOLO un JSON válido, sin markdown ni texto extra, con esta forma exacta:
+{"questions":[{"q":"texto","options":["op1","op2","op3","op4"],"answer":0}]}
+Reglas: 3 preguntas; 4 opciones cada una; "answer" es el índice (0-3) de la opción correcta; preguntas claras y breves; nivel adecuado a ${metadata.grade}; en español.`;
+
+  try {
+    const url = `${GEMINI_BASE}/${GEMINI_MODEL}:generateContent`;
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: geminiHeaders(apiKey),
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.5, maxOutputTokens: 800, thinkingConfig: { thinkingBudget: 0 } }
+      })
+    });
+    if (!r.ok) return res.status(200).json({ questions: [] });
+    const j = await r.json();
+    const raw = j.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const match = raw.match(/\{[\s\S]*\}/);
+    if (!match) return res.status(200).json({ questions: [] });
+    const parsed = JSON.parse(match[0]);
+    const questions = Array.isArray(parsed.questions) ? parsed.questions.slice(0, 3) : [];
+    return res.status(200).json({ questions });
+  } catch (err) {
+    return res.status(200).json({ questions: [] });
+  }
+}
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
