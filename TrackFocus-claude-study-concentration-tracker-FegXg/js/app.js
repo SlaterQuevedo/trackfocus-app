@@ -8,6 +8,7 @@ const App = (() => {
     'student-onboarding': null,
     'teacher-promote':    null,
     'admin-promote':      null,
+    'consent':            ['student'],
 
     // Estudiante
     'pending-approval':   ['student'],
@@ -66,6 +67,7 @@ const App = (() => {
       'student-onboarding': { render: screenStudentOnboarding, wire: wireStudentOnboarding },
       'teacher-promote':    { render: screenTeacherPromote,    wire: wireTeacherPromote },
       'admin-promote':      { render: screenAdminPromote,      wire: wireAdminPromote },
+      consent:              { render: screenConsent,           wire: wireConsent },
       ...UIStudent.screens,
       ...UITeacher.screens,
       ...UIAdmin.screens
@@ -97,6 +99,18 @@ const App = (() => {
       nav.classList.add('hidden');
       userbox.classList.add('hidden');
       bottomnav?.classList.add('hidden');
+      return;
+    }
+
+    // Gate de consentimiento (Fase E): sin menús de navegación (no se puede
+    // saltar al panel), pero se mantiene "Salir".
+    if (_current === 'consent') {
+      if (topbar) topbar.style.display = '';
+      if (footer) footer.style.display = 'none';
+      nav.classList.add('hidden');
+      bottomnav?.classList.add('hidden');
+      userbox.classList.remove('hidden');
+      if (user) document.getElementById('userLabel').textContent = user.name;
       return;
     }
 
@@ -411,6 +425,9 @@ const App = (() => {
     }
     if (!user.institutionType && !user.schoolId) return go('student-onboarding');
     if (!user.institutionType) return go('institution');
+    // Consentimiento parental obligatorio (Fase E): sin él no se accede al panel
+    // (y nunca se registran datos del piloto). Cumplimiento LPDP para menores.
+    if (!user.parentalConsent) return go('consent');
     return go('dashboard');
   }
 
@@ -765,6 +782,66 @@ const App = (() => {
       } catch (err) { UI.flash(err.message, 'error'); }
     });
     document.getElementById('skipOnboard')?.addEventListener('click', () => go('institution'));
+  }
+
+  // ---- Pantalla: Consentimiento parental (Fase E — LPDP Perú, menores) ----
+  function screenConsent() {
+    const u = Roles.current();
+    const nombre = u?.name ? u.name.split(' ')[0] : '';
+    return `
+      <div class="card consent-card" style="max-width:600px;margin:40px auto;">
+        <h2 style="margin:0 0 8px;">Consentimiento de privacidad</h2>
+        <p class="muted" style="margin:0 0 16px;">Hola${nombre ? ', ' + nombre : ''}. Antes de empezar necesitamos la autorización de tu padre, madre o tutor, como exige la Ley de Protección de Datos Personales del Perú para personas menores de edad.</p>
+        <div class="consent-box">
+          <p><strong>¿Qué datos registra TrackFocus?</strong></p>
+          <ul>
+            <li>Tus sesiones de estudio (materia, duración y nivel de concentración).</li>
+            <li>Tu progreso de aprendizaje (logros, XP y rachas).</li>
+            <li>Métricas <strong>anónimas</strong> del piloto educativo (sin tu nombre ni correo) para medir el impacto del proyecto.</li>
+          </ul>
+          <p><strong>¿Cómo los protegemos?</strong></p>
+          <ul>
+            <li>Tus datos personales solo los ves tú (y tu docente, si tu colegio participa).</li>
+            <li>Los datos del piloto se guardan <strong>anonimizados</strong>.</li>
+            <li>Nunca compartimos ni vendemos tu información.</li>
+          </ul>
+        </div>
+        <form id="consentForm" style="margin-top:18px;">
+          <label class="consent-check">
+            <input type="checkbox" id="consentCheck" required>
+            <span>Confirmo que mi padre, madre o tutor leyó esta información y <strong>autoriza</strong> mi uso de TrackFocus y el registro de estos datos.</span>
+          </label>
+          <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">
+            <button class="primary" type="submit">Acepto y continúo</button>
+            <button class="ghost" type="button" id="consentDecline">Ahora no</button>
+          </div>
+        </form>
+      </div>`;
+  }
+
+  function wireConsent() {
+    document.getElementById('consentForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!document.getElementById('consentCheck')?.checked) {
+        UI.flash('Debes confirmar la autorización para continuar.', 'error');
+        return;
+      }
+      const u = Roles.current();
+      if (!u) return go('welcome');
+      Storage.set(st => {
+        if (st.users[u.id]) {
+          st.users[u.id].parentalConsent = true;
+          st.users[u.id].consentAt = new Date().toISOString();
+        }
+      });
+      try { await Storage.flush(); } catch (_) {}
+      UI.flash('¡Listo! Gracias. Ya puedes empezar a estudiar. 🎓', 'success');
+      go('dashboard');
+    });
+    document.getElementById('consentDecline')?.addEventListener('click', async () => {
+      await Auth.logout();
+      go('welcome');
+    });
   }
 
   // ---- Pantalla para promover a docente (post-Google) ----

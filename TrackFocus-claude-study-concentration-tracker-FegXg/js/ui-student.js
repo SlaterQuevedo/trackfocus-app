@@ -567,9 +567,12 @@ const UIStudent = (() => {
     });
   }
 
-  // Registro del piloto (Fase C). El gate de consentimiento parental se añade en Fase E.
+  // Registro del piloto (Fase C) con gate de consentimiento parental (Fase E):
+  // sin consentimiento explícito NO se registra ningún dato del piloto (LPDP).
   function _recordPilot(data) {
     if (typeof Pilot === 'undefined') return;
+    const u = (typeof Roles !== 'undefined') ? Roles.current() : null;
+    if (!u || u.parentalConsent !== true) return;
     Pilot.record(data);
   }
 

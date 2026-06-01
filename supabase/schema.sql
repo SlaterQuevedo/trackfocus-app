@@ -550,3 +550,10 @@ create policy "pilot_update" on public.pilot_analytics for update to authenticat
 drop policy if exists "pilot_delete" on public.pilot_analytics;
 create policy "pilot_delete" on public.pilot_analytics for delete to authenticated
   using (public.current_role() = 'super_admin');
+
+-- ===========================================================
+-- CONSENTIMIENTO PARENTAL (Fase E) — cumplimiento LPDP Perú (menores).
+-- Columnas aditivas e idempotentes en public.users.
+-- ===========================================================
+alter table public.users add column if not exists parental_consent boolean not null default false;
+alter table public.users add column if not exists consent_at        timestamptz;
