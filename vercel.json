@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "routes": [
+    { "src": "/(.*)", "dest": "/TrackFocus%20VSC/TrackFocus-claude-study-concentration-tracker-FegXg/$1" }
+  ]
+}

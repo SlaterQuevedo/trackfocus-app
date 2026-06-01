@@ -796,6 +796,7 @@ button.danger-ghost:hover {
   display: flex;
   flex-direction: column;
   height: calc(100vh - 130px);
+  height: calc(100dvh - 130px); /* dvh excluye barra de URL/teclado en móvil; degrada a vh en navegadores viejos */
   min-height: 400px;
 }
 
@@ -1006,6 +1007,7 @@ button.danger-ghost:hover {
 @media (max-width: 760px) {
   .chat-screen {
     height: calc(100vh - 110px);
+    height: calc(100dvh - 110px);
   }
 
   .chat-bubble {
@@ -1616,19 +1618,30 @@ body.pom-active .container {
   /* Contenedor más ajustado en pantallas pequeñas */
   .container { padding: 18px 14px 24px; }
 
-  /* Barra Pomodoro: compacta y sin desbordar */
+  /* Barra Pomodoro: compacta, envuelve en 2 filas y sin desbordar */
   .pom-bar {
+    flex-wrap: wrap;
     gap: 8px;
     padding: 6px 12px;
     row-gap: 6px;
   }
   .pom-bar-timer { min-width: 60px; }
   .pom-bar-timer span:first-child { font-size: 1.3rem; }
-  .pom-bar-center select { max-width: 130px; }
-  .pom-bar-controls button { font-size: 10px; padding: 3px 7px; }
-  .pom-bar-right { gap: 6px; }
-  .pom-bar-right input { width: 38px; }
-  body.pom-active .container { padding-top: 108px; }
+  .pom-bar-center { flex: 1 1 100%; }
+  .pom-bar-center select { max-width: 100%; width: 100%; min-height: 40px; }
+  /* Targets táctiles cómodos (≥44px) en los controles del timer */
+  .pom-bar-controls { flex: 1; }
+  .pom-bar-controls button {
+    flex: 1;
+    font-size: 14px;
+    padding: 0;
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .pom-bar-right { gap: 8px; }
+  .pom-bar-right input { width: 44px; min-height: 40px; }
+  #pomBarToggle { min-height: 44px; min-width: 44px; }
+  body.pom-active .container { padding-top: 156px; }
 
   /* Sub-tabs no se desbordan */
   .study-tabs { flex-wrap: wrap; }
@@ -1637,6 +1650,8 @@ body.pom-active .container {
   /* Chat: input táctil cómodo en 320px */
   .chat-input-row { gap: 6px; flex-wrap: wrap; }
   .chat-input-row textarea { min-width: 0; }
+  /* Botones de cabecera del chat con tap cómodo */
+  .chat-header-actions button { min-height: 40px; }
 
   /* Evitar scroll horizontal global */
   html, body { overflow-x: hidden; max-width: 100%; }

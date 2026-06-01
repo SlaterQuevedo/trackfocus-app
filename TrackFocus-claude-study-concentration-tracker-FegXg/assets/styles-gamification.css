@@ -292,6 +292,9 @@ tr.self td { background: rgba(200,155,109,0.07) !important; }
   justify-content: center;
   z-index: 200;
   backdrop-filter: blur(6px);
+  /* En móvil/pantallas cortas: permitir scroll y no cortar el modal */
+  padding: 16px;
+  overflow-y: auto;
 }
 
 .pom-modal.hidden { display: none; }
@@ -299,6 +302,8 @@ tr.self td { background: rgba(200,155,109,0.07) !important; }
 .pom-modal-inner {
   max-width: 420px;
   width: 90%;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
   animation: modalIn 0.22s cubic-bezier(0.16,1,0.3,1);
 }
 
