@@ -87,6 +87,8 @@ const Pilot = (() => {
   // ── Agregación para dashboards (Fases D y H) ──────────────────────────────
   // Trae filas del piloto desde Supabase (RLS limita lo visible al rol).
   async function fetchRows(opts = {}) {
+    // Modo demo (Fase G): datos ficticios precargados, sin tocar Supabase.
+    if (window.__TF_DEMO) return window.__TF_DEMO_PILOT_ROWS || [];
     if (!window.SB) return [];
     try {
       let q = window.SB.from('pilot_analytics').select('*');

@@ -121,6 +121,7 @@ const UITeacher = (() => {
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
           <h2 style="margin:0;">🔬 Piloto científico</h2>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="primary" data-go="eureka">🏆 Vista Eureka</button>
             <button class="ghost" id="btnWeeklyReport">🖨️ Reporte semanal</button>
             <button class="ghost" id="btnPilotCsv">⬇️ CSV piloto</button>
           </div>

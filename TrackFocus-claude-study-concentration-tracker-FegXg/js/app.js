@@ -31,6 +31,9 @@ const App = (() => {
     'classroom-stats':    ['teacher'],
     'student-detail':     ['teacher', 'super_admin'],
 
+    // Vista de exposición (Eureka)
+    'eureka':             ['teacher', 'super_admin'],
+
     // Super Admin
     'admin-dashboard':    ['super_admin'],
     'manage-schools':     ['super_admin'],
@@ -70,7 +73,8 @@ const App = (() => {
       consent:              { render: screenConsent,           wire: wireConsent },
       ...UIStudent.screens,
       ...UITeacher.screens,
-      ...UIAdmin.screens
+      ...UIAdmin.screens,
+      ...(typeof UIEureka !== 'undefined' ? UIEureka.screens : {})
     };
 
     const screen = allScreens[route];
