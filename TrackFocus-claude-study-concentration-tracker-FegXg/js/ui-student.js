@@ -120,6 +120,9 @@ const UIStudent = (() => {
     const alerts = Analytics.generateAlerts(user.id);
     const weekXP = Gamification.getWeeklyXP(user.id);
 
+    // Sistema de Metas (Fase 9): objetivos semanales con progreso visual.
+    const goalsCard = _renderGoalsCard(user, sessions, gam);
+
     // Leaderboard del aula (top 5)
     let leaderboardHtml = '';
     if (user.classroomId) {
@@ -219,12 +222,79 @@ const UIStudent = (() => {
         </div>
       </div>
 
+      ${goalsCard}
+
       ${leaderboardHtml}`;
+  }
+
+  // Sistema de Metas (Fase 9): tarjeta con 4 objetivos semanales y su progreso.
+  function _renderGoalsCard(user, sessions, gam) {
+    if (typeof Goals === 'undefined') return '';
+    const goals = Goals.get(user.id);
+
+    const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+    const weekSessions = sessions.filter(se => new Date(se.datetime) >= weekAgo);
+    const weekMinutes = weekSessions.reduce((a, b) => a + (b.durationMin || 0), 0);
+    const weekHours = Math.round(weekMinutes / 60 * 10) / 10;
+    const liSeries = (typeof Stats !== 'undefined' && Stats.learningIndexSeries) ? Stats.learningIndexSeries(sessions) : [];
+    const lastIndex = liSeries.length ? liSeries[liSeries.length - 1].value : 0;
+
+    const items = [
+      { key: 'studyHours',    icon: '⏱', label: 'Horas de estudio',    cur: weekHours,            tgt: goals.studyHours,    suffix: 'h' },
+      { key: 'sessions',      icon: '📚', label: 'Sesiones',            cur: weekSessions.length,  tgt: goals.sessions,      suffix: '' },
+      { key: 'streak',        icon: '🔥', label: 'Racha (días)',        cur: gam.streak || 0,      tgt: goals.streak,        suffix: '' },
+      { key: 'learningIndex', icon: '📊', label: 'Índice de Aprendizaje', cur: lastIndex,          tgt: goals.learningIndex, suffix: '' }
+    ];
+
+    return `
+      <div class="card" style="margin-top:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+          <h2 style="margin:0;">🎯 Mis Metas (esta semana)</h2>
+          <span class="muted" style="font-size:12px;">Toca el lápiz para ajustar un objetivo.</span>
+        </div>
+        <div class="goals-grid">
+          ${items.map(it => {
+            const pct = it.tgt > 0 ? Math.min(100, Math.round((it.cur / it.tgt) * 100)) : 0;
+            const done = pct >= 100;
+            return `<div class="goal-card${done ? ' goal-done' : ''}">
+              <div class="goal-head">
+                <span>${it.icon} ${it.label}</span>
+                <button class="goal-edit-btn" data-goal="${it.key}" title="Editar meta">✎</button>
+              </div>
+              <div class="goal-val">${it.cur}${it.suffix} <span class="muted">/ ${it.tgt}${it.suffix}</span></div>
+              <div class="goal-progress"><div style="width:${pct}%"></div></div>
+              <div class="goal-pct">${done ? '✅ ¡Meta lograda!' : pct + '%'}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
   }
 
   function wireDashboard() {
     root().querySelectorAll('[data-go]').forEach(b =>
       b.addEventListener('click', () => App.go(b.dataset.go)));
+
+    // Sistema de Metas (Fase 9): editar el valor objetivo de cada meta.
+    const labels = {
+      studyHours: 'horas de estudio por semana',
+      sessions: 'sesiones por semana',
+      streak: 'días de racha objetivo',
+      learningIndex: 'Índice de Aprendizaje objetivo (0-100)'
+    };
+    root().querySelectorAll('.goal-edit-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (typeof Goals === 'undefined') return;
+        const key = btn.dataset.goal;
+        const current = Goals.get(Storage.get().currentUserId)[key];
+        const input = prompt(`Nueva meta de ${labels[key] || key}:`, current);
+        if (input === null) return;
+        const val = Number(input);
+        if (!val || isNaN(val)) { UI.flash?.('Ingresa un número válido.', 'error'); return; }
+        Goals.set(Storage.get().currentUserId, key, val);
+        UI.flash?.('Meta actualizada.', 'success');
+        App.go('dashboard');
+      });
+    });
   }
 
   // ---- Pantalla: Nueva sesión — Etapa 1: Configuración de metadatos ----

@@ -1888,6 +1888,58 @@ body.pom-active .container {
   transition: width .8s cubic-bezier(0.16,1,0.3,1);
 }
 
+/* ---- Sistema de Metas (Fase 9) ---- */
+.goals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+.goal-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  transition: border-color .2s, box-shadow .2s;
+}
+.goal-card.goal-done { border-color: var(--good); }
+.goal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 500;
+  gap: 6px;
+}
+.goal-edit-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 4px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.goal-edit-btn:hover { color: var(--accent); background: var(--panel); }
+.goal-val { font-size: 22px; font-weight: 800; margin: 8px 0 6px; }
+.goal-val .muted { font-size: 14px; font-weight: 500; }
+.goal-progress {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--border);
+  overflow: hidden;
+}
+.goal-progress > div {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  transition: width .8s cubic-bezier(0.16,1,0.3,1);
+}
+.goal-card.goal-done .goal-progress > div { background: var(--good); }
+.goal-pct { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.goal-card.goal-done .goal-pct { color: var(--good); font-weight: 600; }
+
 /* (Bloque .pom-widget eliminado: el componente ya no existe; ahora se usa .pom-bar global) */
 
 /* Sub-tabs internos */
