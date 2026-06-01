@@ -117,6 +117,17 @@ const UITeacher = (() => {
         <div class="kpi"><div class="v" style="color:${atRiskStudents > 0 ? 'var(--bad)' : 'var(--good)'};">${atRiskStudents}</div><div class="l">Alumnos en riesgo</div></div>
       </div>
 
+      <div class="card" id="pilotCard" style="margin:16px 0;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+          <h2 style="margin:0;">🔬 Piloto científico</h2>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="ghost" id="btnWeeklyReport">🖨️ Reporte semanal</button>
+            <button class="ghost" id="btnPilotCsv">⬇️ CSV piloto</button>
+          </div>
+        </div>
+        <div id="pilotCardBody"><p class="muted" style="margin:12px 0 0;">Cargando métricas del piloto…</p></div>
+      </div>
+
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
         <h2 style="margin:0;">Mis Aulas</h2>
         <button class="primary" data-go="classroom-manage" data-id="new">+ Nueva aula</button>
@@ -159,6 +170,84 @@ const UITeacher = (() => {
       });
     });
     _wireApprovalButtons(user.id);
+
+    // Piloto científico (Fase D): carga asíncrona de agregados + reportes.
+    _loadPilotCard();
+    document.getElementById('btnWeeklyReport')?.addEventListener('click', () => _weeklyReport(user));
+    document.getElementById('btnPilotCsv')?.addEventListener('click', () => _exportPilotCsv());
+  }
+
+  // Carga las métricas del piloto en la tarjeta (RLS limita lo visible al docente).
+  async function _loadPilotCard() {
+    const body = document.getElementById('pilotCardBody');
+    if (!body || typeof Pilot === 'undefined') return;
+    const rows = await Pilot.fetchRows();
+    const sum  = Pilot.summarize(rows);
+    if (!sum.sessions) {
+      body.innerHTML = '<p class="muted" style="margin:12px 0 0;">Aún no hay datos del piloto. Aparecerán cuando los alumnos completen sesiones de Estudio IA con quiz.</p>';
+      return;
+    }
+    const impColor = sum.avgImprovement > 0 ? 'var(--good)' : 'var(--muted)';
+    body.innerHTML = `
+      <div class="grid cols-3" style="gap:8px;margin-top:12px;">
+        <div class="kpi" style="padding:10px;"><div class="v" style="font-size:20px;">${sum.students}</div><div class="l">Participantes</div></div>
+        <div class="kpi" style="padding:10px;"><div class="v" style="font-size:20px;">${sum.sessions}</div><div class="l">Sesiones piloto</div></div>
+        <div class="kpi" style="padding:10px;"><div class="v" style="font-size:20px;">${sum.avgFocus}/5</div><div class="l">Concentración prom.</div></div>
+        <div class="kpi" style="padding:10px;"><div class="v" style="font-size:20px;">${sum.totalMinutes}</div><div class="l">Minutos totales</div></div>
+        <div class="kpi" style="padding:10px;"><div class="v" style="font-size:20px;color:${impColor};">${sum.avgImprovement > 0 ? '+' : ''}${sum.avgImprovement}</div><div class="l">Mejora quiz</div></div>
+        <div class="kpi" style="padding:10px;"><div class="v" style="font-size:20px;">${sum.improvedPct}%</div><div class="l">Mejoraron</div></div>
+      </div>`;
+  }
+
+  // Reporte semanal imprimible (docentes / padres / directivos).
+  async function _weeklyReport(user) {
+    const s = Storage.get();
+    const school = user.schoolId ? s.schools[user.schoolId] : null;
+    const since = new Date(); since.setDate(since.getDate() - 7);
+    const rows = (typeof Pilot !== 'undefined') ? await Pilot.fetchRows({ since: since.toISOString() }) : [];
+    const sum  = (typeof Pilot !== 'undefined') ? Pilot.summarize(rows) : {};
+    const classrooms = school ? Schools.listClassrooms(school.id) : [];
+
+    let body = `<h1>Reporte semanal · TrackFocus</h1>
+      <p class="sub">${school ? esc(school.name) + ' · ' : ''}Docente: ${esc(user.name)} · Semana al ${new Date().toLocaleDateString('es-PE')}</p>
+      <h2>Resumen del piloto (últimos 7 días)</h2>
+      <div class="kpis">
+        <div class="kpi"><div class="v">${sum.students || 0}</div><div class="l">Participantes</div></div>
+        <div class="kpi"><div class="v">${sum.sessions || 0}</div><div class="l">Sesiones</div></div>
+        <div class="kpi"><div class="v">${sum.avgFocus || 0}/5</div><div class="l">Concentración prom.</div></div>
+        <div class="kpi"><div class="v">${sum.totalMinutes || 0}</div><div class="l">Minutos de estudio</div></div>
+        <div class="kpi"><div class="v">${sum.avgPre || 0} → ${sum.avgPost || 0}</div><div class="l">Quiz pre → post</div></div>
+        <div class="kpi"><div class="v">${sum.improvedPct || 0}%</div><div class="l">Mejoraron</div></div>
+      </div>`;
+
+    if (classrooms.length) {
+      body += `<h2>Aulas</h2><table><tr><th>Aula</th><th>Alumnos</th><th>Sesiones (7d)</th><th>Concentración prom.</th></tr>`;
+      classrooms.forEach(cr => {
+        const students = Schools.listStudentsInClassroom(cr.id);
+        const crSessions = Sessions.listForClassroom(cr.id, { from: since.toISOString() });
+        const avg = crSessions.length ? (crSessions.reduce((a, b) => a + b.concentration, 0) / crSessions.length).toFixed(1) : '—';
+        body += `<tr><td>${esc(cr.name)}</td><td>${students.length}</td><td>${crSessions.length}</td><td>${avg}</td></tr>`;
+      });
+      body += `</table>`;
+    }
+
+    body += `<h2>Lectura pedagógica</h2><p>${(sum.avgImprovement > 0)
+      ? `En promedio los estudiantes mejoraron <strong>${sum.avgImprovement} puntos</strong> entre el quiz inicial y el final, lo que sugiere un efecto positivo del acompañamiento del tutor socrático. El ${sum.improvedPct}% de los participantes mejoró su puntaje.`
+      : `Aún no hay suficiente mejora medible. Se recomienda ampliar la muestra y la duración del piloto para obtener resultados concluyentes.`}</p>`;
+
+    Exporter.printHTML('Reporte semanal TrackFocus', body);
+  }
+
+  // Exporta las filas del piloto (anónimas) a CSV.
+  async function _exportPilotCsv() {
+    if (typeof Pilot === 'undefined') return;
+    const rows = await Pilot.fetchRows();
+    if (!rows.length) { UI.flash('Aún no hay datos del piloto para exportar.', 'info'); return; }
+    const cols = ['student_hash', 'classroom_id', 'focus_score', 'time_spent_seconds', 'pre_quiz_score', 'post_quiz_score', 'created_at'];
+    const head = cols.join(';');
+    const esc2 = v => (v == null ? '' : (/[",;\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v)));
+    const lines = rows.map(r => cols.map(c => esc2(r[c])).join(';'));
+    Exporter.download(`trackfocus-piloto-${new Date().toISOString().slice(0, 10)}.csv`, '﻿' + [head, ...lines].join('\n'));
   }
 
   // ---- Pantalla: Gestión de Aula ----

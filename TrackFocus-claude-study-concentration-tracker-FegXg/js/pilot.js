@@ -84,5 +84,43 @@ const Pilot = (() => {
 
   function pendingCount() { return _readOutbox().length; }
 
-  return { hash, record, flushOutbox, pendingCount };
+  // ── Agregación para dashboards (Fases D y H) ──────────────────────────────
+  // Trae filas del piloto desde Supabase (RLS limita lo visible al rol).
+  async function fetchRows(opts = {}) {
+    if (!window.SB) return [];
+    try {
+      let q = window.SB.from('pilot_analytics').select('*');
+      if (opts.classroomId) q = q.eq('classroom_id', opts.classroomId);
+      if (opts.since)       q = q.gte('created_at', opts.since);
+      const { data, error } = await q;
+      if (error) { window.Monitor?.log?.('supabase', 'pilot fetch error', error.message); return []; }
+      return data || [];
+    } catch (e) {
+      window.Monitor?.log?.('supabase', 'pilot fetch excepción', e?.message);
+      return [];
+    }
+  }
+
+  // Calcula agregados a partir de un array de filas del piloto.
+  function summarize(rows) {
+    rows = rows || [];
+    const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0;
+    const focus = rows.filter(r => r.focus_score != null).map(r => Number(r.focus_score));
+    const times = rows.filter(r => r.time_spent_seconds != null).map(r => Number(r.time_spent_seconds));
+    const pairs = rows.filter(r => r.pre_quiz_score != null && r.post_quiz_score != null);
+    const improvements = pairs.map(r => Number(r.post_quiz_score) - Number(r.pre_quiz_score));
+    return {
+      sessions:       rows.length,
+      students:       new Set(rows.map(r => r.student_hash)).size,
+      avgFocus:       Math.round(avg(focus) * 10) / 10,
+      totalMinutes:   Math.round(times.reduce((x, y) => x + y, 0) / 60),
+      avgPre:         Math.round(avg(pairs.map(r => Number(r.pre_quiz_score)))  * 10) / 10,
+      avgPost:        Math.round(avg(pairs.map(r => Number(r.post_quiz_score))) * 10) / 10,
+      avgImprovement: Math.round(avg(improvements) * 10) / 10,   // puntos de quiz (post - pre)
+      improvedPct:    pairs.length ? Math.round((improvements.filter(d => d > 0).length / pairs.length) * 100) : 0,
+      quizPairs:      pairs.length
+    };
+  }
+
+  return { hash, record, flushOutbox, pendingCount, fetchRows, summarize };
 })();
