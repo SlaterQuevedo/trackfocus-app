@@ -86,6 +86,8 @@ const App = (() => {
     document.getElementById('app').innerHTML = screen.render(params);
     screen.wire(params);
     updateChrome();
+    // TRACKY (Fase 8): mascota contextual. Vive fuera de #app y sobrevive al re-render.
+    if (typeof Tracky !== 'undefined') Tracky.checkContext(_current, Roles.current());
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
 

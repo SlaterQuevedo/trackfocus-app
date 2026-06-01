@@ -68,6 +68,9 @@
   <!-- Navegación inferior (solo móvil) — se llena dinámicamente según el rol -->
   <nav id="bottomnav" class="bottom-nav hidden"></nav>
 
+  <!-- TRACKY — mascota virtual (Fase 8). Vive fuera de #app: sobrevive al re-render. -->
+  <div id="tracky-root"></div>
+
   <!--
     Todos los scripts con defer: se descargan en paralelo al HTML y ejecutan
     en orden después del parseo, sin bloquear el render. Reduce tiempo de carga
@@ -107,6 +110,7 @@
   <script defer src="js/ui-admin.js"></script>
   <script defer src="js/roles.js"></script>
   <script defer src="js/demo.js"></script>
+  <script defer src="js/tracky.js"></script>
   <script defer src="js/app.js"></script>
   <!-- Vercel analytics solo en producción -->
   <script>

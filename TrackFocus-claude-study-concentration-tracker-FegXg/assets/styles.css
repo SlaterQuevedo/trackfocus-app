@@ -2108,3 +2108,91 @@ body.pom-active .container {
   .pom-bar-center select { max-width: 104px; }
   .study-tab { padding: 9px 10px; }
 }
+
+/* ================================================
+   TRACKY — mascota virtual (Fase 8)
+   ================================================ */
+.tracky-container {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 9990;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: none;
+}
+.tracky-container > * { pointer-events: auto; }
+
+.tracky-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  animation: trackyIdle 3s ease-in-out infinite;
+  transition: transform .2s;
+}
+.tracky-avatar:hover { transform: scale(1.06); }
+.tracky-avatar.tracky-anim { animation: trackyHappy .4s ease, trackyIdle 3s ease-in-out infinite .4s; }
+
+@keyframes trackyIdle {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+@keyframes trackyHappy {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.12) rotate(-4deg); }
+  100% { transform: scale(1); }
+}
+
+.tracky-bubble {
+  max-width: 240px;
+  background: var(--panel-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text);
+  box-shadow: var(--shadow);
+  animation: slideUp .3s ease both;
+}
+
+.tracky-revive-btn {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 9990;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: var(--panel);
+  color: var(--accent-2);
+  cursor: pointer;
+  font-size: 16px;
+  box-shadow: var(--shadow);
+  opacity: 0.7;
+  transition: opacity .2s, transform .2s;
+}
+.tracky-revive-btn:hover { opacity: 1; transform: scale(1.1); }
+
+@media (prefers-reduced-motion: reduce) {
+  .tracky-avatar, .tracky-avatar.tracky-anim { animation: none; }
+  .tracky-bubble { animation: none; }
+}
+
+/* Móvil: subir a Tracky para no tapar la nav inferior (≈56px + safe-area). */
+@media (max-width: 768px) {
+  .tracky-container, .tracky-revive-btn { bottom: 80px; right: 14px; }
+  .tracky-avatar { width: 48px; height: 48px; }
+  .tracky-bubble { max-width: 200px; }
+}
