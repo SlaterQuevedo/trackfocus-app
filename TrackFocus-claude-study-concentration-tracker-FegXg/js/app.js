@@ -396,6 +396,7 @@ const App = (() => {
       await Storage.bootstrap();
     } catch (e) {
       console.error('[App] bootstrap error:', e);
+      window.Monitor?.log?.('supabase', 'bootstrap de datos falló', e?.message);
       UI.flash?.('No se pudieron cargar tus datos. Reintenta.', 'error');
       return go('welcome');
     }
