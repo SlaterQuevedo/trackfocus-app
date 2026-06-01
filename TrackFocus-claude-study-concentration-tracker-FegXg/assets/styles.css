@@ -1003,6 +1003,40 @@ button.danger-ghost:hover {
   to { transform: rotate(360deg); }
 }
 
+/* Tarjeta de contingencia del tutor (caída de IA) */
+.tutor-contingency {
+  align-self: center;
+  max-width: 460px;
+  width: 100%;
+  margin: 8px auto;
+  padding: 22px 20px;
+  text-align: center;
+  background: var(--bg-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.18);
+}
+.tutor-contingency .tc-icon { font-size: 34px; line-height: 1; }
+.tutor-contingency .tc-title {
+  font-weight: 700;
+  font-size: 15px;
+  margin: 10px 0 6px;
+  color: var(--text);
+}
+.tutor-contingency .tc-text {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.55;
+  margin-bottom: 16px;
+}
+.tutor-contingency .tc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+.tutor-contingency .tc-actions button { min-height: 44px; }
+
 /* Responsive chat */
 @media (max-width: 760px) {
   .chat-screen {

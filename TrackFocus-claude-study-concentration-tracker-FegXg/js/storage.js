@@ -38,6 +38,23 @@ const Storage = (() => {
   let booted = false;
   let pendingSync = Promise.resolve();
 
+  // Tolerancia a fallos (Fase B): cache local + bandera de "pendiente de sync".
+  const LS_CACHE = 'tf-state-cache';
+  let _syncDirty = false;
+
+  // ¿Estamos en modo demostración aislado? (Fase G). Nunca sincroniza ni cachea datos reales.
+  function _isDemo() { return !!window.__TF_DEMO; }
+
+  // Mirror del estado a localStorage → los datos sobreviven a una recarga aunque
+  // no haya red. No se usa en modo demo para no contaminar el cache real.
+  function _persistCache() {
+    if (_isDemo()) return;
+    try { localStorage.setItem(LS_CACHE, JSON.stringify(state)); } catch (_) {}
+  }
+  function _loadCache() {
+    try { return JSON.parse(localStorage.getItem(LS_CACHE) || 'null'); } catch (_) { return null; }
+  }
+
   // ----- Bootstrap: traer todo desde la nube tras autenticarse -----
   async function bootstrap() {
     if (!window.SB) {
@@ -45,7 +62,21 @@ const Storage = (() => {
       booted = false;
       return state;
     }
-    state = await Cloud.bootstrap();
+    try {
+      state = await Cloud.bootstrap();
+    } catch (e) {
+      // Sin red al arrancar: si hay cache local, seguimos trabajando offline.
+      const cached = _loadCache();
+      if (cached) {
+        console.warn('[Storage] bootstrap sin red → usando cache local. Se sincronizará al reconectar.');
+        window.Monitor?.log?.('sync', 'bootstrap offline → cache local', e?.message);
+        state = cached;
+        booted = true;
+        _syncDirty = true;
+        return state;
+      }
+      throw e;
+    }
 
     // NEW: Cargar availableRoles para el usuario actual
     const activeRole = Auth.getActiveRole?.();
@@ -74,6 +105,9 @@ const Storage = (() => {
   function clear() {
     state = structuredClone(DEFAULT_STATE);
     booted = false;
+    _syncDirty = false;
+    // Privacidad en equipos compartidos (colegio): no dejar datos en el cache tras salir.
+    try { localStorage.removeItem(LS_CACHE); } catch (_) {}
   }
 
   // ----- API pública -----
@@ -84,22 +118,66 @@ const Storage = (() => {
   // dispara un sync por diff hacia Supabase. NO bloquea — devuelve inmediato.
   // Para esperar a que termine el último sync, llama a Storage.flush().
   function set(mutator) {
+    // Modo demo (Fase G): muta sólo en memoria, jamás toca Supabase ni el cache real.
+    if (_isDemo()) { mutator(state); return; }
+
     if (!booted || !window.SB) {
-      // Modo desconectado: sólo cache.
+      // Modo desconectado: muta y guarda en cache local (sobrevive recarga).
       mutator(state);
+      _persistCache();
       return;
     }
     const before = snapshot(state);
     mutator(state);
     const after = snapshot(state);
+    _persistCache();
     pendingSync = pendingSync
       .then(() => Cloud.syncDiff(before, after))
-      .catch(e => console.error('[Storage] cloud sync error:', e));
+      .catch(e => {
+        // El sync falló (red caída, etc.): marcamos pendiente. La bandera es "sticky":
+        // sólo un resync() completo y exitoso la limpia (evita falsos "limpio" y pérdida de datos).
+        // connectivity.js reintenta al reconectar y periódicamente.
+        _syncDirty = true;
+        console.error('[Storage] cloud sync error (pendiente de reintento):', e);
+      });
   }
 
   async function flush() {
     try { await pendingSync; } catch (_) {}
   }
+
+  // Reintenta empujar al cloud SÓLO los datos propios del usuario (upserts idempotentes
+  // → sin duplicados). Se acota a lo que RLS permite escribir para no chocar con filas de
+  // compañeros/aulas que se leen pero no se pueden modificar. La llama connectivity.js.
+  async function resync() {
+    if (_isDemo() || !booted || !window.SB || !_syncDirty) return;
+    const uid = state.currentUserId;
+    if (!uid) return;
+
+    // Sub-estado con SOLO lo escribible por este usuario.
+    const scoped = structuredClone(DEFAULT_STATE);
+    if (state.users[uid]) scoped.users[uid] = state.users[uid];
+    scoped.sessions = (state.sessions || []).filter(s => s.email === uid);
+    if (state.customSubjects[uid]) scoped.customSubjects[uid] = state.customSubjects[uid];
+    for (const [id, f] of Object.entries(state.uploadedFiles || {})) {
+      if (f.userId === uid) scoped.uploadedFiles[id] = f;
+    }
+    for (const [id, r] of Object.entries(state.classroomRequests || {})) {
+      if (r.studentId === uid) scoped.classroomRequests[id] = r;
+    }
+
+    try {
+      await Cloud.syncDiff(structuredClone(DEFAULT_STATE), snapshot(scoped));
+      _syncDirty = false;
+      window.Monitor?.log?.('sync', 'resync OK tras reconexión');
+      console.info('[Storage] resync completado tras reconexión.');
+    } catch (e) {
+      _syncDirty = true;
+      console.error('[Storage] resync falló, se reintentará:', e);
+    }
+  }
+
+  function isDirty() { return _syncDirty; }
 
   // ----- Realtime: cuando otro dispositivo modifica datos, re-bootstrap el cache -----
 
@@ -131,6 +209,8 @@ const Storage = (() => {
     setCurrent,
     clear,
     flush,
+    resync,
+    isDirty,
     bindRealtime,
     uuid,
     DEFAULT_STATE,

@@ -526,6 +526,34 @@ const UIStudent = (() => {
     document.getElementById('chatTyping')?.remove();
   }
 
+  // Contingencia del tutor (Fase B): si Gemini cae, no rompemos la sesión.
+  // Mostramos una tarjeta amable y ofrecemos seguir con el Pomodoro o reintentar.
+  function _showTutorContingency() {
+    const messages = document.getElementById('chatMessages');
+    if (!messages || messages.querySelector('.tutor-contingency')) return;
+    const card = document.createElement('div');
+    card.className = 'tutor-contingency';
+    card.innerHTML = `
+      <div class="tc-icon">🌿</div>
+      <div class="tc-title">El Tutor Socrático está tomando un respiro</div>
+      <div class="tc-text">No pudimos conectar con la IA en este momento. Tu sesión y tu progreso están a salvo. Mientras tanto puedes seguir estudiando:</div>
+      <div class="tc-actions">
+        <button class="primary" id="tcPomodoro">⏱️ Usar el temporizador Pomodoro</button>
+        <button class="ghost" id="tcRetry">🔄 Reintentar</button>
+      </div>`;
+    messages.appendChild(card);
+    messages.scrollTop = messages.scrollHeight;
+    card.querySelector('#tcPomodoro')?.addEventListener('click', () => {
+      window._showPomBar?.();
+      UI.flash?.('Temporizador listo. ¡Sigue concentrado! 🍅', 'success');
+    });
+    card.querySelector('#tcRetry')?.addEventListener('click', () => {
+      card.remove();
+      document.getElementById('chatInput')?.focus();
+      UI.flash?.('Puedes volver a enviar tu mensaje.', 'info');
+    });
+  }
+
   async function _sendAiMessage(userTriggerText) {
     if (!_chatState) return;
 
@@ -561,8 +589,9 @@ const UIStudent = (() => {
       );
     } catch (err) {
       _removeTyping();
-      if (bubble) bubble.textContent = '⚠️ Error al contactar al tutor. Intenta de nuevo.';
-      UI.flash(err.message, 'error');
+      if (bubble) bubble.remove();
+      window.Monitor?.log?.('gemini', 'Tutor: fallo al iniciar respuesta', err?.message);
+      _showTutorContingency();
     } finally {
       if (sendBtn)  sendBtn.disabled = false;
       if (finalBtn) finalBtn.disabled = false;
@@ -606,9 +635,10 @@ const UIStudent = (() => {
       );
       _chatState.history.push({ role: 'model', content: fullText, timestamp: Date.now() });
     } catch (err) {
-      if (bubble) bubble.textContent = '⚠️ Error al contactar al tutor. Intenta de nuevo.';
-      UI.flash(err.message, 'error');
+      if (bubble) bubble.remove();
       _chatState.history.pop();
+      window.Monitor?.log?.('gemini', 'Tutor: fallo al responder', err?.message);
+      _showTutorContingency();
     } finally {
       if (sendBtn)  sendBtn.disabled = false;
       if (finalBtn) finalBtn.disabled = false;
