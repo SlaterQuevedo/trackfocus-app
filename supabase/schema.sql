@@ -498,3 +498,55 @@ begin
     alter publication supabase_realtime add table public.user_roles;
   end if;
 end $$;
+
+-- ===========================================================
+-- PILOTO CIENTÍFICO (Fase C) — métricas ANÓNIMAS para medir impacto.
+-- No contiene PII: el alumno se identifica con un hash irreversible
+-- (SHA-256 del email), nunca con su correo. Sirve para exportar la data
+-- del piloto de 4 semanas y demostrar mejora de aprendizaje (pre vs post).
+-- Bloque autónomo e idempotente.
+-- ===========================================================
+
+create table if not exists public.pilot_analytics (
+  id                 text primary key,
+  session_id         text,
+  student_hash       text not null,          -- SHA-256(email) — anónimo, no reversible
+  classroom_id       text,                   -- para agregados por aula (no es PII)
+  focus_score        smallint check (focus_score between 1 and 5),
+  time_spent_seconds integer check (time_spent_seconds >= 0),
+  pre_quiz_score     integer check (pre_quiz_score  >= 0),
+  post_quiz_score    integer check (post_quiz_score >= 0),
+  created_at         timestamptz not null default now()
+);
+create index if not exists pilot_analytics_classroom_idx on public.pilot_analytics(classroom_id);
+create index if not exists pilot_analytics_created_idx    on public.pilot_analytics(created_at desc);
+create index if not exists pilot_analytics_hash_idx       on public.pilot_analytics(student_hash);
+
+alter table public.pilot_analytics enable row level security;
+
+-- INSERT: cualquier usuario autenticado puede aportar SU métrica anonimizada.
+-- (No hay PII y la fila es append-only; los CHECK de rango limitan datos basura.)
+drop policy if exists "pilot_insert" on public.pilot_analytics;
+create policy "pilot_insert" on public.pilot_analytics for insert to authenticated
+  with check (true);
+
+-- SELECT: solo personal. Docente ve su(s) aula(s) y filas sin aula; admin ve todo.
+-- Los estudiantes NO leen el piloto (es data de investigación, además anónima).
+drop policy if exists "pilot_select" on public.pilot_analytics;
+create policy "pilot_select" on public.pilot_analytics for select to authenticated
+  using (
+    public.current_role() = 'super_admin'
+    or (
+      public.current_role() = 'teacher'
+      and (classroom_id = any(public.current_teacher_classrooms()) or classroom_id is null)
+    )
+  );
+
+-- UPDATE/DELETE: solo super_admin (integridad de la evidencia del piloto).
+drop policy if exists "pilot_update" on public.pilot_analytics;
+create policy "pilot_update" on public.pilot_analytics for update to authenticated
+  using (public.current_role() = 'super_admin') with check (public.current_role() = 'super_admin');
+
+drop policy if exists "pilot_delete" on public.pilot_analytics;
+create policy "pilot_delete" on public.pilot_analytics for delete to authenticated
+  using (public.current_role() = 'super_admin');

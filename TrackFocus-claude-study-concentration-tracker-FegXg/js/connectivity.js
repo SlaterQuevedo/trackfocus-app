@@ -15,7 +15,9 @@ const Connectivity = (() => {
   async function _tryResync() {
     clearTimeout(_retryTimer);
     if (!isOnline()) return;
-    // Nada pendiente → terminar.
+    // Reintentar también la cola del piloto (Fase C), independiente del estado.
+    if (typeof Pilot !== 'undefined' && Pilot.flushOutbox) Pilot.flushOutbox();
+    // Nada pendiente en el estado → terminar.
     if (typeof Storage === 'undefined' || !Storage.isDirty || !Storage.isDirty()) {
       _attempt = 0;
       return;
@@ -48,7 +50,10 @@ const Connectivity = (() => {
     if (isOnline()) setTimeout(_tryResync, 2000);
     // Red de seguridad: cubre fallos transitorios estando online (sin evento 'online').
     setInterval(() => {
-      if (typeof Storage !== 'undefined' && Storage.isDirty && Storage.isDirty()) _tryResync();
+      if (!isOnline()) return;
+      const stateDirty = (typeof Storage !== 'undefined' && Storage.isDirty && Storage.isDirty());
+      const pilotPending = (typeof Pilot !== 'undefined' && Pilot.pendingCount && Pilot.pendingCount() > 0);
+      if (stateDirty || pilotPending) _tryResync();
     }, 20000);
   }
 

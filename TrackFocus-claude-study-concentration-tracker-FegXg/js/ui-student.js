@@ -313,14 +313,27 @@ const UIStudent = (() => {
   // Guarda para registrar el listener de borrado de archivos una sola vez
   let _aiDeleteBound = false;
 
-  function _startAiChat(metadata) {
-    _chatState = { metadata, history: [], startedAt: Date.now(), attachedFiles: [] };
+  async function _startAiChat(metadata) {
+    _chatState = {
+      metadata, history: [], startedAt: Date.now(), attachedFiles: [],
+      quizQuestions: [], preQuizScore: null
+    };
     const tabTutor = document.getElementById('tabTutor');
-    if (tabTutor) {
-      tabTutor.innerHTML = _renderChatScreen(metadata);
-      _wireChatScreen();
-      _sendAiMessage('Hola, estoy listo para comenzar. ¿Qué tema de ' + metadata.subject + ' vas a estudiar hoy?');
-    }
+    if (!tabTutor) return;
+    tabTutor.innerHTML = _renderChatScreen(metadata);
+    _wireChatScreen();
+
+    // Mini-quiz inicial (Fase C): punto de partida. Se reutilizan las mismas
+    // preguntas en el quiz final → la comparación pre/post es válida.
+    try {
+      const qs = await Quiz.generate(metadata, metadata.subject);
+      _chatState.quizQuestions = qs;
+      if (qs.length) {
+        _chatState.preQuizScore = await Quiz.present(qs, '📋 Quiz inicial — ' + metadata.subject);
+      }
+    } catch (_) { /* sin quiz → continuar sin bloquear */ }
+
+    _sendAiMessage('Hola, estoy listo para comenzar. ¿Qué tema de ' + metadata.subject + ' vas a estudiar hoy?');
   }
 
   // Lee un File como base64 (sin el prefijo data:...)
@@ -554,6 +567,12 @@ const UIStudent = (() => {
     });
   }
 
+  // Registro del piloto (Fase C). El gate de consentimiento parental se añade en Fase E.
+  function _recordPilot(data) {
+    if (typeof Pilot === 'undefined') return;
+    Pilot.record(data);
+  }
+
   async function _sendAiMessage(userTriggerText) {
     if (!_chatState) return;
 
@@ -686,9 +705,27 @@ const UIStudent = (() => {
         comment:          JSON.stringify(metrics)
       });
 
+      // Quiz final (Fase C): mismas preguntas que el inicial → mide aprendizaje real.
+      let postQuizScore = null;
+      if (_chatState.quizQuestions && _chatState.quizQuestions.length) {
+        postQuizScore = await Quiz.present(
+          _chatState.quizQuestions, '✅ Quiz final — ' + _chatState.metadata.subject
+        );
+      }
+      const timeSpentSeconds = (Date.now() - (_chatState.startedAt || Date.now())) / 1000;
+      const preQuizScore = _chatState.preQuizScore;
+
       _chatState = null;
+
+      // Registro anónimo del piloto (Fase C). Gateado por consentimiento en Fase E.
+      // Fire-and-forget: tiene su propia cola offline (Pilot.flushOutbox).
+      _recordPilot({ sessionId: record.id, focusScore: concentration, timeSpentSeconds, preQuizScore, postQuizScore });
+
       App.go('dashboard');
-      UI.flash(`Sesión guardada · Concentración deducida: ${concentration}/5 🎯`, 'success');
+      const mejora = (preQuizScore != null && postQuizScore != null)
+        ? ` · Quiz: ${preQuizScore}→${postQuizScore}`
+        : '';
+      UI.flash(`Sesión guardada · Concentración deducida: ${concentration}/5 🎯${mejora}`, 'success');
       showXpToast(gamResult.xpEarned, gamResult.newBadges);
     } catch (err) {
       UI.flash('Error al guardar la sesión: ' + err.message, 'error');
