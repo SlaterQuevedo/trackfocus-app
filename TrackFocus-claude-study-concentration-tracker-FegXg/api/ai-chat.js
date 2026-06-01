@@ -107,11 +107,17 @@ Reglas: 3 preguntas; 4 opciones cada una; "answer" es el índice (0-3) de la opc
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function buildSystemPrompt(metadata) {
-  const { subject, grade, durationMin, previousActivity, mode } = metadata;
+  const { subject, grade, durationMin, previousActivity, mode, memoryContext } = metadata;
+
+  // Memoria Académica (Fase 7): si el cliente envió contexto del historial del
+  // alumno en esta materia, se antepone para personalizar la sesión.
+  const memoryBlock = memoryContext
+    ? `MEMORIA DEL ALUMNO (úsala para personalizar, reconocer su progreso y continuar donde quedó): ${memoryContext}\n\n`
+    : '';
 
   const base = `Eres TrackTutor, el tutor de IA de TrackFocus para estudiantes de secundaria.
 
-CONTEXTO DE LA SESIÓN:
+${memoryBlock}CONTEXTO DE LA SESIÓN:
 - Grado: ${grade}
 - Materia: ${subject}
 - Duración planificada: ${durationMin} minutos

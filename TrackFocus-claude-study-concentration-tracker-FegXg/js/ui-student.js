@@ -315,6 +315,12 @@ const UIStudent = (() => {
     // mode: 'tutor' (guía explicativa) | 'minerva' (socrático puro). Viaja dentro
     // de metadata → llega solo al system prompt del servidor sin cambiar firmas.
     metadata.mode = metadata.mode || 'tutor';
+    // Memoria Académica (Fase 7): contexto del historial del alumno en esta materia.
+    if (typeof AcademicMemory !== 'undefined') {
+      const uid = Storage.get().currentUserId;
+      const ctx = AcademicMemory.getContext(uid, metadata.subject);
+      if (ctx) metadata.memoryContext = ctx;
+    }
     _chatState = {
       metadata, history: [], startedAt: Date.now(), attachedFiles: [],
       quizQuestions: [], preQuizScore: null
@@ -679,6 +685,11 @@ const UIStudent = (() => {
     if (!_chatState) return;
     const ts = Date.now();
 
+    // Memoria Académica (Fase 7): el primer mensaje real del alumno define el tema.
+    if (!_chatState.firstUserTopic && text && text.trim()) {
+      _chatState.firstUserTopic = text.trim();
+    }
+
     // Mostrar burbuja del usuario (con nombres de archivos si los hay)
     const displayText = text + (files.length > 0 ? '\n' + files.map(f => '📎 ' + f.fileName).join('\n') : '');
     _appendBubble('user', displayText);
@@ -783,6 +794,15 @@ const UIStudent = (() => {
       }
       const timeSpentSeconds = (Date.now() - (_chatState.startedAt || Date.now())) / 1000;
       const preQuizScore = _chatState.preQuizScore;
+
+      // Memoria Académica (Fase 7): actualiza lo que el tutor recuerda de esta materia.
+      if (typeof AcademicMemory !== 'undefined') {
+        AcademicMemory.update(user.id, _chatState.metadata.subject, {
+          topic: _chatState.firstUserTopic || _chatState.metadata.subject,
+          learningIndex,
+          decoByLevel: decoResult ? decoResult.byLevel : null
+        });
+      }
 
       _chatState = null;
 
@@ -1304,6 +1324,29 @@ const UIStudent = (() => {
         <p class="muted" style="margin:0;font-size:13px;">Completa sesiones con la evaluación 🎯 DECO en Estudio IA para descubrir tus dimensiones cognitivas (comprensión, aplicación, análisis y constancia).</p>
       </div>`;
 
+    // Memoria Académica (Fase 7): lo que TrackFocus Intelligence recuerda por materia.
+    const memSubjects = (typeof AcademicMemory !== 'undefined') ? AcademicMemory.listSubjects(user.id) : [];
+    const memoryCard = memSubjects.length ? `
+      <div class="card" style="margin-top:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+          <h3 style="margin:0;">📚 Memoria de TrackFocus Intelligence</h3>
+          <button class="ghost" id="clearMemoryBtn" style="font-size:12px;padding:6px 12px;">Borrar memoria</button>
+        </div>
+        <p class="muted" style="margin:6px 0 12px;font-size:13px;">El tutor recuerda tu progreso por materia y adapta cada sesión.</p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          ${memSubjects.map(m => `
+            <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;">
+              <div style="display:flex;justify-content:space-between;font-weight:600;">
+                <span>${esc(m.subject)}</span>
+                <span class="muted" style="font-weight:400;font-size:12px;">${m.sessionCount} sesión(es)${m.lastIndex != null ? ' · Índice ' + m.lastIndex + '/100' : ''}</span>
+              </div>
+              ${m.lastTopic ? `<div class="muted" style="font-size:13px;margin-top:4px;">Último tema: ${esc(m.lastTopic)}</div>` : ''}
+              ${(m.mastered && m.mastered.length) ? `<div style="font-size:12px;margin-top:4px;">✅ Domina: ${esc(m.mastered.join(', '))}</div>` : ''}
+              ${(m.struggling && m.struggling.length) ? `<div style="font-size:12px;margin-top:2px;">📌 Reforzar: ${esc(m.struggling.join(', '))}</div>` : ''}
+            </div>`).join('')}
+        </div>
+      </div>` : '';
+
     return `
       <h1>👤 Mi Perfil de Aprendizaje</h1>
 
@@ -1315,6 +1358,8 @@ const UIStudent = (() => {
       </div>` : `<div class="card"><p class="muted">Registra al menos 3 sesiones para ver tu perfil de aprendizaje.</p></div>`}
 
       ${cognitiveCard}
+
+      ${memoryCard}
 
       <div class="grid cols-3" style="margin-top:18px;">
         <div class="kpi">
@@ -1392,6 +1437,14 @@ const UIStudent = (() => {
   function wireProfile() {
     const s = Storage.get();
     const user = s.users[s.currentUserId];
+
+    // Memoria Académica (Fase 7): borrar lo que el tutor recuerda.
+    document.getElementById('clearMemoryBtn')?.addEventListener('click', () => {
+      if (!confirm('¿Borrar la memoria académica? El tutor olvidará tu historial por materia.')) return;
+      AcademicMemory.clear(user.id);
+      UI.flash('Memoria académica borrada.', 'success');
+      App.go('profile');
+    });
 
     document.getElementById('changeClassroomForm')?.addEventListener('submit', (e) => {
       e.preventDefault();
