@@ -129,7 +129,13 @@ const UITeacher = (() => {
             <input type="file" id="restoreFile" accept=".json,application/json" style="display:none">
           </div>
         </div>
-        <div id="pilotCardBody"><p class="muted" style="margin:12px 0 0;">Cargando métricas del piloto…</p></div>
+        <div id="pilotCardBody">
+          <div class="grid cols-3" style="gap:8px;margin-top:12px;">
+            <div class="skeleton skeleton-kpi"></div>
+            <div class="skeleton skeleton-kpi"></div>
+            <div class="skeleton skeleton-kpi"></div>
+          </div>
+        </div>
       </div>
 
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
@@ -535,12 +541,14 @@ const UITeacher = (() => {
         <div class="card">
           <h3>Concentración semanal (últimas 8 semanas)</h3>
           <div class="chart-container">
+            <div class="chart-skeleton skeleton"></div>
             <canvas id="chartWeekly"></canvas>
           </div>
         </div>
         <div class="card">
           <h3>Concentración por materia</h3>
           <div class="chart-container">
+            <div class="chart-skeleton skeleton"></div>
             <canvas id="chartSubject"></canvas>
           </div>
         </div>

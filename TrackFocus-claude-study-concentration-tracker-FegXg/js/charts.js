@@ -30,11 +30,18 @@ const Charts = (() => {
     return _loading;
   }
 
+  // Elimina el skeleton de carga del contenedor del canvas (Fase 2).
+  function _clearSkeleton(canvasId) {
+    const canvas = document.getElementById(canvasId);
+    canvas?.parentElement?.querySelector('.chart-skeleton')?.remove();
+  }
+
   function _instantiate(canvasId, config) {
     const canvas = document.getElementById(canvasId);
     if (!canvas || typeof Chart === 'undefined') return null;
     const chart = new Chart(canvas, config);
     registry[canvasId] = chart;
+    _clearSkeleton(canvasId);
     return chart;
   }
 
@@ -43,7 +50,7 @@ const Charts = (() => {
     if (typeof Chart !== 'undefined') return _instantiate(canvasId, config);
     // Aún no cargado: traer Chart.js y crear cuando esté listo (no bloquea el render).
     ensure().then(ok => {
-      if (!ok) return;
+      if (!ok) { _clearSkeleton(canvasId); return; }
       destroy(canvasId);
       _instantiate(canvasId, config);
     });

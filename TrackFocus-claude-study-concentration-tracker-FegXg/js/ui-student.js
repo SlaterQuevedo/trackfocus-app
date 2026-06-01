@@ -892,12 +892,14 @@ const UIStudent = (() => {
         <div class="card">
           <h2>Concentración por materia</h2>
           <div class="chart-container">
+            <div class="chart-skeleton skeleton"></div>
             <canvas id="chartSubject"></canvas>
           </div>
         </div>
         <div class="card">
           <h2>Distribución Likert</h2>
           <div class="chart-container">
+            <div class="chart-skeleton skeleton"></div>
             <canvas id="chartLikert"></canvas>
           </div>
         </div>

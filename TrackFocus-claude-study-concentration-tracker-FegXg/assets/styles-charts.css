@@ -17,6 +17,13 @@
   max-width: 100%;
 }
 
+/* Skeleton mientras Chart.js carga (Fase 2) */
+.chart-skeleton {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-sm);
+}
+
 /* Heatmap de actividad (52 semanas × 7 días) */
 .heatmap-grid {
   display: grid;
