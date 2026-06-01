@@ -19,8 +19,9 @@
       document.documentElement.setAttribute('data-theme', t);
     })();
   </script>
-  <!-- CDN con defer: se descargan en paralelo, no bloquean el render -->
-  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- Supabase con defer. Chart.js NO se carga aquí: se difiere y solo se
+       descarga cuando se necesita un gráfico (charts.js → ensure()),
+       reduciendo RAM/CPU en el arranque para equipos de gama baja. -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -74,9 +75,12 @@
     Orden de dependencias preservado (ver comentarios originales).
   -->
   <script defer src="js/theme.js"></script>
+  <script defer src="js/monitor.js"></script>
   <script defer src="js/supabase-config.js"></script>
   <script defer src="js/cloud.js"></script>
   <script defer src="js/storage.js"></script>
+  <script defer src="js/pilot.js"></script>
+  <script defer src="js/quiz.js"></script>
   <script defer src="js/subjects.js"></script>
   <script defer src="js/stats.js"></script>
   <script defer src="js/recommend.js"></script>
@@ -89,6 +93,7 @@
   <script defer src="js/auth.js"></script>
   <script defer src="js/sessions.js"></script>
   <script defer src="js/ui.js"></script>
+  <script defer src="js/connectivity.js"></script>
   <script defer src="js/files.js"></script>
   <script defer src="js/gemini-proxy.js"></script>
   <script defer src="js/ai-chat-proxy.js"></script>
@@ -96,8 +101,10 @@
   <script defer src="js/ui-components-multimedia.js"></script>
   <script defer src="js/ui-student.js"></script>
   <script defer src="js/ui-teacher.js"></script>
+  <script defer src="js/ui-eureka.js"></script>
   <script defer src="js/ui-admin.js"></script>
   <script defer src="js/roles.js"></script>
+  <script defer src="js/demo.js"></script>
   <script defer src="js/app.js"></script>
   <!-- Vercel analytics solo en producción -->
   <script>
