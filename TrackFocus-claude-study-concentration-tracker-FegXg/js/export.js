@@ -26,8 +26,8 @@ const Exporter = (() => {
     return '﻿' + [header, ...rows].join('\n');
   }
 
-  function download(filename, content) {
-    const blob = new Blob([content], { type: 'text/csv;charset=utf-8' });
+  function download(filename, content, mime) {
+    const blob = new Blob([content], { type: (mime || 'text/csv') + ';charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = filename;
@@ -73,5 +73,42 @@ const Exporter = (() => {
     w.document.close();
   }
 
-  return { exportSessions, toCsv, download, printHTML };
+  // ── Backups y recuperación (Fase J) — no perder evidencia del piloto ────────
+
+  // Descarga un respaldo JSON completo del estado visible (datos + metadatos).
+  function backupJSON(filename) {
+    const state = (typeof Storage !== 'undefined') ? Storage.get() : {};
+    const payload = {
+      _meta: { app: 'TrackFocus', kind: 'backup', exportedAt: new Date().toISOString(), version: 2 },
+      state
+    };
+    download(
+      filename || `trackfocus-backup-${new Date().toISOString().slice(0, 10)}.json`,
+      JSON.stringify(payload, null, 2),
+      'application/json'
+    );
+  }
+
+  // Lee y valida un archivo de respaldo JSON. Devuelve el objeto state.
+  function readBackupFile(file) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = (e) => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          const state = parsed && parsed.state ? parsed.state : parsed;
+          if (!state || typeof state !== 'object' || !('users' in state) || !('sessions' in state)) {
+            throw new Error('formato');
+          }
+          resolve(state);
+        } catch (_) {
+          reject(new Error('El archivo no es un respaldo válido de TrackFocus.'));
+        }
+      };
+      r.onerror = () => reject(new Error('No se pudo leer el archivo.'));
+      r.readAsText(file);
+    });
+  }
+
+  return { exportSessions, toCsv, download, printHTML, backupJSON, readBackupFile };
 })();

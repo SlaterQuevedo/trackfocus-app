@@ -124,6 +124,9 @@ const UITeacher = (() => {
             <button class="primary" data-go="eureka">🏆 Vista Eureka</button>
             <button class="ghost" id="btnWeeklyReport">🖨️ Reporte semanal</button>
             <button class="ghost" id="btnPilotCsv">⬇️ CSV piloto</button>
+            <button class="ghost" id="btnBackup">💾 Backup</button>
+            <button class="ghost" id="btnRestore">♻️ Restaurar</button>
+            <input type="file" id="restoreFile" accept=".json,application/json" style="display:none">
           </div>
         </div>
         <div id="pilotCardBody"><p class="muted" style="margin:12px 0 0;">Cargando métricas del piloto…</p></div>
@@ -176,6 +179,27 @@ const UITeacher = (() => {
     _loadPilotCard();
     document.getElementById('btnWeeklyReport')?.addEventListener('click', () => _weeklyReport(user));
     document.getElementById('btnPilotCsv')?.addEventListener('click', () => _exportPilotCsv());
+
+    // Backups y recuperación (Fase J).
+    document.getElementById('btnBackup')?.addEventListener('click', () => Exporter.backupJSON());
+    const restoreInput = document.getElementById('restoreFile');
+    document.getElementById('btnRestore')?.addEventListener('click', () => restoreInput?.click());
+    restoreInput?.addEventListener('change', async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      try {
+        const state = await Exporter.readBackupFile(file);
+        if (confirm('¿Cargar este respaldo? Se mostrará como vista local (no se sobrescribe la nube).')) {
+          state.currentUserId = Storage.get().currentUserId || state.currentUserId;
+          Storage.hydrate(state);
+          UI.flash('Respaldo cargado (vista local). Recarga la página para volver a los datos en vivo.', 'success');
+          App.go('teacher-dashboard');
+        }
+      } catch (err) {
+        UI.flash(err.message, 'error');
+      }
+      e.target.value = '';
+    });
   }
 
   // Carga las métricas del piloto en la tarjeta (RLS limita lo visible al docente).
