@@ -350,6 +350,14 @@ const App = (() => {
     bindGlobal();
     wirePomodoroBar();
 
+    // Modo demostración (Fase G): ?demo=1 (docente→Eureka) o ?demo=student.
+    // No requiere Supabase ni internet; datos ficticios aislados.
+    const _demo = new URLSearchParams(location.search).get('demo');
+    if (typeof Demo !== 'undefined' && (_demo === '1' || _demo === 'teacher' || _demo === 'student')) {
+      Demo.activate(_demo === 'student' ? 'student' : 'teacher');
+      return;
+    }
+
     if (!window.SB_READY) {
       go('welcome');
       // Mostrar aviso amable si supabase-config.js no está configurado

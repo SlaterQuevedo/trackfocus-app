@@ -179,6 +179,13 @@ const Storage = (() => {
 
   function isDirty() { return _syncDirty; }
 
+  // Inyecta un estado completo en memoria (Fase G — Demo Mode). Marca booteado
+  // pero, combinado con window.__TF_DEMO, set() nunca sincroniza ni cachea.
+  function hydrate(obj) {
+    state = obj;
+    booted = true;
+  }
+
   // ----- Realtime: cuando otro dispositivo modifica datos, re-bootstrap el cache -----
 
   let _realtimeBound = false;
@@ -211,6 +218,7 @@ const Storage = (() => {
     flush,
     resync,
     isDirty,
+    hydrate,
     bindRealtime,
     uuid,
     DEFAULT_STATE,
