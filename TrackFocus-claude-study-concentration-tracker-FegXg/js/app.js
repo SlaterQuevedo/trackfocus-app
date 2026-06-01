@@ -405,8 +405,12 @@ const App = (() => {
 
     // Suscribirse a cambios remotos (multi-dispositivo)
     Storage.bindRealtime(() => {
-      // Cuando llegan cambios, repintar la pantalla actual
-      if (_current && _current !== 'welcome' && _current !== 'role-selector') go(_current);
+      // Repintar la pantalla actual cuando llegan cambios, EXCEPTO si interrumpiría
+      // al usuario (rendimiento + UX): chat IA en curso o un modal/quiz abierto.
+      if (!_current || _current === 'welcome' || _current === 'role-selector' || _current === 'consent') return;
+      if (_current === 'ai-study') return;
+      if (document.querySelector('.quiz-modal') || document.querySelector('.pom-modal:not(.hidden)')) return;
+      go(_current);
     });
 
     let user;

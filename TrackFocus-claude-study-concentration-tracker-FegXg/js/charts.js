@@ -13,13 +13,41 @@ const Charts = (() => {
     Object.keys(registry).forEach(destroy);
   }
 
-  function create(canvasId, config) {
-    destroy(canvasId);
+  // Carga diferida de Chart.js (Fase K): solo se descarga la primera vez que
+  // se necesita un gráfico (no en el arranque) → menos RAM/CPU en gama baja.
+  const CHART_CDN = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+  let _loading = null;
+  function ensure() {
+    if (typeof Chart !== 'undefined') return Promise.resolve(true);
+    if (_loading) return _loading;
+    _loading = new Promise((resolve) => {
+      const s = document.createElement('script');
+      s.src = CHART_CDN;
+      s.onload  = () => resolve(true);
+      s.onerror = () => { window.Monitor?.log?.('critical', 'Chart.js no se pudo cargar'); resolve(false); };
+      document.head.appendChild(s);
+    });
+    return _loading;
+  }
+
+  function _instantiate(canvasId, config) {
     const canvas = document.getElementById(canvasId);
     if (!canvas || typeof Chart === 'undefined') return null;
     const chart = new Chart(canvas, config);
     registry[canvasId] = chart;
     return chart;
+  }
+
+  function create(canvasId, config) {
+    destroy(canvasId);
+    if (typeof Chart !== 'undefined') return _instantiate(canvasId, config);
+    // Aún no cargado: traer Chart.js y crear cuando esté listo (no bloquea el render).
+    ensure().then(ok => {
+      if (!ok) return;
+      destroy(canvasId);
+      _instantiate(canvasId, config);
+    });
+    return null;
   }
 
   const COLORS = {

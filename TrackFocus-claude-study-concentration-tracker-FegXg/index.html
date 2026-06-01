@@ -19,8 +19,9 @@
       document.documentElement.setAttribute('data-theme', t);
     })();
   </script>
-  <!-- CDN con defer: se descargan en paralelo, no bloquean el render -->
-  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- Supabase con defer. Chart.js NO se carga aquí: se difiere y solo se
+       descarga cuando se necesita un gráfico (charts.js → ensure()),
+       reduciendo RAM/CPU en el arranque para equipos de gama baja. -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
