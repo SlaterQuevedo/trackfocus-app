@@ -31,7 +31,8 @@ const Pilot = (() => {
   }
 
   // Inserta una fila del piloto. data = { sessionId, focusScore, timeSpentSeconds,
-  // preQuizScore, postQuizScore }. classroom_id y student_hash se derivan del usuario.
+  // preQuizScore, postQuizScore, decoScore, learningIndex, decoByLevel }.
+  // classroom_id y student_hash se derivan del usuario.
   async function record(data) {
     if (window.__TF_DEMO) return;          // el modo demo nunca escribe datos reales
     const s   = (typeof Storage !== 'undefined') ? Storage.get() : null;
@@ -49,6 +50,18 @@ const Pilot = (() => {
       pre_quiz_score:     data.preQuizScore ?? null,
       post_quiz_score:    data.postQuizScore ?? null
     };
+
+    // Fase 5/6 (V2): campos DECO/Índice — se añaden SOLO si existen, para no romper
+    // el insert si la migración SQL aún no se ejecutó (sesiones normales = forma previa).
+    if (data.learningIndex != null) row.learning_index = data.learningIndex;
+    if (data.decoScore != null) {
+      row.deco_score = data.decoScore;
+      const lvl = data.decoByLevel || {};
+      if (lvl.comprehension != null) row.deco_comprehension = lvl.comprehension;
+      if (lvl.application   != null) row.deco_application   = lvl.application;
+      if (lvl.reasoning     != null) row.deco_reasoning     = lvl.reasoning;
+      if (lvl.analysis      != null) row.deco_analysis      = lvl.analysis;
+    }
 
     if (!window.SB) { _enqueue(row); return; }
     try {

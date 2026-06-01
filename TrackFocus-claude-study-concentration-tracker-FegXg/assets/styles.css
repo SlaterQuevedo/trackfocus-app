@@ -1732,6 +1732,139 @@ body.pom-active .container {
   border: 1px solid rgba(139,92,246,0.35);
 }
 
+/* ---- Modo DECO: tarjetas de evaluación en el chat (Fase 5) ---- */
+.deco-card {
+  background: var(--panel-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin: 12px 0;
+  animation: screenIn 0.3s cubic-bezier(0.16,1,0.3,1) both;
+}
+.deco-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 12px;
+}
+.deco-title { font-weight: 700; font-size: 15px; }
+.deco-level {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+.deco-level summary {
+  cursor: pointer;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+  user-select: none;
+}
+.deco-level summary::-webkit-details-marker { display: none; }
+.deco-level summary::after {
+  content: '⌄';
+  margin-left: auto;
+  transition: transform .2s;
+  opacity: 0.6;
+}
+.deco-level[open] summary::after { transform: rotate(180deg); }
+.deco-level-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  font-size: 13px;
+}
+.deco-level-body { padding: 4px 12px 12px; }
+.deco-q { padding: 8px 0; border-top: 1px solid var(--border); }
+.deco-q-text { font-weight: 500; margin: 0 0 8px; font-size: 14px; }
+.deco-opts { display: flex; flex-direction: column; gap: 6px; }
+.deco-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13px;
+  transition: border-color .15s, background .15s;
+}
+.deco-opt:hover { border-color: var(--border-strong); }
+.deco-opt.correct { border-color: var(--good); background: rgba(34,197,94,0.12); }
+.deco-opt.wrong   { border-color: var(--bad);  background: rgba(239,68,68,0.12); }
+.deco-actions { margin-top: 10px; }
+.deco-result {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  font-size: 14px;
+}
+.deco-result-levels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.deco-result-chip {
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+}
+
+/* ---- Índice de Aprendizaje (Fase 5) ---- */
+.learning-index-badge {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  background: conic-gradient(var(--accent) calc(var(--li,0) * 1%), var(--border) 0);
+  position: relative;
+}
+.learning-index-badge::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: var(--panel);
+}
+.learning-index-badge .li-val {
+  position: relative;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1;
+}
+.learning-index-badge .li-lbl {
+  position: relative;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.learning-index-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--border);
+  overflow: hidden;
+}
+.learning-index-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  transition: width .8s cubic-bezier(0.16,1,0.3,1);
+}
+
 /* (Bloque .pom-widget eliminado: el componente ya no existe; ahora se usa .pom-bar global) */
 
 /* Sub-tabs internos */

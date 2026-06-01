@@ -522,6 +522,16 @@ create index if not exists pilot_analytics_classroom_idx on public.pilot_analyti
 create index if not exists pilot_analytics_created_idx    on public.pilot_analytics(created_at desc);
 create index if not exists pilot_analytics_hash_idx       on public.pilot_analytics(student_hash);
 
+-- Fase 5 (V2): evaluación DECO (0-12, aciertos en 4 niveles cognitivos) e
+-- Índice de Aprendizaje (0-100). Aditivo e idempotente — no rompe filas previas.
+alter table public.pilot_analytics add column if not exists deco_score     integer check (deco_score between 0 and 12);
+alter table public.pilot_analytics add column if not exists learning_index integer check (learning_index between 0 and 100);
+-- Perfil cognitivo (Fase 6): aciertos por nivel para agregados (comprensión, etc.).
+alter table public.pilot_analytics add column if not exists deco_comprehension integer check (deco_comprehension between 0 and 3);
+alter table public.pilot_analytics add column if not exists deco_application   integer check (deco_application   between 0 and 3);
+alter table public.pilot_analytics add column if not exists deco_reasoning     integer check (deco_reasoning     between 0 and 3);
+alter table public.pilot_analytics add column if not exists deco_analysis      integer check (deco_analysis      between 0 and 3);
+
 alter table public.pilot_analytics enable row level security;
 
 -- INSERT: cualquier usuario autenticado puede aportar SU métrica anonimizada.

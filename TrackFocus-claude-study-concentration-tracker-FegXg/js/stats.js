@@ -70,5 +70,41 @@ const Stats = (() => {
     return dist;
   }
 
-  return { summary, bySubject, byHourBucket, byPreviousActivity, likertDistribution, hourBucket };
+  // Parsea el comment de una sesión (JSON de métricas). Devuelve {} si no es JSON.
+  function parseMetrics(session) {
+    try { return JSON.parse(session?.comment || '{}') || {}; } catch (_) { return {}; }
+  }
+
+  // Serie histórica del Índice de Aprendizaje (Fase 5). Devuelve, en orden
+  // cronológico, las sesiones que registraron learning_index en su comment.
+  function learningIndexSeries(sessions) {
+    return (sessions || [])
+      .map(s => ({ datetime: s.datetime, value: parseMetrics(s).learning_index }))
+      .filter(p => typeof p.value === 'number' && !isNaN(p.value))
+      .sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
+  }
+
+  // Perfil cognitivo (Fase 6): promedia los aciertos DECO por nivel a través de
+  // las sesiones que registraron una evaluación DECO. Devuelve fracciones 0-1.
+  function cognitiveProfile(sessions) {
+    const levels = ['comprehension', 'application', 'reasoning', 'analysis'];
+    const acc = { comprehension: [], application: [], reasoning: [], analysis: [] };
+    for (const s of sessions || []) {
+      const deco = parseMetrics(s).deco;
+      if (!deco || !deco.byLevel) continue;
+      for (const k of levels) {
+        const v = deco.byLevel[k];
+        if (typeof v === 'number') acc[k].push(v / 3); // 3 preguntas por nivel
+      }
+    }
+    const out = {};
+    for (const k of levels) out[k] = acc[k].length ? +avg(acc[k]).toFixed(2) : null;
+    out.samples = Math.max(...levels.map(k => acc[k].length), 0);
+    return out;
+  }
+
+  return {
+    summary, bySubject, byHourBucket, byPreviousActivity, likertDistribution, hourBucket,
+    parseMetrics, learningIndexSeries, cognitiveProfile
+  };
 })();

@@ -389,6 +389,7 @@ const UIStudent = (() => {
           <div class="chat-footer-actions">
             <div class="ai-toolbar">
               <button class="ghost ai-toolbar-btn" id="chatMinervaBtn" title="Modo Minerva: aprendizaje socrático puro (el tutor nunca da la respuesta, solo te guía con preguntas)">🦉 Minerva</button>
+              <button class="ghost ai-toolbar-btn" id="chatDecoBtn" title="Evaluación DECO: preguntas en 4 niveles cognitivos para medir tu comprensión">🎯 DECO</button>
             </div>
             <span class="chat-hint">Enter envía · Shift+Enter salto de línea</span>
           </div>
@@ -521,6 +522,36 @@ const UIStudent = (() => {
         ? 'Modo Tutor: explicaciones guiadas activadas.'
         : '🦉 Modo Minerva: el tutor te guiará solo con preguntas, sin darte la respuesta.',
         'info');
+    });
+
+    // Modo DECO (Fase 5): evaluación en 4 niveles cognitivos dentro del chat.
+    const decoBtn = document.getElementById('chatDecoBtn');
+    decoBtn?.addEventListener('click', () => _launchDeco(decoBtn));
+  }
+
+  // Genera y presenta la evaluación DECO como tarjeta expandible en el chat.
+  async function _launchDeco(btn) {
+    if (!_chatState || typeof Deco === 'undefined') return;
+    const messages = document.getElementById('chatMessages');
+    if (!messages) return;
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Generando…'; }
+
+    const typingEl = _showTyping();
+    let blocks = null;
+    try {
+      blocks = await Deco.generate(_chatState.metadata, _chatState.metadata.subject);
+    } catch (_) { /* degradación silenciosa */ }
+    typingEl?.remove();
+
+    if (btn) { btn.disabled = false; btn.textContent = '🎯 DECO'; }
+
+    if (!blocks) {
+      UI.flash?.('No se pudo generar la evaluación DECO ahora. Inténtalo de nuevo.', 'error');
+      return;
+    }
+    Deco.renderInto(messages, blocks, (result) => {
+      _chatState.decoResult = result;
+      UI.flash?.(`DECO calificado: ${result.decoScore}/${result.total}. Se reflejará en tu Índice de Aprendizaje al finalizar.`, 'success');
     });
   }
 
@@ -719,6 +750,17 @@ const UIStudent = (() => {
         _chatState.history
       );
 
+      // Índice de Aprendizaje (Fase 5): combina métricas de la sesión + DECO.
+      // Se calcula ANTES de guardar para persistirlo en el comment de la sesión
+      // (así la pantalla de Estadísticas puede mostrar la evolución histórica local).
+      const decoResult = _chatState.decoResult || null;
+      const learningIndex = (typeof Deco !== 'undefined')
+        ? Deco.learningIndex(metrics, decoResult)
+        : null;
+      const commentMetrics = { ...metrics };
+      if (learningIndex != null) commentMetrics.learning_index = learningIndex;
+      if (decoResult) commentMetrics.deco = { score: decoResult.decoScore, total: decoResult.total, byLevel: decoResult.byLevel };
+
       const s    = Storage.get();
       const user = s.users[s.currentUserId];
       const { record, gamResult } = Sessions.add({
@@ -729,7 +771,7 @@ const UIStudent = (() => {
         concentration:    concentration,
         durationMin:      _chatState.metadata.durationMin,
         previousActivity: _chatState.metadata.previousActivity,
-        comment:          JSON.stringify(metrics)
+        comment:          JSON.stringify(commentMetrics)
       });
 
       // Quiz final (Fase C): mismas preguntas que el inicial → mide aprendizaje real.
@@ -746,13 +788,20 @@ const UIStudent = (() => {
 
       // Registro anónimo del piloto (Fase C). Gateado por consentimiento en Fase E.
       // Fire-and-forget: tiene su propia cola offline (Pilot.flushOutbox).
-      _recordPilot({ sessionId: record.id, focusScore: concentration, timeSpentSeconds, preQuizScore, postQuizScore });
+      _recordPilot({
+        sessionId: record.id, focusScore: concentration, timeSpentSeconds,
+        preQuizScore, postQuizScore,
+        decoScore: decoResult ? decoResult.decoScore : null,
+        learningIndex,
+        decoByLevel: decoResult ? decoResult.byLevel : null
+      });
 
       App.go('dashboard');
       const mejora = (preQuizScore != null && postQuizScore != null)
         ? ` · Quiz: ${preQuizScore}→${postQuizScore}`
         : '';
-      UI.flash(`Sesión guardada · Concentración deducida: ${concentration}/5 🎯${mejora}`, 'success');
+      const idxTxt = (learningIndex != null) ? ` · Índice ${learningIndex}/100 📊` : '';
+      UI.flash(`Sesión guardada · Concentración deducida: ${concentration}/5 🎯${mejora}${idxTxt}`, 'success');
       showXpToast(gamResult.xpEarned, gamResult.newBadges);
     } catch (err) {
       UI.flash('Error al guardar la sesión: ' + err.message, 'error');
@@ -897,6 +946,30 @@ const UIStudent = (() => {
       </div>`;
     }).join('');
 
+    // Índice de Aprendizaje (Fase 5): última medición + evolución reciente.
+    const liSeries = Stats.learningIndexSeries(sessions);
+    const liLatest = liSeries.length ? liSeries[liSeries.length - 1].value : null;
+    const liRecent = liSeries.slice(-8);
+    const liCard = liLatest != null ? `
+      <div class="card" style="margin-top:18px;">
+        <h3 style="margin:0 0 4px;">📊 Índice de Aprendizaje</h3>
+        <p class="muted" style="margin:0 0 14px;font-size:13px;">Combina precisión, coherencia, participación, rapidez y razonamiento (0–100).</p>
+        <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+          <div class="learning-index-badge" style="--li:${liLatest};">
+            <span class="li-val">${liLatest}</span>
+            <span class="li-lbl">de 100</span>
+          </div>
+          <div style="flex:1;min-width:200px;">
+            <div style="display:flex;align-items:flex-end;gap:6px;height:80px;">
+              ${liRecent.map(p => `<div title="${esc(new Date(p.datetime).toLocaleDateString('es-PE'))}: ${p.value}" style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;">
+                <div style="height:${Math.max(4, p.value)}%;background:linear-gradient(180deg,var(--accent),var(--primary));border-radius:4px 4px 0 0;"></div>
+              </div>`).join('')}
+            </div>
+            <p class="muted" style="font-size:12px;margin:8px 0 0;">Últimas ${liRecent.length} sesiones con Estudio IA.</p>
+          </div>
+        </div>
+      </div>` : '';
+
     return `
       <h1>Estadísticas</h1>
       <div class="grid cols-4">
@@ -905,6 +978,8 @@ const UIStudent = (() => {
         <div class="kpi"><div class="v">${sum.totalMin}</div><div class="l">Min totales</div></div>
         <div class="kpi"><div class="v">${sum.avgDur}</div><div class="l">Min prom./sesión</div></div>
       </div>
+
+      ${liCard}
 
       <div class="card" style="margin-top:18px;">
         <h3>Actividad semanal (últimas 52 semanas)</h3>

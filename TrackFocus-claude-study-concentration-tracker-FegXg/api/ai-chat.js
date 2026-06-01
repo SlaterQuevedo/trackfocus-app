@@ -10,9 +10,61 @@ export default async (req, res) => {
   if (action === 'message')  return handleMessage(req, res);
   if (action === 'finalize') return handleFinalize(req, res);
   if (action === 'quiz')     return handleQuiz(req, res);
+  if (action === 'deco')     return handleDeco(req, res);
 
-  return res.status(400).json({ error: 'action debe ser "message", "finalize" o "quiz"' });
+  return res.status(400).json({ error: 'action debe ser "message", "finalize", "quiz" o "deco"' });
 };
+
+// ── Handler: evaluación DECO (Fase 5) ─────────────────────────────────────────
+// Genera 12 preguntas de opción múltiple en 4 niveles cognitivos (3 c/u):
+// comprensión, aplicación, razonamiento y análisis crítico. Ante cualquier fallo
+// devuelve la estructura vacía (200) para degradar con elegancia.
+async function handleDeco(req, res) {
+  const empty = { comprehension: [], application: [], reasoning: [], analysis: [] };
+  const { metadata, topic } = req.body || {};
+  if (!metadata) return res.status(400).json({ error: 'metadata requerido' });
+
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return res.status(200).json(empty);
+
+  const tema = topic || metadata.subject;
+  const prompt = `Genera una evaluación DECO para un estudiante de ${metadata.grade} de secundaria sobre "${tema}" (materia: ${metadata.subject}).
+Crea exactamente 12 preguntas de opción múltiple, 3 por cada nivel cognitivo:
+- "comprehension" (Comprensión: qué significa, definiciones, identificar)
+- "application" (Aplicación: cómo usar el concepto, resolver casos)
+- "reasoning" (Razonamiento: por qué ocurre, causa-efecto, qué pasaría si)
+- "analysis" (Análisis crítico: limitaciones, comparar, evaluar)
+Devuelve SOLO un JSON válido, sin markdown ni texto extra, con esta forma exacta:
+{"comprehension":[{"q":"texto","options":["a","b","c","d"],"answer":0}],"application":[...],"reasoning":[...],"analysis":[...]}
+Reglas: 3 preguntas por nivel; 4 opciones cada una; "answer" es el índice (0-3) de la correcta; preguntas claras y breves; nivel adecuado a ${metadata.grade}; en español.`;
+
+  try {
+    const url = `${GEMINI_BASE}/${GEMINI_MODEL}:generateContent`;
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: geminiHeaders(apiKey),
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.5, maxOutputTokens: 1600, thinkingConfig: { thinkingBudget: 0 } }
+      })
+    });
+    if (!r.ok) return res.status(200).json(empty);
+    const j = await r.json();
+    const raw = j.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const match = raw.match(/\{[\s\S]*\}/);
+    if (!match) return res.status(200).json(empty);
+    const parsed = JSON.parse(match[0]);
+    const pick = (arr) => (Array.isArray(arr) ? arr.slice(0, 3) : []);
+    return res.status(200).json({
+      comprehension: pick(parsed.comprehension),
+      application:   pick(parsed.application),
+      reasoning:     pick(parsed.reasoning),
+      analysis:      pick(parsed.analysis)
+    });
+  } catch (err) {
+    return res.status(200).json(empty);
+  }
+}
 
 // ── Handler: generar mini-quiz (Fase C) ──────────────────────────────────────
 // Devuelve 3 preguntas de opción múltiple en JSON. Ante cualquier fallo responde
