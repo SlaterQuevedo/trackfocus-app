@@ -45,14 +45,21 @@ const AiChatProxy = (() => {
       // Red caída / sin proxy → fallback directo si hay clave local
     }
 
-    // 2) Fallback directo (solo dev con clave local) o respuesta simulada
+    // 2) Fallback directo (solo dev con clave local) o respuesta simulada.
+    // NOTA: las claves AQ. son server-only (Google las bloquea en el navegador).
+    // Si _directSend falla por cualquier motivo, se cae al fallback simulado
+    // en lugar de propagar la excepción y romper la sesión.
     const key = getKey();
-    if (!key) {
-      const fallback = _buildFallback(userMessage, metadata);
-      for (const char of fallback) { onChunk(char); await _sleep(2); }
-      return fallback;
+    if (key) {
+      try {
+        return await _directSend(metadata, recentHistory, userMessage, onChunk, fileParts, key);
+      } catch (e) {
+        window.Monitor?.log?.('gemini', 'Direct API fallida (clave dev no usable en navegador?), usando simulación', e?.message);
+      }
     }
-    return _directSend(metadata, recentHistory, userMessage, onChunk, fileParts, key);
+    const fallback = _buildFallback(userMessage, metadata);
+    for (const char of fallback) { onChunk(char); await _sleep(2); }
+    return fallback;
   }
 
   async function finalizeSession(metadata, history) {
@@ -69,8 +76,10 @@ const AiChatProxy = (() => {
 
     // 2) Fallback directo (dev) o métricas por defecto
     const key = getKey();
-    if (!key) return _defaultMetrics();
-    return _directFinalize(metadata, history, key);
+    if (key) {
+      try { return await _directFinalize(metadata, history, key); } catch (_) {}
+    }
+    return _defaultMetrics();
   }
 
   // ── Lectura de SSE (común a proxy y directo) ───────────────────────
