@@ -310,17 +310,19 @@ const UIStudent = (() => {
 
   // ---- Chat IA — estado en memoria (no persiste en Storage) ----
   let _chatState = null;
-  // Guarda para registrar el listener de borrado de archivos una sola vez
-  let _aiDeleteBound = false;
 
   async function _startAiChat(metadata) {
     _chatState = {
       metadata, history: [], startedAt: Date.now(), attachedFiles: [],
       quizQuestions: [], preQuizScore: null
     };
-    const tabTutor = document.getElementById('tabTutor');
-    if (!tabTutor) return;
-    tabTutor.innerHTML = _renderChatScreen(metadata);
+    // El chat reemplaza el cuerpo de la pantalla actual. Funciona tanto en
+    // 'ai-study' (#aiPanelBody) como en 'new-session' (.session-setup-wrap).
+    const panelBody = document.getElementById('aiPanelBody')
+      || document.querySelector('.session-setup-wrap')
+      || root();
+    if (!panelBody) return;
+    panelBody.innerHTML = _renderChatScreen(metadata);
     _wireChatScreen();
 
     // Mini-quiz inicial (Fase C): punto de partida. Se reutilizan las mismas
@@ -437,7 +439,7 @@ const UIStudent = (() => {
       if (fileInput) fileInput.value = '';
     });
 
-    // Micrófono — Nivel 1: dictado nativo (instantáneo); Nivel 2: grabación + Gemini
+    // Micrófono — Nivel 1: dictado nativo (instantáneo); Nivel 2: grabación + transcripción IA
     const micBtn = document.getElementById('chatMicBtn');
     let _micActive = false;
     function _micIdle() { _micActive = false; micBtn.textContent = '🎤'; micBtn.classList.remove('recording'); }
@@ -457,7 +459,7 @@ const UIStudent = (() => {
         }
         return;
       }
-      // Fallback (sin Web Speech API): grabar + transcribir con Gemini
+      // Fallback (sin Web Speech API): grabar + transcribir con TrackFocus Intelligence
       if (!_micActive) {
         _micActive = true;
         micBtn.textContent = '⏹';
@@ -539,7 +541,7 @@ const UIStudent = (() => {
     document.getElementById('chatTyping')?.remove();
   }
 
-  // Contingencia del tutor (Fase B): si Gemini cae, no rompemos la sesión.
+  // Contingencia del tutor (Fase B): si TrackFocus Intelligence cae, no rompemos la sesión.
   // Mostramos una tarjeta amable y ofrecemos seguir con el Pomodoro o reintentar.
   function _showTutorContingency() {
     const messages = document.getElementById('chatMessages');
@@ -612,7 +614,7 @@ const UIStudent = (() => {
     } catch (err) {
       _removeTyping();
       if (bubble) bubble.remove();
-      window.Monitor?.log?.('gemini', 'Tutor: fallo al iniciar respuesta', err?.message);
+      window.Monitor?.log?.('tf-intelligence', 'Tutor: fallo al iniciar respuesta', err?.message);
       _showTutorContingency();
     } finally {
       if (sendBtn)  sendBtn.disabled = false;
@@ -659,7 +661,7 @@ const UIStudent = (() => {
     } catch (err) {
       if (bubble) bubble.remove();
       _chatState.history.pop();
-      window.Monitor?.log?.('gemini', 'Tutor: fallo al responder', err?.message);
+      window.Monitor?.log?.('tf-intelligence', 'Tutor: fallo al responder', err?.message);
       _showTutorContingency();
     } finally {
       if (sendBtn)  sendBtn.disabled = false;
@@ -1293,10 +1295,6 @@ const UIStudent = (() => {
     const user = s.users[s.currentUserId];
     const subjects = Subjects.listSubjects(user.institutionType || 'colegio', user.id);
     const sessions = Sessions.listFor(user.id);
-    const recentFiles = Object.values(s.uploadedFiles || {})
-      .filter(f => f.userId === user.id)
-      .sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt))
-      .slice(0, 5);
 
     const grades = [
       { id: '1ro', label: '1ro de Secundaria' },
@@ -1308,8 +1306,6 @@ const UIStudent = (() => {
 
     const now = new Date();
     const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-    const pState = Pomodoro.getState();
-    const remaining = pState.remaining || Pomodoro.DEFAULTS.focus * 60;
 
     const gam = user.gamification || {};
     const levelInfo = Gamification.getLevelInfo(gam.xp || 0);
@@ -1317,7 +1313,6 @@ const UIStudent = (() => {
     const totalMins = sessions.reduce((sum, s) => sum + (s.durationMin || 0), 0);
     const hoursRound = Math.round(totalMins / 60 * 10) / 10;
 
-    const today = new Date().toDateString();
     const weekSessions = sessions.filter(s => {
       const sDate = new Date(s.datetime);
       const daysAgo = Math.floor((new Date() - sDate) / (1000 * 60 * 60 * 24));
@@ -1329,28 +1324,17 @@ const UIStudent = (() => {
       : 0;
 
     return `
-      <!-- Contenedor principal — Pomodoro ahora es la barra global #pomBar -->
+      <!-- Panel IA Unificado (Fase 3): una sola experiencia de conversación.
+           El chat del tutor reemplaza este cuerpo al iniciar la sesión. -->
       <div class="ai-unified-wrap">
+        <div id="aiPanelBody">
 
-        <!-- Sub-tabs -->
-        <div class="study-tabs">
-          <button class="study-tab active" data-tab="Tutor">🤖 Tutor IA</button>
-          <button class="study-tab" data-tab="Files">📁 Material de Estudio</button>
-        </div>
+          <div class="ai-intro">
+            <h1>🧠 Estudio con TrackFocus Intelligence</h1>
+            <p class="muted">Conversa, adjunta archivos (PDF, imágenes, audio) o habla por voz — todo en una sola conversación continua. TrackFocus Intelligence te guía mientras estudias.</p>
+          </div>
 
-        <!-- Tab: Tutor IA -->
-        <div class="study-tab-panel" id="tabTutor">
-          <form id="sessionSetupForm" class="card">
-            <div class="row">
-              <div class="field">
-                <label>Fecha y hora</label>
-                <input type="datetime-local" name="datetime" value="${local}" required />
-              </div>
-              <div class="field">
-                <label>Duración (minutos)</label>
-                <input type="number" name="durationMin" min="5" max="240" value="30" required />
-              </div>
-            </div>
+          <form id="sessionSetupForm" class="card ai-config-card">
             <div class="row">
               <div class="field">
                 <label>Curso / materia</label>
@@ -1365,108 +1349,69 @@ const UIStudent = (() => {
                 </select>
               </div>
             </div>
-            <div class="field">
-              <label>Actividad previa</label>
-              <select name="previousActivity" required>
-                ${Sessions.PREVIOUS_ACTIVITIES.map(a => `<option value="${a.id}">${esc(a.label)}</option>`).join('')}
-              </select>
+            <div class="row">
+              <div class="field">
+                <label>Duración (minutos)</label>
+                <input type="number" name="durationMin" min="5" max="240" value="30" required />
+              </div>
+              <div class="field">
+                <label>Actividad previa</label>
+                <select name="previousActivity" required>
+                  ${Sessions.PREVIOUS_ACTIVITIES.map(a => `<option value="${a.id}">${esc(a.label)}</option>`).join('')}
+                </select>
+              </div>
             </div>
+            <input type="hidden" name="datetime" value="${local}" />
             <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
-              <button type="button" class="ghost" id="cancelSessionBtn">Cancelar</button>
-              <button class="primary" type="submit">Comenzar sesión con IA ✨</button>
+              <button class="primary" type="submit">Comenzar sesión ✨</button>
             </div>
           </form>
           <p class="muted" style="font-size:12px;margin-top:12px;text-align:center;">
-            La IA evaluará tu concentración y aprendizaje de forma invisible mientras estudias.
+            TrackFocus Intelligence evaluará tu concentración y aprendizaje de forma invisible mientras estudias.
           </p>
-        </div>
 
-        <!-- Tab: Material de Estudio -->
-        <div class="study-tab-panel hidden" id="tabFiles">
-          <div class="ai-study-grid">
-            <div style="display:flex;flex-direction:column;gap:16px;">
-              ${UIComponentsMultimedia.FileUploader('aiStudyUpload', null)}
-
-              ${recentFiles.length > 0 ? `
-              <div style="background:var(--bg-2);border-radius:var(--radius,12px);padding:16px;border:1px solid var(--border);">
-                <h3 style="margin:0 0 12px;">Archivos recientes</h3>
-                <div id="recentFilesList" style="display:flex;flex-direction:column;gap:8px;">
-                  ${recentFiles.map(f => UIComponentsMultimedia.FilePreviewCard(f)).join('')}
-                </div>
-              </div>` : `<div style="background:var(--bg-2);border-radius:var(--radius,12px);padding:16px;border:1px solid var(--border);color:var(--muted);text-align:center;">Aún no hay archivos cargados</div>`}
+          <!-- Sección Progreso -->
+          <div class="study-progress-grid">
+            <div class="progress-card">
+              <span class="prog-icon">🔥</span>
+              <span class="prog-val" data-count="${streak}">${streak}</span>
+              <span class="prog-label">Racha actual</span>
             </div>
-
-            <div id="chatContainer" class="hidden" style="display:flex;flex-direction:column;">
-              ${UIComponentsMultimedia.AIStudyChat('aiStudyChat')}
+            <div class="progress-card">
+              <span class="prog-icon">⏱</span>
+              <span class="prog-val" data-count="${hoursRound}" data-suffix="h">${hoursRound}h</span>
+              <span class="prog-label">Horas estudiadas</span>
+            </div>
+            <div class="progress-card">
+              <span class="prog-icon">⭐</span>
+              <span class="prog-val">Nv. ${levelInfo.current.level}</span>
+              <span class="prog-label">${esc(levelInfo.current.title)}</span>
+              <div class="prog-bar"><div style="width:${levelInfo.progress}%"></div></div>
+            </div>
+            <div class="progress-card">
+              <span class="prog-icon">🎯</span>
+              <span class="prog-val">${weekSessions}/5</span>
+              <span class="prog-label">Meta semanal</span>
+            </div>
+            <div class="progress-card">
+              <span class="prog-icon">📈</span>
+              <span class="prog-val" data-count="${avgConc}" data-suffix="/5">${avgConc}/5</span>
+              <span class="prog-label">Concentración</span>
+            </div>
+            <div class="progress-card">
+              <span class="prog-icon">🏛</span>
+              <span class="prog-val">${levelInfo.progress}%</span>
+              <span class="prog-label">Progreso nivel</span>
             </div>
           </div>
 
-          <div id="aiStudyActions" class="hidden ai-action-btns" style="margin-top:16px;">
-            <button class="ghost" data-action="summary">📋 Resumen</button>
-            <button class="ghost" data-action="questions">❓ Preguntas</button>
-            <button class="ghost" data-action="exercises">✏️ Ejercicios</button>
-            <button class="ghost" data-action="chat">💬 Conversar</button>
-          </div>
         </div>
-
-        <!-- Sección Progreso -->
-        <div class="study-progress-grid">
-          <div class="progress-card">
-            <span class="prog-icon">🔥</span>
-            <span class="prog-val" data-count="${streak}">${streak}</span>
-            <span class="prog-label">Racha actual</span>
-          </div>
-          <div class="progress-card">
-            <span class="prog-icon">⏱</span>
-            <span class="prog-val" data-count="${hoursRound}" data-suffix="h">${hoursRound}h</span>
-            <span class="prog-label">Horas estudiadas</span>
-          </div>
-          <div class="progress-card">
-            <span class="prog-icon">⭐</span>
-            <span class="prog-val">Nv. ${levelInfo.current.level}</span>
-            <span class="prog-label">${esc(levelInfo.current.title)}</span>
-            <div class="prog-bar"><div style="width:${levelInfo.progress}%"></div></div>
-          </div>
-          <div class="progress-card">
-            <span class="prog-icon">🎯</span>
-            <span class="prog-val">${weekSessions}/5</span>
-            <span class="prog-label">Meta semanal</span>
-          </div>
-          <div class="progress-card">
-            <span class="prog-icon">📈</span>
-            <span class="prog-val" data-count="${avgConc}" data-suffix="/5">${avgConc}/5</span>
-            <span class="prog-label">Concentración</span>
-          </div>
-          <div class="progress-card">
-            <span class="prog-icon">🏛</span>
-            <span class="prog-val">${levelInfo.progress}%</span>
-            <span class="prog-label">Progreso nivel</span>
-          </div>
-        </div>
-
       </div>`;
   }
 
   function wireAIStudy() {
-    const s = Storage.get();
-    const user = s.users[s.currentUserId];
-    const chatContainer = document.getElementById('chatContainer');
-    const aiStudyActions = document.getElementById('aiStudyActions');
-    let currentFileId = null;
-
-    // === Sub-tabs navigation ===
-    root().querySelectorAll('.study-tab').forEach(btn => {
-      btn.addEventListener('click', () => {
-        root().querySelectorAll('.study-tab').forEach(b => b.classList.remove('active'));
-        root().querySelectorAll('.study-tab-panel').forEach(p => p.classList.add('hidden'));
-        btn.classList.add('active');
-        const tabName = btn.dataset.tab;
-        const tabEl = document.getElementById('tab' + tabName);
-        if (tabEl) tabEl.classList.remove('hidden');
-      });
-    });
-
-    // === Tutor IA tab: session form ===
+    // Panel IA Unificado (Fase 3): el formulario de configuración inicia el chat
+    // del tutor, que ya integra archivos (multimodal) y voz en una sola conversación.
     const setupForm = document.getElementById('sessionSetupForm');
     if (setupForm) {
       setupForm.addEventListener('submit', (e) => {
@@ -1483,214 +1428,10 @@ const UIStudent = (() => {
       });
     }
 
-    const cancelBtn = document.getElementById('cancelSessionBtn');
-    if (cancelBtn) {
-      cancelBtn.addEventListener('click', () => {
-        setupForm?.reset();
-      });
-    }
-
-    // Pomodoro ahora es la barra global #pomBar (ver wirePomodoroBar en app.js)
-    // Mostrar la barra global al entrar a Estudio IA
+    // Mostrar la barra Pomodoro global al entrar a Estudio IA.
     window._showPomBar?.();
 
-    // === Material de Estudio: file upload & analysis ===
-    UIComponentsMultimedia.wireFileUploader('aiStudyUpload', async (fileRecord) => {
-      try {
-        currentFileId = fileRecord.id;
-        chatContainer.style.display = 'flex';
-        aiStudyActions.classList.remove('hidden');
-
-        UIComponentsMultimedia.clearChatMessages('aiStudyChat');
-        UIComponentsMultimedia.wireChatMessage('aiStudyChat',
-          `Archivo cargado: ${esc(fileRecord.fileName)}. Analizando contenido...`,
-          false);
-        UIComponentsMultimedia.showChatLoading('aiStudyChat');
-
-        const analysis = await GeminiProxy.analyzeFile(fileRecord, {
-          subject: 'Educación',
-          language: 'es'
-        });
-
-        UIComponentsMultimedia.removeChatLoading('aiStudyChat');
-
-        // Encabezado del archivo analizado
-        UIComponentsMultimedia.wireChatMessageRich('aiStudyChat',
-          `<div class="analysis-head">📎 <strong>${esc(fileRecord.fileName)}</strong></div>`);
-
-        const nl2br = (t) => esc(t).replace(/\n/g, '<br>');
-
-        if (analysis.summary) {
-          UIComponentsMultimedia.wireChatMessageRich('aiStudyChat',
-            `<div class="analysis-block"><h4>📋 Resumen</h4><p>${nl2br(analysis.summary)}</p></div>`);
-        }
-        if (analysis.keyConcepts) {
-          UIComponentsMultimedia.wireChatMessageRich('aiStudyChat',
-            `<div class="analysis-block"><h4>💡 Conceptos clave</h4><p>${nl2br(analysis.keyConcepts)}</p></div>`);
-        }
-        if (analysis.questions && analysis.questions.length > 0) {
-          const qHtml = analysis.questions.map(q =>
-            `<div class="question-item"><strong>P:</strong> ${esc(q.text)}<br><strong>R:</strong> ${esc(q.answer || '')}</div>`
-          ).join('');
-          UIComponentsMultimedia.wireChatMessageRich('aiStudyChat',
-            `<div class="analysis-block"><h4>❓ Preguntas de práctica</h4>${qHtml}</div>`);
-        }
-        if (analysis.exercises && analysis.exercises.length > 0) {
-          const eHtml = analysis.exercises.map(e =>
-            `<div class="exercise-item"><strong>${esc(e.title)}:</strong> ${esc(e.prompt)}</div>`
-          ).join('');
-          UIComponentsMultimedia.wireChatMessageRich('aiStudyChat',
-            `<div class="analysis-block"><h4>✏️ Ejercicios</h4>${eHtml}</div>`);
-        }
-        if (analysis.feedback) {
-          UIComponentsMultimedia.wireChatMessageRich('aiStudyChat',
-            `<div class="analysis-block"><h4>🔄 Retroalimentación</h4><p>${nl2br(analysis.feedback)}</p></div>`);
-        }
-
-        UI.flash?.('Análisis completado. Haz preguntas en el chat.', 'success');
-      } catch (err) {
-        UIComponentsMultimedia.removeChatLoading('aiStudyChat');
-        UI.flash?.(err.message, 'error');
-      }
-    });
-
-    // === Action buttons (summary, questions, exercises, chat) ===
-    root().querySelectorAll('[data-action]').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        if (!currentFileId) {
-          UI.flash?.('Por favor carga un archivo primero.', 'warning');
-          return;
-        }
-        const action = btn.dataset.action;
-        let prompt = '';
-        switch (action) {
-          case 'summary': prompt = 'Dame un resumen detallado de este material'; break;
-          case 'questions': prompt = 'Genera 5 preguntas de práctica sobre este material'; break;
-          case 'exercises': prompt = 'Crea ejercicios guiados paso a paso sobre este material'; break;
-          case 'chat':
-            document.getElementById('aiStudyChat-textarea')?.focus();
-            return;
-        }
-        if (prompt) {
-          UIComponentsMultimedia.wireChatMessage('aiStudyChat', prompt, true);
-          UIComponentsMultimedia.clearChatInput('aiStudyChat');
-          UIComponentsMultimedia.showChatLoading('aiStudyChat');
-          try {
-            const answer = await GeminiProxy.answerQuestion(
-              currentFileId,
-              prompt,
-              Storage.get().uploadedFiles[currentFileId]?.metadata?.analysis
-            );
-            UIComponentsMultimedia.removeChatLoading('aiStudyChat');
-            UIComponentsMultimedia.wireChatMessage('aiStudyChat', esc(answer), false);
-          } catch (err) {
-            UIComponentsMultimedia.removeChatLoading('aiStudyChat');
-            UI.flash?.(err.message, 'error');
-          }
-        }
-      });
-    });
-
-    // Delete files handler — registrar UNA sola vez (evita listeners duplicados)
-    if (!_aiDeleteBound) {
-      _aiDeleteBound = true;
-      document.addEventListener('click', (e) => {
-        const btn = e.target.closest('[data-delete]');
-        if (btn) {
-          const fileId = btn.dataset.delete;
-          if (confirm('¿Eliminar este archivo?')) {
-            Files.delete(fileId);
-            App.go('ai-study');
-          }
-        }
-      });
-    }
-
-    // Chat send button
-    const sendBtn = document.getElementById('aiStudyChat-send');
-    const textarea = document.getElementById('aiStudyChat-textarea');
-
-    if (sendBtn && textarea) {
-      sendBtn.addEventListener('click', async () => {
-        const message = UIComponentsMultimedia.getChatInput('aiStudyChat').trim();
-        if (!message || !currentFileId) return;
-
-        UIComponentsMultimedia.wireChatMessage('aiStudyChat', message, true);
-        UIComponentsMultimedia.clearChatInput('aiStudyChat');
-        UIComponentsMultimedia.showChatLoading('aiStudyChat');
-
-        try {
-          const answer = await GeminiProxy.answerQuestion(
-            currentFileId,
-            message,
-            Storage.get().uploadedFiles[currentFileId]?.metadata?.analysis
-          );
-          UIComponentsMultimedia.removeChatLoading('aiStudyChat');
-          UIComponentsMultimedia.wireChatMessage('aiStudyChat', esc(answer), false);
-        } catch (err) {
-          UIComponentsMultimedia.removeChatLoading('aiStudyChat');
-          UI.flash?.(err.message, 'error');
-        }
-      });
-
-      textarea.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault();
-          sendBtn.click();
-        }
-      });
-    }
-
-    // Micrófono — dictado nativo (Nivel 1) con fallback a grabación + Gemini (Nivel 2)
-    const micBtn = document.getElementById('aiStudyChat-mic');
-    if (micBtn) {
-      let micActive = false;
-      const micIdle = () => { micActive = false; micBtn.textContent = '🎤'; micBtn.style.background = ''; };
-      const fillAndSend = (text) => {
-        if (!text) { UI.flash?.('No se detectó voz. Intenta de nuevo.', 'error'); return; }
-        const ta = document.getElementById('aiStudyChat-textarea');
-        if (ta) ta.value = text;
-        document.getElementById('aiStudyChat-send')?.click();
-      };
-      micBtn.addEventListener('click', async () => {
-        if (AudioTranscriber.isDictationSupported()) {
-          if (!micActive) {
-            micActive = true;
-            micBtn.textContent = '⏹';
-            micBtn.style.background = 'rgba(239,68,68,0.1)';
-            AudioTranscriber.startDictation(
-              (text) => { micIdle(); fillAndSend(text); },
-              (errMsg) => { micIdle(); UI.flash?.(errMsg, 'error'); }
-            );
-          } else { AudioTranscriber.stopDictation(); micIdle(); }
-          return;
-        }
-        // Fallback: grabación + transcripción Gemini
-        try {
-          if (!micActive) {
-            micActive = true;
-            micBtn.textContent = '⏹ Detener';
-            micBtn.style.background = 'rgba(239, 68, 68, 0.1)';
-            await AudioTranscriber.startRecording(() => {});
-          } else {
-            micActive = false;
-            micBtn.textContent = '🎤';
-            micBtn.style.background = '';
-            const audioBlob = await AudioTranscriber.stopRecording();
-            UIComponentsMultimedia.showChatLoading('aiStudyChat');
-            const { text } = await AudioTranscriber.transcribe(audioBlob, 'es-ES');
-            UIComponentsMultimedia.removeChatLoading('aiStudyChat');
-            fillAndSend(text);
-          }
-        } catch (err) {
-          micIdle();
-          UIComponentsMultimedia.removeChatLoading('aiStudyChat');
-          UI.flash?.(err.message, 'error');
-        }
-      });
-    }
-
-    // === Progress counters animation ===
+    // === Animación de contadores de progreso ===
     _wireProgressCounters();
   }
 
