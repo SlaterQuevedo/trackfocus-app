@@ -1005,6 +1005,7 @@ button.danger-ghost:hover {
   justify-content: space-between;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .chat-hint {

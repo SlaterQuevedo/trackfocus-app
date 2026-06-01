@@ -312,6 +312,9 @@ const UIStudent = (() => {
   let _chatState = null;
 
   async function _startAiChat(metadata) {
+    // mode: 'tutor' (guía explicativa) | 'minerva' (socrático puro). Viaja dentro
+    // de metadata → llega solo al system prompt del servidor sin cambiar firmas.
+    metadata.mode = metadata.mode || 'tutor';
     _chatState = {
       metadata, history: [], startedAt: Date.now(), attachedFiles: [],
       quizQuestions: [], preQuizScore: null
@@ -358,7 +361,7 @@ const UIStudent = (() => {
       <div class="chat-screen">
         <div class="chat-header">
           <div class="chat-header-info">
-            <span class="chat-header-title">🤖 TrackTutor · ${esc(metadata.subject)}</span>
+            <span class="chat-header-title">🤖 TrackTutor · ${esc(metadata.subject)} <span class="ai-mode-badge" id="chatModeBadge" hidden>🦉 Minerva</span></span>
             <span class="chat-header-sub">${esc(gradeLabel)} · ${metadata.durationMin} min planificados</span>
           </div>
           <div class="chat-header-actions">
@@ -384,7 +387,10 @@ const UIStudent = (() => {
             <button class="primary" id="chatSendBtn" style="height:44px;padding:0 18px;flex-shrink:0;">Enviar</button>
           </div>
           <div class="chat-footer-actions">
-            <span class="chat-hint">Enter para enviar · Shift+Enter nueva línea · 📎 adjuntar · 🎤 voz</span>
+            <div class="ai-toolbar">
+              <button class="ghost ai-toolbar-btn" id="chatMinervaBtn" title="Modo Minerva: aprendizaje socrático puro (el tutor nunca da la respuesta, solo te guía con preguntas)">🦉 Minerva</button>
+            </div>
+            <span class="chat-hint">Enter envía · Shift+Enter salto de línea</span>
           </div>
         </div>
       </div>`;
@@ -500,6 +506,22 @@ const UIStudent = (() => {
     });
 
     finalBtn.addEventListener('click', () => _finalizeChat());
+
+    // Modo Minerva (Fase 4): toggle socrático. Solo cambia el system prompt de
+    // los próximos mensajes; no reescribe el historial ni interrumpe la sesión.
+    const minervaBtn = document.getElementById('chatMinervaBtn');
+    const modeBadge  = document.getElementById('chatModeBadge');
+    minervaBtn?.addEventListener('click', () => {
+      if (!_chatState) return;
+      const on = _chatState.metadata.mode === 'minerva';
+      _chatState.metadata.mode = on ? 'tutor' : 'minerva';
+      minervaBtn.classList.toggle('active', !on);
+      if (modeBadge) modeBadge.hidden = on;
+      UI.flash?.(on
+        ? 'Modo Tutor: explicaciones guiadas activadas.'
+        : '🦉 Modo Minerva: el tutor te guiará solo con preguntas, sin darte la respuesta.',
+        'info');
+    });
   }
 
   function _appendBubble(role, text, streaming) {

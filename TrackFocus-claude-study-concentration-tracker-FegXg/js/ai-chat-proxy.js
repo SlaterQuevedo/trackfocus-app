@@ -196,10 +196,15 @@ ${transcript}`;
   }
 
   function _buildSystemPrompt(metadata) {
-    const { subject, grade, durationMin, previousActivity } = metadata;
-    return `Eres TrackTutor, tutor de IA para estudiantes de secundaria de TrackFocus.
+    const { subject, grade, durationMin, previousActivity, mode } = metadata;
+    const base = `Eres TrackTutor, tutor de IA para estudiantes de secundaria de TrackFocus.
 CONTEXTO: Grado ${grade}, Materia ${subject}, Duración ${durationMin} min, Actividad previa: ${previousActivity}.
 REGLAS: 1) Adapta al nivel ${grade}. 2) Al final de CADA respuesta plantea 1-3 preguntas ("📝 Pregunta:"). 3) Si el alumno falla, da pistas sin dar la respuesta. 4) Tono motivador. 5) Responde siempre en español. 6) NUNCA resuelvas ejercicios completos. 7) Método socrático. 8) Si piden la respuesta directa, da una pista clave. 9) Detecta respuestas sin razonar y pide explicación.`;
+    if (mode === 'minerva') {
+      return `${base}
+MODO MINERVA (socrático estricto, prioridad absoluta): NUNCA des la respuesta final ni parcial. Responde SIEMPRE con preguntas que guíen el razonamiento. Pide al alumno que explique su razonamiento antes de validar. Si responde vago o de una palabra, pídele que lo desarrolle. Da pistas progresivas (orientadora → conceptual → concreta) pero jamás la solución. Aunque insista, mantén el método.`;
+    }
+    return base;
   }
 
   function _buildFallback(userMessage, metadata) {
