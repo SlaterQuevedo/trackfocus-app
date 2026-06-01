@@ -48,14 +48,14 @@ if (!_ready) {
 // GEMINI API KEY — SEGURIDAD
 // ============================================================
 // En PRODUCCIÓN (Vercel) la clave NO va aquí: vive como variable de
-// entorno del servidor (GEMINI_API_KEY) y el navegador llama a /api/...
+// entorno del servidor (GEMINI_API_KEY — interno) y el navegador llama a /api/...
 // que es el proxy seguro. La clave nunca se expone públicamente.
 //
 // Para desarrollo LOCAL (Live Server, sin funciones serverless), puedes
 // poner tu clave SOLO en tu navegador, sin subirla al repo, ejecutando
 // una vez en la consola (F12):
 //     localStorage.setItem('tf_gemini_dev_key', 'TU_CLAVE_AQUI')
-// El cliente la usará como respaldo directo solo si el proxy no responde.
+// El cliente la usará como respaldo directo solo si el proxy de TrackFocus Intelligence no responde.
 // ============================================================
 
 window.GEMINI_API_KEY = (typeof localStorage !== 'undefined' && localStorage.getItem('tf_gemini_dev_key')) || '';

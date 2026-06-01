@@ -150,9 +150,9 @@ const AudioTranscriber = (() => {
       return _transcribeWithGemini(audioBlob);
     }
 
-    // Sin clave de Gemini: el método principal es el dictado nativo del navegador
+    // Sin clave de TrackFocus Intelligence: el método principal es el dictado nativo del navegador
     // (Web Speech API). No hay endpoint de servidor (carpeta api/ eliminada).
-    throw new Error('La transcripción por voz usa el dictado del navegador. Si no está disponible, configura tu GEMINI_API_KEY.');
+    throw new Error('La transcripción por voz usa el dictado del navegador. Si no está disponible, activa TrackFocus Intelligence desde Vercel.');
   }
 
   // Transcripción directa con Gemini API (sin servidor)

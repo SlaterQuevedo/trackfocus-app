@@ -30,7 +30,7 @@ const Quiz = (() => {
         }))
         .slice(0, 3);
     } catch (e) {
-      window.Monitor?.log?.('gemini', 'quiz generate falló', e?.message);
+      window.Monitor?.log?.('tf-intelligence', 'quiz generate falló', e?.message);
       return [];
     }
   }

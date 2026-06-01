@@ -197,11 +197,11 @@ REGLAS:
 
   function _mockAnalysis(fileName) {
     return {
-      summary:     `Vista previa de "${fileName}". Configura GEMINI_API_KEY para análisis real.`,
-      keyConcepts: 'Configura tu clave de Gemini para obtener los conceptos clave.',
-      questions:   [{ text: '¿Cuál es el tema principal del material?', answer: 'Analiza el material con tu tutor IA.' }],
+      summary:     `Vista previa de "${fileName}". TrackFocus Intelligence no está disponible en modo local.`,
+      keyConcepts: 'Activa TrackFocus Intelligence para ver los conceptos clave.',
+      questions:   [{ text: '¿Cuál es el tema principal del material?', answer: 'Analiza el material con TrackFocus Intelligence.' }],
       exercises:   [{ title: 'Ejercicio 1', prompt: 'Lee el material y resume los puntos principales.' }],
-      feedback:    'Agrega tu GEMINI_API_KEY en js/supabase-config.js para obtener análisis real.'
+      feedback:    'Conecta TrackFocus Intelligence desde Vercel para obtener análisis completo.'
     };
   }
 

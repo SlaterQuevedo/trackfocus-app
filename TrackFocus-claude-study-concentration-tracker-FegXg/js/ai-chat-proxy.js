@@ -54,7 +54,7 @@ const AiChatProxy = (() => {
       try {
         return await _directSend(metadata, recentHistory, userMessage, onChunk, fileParts, key);
       } catch (e) {
-        window.Monitor?.log?.('gemini', 'Direct API fallida (clave dev no usable en navegador?), usando simulación', e?.message);
+        window.Monitor?.log?.('tf-intelligence', 'Direct API fallida (clave dev no usable en navegador?), usando simulación', e?.message);
       }
     }
     const fallback = _buildFallback(userMessage, metadata);

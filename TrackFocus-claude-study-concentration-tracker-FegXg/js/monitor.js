@@ -20,7 +20,7 @@ const Monitor = (() => {
     catch (_) { return String(ctx); }
   }
 
-  // type: 'gemini' | 'supabase' | 'sync' | 'critical' | 'info'
+  // type: 'tf-intelligence' | 'supabase' | 'sync' | 'critical' | 'info'
   function log(type, message, context) {
     const entry = {
       ts: new Date().toISOString(),
