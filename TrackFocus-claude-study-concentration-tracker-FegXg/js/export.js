@@ -73,6 +73,52 @@ const Exporter = (() => {
     w.document.close();
   }
 
+  // ── Certificados (Fase 12) — diploma imprimible / guardable como PDF ────────
+  // data = { studentName, title, subtitle, detail, date, school }
+  function printCertificate(data) {
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c =>
+      ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+    const w = window.open('', '_blank');
+    if (!w) {
+      (window.UI && UI.flash) && UI.flash('Permite las ventanas emergentes para ver el certificado.', 'error');
+      return;
+    }
+    const date = data.date || new Date().toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });
+    w.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Certificado · TrackFocus</title>
+      <style>
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:Inter,Georgia,serif;background:#f4f1ea;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:24px;}
+        .cert{position:relative;width:100%;max-width:840px;aspect-ratio:1.414/1;background:#fffdf8;border:3px solid #c89b6d;border-radius:12px;padding:48px 56px;text-align:center;display:flex;flex-direction:column;justify-content:center;box-shadow:0 10px 40px rgba(0,0,0,.12);}
+        .cert::before{content:'';position:absolute;inset:14px;border:1px solid #d9c3a3;border-radius:6px;pointer-events:none;}
+        .brand{font-size:14px;letter-spacing:3px;text-transform:uppercase;color:#8b5cf6;font-weight:700;}
+        .ttl{font-size:30px;color:#3a2f25;margin:18px 0 6px;font-weight:800;}
+        .sub{font-size:15px;color:#777;margin-bottom:26px;}
+        .otorga{font-size:13px;color:#999;letter-spacing:1px;text-transform:uppercase;}
+        .name{font-size:40px;color:#c89b6d;margin:8px 0 18px;font-weight:800;border-bottom:2px solid #e4d6c0;display:inline-block;padding:0 24px 8px;}
+        .detail{font-size:16px;color:#555;max-width:560px;margin:0 auto 28px;line-height:1.6;}
+        .foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:24px;font-size:13px;color:#666;}
+        .seal{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#c89b6d);display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px;}
+        @media print { body{background:#fff;padding:0;} .noprint{display:none;} .cert{box-shadow:none;border-color:#c89b6d;} }
+      </style></head><body>
+      <div class="cert">
+        <div class="brand">TrackFocus Intelligence</div>
+        <div class="ttl">${esc(data.title || 'Certificado de Logro')}</div>
+        <div class="sub">${esc(data.subtitle || '')}</div>
+        <div class="otorga">Otorgado a</div>
+        <div class="name">${esc(data.studentName || 'Estudiante')}</div>
+        <div class="detail">${esc(data.detail || '')}</div>
+        <div class="foot">
+          <div style="text-align:left;">${esc(data.school || 'TrackFocus')}<br><span style="color:#999;">${esc(date)}</span></div>
+          <div class="seal">🏆</div>
+        </div>
+      </div>
+      <button class="noprint" onclick="window.print()" style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:12px 24px;border:0;border-radius:8px;background:#c89b6d;color:#fff;font-size:14px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.2);">🖨️ Imprimir / Guardar PDF</button>
+      </body></html>`);
+    w.document.close();
+  }
+
   // ── Backups y recuperación (Fase J) — no perder evidencia del piloto ────────
 
   // Descarga un respaldo JSON completo del estado visible (datos + metadatos).
@@ -110,5 +156,5 @@ const Exporter = (() => {
     });
   }
 
-  return { exportSessions, toCsv, download, printHTML, backupJSON, readBackupFile };
+  return { exportSessions, toCsv, download, printHTML, printCertificate, backupJSON, readBackupFile };
 })();

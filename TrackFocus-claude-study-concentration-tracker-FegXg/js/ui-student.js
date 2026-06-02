@@ -1183,10 +1183,42 @@ const UIStudent = (() => {
   }
 
   // ---- Pantalla: Logros ----
+  // Certificados disponibles (Fase 12): se calculan desde los datos del alumno.
+  function _availableCertificates(user, sessions) {
+    const gam = user.gamification || {};
+    const total = sessions.length;
+    const avgConc = total ? sessions.reduce((a, b) => a + (b.concentration || 0), 0) / total : 0;
+    const indices = (typeof Stats !== 'undefined' && Stats.learningIndexSeries)
+      ? Stats.learningIndexSeries(sessions).map(p => p.value) : [];
+    const avgIndex = indices.length ? indices.reduce((a, b) => a + b, 0) / indices.length : 0;
+
+    const certs = [
+      { id: 'constancia', icon: '🔥', title: 'Certificado de Constancia',
+        subtitle: 'Por mantener una racha de estudio sostenida',
+        detail: `Por demostrar disciplina y constancia con una racha de ${gam.streak || 0} días consecutivos de estudio en TrackFocus.`,
+        eligible: (gam.streak || 0) >= 7 },
+      { id: 'disciplina', icon: '📚', title: 'Certificado de Disciplina',
+        subtitle: 'Por dedicación al estudio',
+        detail: `Por completar ${total} sesiones de estudio, demostrando un compromiso ejemplar con su aprendizaje.`,
+        eligible: total >= 10 },
+      { id: 'concentracion', icon: '🎯', title: 'Certificado de Concentración',
+        subtitle: 'Por excelencia en el enfoque',
+        detail: `Por alcanzar una concentración promedio de ${avgConc.toFixed(1)}/5, un nivel de enfoque sobresaliente.`,
+        eligible: total >= 5 && avgConc >= 4 },
+      { id: 'excelencia', icon: '🏅', title: 'Certificado de Excelencia Académica',
+        subtitle: 'Por un alto Índice de Aprendizaje',
+        detail: `Por alcanzar un Índice de Aprendizaje promedio de ${Math.round(avgIndex)}/100, reflejando comprensión y razonamiento destacados.`,
+        eligible: indices.length >= 1 && avgIndex >= 70 }
+    ];
+    return certs;
+  }
+
   function screenAchievements() {
     const s = Storage.get();
     const user = s.users[s.currentUserId];
     const earned = new Set((user.gamification?.badges) || []);
+    const sessions = Sessions.listFor(user.id);
+    const certs = _availableCertificates(user, sessions);
 
     return `
       <h1>Logros e Insignias</h1>
@@ -1207,6 +1239,22 @@ const UIStudent = (() => {
         </div>
       </div>
 
+      <div class="card" style="margin:18px 0;">
+        <h2 style="margin:0 0 4px;">📜 Certificados</h2>
+        <p class="muted" style="margin:0 0 14px;font-size:13px;">Descarga tus certificados (PDF) cuando cumplas los requisitos.</p>
+        <div class="cert-grid">
+          ${certs.map(c => `
+            <div class="cert-card ${c.eligible ? '' : 'cert-locked'}">
+              <span class="cert-icon">${c.icon}</span>
+              <div class="cert-title">${esc(c.title)}</div>
+              <div class="cert-sub">${esc(c.subtitle)}</div>
+              ${c.eligible
+                ? `<button class="primary cert-dl" data-cert="${c.id}" style="margin-top:10px;">⬇️ Descargar</button>`
+                : `<div class="cert-req">🔒 Aún no disponible</div>`}
+            </div>`).join('')}
+        </div>
+      </div>
+
       <div class="badges-grid">
         ${Gamification.BADGES.map(b => `
           <div class="badge-card ${earned.has(b.id) ? '' : 'locked'}">
@@ -1216,6 +1264,28 @@ const UIStudent = (() => {
             ${earned.has(b.id) ? '<div class="badge-date">✓ Obtenida</div>' : '<div class="badge-date" style="color:var(--muted);">Bloqueada</div>'}
           </div>`).join('')}
       </div>`;
+  }
+
+  function wireAchievements() {
+    const s = Storage.get();
+    const user = s.users[s.currentUserId];
+    const sessions = Sessions.listFor(user.id);
+    const certs = _availableCertificates(user, sessions);
+    const school = user.schoolId ? s.schools[user.schoolId] : null;
+
+    root().querySelectorAll('.cert-dl').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const cert = certs.find(c => c.id === btn.dataset.cert);
+        if (!cert || !cert.eligible) return;
+        Exporter.printCertificate({
+          studentName: user.name,
+          title: cert.title,
+          subtitle: cert.subtitle,
+          detail: cert.detail,
+          school: school ? school.name : 'TrackFocus'
+        });
+      });
+    });
   }
 
   // ---- Pantalla: Leaderboard ----
@@ -1757,7 +1827,7 @@ const UIStudent = (() => {
       history:      { render: () => screenHistory(App._historyFilters || {}), wire: wireHistory },
       stats:        { render: screenStats,        wire: wireStats },
       recommend:    { render: screenRecommend,    wire: () => {} },
-      achievements: { render: screenAchievements, wire: () => {} },
+      achievements: { render: screenAchievements, wire: wireAchievements },
       leaderboard:  { render: screenLeaderboard,  wire: wireLeaderboard },
       pomodoro:     { render: screenPomodoro,     wire: wirePomodoro },
       profile:      { render: screenProfile,      wire: wireProfile },
