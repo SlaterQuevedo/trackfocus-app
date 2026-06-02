@@ -174,7 +174,10 @@ Devuelve exactamente este JSON:
   "questions_attempted": <número de preguntas/ejercicios que planteó el tutor>,
   "questions_correct": <número que el alumno respondió correctamente>,
   "coherence": <decimal 0-1 que refleja la coherencia y relevancia de las respuestas del alumno>,
-  "engagement_notes": "<frase breve sobre el nivel de participación>"
+  "engagement_notes": "<frase breve sobre el nivel de participación>",
+  "next_topic": "<próximo tema sugerido para la siguiente sesión, breve>",
+  "reinforce": "<concepto específico que el alumno debería reforzar, breve>",
+  "related": "<tema o área relacionada que podría explorar, breve>"
 }`;
 }
 
@@ -360,6 +363,7 @@ async function handleFinalize(req, res) {
   let questionsAttempted = 0;
   let questionsCorrect = 0;
   let coherence = 0.5;
+  let recommendations = null;   // Fase 10: sugerencias post-sesión
 
   try {
     const evalUrl = `${GEMINI_BASE}/${GEMINI_MODEL}:generateContent`;
@@ -368,7 +372,7 @@ async function handleFinalize(req, res) {
       headers: geminiHeaders(apiKey),
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: buildEvaluationPrompt(history, metadata) }] }],
-        generationConfig: { temperature: 0.1, maxOutputTokens: 256, thinkingConfig: { thinkingBudget: 0 } }
+        generationConfig: { temperature: 0.1, maxOutputTokens: 320, thinkingConfig: { thinkingBudget: 0 } }
       })
     });
 
@@ -386,6 +390,13 @@ async function handleFinalize(req, res) {
           ? questionsCorrect / questionsAttempted
           : 0.5;
         scoreB = (accuracy * 0.7) + (coherence * 0.3);
+        if (parsed.next_topic || parsed.reinforce || parsed.related) {
+          recommendations = {
+            nextTopic: parsed.next_topic || '',
+            reinforce: parsed.reinforce || '',
+            related:   parsed.related   || ''
+          };
+        }
       }
     }
   } catch {
@@ -422,6 +433,7 @@ async function handleFinalize(req, res) {
       questions_attempted:  questionsAttempted,
       questions_correct:    questionsCorrect,
       coherence:            Math.round(coherence * 100) / 100
-    }
+    },
+    recommendations
   });
 }

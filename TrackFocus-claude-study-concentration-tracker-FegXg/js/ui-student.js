@@ -826,7 +826,7 @@ const UIStudent = (() => {
       </div>`;
 
     try {
-      const { concentration, metrics } = await AiChatProxy.finalizeSession(
+      const { concentration, metrics, recommendations } = await AiChatProxy.finalizeSession(
         _chatState.metadata,
         _chatState.history
       );
@@ -886,13 +886,37 @@ const UIStudent = (() => {
         decoByLevel: decoResult ? decoResult.byLevel : null
       });
 
-      App.go('dashboard');
+      // Recomendaciones inteligentes (Fase 10): combina IA + análisis local,
+      // se guardan para la pantalla "Recomendaciones" y se muestran ahora.
+      const recs = (typeof Recommend !== 'undefined')
+        ? Recommend.fromSession(recommendations, metrics, decoResult)
+        : [];
+      try { sessionStorage.setItem('tf-last-recommendations', JSON.stringify({ at: Date.now(), subject: record.subject, recs })); } catch (_) {}
+
       const mejora = (preQuizScore != null && postQuizScore != null)
         ? ` · Quiz: ${preQuizScore}→${postQuizScore}`
         : '';
       const idxTxt = (learningIndex != null) ? ` · Índice ${learningIndex}/100 📊` : '';
-      UI.flash(`Sesión guardada · Concentración deducida: ${concentration}/5 🎯${mejora}${idxTxt}`, 'success');
-      showXpToast(gamResult.xpEarned, gamResult.newBadges);
+      const goPanel = () => {
+        App.go('dashboard');
+        UI.flash(`Sesión guardada · Concentración deducida: ${concentration}/5 🎯${mejora}${idxTxt}`, 'success');
+        showXpToast(gamResult.xpEarned, gamResult.newBadges);
+      };
+
+      // Tarjeta de recomendaciones antes de volver al panel.
+      const inputArea2 = document.querySelector('.chat-input-area');
+      if (inputArea2 && recs.length) {
+        inputArea2.innerHTML = `
+          <div class="session-recs">
+            <h3 style="margin:0 0 4px;">✅ ¡Sesión completada!</h3>
+            <p class="muted" style="margin:0 0 12px;font-size:13px;">TrackFocus Intelligence te sugiere para continuar:</p>
+            ${recs.map(r => `<div class="rec-item"><span class="rec-icon">${r.icon}</span><div><strong>${esc(r.label)}:</strong> ${esc(r.text)}</div></div>`).join('')}
+            <button class="primary" id="recContinueBtn" style="margin-top:12px;width:100%;">Ver mi panel →</button>
+          </div>`;
+        document.getElementById('recContinueBtn')?.addEventListener('click', goPanel);
+      } else {
+        goPanel();
+      }
     } catch (err) {
       UI.flash('Error al guardar la sesión: ' + err.message, 'error');
       if (finalBtn)  finalBtn.disabled = false;
@@ -1135,9 +1159,24 @@ const UIStudent = (() => {
     const oldTips = Recommend.build(sessions);
     const allTips = [...tips, ...oldTips.filter(t => !tips.some(n => n.text === t.text))];
 
+    // Recomendaciones de la última sesión IA (Fase 10), si existen (sessionStorage).
+    let lastRecHtml = '';
+    try {
+      const stored = JSON.parse(sessionStorage.getItem('tf-last-recommendations') || 'null');
+      if (stored && Array.isArray(stored.recs) && stored.recs.length) {
+        lastRecHtml = `
+          <div class="card" style="margin-bottom:18px;">
+            <h3 style="margin:0 0 4px;">🧠 Basado en tu última sesión${stored.subject ? ' de ' + esc(stored.subject) : ''}</h3>
+            <p class="muted" style="margin:0 0 12px;font-size:13px;">Sugerencias de TrackFocus Intelligence.</p>
+            ${stored.recs.map(r => `<div class="rec-item"><span class="rec-icon">${r.icon || '•'}</span><div><strong>${esc(r.label || '')}:</strong> ${esc(r.text || '')}</div></div>`).join('')}
+          </div>`;
+      }
+    } catch (_) {}
+
     return `
       <h1>Recomendaciones personalizadas</h1>
       <p class="muted">Basadas en tus ${sessions.length} sesión${sessions.length === 1 ? '' : 'es'} registrada${sessions.length === 1 ? '' : 's'}.</p>
+      ${lastRecHtml}
       <div style="margin-top:14px;">
         ${allTips.map(t => `<div class="alert ${t.type}">${esc(t.text || t.msg || '')}</div>`).join('')}
       </div>`;
