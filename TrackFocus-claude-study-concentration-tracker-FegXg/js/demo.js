@@ -76,6 +76,42 @@ const Demo = (() => {
         d.setHours(range(7, 22), range(0, 59), 0, 0);
         // Concentración tiende a subir con el tiempo (efecto del piloto).
         const baseConc = daysAgo > 28 ? range(2, 3) : daysAgo > 14 ? range(2, 4) : range(3, 5);
+
+        // V2 (Fase 13): la mayoría de sesiones son de Estudio IA y registran
+        // métricas (Índice de Aprendizaje + DECO) en el comment para poblar las
+        // vistas nuevas (perfil cognitivo, índice, dashboards docentes).
+        const isAiSession = rnd() > 0.25;
+        let comment = rnd() > 0.5 ? 'Sesión registrada desde Pomodoro' : '';
+        if (isAiSession) {
+          // Índice correlacionado con concentración + tendencia temporal (sube con el tiempo).
+          const trend = daysAgo > 28 ? 0 : daysAgo > 14 ? 8 : 16;
+          const learning_index = Math.max(35, Math.min(98, baseConc * 12 + trend + range(0, 10)));
+          const metrics = {
+            learning_score: +(learning_index / 100).toFixed(2),
+            response_quality: +(0.5 + rnd() * 0.4).toFixed(2),
+            engagement: +(0.4 + rnd() * 0.5).toFixed(2),
+            coherence: +(0.5 + rnd() * 0.4).toFixed(2),
+            response_time_score: +(0.4 + rnd() * 0.5).toFixed(2),
+            learning_index
+          };
+          // ~60% de las sesiones IA incluyen evaluación DECO (aciertos por nivel 0-3).
+          if (rnd() > 0.4) {
+            const lift = daysAgo > 21 ? 0 : 1;   // mejoran con el tiempo
+            metrics.deco = {
+              score: 0, total: 12,
+              byLevel: {
+                comprehension: Math.min(3, range(1, 2) + lift),
+                application:   Math.min(3, range(1, 2) + lift),
+                reasoning:     Math.min(3, range(0, 2) + lift),
+                analysis:      Math.min(3, range(0, 2))
+              }
+            };
+            const bl = metrics.deco.byLevel;
+            metrics.deco.score = bl.comprehension + bl.application + bl.reasoning + bl.analysis;
+          }
+          comment = JSON.stringify(metrics);
+        }
+
         state.sessions.push({
           id: _uuid(),
           email: st.id,
@@ -86,7 +122,7 @@ const Demo = (() => {
           durationMin: range(20, 90),
           previousActivity: pick(ACTS),
           previousActivityOther: '',
-          comment: rnd() > 0.5 ? 'Sesión registrada desde Pomodoro' : '',
+          comment,
           classroomId: CR
         });
       }
@@ -103,6 +139,7 @@ const Demo = (() => {
       for (let i = 0; i < n; i++) {
         const pre = range(0, 2);
         const post = Math.min(3, pre + range(0, 2)); // tiende a mejorar
+        const comp = range(1, 3), app = range(1, 3), rea = range(0, 3), ana = range(0, 2);
         rows.push({
           id: _uuid(),
           session_id: _uuid(),
@@ -112,6 +149,13 @@ const Demo = (() => {
           time_spent_seconds: range(900, 3000),
           pre_quiz_score: pre,
           post_quiz_score: post,
+          // V2 (Fase 13): Índice de Aprendizaje + DECO en el piloto.
+          learning_index: range(45, 95),
+          deco_score: comp + app + rea + ana,
+          deco_comprehension: comp,
+          deco_application: app,
+          deco_reasoning: rea,
+          deco_analysis: ana,
           created_at: new Date(Date.now() - range(0, 30) * 86400000).toISOString()
         });
       }

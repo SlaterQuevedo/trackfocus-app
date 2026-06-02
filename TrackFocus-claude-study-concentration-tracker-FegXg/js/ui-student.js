@@ -963,6 +963,20 @@ const UIStudent = (() => {
   }
 
   // ---- Pantalla: Historial ----
+  // Presenta el comentario de una sesión: si es JSON de métricas (sesión IA),
+  // muestra un resumen amable en vez del JSON crudo.
+  function _formatComment(comment) {
+    if (!comment) return '';
+    const m = (typeof Stats !== 'undefined' && Stats.parseMetrics) ? Stats.parseMetrics({ comment }) : {};
+    if (m && (m.learning_index != null || m.learning_score != null || m.deco)) {
+      const parts = ['🤖 Sesión IA'];
+      if (m.learning_index != null) parts.push('Índice ' + m.learning_index + '/100');
+      else if (m.deco && m.deco.total) parts.push('DECO ' + m.deco.score + '/' + m.deco.total);
+      return parts.join(' · ');
+    }
+    return esc(comment);
+  }
+
   function screenHistory(filters = {}) {
     const s = Storage.get();
     const user = s.users[s.currentUserId];
@@ -998,7 +1012,7 @@ const UIStudent = (() => {
                 <td><strong>${x.concentration}</strong>/5</td>
                 <td>${x.durationMin}</td>
                 <td>${esc(x.previousActivity)}${x.previousActivityOther ? ' — '+esc(x.previousActivityOther) : ''}</td>
-                <td>${esc(x.comment)}</td>
+                <td>${_formatComment(x.comment)}</td>
                 <td><button class="danger" data-rm="${x.id}">Eliminar</button></td>
               </tr>`).join('')}
           </tbody>
