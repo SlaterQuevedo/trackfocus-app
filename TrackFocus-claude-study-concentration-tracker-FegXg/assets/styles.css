@@ -2289,3 +2289,35 @@ body.pom-active .container {
   .tracky-avatar { width: 48px; height: 48px; }
   .tracky-bubble { max-width: 200px; }
 }
+
+/* ================================================
+   Responsive de componentes V2 (Fase 14)
+   Garantiza 320px → 4K sin overflow horizontal.
+   ================================================ */
+@media (max-width: 480px) {
+  /* DECO: tarjetas y opciones cómodas en pantallas chicas */
+  .deco-card { padding: 12px; }
+  .deco-level summary { padding: 9px 10px; font-size: 13px; }
+  .deco-opt { padding: 9px; font-size: 13px; }
+  .deco-result-levels { gap: 4px; }
+
+  /* Metas, certificados y perfil cognitivo: 1 columna fluida */
+  .goals-grid, .cert-grid { grid-template-columns: 1fr; }
+  .goal-val { font-size: 20px; }
+
+  /* Índice de Aprendizaje: badge un poco menor */
+  .learning-index-badge { width: 80px; height: 80px; }
+  .learning-index-badge .li-val { font-size: 22px; }
+
+  /* Toolbar del chat: los modos no desbordan */
+  .ai-toolbar { gap: 4px; }
+  .ai-toolbar-btn { font-size: 12px; padding: 0 8px; }
+
+  /* Recomendaciones post-sesión */
+  .session-recs { padding: 12px; }
+}
+
+/* Pantallas grandes (≥1600px): centrar y limitar ancho para no estirar en 4K */
+@media (min-width: 1600px) {
+  .container { max-width: 1320px; }
+}

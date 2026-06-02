@@ -151,8 +151,10 @@
 }
 
 .chat-message.user {
-  background: var(--accent);
-  color: white;
+  /* Coherencia visual (Fase 14): mismo dorado que el chat canónico .chat-bubble.user */
+  background: rgba(200,155,109,0.16);
+  color: var(--text);
+  border: 1px solid rgba(200,155,109,0.3);
   margin-left: auto;
   border-radius: 12px 4px 12px 12px;
 }
