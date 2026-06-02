@@ -105,15 +105,28 @@ const UITeacher = (() => {
 
     const pendingCount = school ? Schools.getPendingCount(school.id) : 0;
 
+    // Índice de Aprendizaje promedio del colegio (Fase 11): de las sesiones de IA
+    // de los alumnos (sin exponer conversaciones; solo el agregado numérico).
+    const schoolStudentIds = new Set();
+    classrooms.forEach(cr => Schools.listStudentsInClassroom(cr.id).forEach(st => schoolStudentIds.add(st.id)));
+    const allIndices = s.sessions
+      .filter(se => schoolStudentIds.has(se.email))
+      .map(se => Stats.parseMetrics(se).learning_index)
+      .filter(v => typeof v === 'number' && !isNaN(v));
+    const avgLearningIndex = allIndices.length
+      ? Math.round(allIndices.reduce((a, b) => a + b, 0) / allIndices.length)
+      : null;
+
     return `
       <h1>Panel del Docente</h1>
       ${school ? `<p class="muted">Colegio: <strong>${esc(school.name)}</strong> · Código de colegio: <strong>${school.code}</strong></p>` : '<p class="muted">No estás asignado a ningún colegio.</p>'}
 
       ${school ? _pendingRequestsPanel(school.id, user.id) : ''}
 
-      <div class="grid cols-3" style="margin:16px 0;">
+      <div class="grid cols-4" style="margin:16px 0;">
         <div class="kpi"><div class="v">${totalStudents}</div><div class="l">Total alumnos</div></div>
         <div class="kpi"><div class="v">${totalSessions}</div><div class="l">Sesiones esta semana</div></div>
+        <div class="kpi"><div class="v" style="color:var(--accent);">${avgLearningIndex != null ? avgLearningIndex + '/100' : '—'}</div><div class="l">Índice aprendizaje prom.</div></div>
         <div class="kpi"><div class="v" style="color:${atRiskStudents > 0 ? 'var(--bad)' : 'var(--good)'};">${atRiskStudents}</div><div class="l">Alumnos en riesgo</div></div>
       </div>
 
@@ -498,6 +511,14 @@ const UITeacher = (() => {
       : '—';
     const totalMin = allCrSessions.reduce((a, b) => a + b.durationMin, 0);
 
+    // Índice de Aprendizaje promedio del aula (Fase 11).
+    const crIndices = allCrSessions
+      .map(se => Stats.parseMetrics(se).learning_index)
+      .filter(v => typeof v === 'number' && !isNaN(v));
+    const avgIndex = crIndices.length
+      ? Math.round(crIndices.reduce((a, b) => a + b, 0) / crIndices.length)
+      : null;
+
     // Semanas (8 últimas)
     const weekLabels = [];
     const weekAvgs = [];
@@ -541,6 +562,7 @@ const UITeacher = (() => {
       <div class="grid cols-4" style="margin-bottom:18px;">
         <div class="kpi"><div class="v">${students.length}</div><div class="l">Alumnos</div></div>
         <div class="kpi"><div class="v">${avgConc}</div><div class="l">Conc. prom. total</div></div>
+        <div class="kpi"><div class="v" style="color:var(--accent);">${avgIndex != null ? avgIndex + '/100' : '—'}</div><div class="l">Índice apr. prom.</div></div>
         <div class="kpi"><div class="v">${allCrSessions.length}</div><div class="l">Sesiones totales</div></div>
         <div class="kpi"><div class="v">${totalMin}</div><div class="l">Minutos estudiados</div></div>
       </div>
