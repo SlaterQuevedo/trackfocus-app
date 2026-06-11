@@ -799,7 +799,9 @@ const App = (() => {
 
     root().querySelector('.lp-btn-inst[data-role="admin"]')?.addEventListener('click', () => {
       root().querySelector('.lp-card[data-role="admin"]')?.click();
-      root().querySelector('.lp-cards')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => {
+        root().querySelector('.lp-form-wrap')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
     });
 
     const ctaBtn = document.getElementById('lpAICta');
