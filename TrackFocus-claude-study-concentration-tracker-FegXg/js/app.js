@@ -798,9 +798,10 @@ const App = (() => {
     });
 
     root().querySelector('.lp-btn-inst[data-role="admin"]')?.addEventListener('click', () => {
-      root().querySelector('.lp-card[data-role="admin"]')?.click();
+      const adminCard = root().querySelector('.lp-card[data-role="admin"]');
+      adminCard?.click();
       setTimeout(() => {
-        root().querySelector('.lp-form-wrap')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        adminCard?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 300);
     });
 
