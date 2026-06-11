@@ -531,11 +531,20 @@ const App = (() => {
           Plataforma Educativa con IA
         </div>
         <h1 class="lp-title">Estudia con propósito.<br>Aprende con inteligencia.<br>Construye tu futuro.</h1>
-        <p class="lp-subtitle">TrackFocus ayuda a estudiantes a concentrarse, comprender mejor lo que estudian y prepararse para alcanzar sus metas universitarias.</p>
+        <p class="lp-subtitle">Convierte cada sesión de estudio en aprendizaje medible. Tutor IA socrático, evaluación por niveles cognitivos e Índice de Aprendizaje en tiempo real.</p>
 
         <div class="lp-hero-cta">
-          <button class="lp-btn-hero-primary" id="lpScrollCards2">Probar TrackFocus</button>
-          <button class="lp-btn-hero-ghost" onclick="location.href=location.pathname+'?demo=1'">Ver demostración →</button>
+          <button class="lp-btn-hero-primary" id="lpScrollCards2">Comenzar a estudiar gratis</button>
+          <a href="?demo=student" class="lp-btn-hero-ghost">🎒 Demo estudiante</a>
+          <a href="?demo=1" class="lp-btn-hero-ghost">📊 Demo docente →</a>
+        </div>
+
+        <div class="lp-impact-stats">
+          <span>🧠 4 niveles cognitivos</span>
+          <span class="lp-stat-sep-inline">·</span>
+          <span>📊 Índice de Aprendizaje 0–100</span>
+          <span class="lp-stat-sep-inline">·</span>
+          <span>🦉 Tutor IA socrático</span>
         </div>
 
         <div class="lp-stats">
