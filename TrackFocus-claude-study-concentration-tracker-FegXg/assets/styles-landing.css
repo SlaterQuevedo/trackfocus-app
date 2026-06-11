@@ -153,12 +153,11 @@
 
 /* ---- HERO ---- */
 .lp-hero {
-  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 72px 24px 64px;
+  padding: 40px 24px 48px;
   position: relative;
   z-index: 1;
 }
@@ -701,7 +700,7 @@
   .lp-cards { grid-template-columns: repeat(2, 1fr); max-width: 620px; }
   .lp-features { grid-template-columns: repeat(3, 1fr); max-width: 620px; }
   .lp-header { padding: 16px 24px; }
-  .lp-hero { padding: 56px 20px 48px; }
+  .lp-hero { padding: 40px 20px 48px; }
   .lp-stats { padding: 16px 20px; }
   .lp-stat-sep { margin: 0 16px; }
 }
@@ -712,7 +711,7 @@
   .lp-stats { flex-direction: column; gap: 16px; padding: 20px; }
   .lp-stat-sep { width: 80px; height: 1px; margin: 0; }
   .lp-title { letter-spacing: -1px; }
-  .lp-hero { padding: 44px 16px 40px; }
+  .lp-hero { padding: 32px 16px 40px; }
   .lp-form-wrap { padding: 24px 20px; border-radius: 16px; }
   .lp-footer { gap: 4px; flex-direction: column; text-align: center; }
   .lp-footer-sep { display: none; }
