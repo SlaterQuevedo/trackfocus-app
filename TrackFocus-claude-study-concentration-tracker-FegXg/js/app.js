@@ -786,7 +786,7 @@ const App = (() => {
         renderAuthForm(card.dataset.role);
         setTimeout(() => {
           root().querySelector('#authForm')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 60);
+        }, 150);
       });
     });
 
