@@ -12,11 +12,51 @@ const AiChatProxy = (() => {
 
   // ── API pública ───────────────────────────────────────────────────
 
+  // Respuestas pre-escritas para ?demo=guided — sin API, 100% offline
+  const _DEMO_SCRIPT = [
+    `¡Hola, Lucía! Estoy listo para esta sesión de **Matemática** sobre ecuaciones cuadráticas. 🧠
+
+Antes de comenzar, dime: cuando ves una ecuación como **ax² + bx + c = 0**, ¿qué es lo primero que piensas?
+
+📝 Pregunta: ¿Recuerdas qué significa cada letra (a, b, c) en esa expresión?`,
+
+    `Bien, a, b y c son los coeficientes — ¡correcto! Ahora veamos si puedes aplicarlo.
+
+Tenemos la ecuación: **2x² + 5x − 3 = 0**
+
+Antes de resolverla, ¿puedes identificar cuánto vale *a*, cuánto vale *b* y cuánto vale *c* en esta ecuación?
+
+📝 Pregunta: ¿Qué pasa si *a* = 0? ¿Sigue siendo cuadrática?`,
+
+    `Exacto, si *a* = 0 deja de ser cuadrática porque desaparece el término x².
+
+Ahora, ¿conoces la **fórmula general** para resolver ecuaciones cuadráticas? Te doy una pista: tiene una raíz cuadrada de algo que se llama *discriminante*.
+
+📝 Pregunta: ¿Qué crees que nos indica el discriminante sobre las soluciones de la ecuación?`,
+
+    `¡Excelente razonamiento! El discriminante **b² − 4ac** nos dice:
+- Si es **positivo** → dos soluciones reales distintas
+- Si es **cero** → una sola solución (raíz doble)
+- Si es **negativo** → sin soluciones reales
+
+Calculemos el discriminante para nuestra ecuación **2x² + 5x − 3 = 0**.
+
+📝 Pregunta: Con a=2, b=5, c=−3, ¿cuánto da b² − 4ac? Intenta calcularlo tú primero.`
+  ];
+
   async function sendMessage(metadata, history, userMessage, onChunk, files = []) {
     const recentHistory = (history || []).slice(-12);
     const fileParts = (files || [])
       .filter(f => f.base64 && f.mimeType)
       .map(f => ({ base64: f.base64, mimeType: f.mimeType }));
+
+    // Demo guiada: respuestas pre-escritas sin API
+    if (window.__TF_DEMO_GUIDED_META) {
+      const turnIndex = (recentHistory || []).filter(m => m.role === 'model').length;
+      const scriptReply = _DEMO_SCRIPT[Math.min(turnIndex, _DEMO_SCRIPT.length - 1)];
+      for (const char of scriptReply) { onChunk(char); await _sleep(8); }
+      return scriptReply;
+    }
 
     // 1) Intentar el proxy seguro
     try {
