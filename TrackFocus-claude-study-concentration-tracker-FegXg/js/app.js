@@ -784,9 +784,6 @@ const App = (() => {
         root().querySelectorAll('.lp-card[data-role]').forEach(c => c.classList.remove('lp-selected'));
         card.classList.add('lp-selected');
         renderAuthForm(card.dataset.role);
-        setTimeout(() => {
-          root().querySelector('#authForm')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 60);
       });
     });
 
