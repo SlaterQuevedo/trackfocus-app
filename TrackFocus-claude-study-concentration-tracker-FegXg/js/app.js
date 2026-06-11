@@ -785,7 +785,7 @@ const App = (() => {
         card.classList.add('lp-selected');
         renderAuthForm(card.dataset.role);
         setTimeout(() => {
-          root().querySelector('.lp-cards')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          root().querySelector('#authForm')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, 60);
       });
     });
