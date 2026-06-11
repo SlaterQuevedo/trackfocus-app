@@ -5,7 +5,7 @@
 // o ?demo=student (vista de estudiante).
 const Demo = (() => {
 
-  const SUBJECTS = ['Matemática', 'Comunicación', 'Física', 'Química', 'Inglés', 'Historia'];
+  const SUBJECTS = ['Matemática', 'Comunicación', 'Ciencia y Tecnología', 'Ciencias Sociales', 'Inglés', 'Arte y Cultura'];
   const ACTS = ['comer', 'ejercicio', 'cafe', 'descanso', 'redes'];
   const TEACHER = 'demo.teacher@trackfocus.demo';
   const SCHOOL = 'demo-school';

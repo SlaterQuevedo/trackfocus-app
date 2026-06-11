@@ -186,7 +186,7 @@ const Cloud = (() => {
       classrooms: {},
       sessions: [],
       uploadedFiles: {},
-      subjectsByInstitution: { colegio: ['Matemática','Comunicación','Física','Química','Inglés','Historia'] },
+      subjectsByInstitution: { colegio: ['Matemática','Comunicación','Ciencia y Tecnología','Ciencias Sociales','Desarrollo Personal, Ciudadanía y Cívica','Educación Religiosa','Tutoría','Educación Física','Arte y Cultura','Inglés'] },
       customSubjects: {},
       students: {},
       classroomRequests: {}

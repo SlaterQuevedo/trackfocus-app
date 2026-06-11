@@ -265,6 +265,7 @@ const App = (() => {
           || 'Sin materia';
         try {
           const { gamResult } = Sessions.addFromPomodoro(userId, subject, focusDurationMin, conc);
+          Subjects.saveLastSubject(userId, subject);
           UI.flash?.('Sesión Pomodoro guardada. +' + gamResult.xpEarned + ' XP', 'success');
         } catch(e) { UI.flash?.(e.message, 'error'); }
         modal.classList.add('hidden');

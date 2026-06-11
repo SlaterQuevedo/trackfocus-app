@@ -302,6 +302,7 @@ const UIStudent = (() => {
     const s = Storage.get();
     const user = s.users[s.currentUserId];
     const subjects = Subjects.listSubjects(user.institutionType || 'colegio', user.id);
+    const lastSubject = Subjects.getLastSubject(user.id);
     const now = new Date();
     const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 
@@ -332,9 +333,13 @@ const UIStudent = (() => {
           <div class="row">
             <div class="field">
               <label>Curso / materia</label>
-              <select name="subject" required>
-                ${subjects.map(x => `<option>${esc(x)}</option>`).join('')}
+              <select name="subject" id="subjectSelectNS" required>
+                ${Subjects.renderOptions(subjects, lastSubject)}
               </select>
+              <div id="customSubjectWrapNS" style="display:none;margin-top:8px;">
+                <input type="text" id="customSubjectInputNS" placeholder="Escribe el nombre del curso…"
+                  style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;font-family:inherit;box-sizing:border-box;min-height:44px;" />
+              </div>
             </div>
             <div class="field">
               <label>Grado escolar</label>
@@ -363,19 +368,63 @@ const UIStudent = (() => {
 
   function wireNewSession() {
     root().querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => App.go(b.dataset.go)));
+    _wireSubjectOtro('subjectSelectNS', 'customSubjectWrapNS', 'customSubjectInputNS');
 
     document.getElementById('sessionSetupForm').addEventListener('submit', (e) => {
       e.preventDefault();
       const fd = new FormData(e.target);
+      const subject = _resolveSubject('subjectSelectNS', 'customSubjectInputNS', Storage.get().users[Storage.get().currentUserId]?.id);
+      if (!subject) return;
       const metadata = {
         datetime:         new Date(fd.get('datetime')).toISOString(),
         durationMin:      Number(fd.get('durationMin')),
-        subject:          fd.get('subject'),
+        subject,
         grade:            fd.get('grade'),
         previousActivity: fd.get('previousActivity')
       };
       _startAiChat(metadata);
     });
+  }
+
+  // ---- Helpers: selector "Otro curso" ----
+
+  // Muestra/oculta el input de curso personalizado según selección del select
+  function _wireSubjectOtro(selectId, wrapId, inputId) {
+    const sel = document.getElementById(selectId);
+    const wrap = document.getElementById(wrapId);
+    if (!sel || !wrap) return;
+    sel.addEventListener('change', () => {
+      if (sel.value === '__otro__') {
+        wrap.style.display = 'block';
+        document.getElementById(inputId)?.focus();
+      } else {
+        wrap.style.display = 'none';
+      }
+    });
+    // Estado inicial
+    if (sel.value === '__otro__') wrap.style.display = 'block';
+  }
+
+  // Resuelve el valor final del subject: del select o del input personalizado.
+  // Si es "Otro curso" con input vacío, muestra alert y retorna null.
+  // Si es un curso nuevo personalizado, lo persiste en customSubjects.
+  function _resolveSubject(selectId, inputId, userId) {
+    const sel = document.getElementById(selectId);
+    if (!sel) return null;
+    if (sel.value !== '__otro__') return sel.value;
+
+    const input = document.getElementById(inputId);
+    const custom = (input?.value || '').trim();
+    if (!custom) {
+      UI.flash('Escribe el nombre del curso personalizado.', 'error');
+      input?.focus();
+      return null;
+    }
+    // Guardar como materia personalizada para reutilización futura
+    if (userId) {
+      try { Subjects.addCustomSubject(userId, custom); } catch (_) {}
+    }
+    return custom;
   }
 
   // ---- Chat IA — estado en memoria (no persiste en Storage) ----
@@ -854,6 +903,9 @@ const UIStudent = (() => {
         previousActivity: _chatState.metadata.previousActivity,
         comment:          JSON.stringify(commentMetrics)
       });
+
+      // Persistir la última materia utilizada para pre-selección futura
+      Subjects.saveLastSubject(user.id, _chatState.metadata.subject);
 
       // Quiz final (Fase C): mismas preguntas que el inicial → mide aprendizaje real.
       let postQuizScore = null;
@@ -1383,6 +1435,7 @@ const UIStudent = (() => {
     const s = Storage.get();
     const user = s.users[s.currentUserId];
     const subjects = Subjects.listSubjects(user.institutionType || 'colegio', user.id);
+    const lastSubject = Subjects.getLastSubject(user.id);
     const pState = Pomodoro.getState();
     const remaining = pState.remaining || Pomodoro.DEFAULTS.focus * 60;
 
@@ -1398,8 +1451,12 @@ const UIStudent = (() => {
         <div class="field" style="margin-top:20px;max-width:300px;margin-left:auto;margin-right:auto;">
           <label>Materia a estudiar</label>
           <select id="pomSubject">
-            ${subjects.map(x => `<option>${esc(x)}</option>`).join('')}
+            ${Subjects.renderOptions(subjects, lastSubject)}
           </select>
+          <div id="customSubjectWrapPom" style="display:none;margin-top:8px;">
+            <input type="text" id="customSubjectInputPom" placeholder="¿Qué curso deseas estudiar?"
+              style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;font-family:inherit;box-sizing:border-box;min-height:44px;" />
+          </div>
         </div>
 
         <div class="timer-controls">
@@ -1451,6 +1508,8 @@ const UIStudent = (() => {
     const s = Storage.get();
     const userId = s.currentUserId;
 
+    _wireSubjectOtro('pomSubject', 'customSubjectWrapPom', 'customSubjectInputPom');
+
     // El timer y sus callbacks los gestiona la barra global (#pomBar en app.js).
     // Aquí solo renderizamos el estado inicial y cableamos los botones de la página.
     const modeLabels = { focus: 'Enfocado 🧠', break: 'Descanso ☕', paused: 'Pausado ⏸', idle: 'Listo para enfocar' };
@@ -1465,7 +1524,7 @@ const UIStudent = (() => {
       const breakInput = document.getElementById('breakDur');
       Pomodoro.DEFAULTS.focus = Number(focusInput?.value || 25);
       Pomodoro.DEFAULTS.shortBreak = Number(breakInput?.value || 5);
-      const subject = document.getElementById('pomSubject')?.value || 'Sin materia';
+      const subject = _resolveSubject('pomSubject', 'customSubjectInputPom', userId) || 'Sin materia';
       Pomodoro.reset();
       Pomodoro.start(subject, userId);
     });
@@ -1667,6 +1726,7 @@ const UIStudent = (() => {
     const s = Storage.get();
     const user = s.users[s.currentUserId];
     const subjects = Subjects.listSubjects(user.institutionType || 'colegio', user.id);
+    const lastSubject = Subjects.getLastSubject(user.id);
     const sessions = Sessions.listFor(user.id);
 
     const grades = [
@@ -1711,9 +1771,13 @@ const UIStudent = (() => {
             <div class="row">
               <div class="field">
                 <label>Curso / materia</label>
-                <select name="subject" required>
-                  ${subjects.map(x => `<option>${esc(x)}</option>`).join('')}
+                <select name="subject" id="subjectSelectAI" required>
+                  ${Subjects.renderOptions(subjects, lastSubject)}
                 </select>
+                <div id="customSubjectWrapAI" style="display:none;margin-top:8px;">
+                  <input type="text" id="customSubjectInputAI" placeholder="¿Qué curso deseas estudiar?"
+                    style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;font-family:inherit;box-sizing:border-box;min-height:44px;" />
+                </div>
               </div>
               <div class="field">
                 <label>Grado escolar</label>
@@ -1787,10 +1851,13 @@ const UIStudent = (() => {
     // del tutor, que ya integra archivos (multimodal) y voz en una sola conversación.
     const setupForm = document.getElementById('sessionSetupForm');
     if (setupForm) {
+      _wireSubjectOtro('subjectSelectAI', 'customSubjectWrapAI', 'customSubjectInputAI');
+
       // Demo guiada: pre-llenar el formulario y auto-submitear
       if (window.__TF_DEMO_GUIDED_META) {
         const meta = window.__TF_DEMO_GUIDED_META;
-        setupForm.querySelector('[name="subject"]').value = meta.subject;
+        const sel = document.getElementById('subjectSelectAI');
+        if (sel) sel.value = meta.subject;
         setupForm.querySelector('[name="grade"]').value = meta.grade;
         setupForm.querySelector('[name="durationMin"]').value = meta.durationMin;
         setupForm.querySelector('[name="previousActivity"]').value = meta.previousActivity;
@@ -1802,10 +1869,13 @@ const UIStudent = (() => {
       setupForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
+        const userId = Storage.get().currentUserId;
+        const subject = _resolveSubject('subjectSelectAI', 'customSubjectInputAI', userId);
+        if (!subject) return;
         const metadata = {
           datetime:         new Date(fd.get('datetime')).toISOString(),
           durationMin:      Number(fd.get('durationMin')),
-          subject:          fd.get('subject'),
+          subject,
           grade:            fd.get('grade'),
           previousActivity: fd.get('previousActivity')
         };

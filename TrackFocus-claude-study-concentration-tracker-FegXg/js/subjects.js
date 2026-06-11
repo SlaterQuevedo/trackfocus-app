@@ -6,6 +6,24 @@ const Subjects = (() => {
     // Futuro: universidad, academia, autodidacta… (estructura ya soporta varios)
   ];
 
+  // Emojis para los cursos del currículo peruano de secundaria
+  const SUBJECT_ICONS = {
+    'Matemática':                                    '📐',
+    'Comunicación':                                  '📖',
+    'Ciencia y Tecnología':                          '🔬',
+    'Ciencias Sociales':                             '🌎',
+    'Desarrollo Personal, Ciudadanía y Cívica':      '🤝',
+    'Educación Religiosa':                           '⛪',
+    'Tutoría':                                       '🧭',
+    'Educación Física':                              '⚽',
+    'Arte y Cultura':                                '🎨',
+    'Inglés':                                        '🇬🇧'
+  };
+
+  function getIcon(subjectName) {
+    return SUBJECT_ICONS[subjectName] || '📚';
+  }
+
   function listInstitutions() {
     return INSTITUTIONS;
   }
@@ -45,5 +63,42 @@ const Subjects = (() => {
     });
   }
 
-  return { INSTITUTIONS, listInstitutions, getInstitution, listSubjects, addCustomSubject, removeCustomSubject };
+  // Guarda la última materia usada por el estudiante
+  function saveLastSubject(email, subjectName) {
+    if (!email || !subjectName) return;
+    Storage.set(s => {
+      if (s.users[email]) s.users[email].lastSubject = subjectName;
+    });
+  }
+
+  // Recupera la última materia usada (o null)
+  function getLastSubject(email) {
+    if (!email) return null;
+    const s = Storage.get();
+    return s.users[email]?.lastSubject || null;
+  }
+
+  // Genera el HTML de las <option> con emojis, con pre-selección y opción "Otro curso"
+  function renderOptions(subjects, selectedValue) {
+    const opts = subjects.map(name => {
+      const icon = getIcon(name);
+      const sel = name === selectedValue ? ' selected' : '';
+      return `<option value="${name}"${sel}>${icon} ${name}</option>`;
+    });
+    opts.push(`<option value="__otro__">➕ Otro curso…</option>`);
+    return opts.join('');
+  }
+
+  return {
+    INSTITUTIONS,
+    listInstitutions,
+    getInstitution,
+    listSubjects,
+    addCustomSubject,
+    removeCustomSubject,
+    saveLastSubject,
+    getLastSubject,
+    getIcon,
+    renderOptions
+  };
 })();
