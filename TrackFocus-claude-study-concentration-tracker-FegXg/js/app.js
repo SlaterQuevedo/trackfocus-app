@@ -784,13 +784,16 @@ const App = (() => {
         root().querySelectorAll('.lp-card[data-role]').forEach(c => c.classList.remove('lp-selected'));
         card.classList.add('lp-selected');
         renderAuthForm(card.dataset.role);
+        setTimeout(() => {
+          root().querySelector('#authForm')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 60);
       });
     });
 
     // Botones que scrollean a las tarjetas de acceso (mismo comportamiento que card click)
     ['lpScrollCards', 'lpScrollCards2', 'lpAICta'].forEach(id => {
       document.getElementById(id)?.addEventListener('click', () => {
-        root().querySelector('.lp-cards')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        root().querySelector('.lp-cards')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     });
 
