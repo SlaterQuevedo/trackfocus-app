@@ -791,12 +791,14 @@ const App = (() => {
       });
     });
 
-    ['lpScrollCards', 'lpScrollCards2'].forEach(id => {
+    // Botones que scrollean a las tarjetas de acceso
+    ['lpScrollCards', 'lpScrollCards2', 'lpAICta'].forEach(id => {
       document.getElementById(id)?.addEventListener('click', () => {
         root().querySelector('.lp-cards')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       });
     });
 
+    // Botón "Gestionar mi institución" — selecciona admin y scrollea
     root().querySelector('.lp-btn-inst[data-role="admin"]')?.addEventListener('click', () => {
       const adminCard = root().querySelector('.lp-card[data-role="admin"]');
       adminCard?.click();
