@@ -496,7 +496,10 @@ const App = (() => {
     });
   }
 
-  // ---- Pantalla de bienvenida premium (3 roles) ----
+  // ---- Pantalla de bienvenida — versión legacy (backup) ----
+  // function screenWelcomeLegacy() { /* backup de la versión anterior — no eliminar */ }
+
+  // ---- Pantalla de bienvenida rediseñada (institucional) ----
   function screenWelcome() {
     const svgStudent = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`;
     const svgTeacher = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>`;
@@ -521,12 +524,19 @@ const App = (() => {
       </header>
 
       <div class="lp-hero">
+
+        <!-- HERO -->
         <div class="lp-pill">
           <span class="lp-pill-dot"></span>
-          Plataforma Educativa Inteligente
+          Plataforma Educativa con IA
         </div>
-        <h1 class="lp-title">Convierte tu<br>esfuerzo en resultados</h1>
-        <p class="lp-subtitle">Mejora tu concentración, construye disciplina y descubre la mejor forma de estudiar para alcanzar tus objetivos académicos.</p>
+        <h1 class="lp-title">Estudia con propósito.<br>Aprende con inteligencia.<br>Construye tu futuro.</h1>
+        <p class="lp-subtitle">TrackFocus ayuda a estudiantes a concentrarse, comprender mejor lo que estudian y prepararse para alcanzar sus metas universitarias.</p>
+
+        <div class="lp-hero-cta">
+          <button class="lp-btn-hero-primary" id="lpScrollCards2">Probar TrackFocus</button>
+          <button class="lp-btn-hero-ghost" onclick="location.href=location.pathname+'?demo=1'">Ver demostración →</button>
+        </div>
 
         <div class="lp-stats">
           <div class="lp-stat">
@@ -545,64 +555,128 @@ const App = (() => {
           </div>
         </div>
 
-        <div class="lp-cards reveal">
-          <div class="lp-card lp-card--gold reveal" data-role="student" data-delay="0">
-            <div class="lp-icon-ring">${svgStudent}</div>
-            <h3>QUIERO MEJORAR MI RENDIMIENTO</h3>
-            <p>Registra sesiones, desarrolla hábitos y descubre cuándo estudias mejor.</p>
-            <div class="lp-card-foot">
-              <span style="font-size:12px;color:#52525B;">Solo Gmail</span>
-              <button class="lp-arrow-btn" tabindex="-1">${svgArrow}</button>
+        <!-- PROBLEMA -->
+        <section class="lp-section lp-problem">
+          <div class="lp-section-label">El problema</div>
+          <h2 class="lp-section-title">La mayoría de estudiantes estudia sin saber si realmente está aprendiendo</h2>
+          <div class="lp-problem-grid">
+            <div class="lp-problem-card">
+              <span class="lp-problem-icon">😵</span>
+              <h4>Distracción constante</h4>
+              <p>El celular, las redes y el entorno interrumpen tu concentración antes de que empiece.</p>
+            </div>
+            <div class="lp-problem-card">
+              <span class="lp-problem-icon">🧭</span>
+              <h4>Sin orientación clara</h4>
+              <p>Estudias horas pero no sabes si realmente estás aprendiendo o solo leyendo.</p>
+            </div>
+            <div class="lp-problem-card">
+              <span class="lp-problem-icon">📉</span>
+              <h4>Esfuerzo sin resultados</h4>
+              <p>Te esfuerzas mucho pero los exámenes no reflejan lo que sientes que sabes.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- SOLUCIÓN -->
+        <section class="lp-section lp-solution">
+          <div class="lp-section-label">La solución</div>
+          <h2 class="lp-section-title">Tres pilares que transforman cómo estudias</h2>
+          <div class="lp-solution-grid">
+            <div class="lp-solution-card lp-solution-card--gold">
+              <div class="lp-solution-icon">🍅</div>
+              <h4>Concentración</h4>
+              <p>Sesiones Pomodoro con métricas reales de enfoque. Descubre cuándo y cómo estudias mejor.</p>
+            </div>
+            <div class="lp-solution-card lp-solution-card--purple">
+              <div class="lp-solution-icon">🧠</div>
+              <h4>Comprensión</h4>
+              <p>TrackFocus Intelligence evalúa qué tan profundo aprendes mediante preguntas y evaluaciones DECO.</p>
+            </div>
+            <div class="lp-solution-card lp-solution-card--blue">
+              <div class="lp-solution-icon">🏆</div>
+              <h4>Constancia</h4>
+              <p>Rachas, XP y logros que convierten el estudio en hábito. Tu progreso siempre visible.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- CÓMO FUNCIONA -->
+        <section class="lp-section lp-how">
+          <div class="lp-section-label">Cómo funciona</div>
+          <h2 class="lp-section-title">Cuatro pasos hacia el aprendizaje real</h2>
+          <div class="lp-steps">
+            <div class="lp-step">
+              <div class="lp-step-num">1</div>
+              <div class="lp-step-icon">📝</div>
+              <h4>Registra tu sesión</h4>
+              <p>Elige materia, duración y lo que vas a estudiar.</p>
+            </div>
+            <div class="lp-step-connector"></div>
+            <div class="lp-step">
+              <div class="lp-step-num">2</div>
+              <div class="lp-step-icon">🍅</div>
+              <h4>Estudia con enfoque</h4>
+              <p>El Pomodoro mide tu concentración en tiempo real.</p>
+            </div>
+            <div class="lp-step-connector"></div>
+            <div class="lp-step">
+              <div class="lp-step-num">3</div>
+              <div class="lp-step-icon">🧠</div>
+              <h4>Comprende más profundo</h4>
+              <p>La IA analiza tu nivel y genera preguntas personalizadas.</p>
+            </div>
+            <div class="lp-step-connector"></div>
+            <div class="lp-step">
+              <div class="lp-step-num">4</div>
+              <div class="lp-step-icon">📊</div>
+              <h4>Ve tu progreso</h4>
+              <p>Métricas, logros y racha diaria que te motivan a volver.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- CARDS DE ROL -->
+        <section class="lp-section lp-roles-section">
+          <div class="lp-section-label">Elige tu acceso</div>
+          <h2 class="lp-section-title">¿Quién eres en TrackFocus?</h2>
+
+          <div class="lp-cards reveal">
+            <div class="lp-card lp-card--gold reveal" data-role="student" data-delay="0">
+              <div class="lp-icon-ring">${svgStudent}</div>
+              <h3>QUIERO MEJORAR MI RENDIMIENTO</h3>
+              <p>Registra sesiones, desarrolla hábitos y descubre cuándo estudias mejor.</p>
+              <div class="lp-card-foot">
+                <span style="font-size:12px;color:#52525B;">Solo Gmail</span>
+                <button class="lp-arrow-btn" tabindex="-1">${svgArrow}</button>
+              </div>
+            </div>
+
+            <div class="lp-card lp-card--purple reveal" data-role="teacher" data-delay="100">
+              <div class="lp-icon-ring">${svgTeacher}</div>
+              <h3>QUIERO MONITOREAR A MIS ESTUDIANTES</h3>
+              <p>Analiza el progreso, detecta riesgos y acompaña el desarrollo académico.</p>
+              <div class="lp-card-foot">
+                <span style="font-size:12px;color:#52525B;">Requiere código</span>
+                <button class="lp-arrow-btn" tabindex="-1">${svgArrow}</button>
+              </div>
+            </div>
+
+            <div class="lp-card lp-card--blue reveal" data-role="admin" data-delay="200">
+              <div class="lp-icon-ring">${svgAdmin}</div>
+              <h3>GESTIONAR MI INSTITUCIÓN</h3>
+              <p>Centraliza estadísticas, usuarios y rendimiento académico desde un solo lugar.</p>
+              <div class="lp-card-foot">
+                <span style="font-size:12px;color:#52525B;">Acceso restringido</span>
+                <button class="lp-arrow-btn" tabindex="-1">${svgArrow}</button>
+              </div>
             </div>
           </div>
 
-          <div class="lp-card lp-card--purple reveal" data-role="teacher" data-delay="100">
-            <div class="lp-icon-ring">${svgTeacher}</div>
-            <h3>QUIERO MONITOREAR A MIS ESTUDIANTES</h3>
-            <p>Analiza el progreso, detecta riesgos y acompaña el desarrollo académico.</p>
-            <div class="lp-card-foot">
-              <span style="font-size:12px;color:#52525B;">Requiere código</span>
-              <button class="lp-arrow-btn" tabindex="-1">${svgArrow}</button>
-            </div>
-          </div>
+          <div id="authForm" class="lp-form-wrap hidden"></div>
+        </section>
 
-          <div class="lp-card lp-card--blue reveal" data-role="admin" data-delay="200">
-            <div class="lp-icon-ring">${svgAdmin}</div>
-            <h3>GESTIONAR MI INSTITUCIÓN</h3>
-            <p>Centraliza estadísticas, usuarios y rendimiento académico desde un solo lugar.</p>
-            <div class="lp-card-foot">
-              <span style="font-size:12px;color:#52525B;">Acceso restringido</span>
-              <button class="lp-arrow-btn" tabindex="-1">${svgArrow}</button>
-            </div>
-          </div>
-        </div>
-
-        <div id="authForm" class="lp-form-wrap hidden"></div>
-
-        <div class="lp-features reveal">
-          <div class="lp-feat reveal" data-delay="0">
-            <div class="lp-feat-icon lp-feat-icon--gold">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            </div>
-            <h4>Gamificación</h4>
-            <p>XP, niveles, badges y ranking por aula para mantener la motivación alta.</p>
-          </div>
-          <div class="lp-feat reveal" data-delay="100">
-            <div class="lp-feat-icon lp-feat-icon--purple">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-            </div>
-            <h4>Analytics</h4>
-            <p>Detección automática de patrones y alertas de rendimiento en tiempo real.</p>
-          </div>
-          <div class="lp-feat reveal" data-delay="200">
-            <div class="lp-feat-icon lp-feat-icon--blue">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            </div>
-            <h4>Pomodoro</h4>
-            <p>Timer con ciclos automáticos y análisis post-sesión de productividad.</p>
-          </div>
-        </div>
-
+        <!-- DEMO IA -->
         <div class="lp-ai-demo reveal">
           <div class="lp-ai-demo__header">
             <div class="lp-ai-badge"><span>🧠</span> TrackFocus Intelligence</div>
@@ -668,6 +742,33 @@ const App = (() => {
           <button class="lp-ai-cta" id="lpAICta">Comenzar a estudiar gratis</button>
         </div>
 
+        <!-- SECCIÓN INSTITUCIONAL -->
+        <section class="lp-section lp-institutional">
+          <div class="lp-inst-content">
+            <div class="lp-section-label">Para instituciones</div>
+            <h2 class="lp-section-title lp-inst-title">Para docentes y directores</h2>
+            <p class="lp-inst-desc">TrackFocus no es solo para estudiantes. Docentes y directores pueden monitorear el progreso real de sus alumnos, detectar quiénes necesitan apoyo y tomar decisiones basadas en datos.</p>
+            <button class="lp-btn-inst" data-role="admin">Gestionar mi institución →</button>
+          </div>
+          <div class="lp-inst-cards">
+            <div class="lp-inst-card">
+              <span class="lp-inst-card-icon">📋</span>
+              <h5>Dashboard docente</h5>
+              <p>Visualiza el progreso individual y grupal de tus alumnos en tiempo real.</p>
+            </div>
+            <div class="lp-inst-card">
+              <span class="lp-inst-card-icon">📈</span>
+              <h5>Métricas por aula</h5>
+              <p>Concentración, Índice de Aprendizaje y rachas agregadas por grupo.</p>
+            </div>
+            <div class="lp-inst-card">
+              <span class="lp-inst-card-icon">🏫</span>
+              <h5>Panel institucional</h5>
+              <p>Gestión de aulas, docentes y estadísticas globales del colegio.</p>
+            </div>
+          </div>
+        </section>
+
         <footer class="lp-footer">
           <span>© 2026 TrackFocus</span>
           <span class="lp-footer-sep">·</span>
@@ -690,12 +791,16 @@ const App = (() => {
       });
     });
 
-    const scrollBtn = document.getElementById('lpScrollCards');
-    if (scrollBtn) {
-      scrollBtn.addEventListener('click', () => {
+    ['lpScrollCards', 'lpScrollCards2'].forEach(id => {
+      document.getElementById(id)?.addEventListener('click', () => {
         root().querySelector('.lp-cards')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       });
-    }
+    });
+
+    root().querySelector('.lp-btn-inst[data-role="admin"]')?.addEventListener('click', () => {
+      root().querySelector('.lp-card[data-role="admin"]')?.click();
+      root().querySelector('.lp-cards')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
 
     const ctaBtn = document.getElementById('lpAICta');
     if (ctaBtn) {
