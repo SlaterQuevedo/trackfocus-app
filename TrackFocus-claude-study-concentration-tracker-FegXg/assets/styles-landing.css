@@ -1315,7 +1315,45 @@ a.lp-btn-hero-ghost {
   color: var(--text);
   line-height: 1.2;
   letter-spacing: -0.8px;
-  margin: 0 0 40px;
+  margin: 0 0 16px;
+}
+
+/* Subtítulo del wizard */
+.lp-wizard-sub {
+  font-size: 14.5px;
+  color: var(--muted);
+  max-width: 480px;
+  margin: 0 auto 36px;
+  line-height: 1.6;
+}
+
+/* Botón volver del wizard */
+.lp-wizard-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 13px;
+  font-family: inherit;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 28px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+  min-height: 36px;
+}
+.lp-wizard-back:hover { color: var(--text); border-color: var(--border-strong); }
+
+/* Grid 2 columnas para pasos Personal */
+.lp-cards.lp-cards--2col {
+  grid-template-columns: repeat(2, 1fr);
+  max-width: 660px;
+}
+
+@media (max-width: 600px) {
+  .lp-cards.lp-cards--2col { grid-template-columns: 1fr; max-width: 380px; }
 }
 
 /* PROBLEMA */

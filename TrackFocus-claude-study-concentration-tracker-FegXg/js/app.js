@@ -434,6 +434,29 @@ const App = (() => {
     // 3. ¿Hay intención de rol pendiente del click pre-OAuth?
     const intent = Auth.getRoleIntent();
 
+    // --- Nuevos roles personales ---
+    // self_learner: estudiante autodidacta → salta onboarding institucional
+    if (intent === 'self_learner' && user.role === 'student') {
+      sessionStorage.setItem('tf.accessType', 'personal');
+      if (!user.institutionType) {
+        Storage.set(s => {
+          if (s.users[user.id]) {
+            s.users[user.id].institutionType = 'personal';
+            s.users[user.id].accessType = 'personal';
+          }
+        });
+      }
+      if (!user.parentalConsent) return go('consent');
+      return go('dashboard');
+    }
+
+    // academy: gestor personal de grupos → sigue flujo teacher (con promote si aún es student)
+    if (intent === 'academy') {
+      sessionStorage.setItem('tf.accessType', 'personal');
+      if (user.role === 'student' && !user.schoolId) return go('teacher-promote');
+      if (user.role === 'teacher') return go('teacher-dashboard');
+    }
+
     // Si es admin pendiente, mostrar pantalla de contraseña (NO para super_admin oficial)
     if (intent === 'admin' && user.role !== 'super_admin') return go('admin-promote');
     if (intent === 'teacher' && user.role === 'student' && !user.schoolId) return go('teacher-promote');
@@ -647,43 +670,9 @@ const App = (() => {
           </div>
         </section>
 
-        <!-- CARDS DE ROL -->
-        <section class="lp-section lp-roles-section">
-          <div class="lp-section-label">Elige tu acceso</div>
-          <h2 class="lp-section-title">¿Quién eres en TrackFocus?</h2>
-
-          <div class="lp-cards reveal">
-            <div class="lp-card lp-card--gold reveal" data-role="student" data-delay="0">
-              <div class="lp-icon-ring">${svgStudent}</div>
-              <h3>QUIERO MEJORAR MI RENDIMIENTO</h3>
-              <p>Registra sesiones, desarrolla hábitos y descubre cuándo estudias mejor.</p>
-              <div class="lp-card-foot">
-                <span style="font-size:12px;color:#52525B;">Solo Gmail</span>
-                <button class="lp-arrow-btn" tabindex="-1">${svgArrow}</button>
-              </div>
-            </div>
-
-            <div class="lp-card lp-card--purple reveal" data-role="teacher" data-delay="100">
-              <div class="lp-icon-ring">${svgTeacher}</div>
-              <h3>QUIERO MONITOREAR A MIS ESTUDIANTES</h3>
-              <p>Analiza el progreso, detecta riesgos y acompaña el desarrollo académico.</p>
-              <div class="lp-card-foot">
-                <span style="font-size:12px;color:#52525B;">Requiere código</span>
-                <button class="lp-arrow-btn" tabindex="-1">${svgArrow}</button>
-              </div>
-            </div>
-
-            <div class="lp-card lp-card--blue reveal" data-role="admin" data-delay="200">
-              <div class="lp-icon-ring">${svgAdmin}</div>
-              <h3>GESTIONAR MI INSTITUCIÓN</h3>
-              <p>Centraliza estadísticas, usuarios y rendimiento académico desde un solo lugar.</p>
-              <div class="lp-card-foot">
-                <span style="font-size:12px;color:#52525B;">Acceso restringido</span>
-                <button class="lp-arrow-btn" tabindex="-1">${svgArrow}</button>
-              </div>
-            </div>
-          </div>
-
+        <!-- WIZARD DE ACCESO — Se rellena dinámicamente por wireWelcome() -->
+        <section class="lp-section lp-roles-section" id="lpRolesSection">
+          <div id="lpAccessWizard"></div>
           <div id="authForm" class="lp-form-wrap hidden"></div>
         </section>
 
@@ -789,26 +778,173 @@ const App = (() => {
     </div>`;
   }
 
-  function wireWelcome() {
-    root().querySelectorAll('.lp-card[data-role]').forEach(card => {
-      card.addEventListener('click', () => {
-        root().querySelectorAll('.lp-card[data-role]').forEach(c => c.classList.remove('lp-selected'));
-        card.classList.add('lp-selected');
-        renderAuthForm(card.dataset.role);
-      });
-    });
+  // ── Wizard de acceso ─────────────────────────────────────────────────────
+  // Genera cada paso del wizard reutilizando EXACTAMENTE las mismas clases CSS
+  // de las cards originales. Sin CSS nuevo para los cards.
 
-    // Botones que scrollean a las tarjetas de acceso (mismo comportamiento que card click)
+  function _wizardStep0() {
+    const svgPersonal = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 10-16 0"/></svg>`;
+    const svgInst     = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M3 10h18M3 7l9-4 9 4M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/></svg>`;
+    const svgArrow    = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
+    return `
+      <div class="lp-section-label">Elige tu acceso</div>
+      <h2 class="lp-section-title">¿Cómo utilizarás TrackFocus?</h2>
+      <p class="lp-wizard-sub">Elige el entorno que mejor represente cómo aprenderás o gestionarás el aprendizaje.</p>
+      <div class="lp-cards lp-cards--2col">
+        <div class="lp-card lp-card--gold" data-access="personal">
+          <div class="lp-icon-ring">${svgPersonal}</div>
+          <h3>USO PERSONAL</h3>
+          <p>Aprende a tu ritmo o gestiona grupos pequeños de preparación.</p>
+          <div class="lp-card-foot">
+            <span style="font-size:12px;color:#52525B;">Autodidacta · Academia</span>
+            <button class="lp-arrow-btn" tabindex="-1">${svgArrow}</button>
+          </div>
+        </div>
+        <div class="lp-card lp-card--blue" data-access="institutional">
+          <div class="lp-icon-ring">${svgInst}</div>
+          <h3>USO INSTITUCIONAL</h3>
+          <p>Gestiona estudiantes, aulas y el progreso académico de tu colegio.</p>
+          <div class="lp-card-foot">
+            <span style="font-size:12px;color:#52525B;">Colegio · Institución</span>
+            <button class="lp-arrow-btn" tabindex="-1">${svgArrow}</button>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function _wizardStep2A() {
+    const svgAuto  = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`;
+    const svgAcad  = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`;
+    const svgArrow = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
+    return `
+      <button class="lp-wizard-back" id="lpWizardBack">← Volver</button>
+      <div class="lp-section-label">Uso Personal</div>
+      <h2 class="lp-section-title">¿Cómo deseas aprender?</h2>
+      <p class="lp-wizard-sub">Selecciona la modalidad que mejor se adapte a tus objetivos.</p>
+      <div class="lp-cards lp-cards--2col">
+        <div class="lp-card lp-card--gold" data-role="self_learner">
+          <div class="lp-icon-ring">${svgAuto}</div>
+          <h3>AUTODIDACTA</h3>
+          <p>Prepárate para tus metas académicas con TrackFocus Intelligence.</p>
+          <div class="lp-card-foot">
+            <span style="font-size:12px;color:#52525B;">Acceso completo · Solo Gmail</span>
+            <button class="lp-arrow-btn" tabindex="-1">${svgArrow}</button>
+          </div>
+        </div>
+        <div class="lp-card lp-card--purple" data-role="academy">
+          <div class="lp-icon-ring">${svgAcad}</div>
+          <h3>ACADEMIA</h3>
+          <p>Gestiona grupos de preparación y acompaña el progreso de tus estudiantes.</p>
+          <div class="lp-card-foot">
+            <span style="font-size:12px;color:#52525B;">Grupos y reportes</span>
+            <button class="lp-arrow-btn" tabindex="-1">${svgArrow}</button>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function _wizardStep2B() {
+    const svgStudent = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`;
+    const svgTeacher = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>`;
+    const svgAdmin   = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
+    const svgArrow   = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
+    return `
+      <button class="lp-wizard-back" id="lpWizardBack">← Volver</button>
+      <div class="lp-section-label">Uso Institucional</div>
+      <h2 class="lp-section-title">¿Quién eres en tu institución?</h2>
+      <p class="lp-wizard-sub">Selecciona el rol con el que ingresarás hoy.</p>
+      <div class="lp-cards">
+        <div class="lp-card lp-card--gold" data-role="student">
+          <div class="lp-icon-ring">${svgStudent}</div>
+          <h3>ESTUDIANTE</h3>
+          <p>Aprende, practica y mejora tu comprensión con IA socrática.</p>
+          <div class="lp-card-foot">
+            <span style="font-size:12px;color:#52525B;">Solo Gmail</span>
+            <button class="lp-arrow-btn" tabindex="-1">${svgArrow}</button>
+          </div>
+        </div>
+        <div class="lp-card lp-card--purple" data-role="teacher">
+          <div class="lp-icon-ring">${svgTeacher}</div>
+          <h3>PROFESOR</h3>
+          <p>Monitorea aulas, detecta riesgos y acompaña el aprendizaje.</p>
+          <div class="lp-card-foot">
+            <span style="font-size:12px;color:#52525B;">Requiere código</span>
+            <button class="lp-arrow-btn" tabindex="-1">${svgArrow}</button>
+          </div>
+        </div>
+        <div class="lp-card lp-card--blue" data-role="admin">
+          <div class="lp-icon-ring">${svgAdmin}</div>
+          <h3>DIRECTOR</h3>
+          <p>Gestiona el rendimiento institucional desde un solo lugar.</p>
+          <div class="lp-card-foot">
+            <span style="font-size:12px;color:#52525B;">Acceso restringido</span>
+            <button class="lp-arrow-btn" tabindex="-1">${svgArrow}</button>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function wireWelcome() {
+    const wizard = root().querySelector('#lpAccessWizard');
+    const authForm = root().querySelector('#authForm');
+
+    // Función para renderizar un paso en el wizard y reconectar eventos
+    function renderStep(html) {
+      wizard.innerHTML = html;
+      wireWizardStep();
+    }
+
+    function wireWizardStep() {
+      // Botón volver → regresa al paso 0
+      wizard.querySelector('#lpWizardBack')?.addEventListener('click', () => {
+        authForm.classList.add('hidden');
+        renderStep(_wizardStep0());
+        root().querySelector('#lpRolesSection')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+
+      // Click en tarjeta de acceso (paso 0) → paso 2A o 2B
+      wizard.querySelectorAll('.lp-card[data-access]').forEach(card => {
+        card.addEventListener('click', () => {
+          authForm.classList.add('hidden');
+          if (card.dataset.access === 'personal') {
+            renderStep(_wizardStep2A());
+          } else {
+            renderStep(_wizardStep2B());
+          }
+          root().querySelector('#lpRolesSection')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+      });
+
+      // Click en tarjeta de rol (paso 2A o 2B) → mostrar formulario de acceso
+      wizard.querySelectorAll('.lp-card[data-role]').forEach(card => {
+        card.addEventListener('click', () => {
+          wizard.querySelectorAll('.lp-card[data-role]').forEach(c => c.classList.remove('lp-selected'));
+          card.classList.add('lp-selected');
+          renderAuthForm(card.dataset.role);
+        });
+      });
+    }
+
+    // Renderizar paso inicial
+    renderStep(_wizardStep0());
+
+    // Botones del hero que scrollean a la sección de acceso
     ['lpScrollCards', 'lpScrollCards2', 'lpAICta'].forEach(id => {
       document.getElementById(id)?.addEventListener('click', () => {
-        root().querySelector('.lp-cards')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        root().querySelector('#lpRolesSection')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       });
     });
 
-    // Botón "Gestionar mi institución" — selecciona admin y scrollea
+    // Botón "Gestionar mi institución" de la sección institucional
     root().querySelector('.lp-btn-inst[data-role="admin"]')?.addEventListener('click', () => {
-      const adminCard = root().querySelector('.lp-card[data-role="admin"]');
-      adminCard?.click();
+      authForm.classList.add('hidden');
+      renderStep(_wizardStep2B());
+      root().querySelector('#lpRolesSection')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Auto-seleccionar la card de admin
+      setTimeout(() => {
+        const adminCard = wizard.querySelector('.lp-card[data-role="admin"]');
+        adminCard?.click();
+      }, 50);
     });
 
     wireLandingAnimations();
@@ -842,9 +978,11 @@ const App = (() => {
     container.classList.remove('hidden', 'lp-form--purple', 'lp-form--blue');
 
     const cfg = {
-      student: { cls: 'lp-form-emoji--gold',   emoji: '🎒', title: 'Entrar como Estudiante', subtitle: 'Inicia sesión con tu cuenta de Google. Crearemos tu perfil al instante.' },
-      teacher: { cls: 'lp-form-emoji--purple', emoji: '👩‍🏫', title: 'Entrar como Docente',    subtitle: 'Inicia sesión con tu cuenta institucional de Google.' },
-      admin:   { cls: 'lp-form-emoji--blue',   emoji: '🛡️', title: 'Acceso Administrador',     subtitle: 'Inicia sesión con Google y luego ingresa la contraseña de administrador.' }
+      student:      { cls: 'lp-form-emoji--gold',   emoji: '🎒', title: 'Entrar como Estudiante',  subtitle: 'Inicia sesión con tu cuenta de Google. Crearemos tu perfil al instante.' },
+      teacher:      { cls: 'lp-form-emoji--purple', emoji: '👩‍🏫', title: 'Entrar como Profesor',    subtitle: 'Inicia sesión con tu cuenta institucional de Google.' },
+      admin:        { cls: 'lp-form-emoji--blue',   emoji: '🛡️', title: 'Acceso Director',          subtitle: 'Inicia sesión con Google y luego ingresa la contraseña de administrador.' },
+      self_learner: { cls: 'lp-form-emoji--gold',   emoji: '🎓', title: 'Entrar como Autodidacta', subtitle: 'Inicia sesión con Google. Comenzarás a estudiar de inmediato.' },
+      academy:      { cls: 'lp-form-emoji--purple', emoji: '📚', title: 'Entrar como Academia',    subtitle: 'Inicia sesión con Google para gestionar tus grupos de estudio.' }
     }[role];
 
     if (role === 'teacher') container.classList.add('lp-form--purple');
