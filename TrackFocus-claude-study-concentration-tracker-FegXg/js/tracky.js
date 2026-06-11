@@ -108,29 +108,64 @@ const Tracky = (() => {
     _renderHiddenState();
   }
 
-  // Elige un mensaje según la ruta y los datos de gamificación del usuario.
+  // Elige un mensaje pedagógico según la ruta y los datos del usuario.
   function _pickMessage(route, user) {
     const gam = user?.gamification || {};
     const streak = gam.streak || 0;
     const name = (user?.name || '').split(' ')[0];
 
+    // Pantalla de estudio IA — recordar materia anterior si existe memoria
     if (route === 'ai-study' || route === 'new-session') {
-      return '📚 ¿Qué estudias hoy? ¡Estoy aquí para ayudarte!';
+      try {
+        const uid = user?.id;
+        if (uid && typeof AcademicMemory !== 'undefined') {
+          const subjects = AcademicMemory.listSubjects(uid);
+          if (subjects.length > 0) {
+            const last = subjects[0];
+            const topic = last.lastTopic ? ` en "${last.lastTopic}"` : '';
+            return `📚 ¿Seguimos con ${last.subject}? La última vez avanzaste${topic}. ¡Vamos!`;
+          }
+        }
+      } catch (_) {}
+      return '📚 ¿Qué estudias hoy? La IA te guiará paso a paso.';
     }
-    if (route === 'achievements') return '🏆 ¡Mira todo lo que has desbloqueado!';
-    if (route === 'stats' || route === 'profile') return '📊 Revisa tu progreso. ¡Vas muy bien!';
-    if (route === 'leaderboard') return '🥇 ¡A escalar posiciones! Cada sesión suma.';
 
-    // Dashboard (y por defecto): prioriza racha, luego XP para subir de nivel.
-    if (streak >= 3) return `🔥 ¡${streak} días seguidos! Sigue así${name ? ', ' + name : ''}.`;
+    if (route === 'achievements') return '🏆 Cada logro desbloqueado es una habilidad que ya dominas.';
+
+    // Estadísticas: si no ha estudiado esta semana, recordarlo
+    if (route === 'stats' || route === 'profile') {
+      try {
+        const uid = user?.id;
+        const s = typeof Storage !== 'undefined' ? Storage.get() : null;
+        const sessions = s?.users?.[uid]?.sessions || [];
+        const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+        const thisWeek = sessions.filter(s => new Date(s.date).getTime() > weekAgo).length;
+        if (thisWeek === 0) return '📊 Esta semana aún no has estudiado. ¿Empezamos con 25 minutos?';
+      } catch (_) {}
+      return '📊 Aquí puedes ver cómo evoluciona tu aprendizaje.';
+    }
+
+    if (route === 'leaderboard') return '🥇 Cada sesión te acerca más al tope del ranking.';
+
+    // Recomendaciones: refuerzo pedagógico
+    if (route === 'recommend') return '💡 Estas recomendaciones están basadas en tu historial real de aprendizaje.';
+
+    // Dashboard: prioriza racha, luego nivel próximo, luego sesiones acumuladas.
+    if (streak >= 3) return `🔥 ¡${streak} días seguidos! La constancia es la base del aprendizaje.`;
     try {
       const info = Gamification.getLevelInfo(gam.xp || 0);
       if (info?.next) {
         const gap = info.next.xpRequired - (gam.xp || 0);
-        if (gap > 0 && gap <= 10) return `🎯 Solo ${gap} XP más para ${info.next.title}. ¡Tú puedes!`;
+        if (gap > 0 && gap <= 10) return `🎓 Solo ${gap} XP para "${info.next.title}". ¡Eso significa que ya entiendes más!`;
       }
     } catch (_) {}
-    return name ? `¡Hola, ${name}! ¿List@ para concentrarte? 🚀` : '¡Hola! ¿List@ para concentrarte? 🚀';
+    try {
+      const uid = user?.id;
+      const s = typeof Storage !== 'undefined' ? Storage.get() : null;
+      const count = s?.users?.[uid]?.sessions?.length || 0;
+      if (count >= 3) return `📈 Llevas ${count} sesiones registradas. Tu Índice de Aprendizaje está creciendo.`;
+    } catch (_) {}
+    return name ? `¡Hola, ${name}! ¿List@ para aprender algo nuevo hoy? 🚀` : '¡Hola! ¿List@ para concentrarte? 🚀';
   }
 
   function _armIdle() {
