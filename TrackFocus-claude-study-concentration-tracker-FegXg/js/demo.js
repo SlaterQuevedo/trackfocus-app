@@ -170,7 +170,7 @@ const Demo = (() => {
     window.__TF_DEMO_PILOT_ROWS = _buildPilotRows();
 
     // Usuario actual según el modo de demo.
-    const asStudent = (mode === 'student');
+    const asStudent = (mode === 'student' || mode === 'guided');
     const currentId = asStudent ? STUDENTS[0].id : TEACHER;
     state.currentUserId = currentId;
 
@@ -179,7 +179,20 @@ const Demo = (() => {
     try { Auth.setActiveRole?.(null); } catch (_) {}
 
     UI?.flash?.('🎭 Modo demostración activo · datos de ejemplo, sin conexión.', 'info');
-    App.go(asStudent ? 'dashboard' : 'eureka');
+
+    // Modo guiado: pre-configura metadata y salta directo a chat
+    if (mode === 'guided') {
+      window.__TF_DEMO_GUIDED_META = {
+        subject: 'Matemática',
+        grade: '4to',
+        durationMin: 45,
+        previousActivity: 'repaso-previo',
+        topic: 'Ecuaciones cuadráticas'
+      };
+      App.go('ai-study');
+    } else {
+      App.go(asStudent ? 'dashboard' : 'eureka');
+    }
   }
 
   function isActive() { return !!window.__TF_DEMO; }

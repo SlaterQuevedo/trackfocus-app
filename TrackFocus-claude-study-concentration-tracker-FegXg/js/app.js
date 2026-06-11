@@ -352,11 +352,12 @@ const App = (() => {
     bindGlobal();
     wirePomodoroBar();
 
-    // Modo demostración (Fase G): ?demo=1 (docente→Eureka) o ?demo=student.
-    // No requiere Supabase ni internet; datos ficticios aislados.
+    // Modo demostración (Fase G): ?demo=1 (docente→Eureka), ?demo=student (dashboard),
+    // o ?demo=guided (chat directo). No requiere Supabase ni internet; datos ficticios aislados.
     const _demo = new URLSearchParams(location.search).get('demo');
-    if (typeof Demo !== 'undefined' && (_demo === '1' || _demo === 'teacher' || _demo === 'student')) {
-      Demo.activate(_demo === 'student' ? 'student' : 'teacher');
+    if (typeof Demo !== 'undefined' && (_demo === '1' || _demo === 'teacher' || _demo === 'student' || _demo === 'guided')) {
+      const mode = _demo === 'guided' ? 'guided' : (_demo === 'student' ? 'student' : 'teacher');
+      Demo.activate(mode);
       return;
     }
 
@@ -535,8 +536,8 @@ const App = (() => {
 
         <div class="lp-hero-cta">
           <button class="lp-btn-hero-primary" id="lpScrollCards2">Comenzar a estudiar gratis</button>
+          <a href="?demo=guided" class="lp-btn-hero-ghost">🚀 Demo del chat IA</a>
           <a href="?demo=student" class="lp-btn-hero-ghost">🎒 Demo estudiante</a>
-          <a href="?demo=1" class="lp-btn-hero-ghost">📊 Demo docente →</a>
         </div>
 
         <div class="lp-impact-stats">

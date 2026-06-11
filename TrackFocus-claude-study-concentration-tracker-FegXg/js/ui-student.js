@@ -1787,6 +1787,18 @@ const UIStudent = (() => {
     // del tutor, que ya integra archivos (multimodal) y voz en una sola conversación.
     const setupForm = document.getElementById('sessionSetupForm');
     if (setupForm) {
+      // Demo guiada: pre-llenar el formulario y auto-submitear
+      if (window.__TF_DEMO_GUIDED_META) {
+        const meta = window.__TF_DEMO_GUIDED_META;
+        setupForm.querySelector('[name="subject"]').value = meta.subject;
+        setupForm.querySelector('[name="grade"]').value = meta.grade;
+        setupForm.querySelector('[name="durationMin"]').value = meta.durationMin;
+        setupForm.querySelector('[name="previousActivity"]').value = meta.previousActivity;
+
+        // Auto-submitear después de un pequeño delay visual
+        setTimeout(() => setupForm.dispatchEvent(new Event('submit')), 800);
+      }
+
       setupForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
