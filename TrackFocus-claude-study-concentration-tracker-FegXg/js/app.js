@@ -785,13 +785,12 @@ const App = (() => {
         card.classList.add('lp-selected');
         renderAuthForm(card.dataset.role);
         setTimeout(() => {
-          const form = document.getElementById('authForm');
-          if (form) form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          root().querySelector('.lp-cards')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, 60);
       });
     });
 
-    // Botones que scrollean a las tarjetas de acceso
+    // Botones que scrollean a las tarjetas de acceso (mismo comportamiento que card click)
     ['lpScrollCards', 'lpScrollCards2', 'lpAICta'].forEach(id => {
       document.getElementById(id)?.addEventListener('click', () => {
         root().querySelector('.lp-cards')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -802,17 +801,7 @@ const App = (() => {
     root().querySelector('.lp-btn-inst[data-role="admin"]')?.addEventListener('click', () => {
       const adminCard = root().querySelector('.lp-card[data-role="admin"]');
       adminCard?.click();
-      setTimeout(() => {
-        adminCard?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 300);
     });
-
-    const ctaBtn = document.getElementById('lpAICta');
-    if (ctaBtn) {
-      ctaBtn.addEventListener('click', () => {
-        root().querySelector('.lp-cards')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      });
-    }
 
     wireLandingAnimations();
   }
