@@ -434,27 +434,16 @@ const App = (() => {
     // 3. ¿Hay intención de rol pendiente del click pre-OAuth?
     const intent = Auth.getRoleIntent();
 
-    // --- Nuevos roles personales ---
-    // self_learner: estudiante autodidacta → salta onboarding institucional
-    if (intent === 'self_learner' && user.role === 'student') {
-      sessionStorage.setItem('tf.accessType', 'personal');
+    // Uso Personal: mismo usuario, sin escuela asociada → salta onboarding institucional
+    const accessType = sessionStorage.getItem('tf.accessType');
+    if (accessType === 'personal' && user.role === 'student' && !user.schoolId) {
       if (!user.institutionType) {
         Storage.set(s => {
-          if (s.users[user.id]) {
-            s.users[user.id].institutionType = 'personal';
-            s.users[user.id].accessType = 'personal';
-          }
+          if (s.users[user.id]) s.users[user.id].institutionType = 'personal';
         });
       }
       if (!user.parentalConsent) return go('consent');
       return go('dashboard');
-    }
-
-    // academy: gestor personal de grupos → sigue flujo teacher (con promote si aún es student)
-    if (intent === 'academy') {
-      sessionStorage.setItem('tf.accessType', 'personal');
-      if (user.role === 'student' && !user.schoolId) return go('teacher-promote');
-      if (user.role === 'teacher') return go('teacher-dashboard');
     }
 
     // Si es admin pendiente, mostrar pantalla de contraseña (NO para super_admin oficial)
@@ -812,37 +801,6 @@ const App = (() => {
       </div>`;
   }
 
-  function _wizardStep2A() {
-    const svgAuto  = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`;
-    const svgAcad  = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`;
-    const svgArrow = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
-    return `
-      <button class="lp-wizard-back" id="lpWizardBack">← Volver</button>
-      <div class="lp-section-label">Uso Personal</div>
-      <h2 class="lp-section-title">¿Cómo deseas aprender?</h2>
-      <p class="lp-wizard-sub">Selecciona la modalidad que mejor se adapte a tus objetivos.</p>
-      <div class="lp-cards lp-cards--2col">
-        <div class="lp-card lp-card--gold" data-role="self_learner">
-          <div class="lp-icon-ring">${svgAuto}</div>
-          <h3>AUTODIDACTA</h3>
-          <p>Prepárate para tus metas académicas con TrackFocus Intelligence.</p>
-          <div class="lp-card-foot">
-            <span style="font-size:12px;color:#52525B;">Acceso completo · Solo Gmail</span>
-            <button class="lp-arrow-btn" tabindex="-1">${svgArrow}</button>
-          </div>
-        </div>
-        <div class="lp-card lp-card--purple" data-role="academy">
-          <div class="lp-icon-ring">${svgAcad}</div>
-          <h3>ACADEMIA</h3>
-          <p>Gestiona grupos de preparación y acompaña el progreso de tus estudiantes.</p>
-          <div class="lp-card-foot">
-            <span style="font-size:12px;color:#52525B;">Grupos y reportes</span>
-            <button class="lp-arrow-btn" tabindex="-1">${svgArrow}</button>
-          </div>
-        </div>
-      </div>`;
-  }
-
   function _wizardStep2B() {
     const svgStudent = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`;
     const svgTeacher = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>`;
@@ -902,16 +860,21 @@ const App = (() => {
         root().querySelector('#lpRolesSection')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       });
 
-      // Click en tarjeta de acceso (paso 0) → paso 2A o 2B
+      // Click en tarjeta de acceso (paso 0):
+      // Personal → login directo como 'student' (sin paso intermedio)
+      // Institucional → paso 2B con selección de rol
       wizard.querySelectorAll('.lp-card[data-access]').forEach(card => {
         card.addEventListener('click', () => {
           authForm.classList.add('hidden');
           if (card.dataset.access === 'personal') {
-            renderStep(_wizardStep2A());
+            sessionStorage.setItem('tf.accessType', 'personal');
+            renderAuthForm('student');
+            root().querySelector('#lpRolesSection')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
           } else {
+            sessionStorage.setItem('tf.accessType', 'institutional');
             renderStep(_wizardStep2B());
+            root().querySelector('#lpRolesSection')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }
-          root().querySelector('#lpRolesSection')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
       });
 
@@ -978,11 +941,9 @@ const App = (() => {
     container.classList.remove('hidden', 'lp-form--purple', 'lp-form--blue');
 
     const cfg = {
-      student:      { cls: 'lp-form-emoji--gold',   emoji: '🎒', title: 'Entrar como Estudiante',  subtitle: 'Inicia sesión con tu cuenta de Google. Crearemos tu perfil al instante.' },
-      teacher:      { cls: 'lp-form-emoji--purple', emoji: '👩‍🏫', title: 'Entrar como Profesor',    subtitle: 'Inicia sesión con tu cuenta institucional de Google.' },
-      admin:        { cls: 'lp-form-emoji--blue',   emoji: '🛡️', title: 'Acceso Director',          subtitle: 'Inicia sesión con Google y luego ingresa la contraseña de administrador.' },
-      self_learner: { cls: 'lp-form-emoji--gold',   emoji: '🎓', title: 'Entrar como Autodidacta', subtitle: 'Inicia sesión con Google. Comenzarás a estudiar de inmediato.' },
-      academy:      { cls: 'lp-form-emoji--purple', emoji: '📚', title: 'Entrar como Academia',    subtitle: 'Inicia sesión con Google para gestionar tus grupos de estudio.' }
+      student: { cls: 'lp-form-emoji--gold',   emoji: '🎒', title: 'Comenzar a estudiar',  subtitle: 'Inicia sesión con Google. Tu perfil estará listo al instante.' },
+      teacher: { cls: 'lp-form-emoji--purple', emoji: '👩‍🏫', title: 'Entrar como Profesor', subtitle: 'Inicia sesión con tu cuenta institucional de Google.' },
+      admin:   { cls: 'lp-form-emoji--blue',   emoji: '🏫', title: 'Acceso Director',       subtitle: 'Inicia sesión con Google y luego ingresa la contraseña de administrador.' }
     }[role];
 
     if (role === 'teacher') container.classList.add('lp-form--purple');
