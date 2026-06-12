@@ -108,123 +108,343 @@ const UIStudent = (() => {
     });
   }
 
-  // ---- Pantalla: Dashboard ----
+  // ---- Pantalla: Dashboard (bifurca entre personal e institucional) ----
   function screenDashboard() {
     const s = Storage.get();
     const user = s.users[s.currentUserId];
-    const inst = Subjects.getInstitution(user.institutionType);
     const sessions = Sessions.listFor(user.id);
-    const sum = Stats.summary(sessions);
+    const isPersonal = !user.schoolId;
+    return isPersonal ? _dashPersonal(user, sessions, s) : _dashInstitutional(user, sessions, s);
+  }
+
+  function _relTime(dateStr) {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const d = Math.floor(diff / 86400000);
+    if (d === 0) return 'Hoy';
+    if (d === 1) return 'Ayer';
+    if (d < 7) return `Hace ${d} días`;
+    const w = Math.floor(d / 7);
+    return `Hace ${w} semana${w > 1 ? 's' : ''}`;
+  }
+
+  function _dashPersonal(user, sessions, s) {
     const gam = user.gamification || {};
     const levelInfo = Gamification.getLevelInfo(gam.xp || 0);
+    const sum = Stats.summary(sessions);
     const alerts = Analytics.generateAlerts(user.id);
     const weekXP = Gamification.getWeeklyXP(user.id);
-
-    // Sistema de Metas (Fase 9): objetivos semanales con progreso visual.
+    const learningIndex = sum.avgConc ? Math.round((parseFloat(sum.avgConc) / 5) * 100) : 0;
+    const hours = Math.round(((sum.totalMin || 0) / 60) * 10) / 10;
     const goalsCard = _renderGoalsCard(user, sessions, gam);
 
-    // Leaderboard del aula (top 5)
-    let leaderboardHtml = '';
+    const subtitles = [
+      'Cada sesión te acerca más a tu meta.',
+      'Hoy es un buen día para aprender algo nuevo.',
+      'Tu progreso se construye una sesión a la vez.',
+      'La constancia es tu superpoder.',
+      'Estudia con propósito, avanza con confianza.'
+    ];
+    const subtitle = subtitles[new Date().getDay() % subtitles.length];
+
+    const sorted = [...sessions].sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
+    const last = sorted[0] || null;
+
+    const continueBlock = last ? `
+      <div class="dash-section">
+        <div class="dash-section-title">▶ Continúa donde te quedaste</div>
+        <div class="dash-continue-card">
+          <div class="dash-continue-icon">📚</div>
+          <div class="dash-continue-body">
+            <div class="dash-continue-subject">${esc(last.subject)}</div>
+            <div class="dash-continue-meta">${_relTime(last.datetime)} · ${last.durationMin} min · Concentración ${last.concentration}/5</div>
+          </div>
+          <button class="primary" data-go="ai-study" style="flex-shrink:0;white-space:nowrap;">Estudiar →</button>
+        </div>
+      </div>` : `
+      <div class="dash-section">
+        <div class="dash-section-title">▶ Empieza tu primera sesión</div>
+        <div class="dash-continue-card">
+          <div class="dash-continue-icon">🚀</div>
+          <div class="dash-continue-body">
+            <div class="dash-continue-subject">¡Comienza hoy!</div>
+            <div class="dash-continue-meta">Registra tu primera sesión de estudio.</div>
+          </div>
+          <button class="primary" data-go="new-session" style="flex-shrink:0;white-space:nowrap;">Nueva sesión →</button>
+        </div>
+      </div>`;
+
+    const recsHtml = alerts.length ? `
+      <div class="dash-section">
+        <div class="dash-section-title">💡 Recomendaciones</div>
+        <div class="dash-recommendations">
+          ${alerts.slice(0, 3).map(a => `<div class="dash-rec-item">${a.msg}</div>`).join('')}
+        </div>
+      </div>` : '';
+
+    return `
+      <div class="dash-personal">
+        <div class="dash-hero-personal">
+          <div>
+            <h1 class="dash-hero-title">Hola, ${esc(user.name)} 👋</h1>
+            <p class="dash-hero-sub">${subtitle}</p>
+          </div>
+          <div class="dash-stat-chips">
+            <div class="dash-stat-chip dash-chip-primary">
+              <span class="dash-chip-val">Nv. ${levelInfo.current.level}</span>
+              <span class="dash-chip-lbl">Nivel</span>
+            </div>
+            <div class="dash-stat-chip">
+              <span class="dash-chip-val">${gam.xp || 0}</span>
+              <span class="dash-chip-lbl">XP total</span>
+            </div>
+            <div class="dash-stat-chip dash-chip-fire">
+              <span class="dash-chip-val">🔥 ${gam.streak || 0}</span>
+              <span class="dash-chip-lbl">días racha</span>
+            </div>
+            <div class="dash-stat-chip dash-chip-accent">
+              <span class="dash-chip-val">${learningIndex}</span>
+              <span class="dash-chip-lbl">Índice</span>
+            </div>
+          </div>
+        </div>
+
+        ${continueBlock}
+
+        <div class="dash-section">
+          <div class="dash-section-title">📊 Tu progreso</div>
+          <div class="dash-progress-row">
+            <div class="dash-prog-card">
+              <div class="dash-prog-icon">📚</div>
+              <div class="dash-prog-val">${sum.total}</div>
+              <div class="dash-prog-lbl">Sesiones</div>
+            </div>
+            <div class="dash-prog-card">
+              <div class="dash-prog-icon">⏱</div>
+              <div class="dash-prog-val">${hours}h</div>
+              <div class="dash-prog-lbl">Horas totales</div>
+            </div>
+            <div class="dash-prog-card">
+              <div class="dash-prog-icon">⚡</div>
+              <div class="dash-prog-val">${weekXP}</div>
+              <div class="dash-prog-lbl">XP esta semana</div>
+            </div>
+            <div class="dash-prog-card">
+              <div class="dash-prog-icon">🧠</div>
+              <div class="dash-prog-val">${sum.avgConc || '—'}</div>
+              <div class="dash-prog-lbl">Concentración</div>
+            </div>
+          </div>
+        </div>
+
+        ${recsHtml}
+        ${goalsCard ? `<div class="dash-section">${goalsCard}</div>` : ''}
+
+        <div class="dash-section">
+          <div class="dash-section-title">🛠 Herramientas</div>
+          <div class="dash-tools-grid">
+            <div class="dash-tool-card" data-go="pomodoro">
+              <div class="dash-tool-icon">🍅</div>
+              <div class="dash-tool-label">Concentración</div>
+            </div>
+            <div class="dash-tool-card" data-go="ai-study">
+              <div class="dash-tool-icon">🧠</div>
+              <div class="dash-tool-label">Estudio IA</div>
+            </div>
+            <div class="dash-tool-card" data-go="new-session">
+              <div class="dash-tool-icon">📝</div>
+              <div class="dash-tool-label">Nueva sesión</div>
+            </div>
+            <div class="dash-tool-card" data-go="achievements">
+              <div class="dash-tool-icon">🏆</div>
+              <div class="dash-tool-label">Logros</div>
+            </div>
+            <div class="dash-tool-card" data-go="recommend">
+              <div class="dash-tool-icon">💡</div>
+              <div class="dash-tool-label">Recomend.</div>
+            </div>
+            <div class="dash-tool-card" data-go="stats">
+              <div class="dash-tool-icon">📈</div>
+              <div class="dash-tool-label">Estadísticas</div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function _dashInstitutional(user, sessions, s) {
+    const gam = user.gamification || {};
+    const levelInfo = Gamification.getLevelInfo(gam.xp || 0);
+    const sum = Stats.summary(sessions);
+    const alerts = Analytics.generateAlerts(user.id);
+    const weekXP = Gamification.getWeeklyXP(user.id);
+    const school = user.schoolId ? s.schools[user.schoolId] : null;
+    const classroom = user.classroomId ? s.classrooms[user.classroomId] : null;
+    const sorted = [...sessions].sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
+
+    // Leaderboard del aula
+    let lbHtml = '';
     if (user.classroomId) {
       const lb = Gamification.getLeaderboard('classroom', user.classroomId, 'week').slice(0, 5);
       if (lb.length > 0) {
-        leaderboardHtml = `
-          <div class="card" style="margin-top:0;">
-            <h3>🏅 Ranking del Aula (esta semana)</h3>
-            <table class="table">
-              <thead><tr><th>#</th><th>Estudiante</th><th>XP</th><th>Racha</th></tr></thead>
-              <tbody>
-                ${lb.map(e => `
-                  <tr class="${e.userId === user.id ? 'self-row' : ''}">
-                    <td class="rank-medal-${e.rank}">${e.rank <= 3 ? ['🥇','🥈','🥉'][e.rank-1] : e.rank}</td>
-                    <td><span class="avatar-initials">${esc(e.name.slice(0,2).toUpperCase())}</span> ${esc(e.name)}</td>
-                    <td><strong>${e.xp}</strong></td>
-                    <td>🔥 ${e.streak}</td>
-                  </tr>`).join('')}
-              </tbody>
-            </table>
-            <button class="ghost" style="margin-top:10px;width:100%;" data-go="leaderboard">Ver ranking completo</button>
+        lbHtml = `
+          <div class="dash-section">
+            <div class="dash-section-title">🏅 Ranking del Aula — esta semana</div>
+            <div class="card" style="padding:14px;">
+              <table class="table">
+                <thead><tr><th>#</th><th>Estudiante</th><th>XP</th><th>Racha</th></tr></thead>
+                <tbody>
+                  ${lb.map(e => `
+                    <tr class="${e.userId === user.id ? 'self-row' : ''}">
+                      <td class="rank-medal-${e.rank}">${e.rank <= 3 ? ['🥇','🥈','🥉'][e.rank-1] : e.rank}</td>
+                      <td><span class="avatar-initials">${esc(e.name.slice(0,2).toUpperCase())}</span> ${esc(e.name)}</td>
+                      <td><strong>${e.xp}</strong></td>
+                      <td>🔥 ${e.streak}</td>
+                    </tr>`).join('')}
+                </tbody>
+              </table>
+              <button class="ghost" style="margin-top:10px;width:100%;" data-go="leaderboard">Ver ranking completo</button>
+            </div>
           </div>`;
       }
     }
 
-    return `
-      ${alerts.map(a => `<div class="alert ${a.type === 'success' ? 'success' : a.type === 'error' ? 'error' : 'info'}">${a.msg}</div>`).join('')}
+    // Cursos por materia
+    const bySubject = {};
+    sessions.forEach(sess => {
+      if (!bySubject[sess.subject]) bySubject[sess.subject] = [];
+      bySubject[sess.subject].push(sess);
+    });
+    const subjects = Object.keys(bySubject).sort((a, b) => bySubject[b].length - bySubject[a].length).slice(0, 6);
 
-      <div class="student-hero">
-        <div class="xp-section">
-          <div class="level-badge-wrap">
-            <div class="level-badge">Nv.<br>${levelInfo.current.level}</div>
-            <div style="flex:1;">
-              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
-                <span style="font-weight:600;color:var(--text);">${esc(levelInfo.current.title)}</span>
-                <span class="muted">${gam.xp || 0} XP</span>
+    const coursesHtml = subjects.length ? `
+      <div class="dash-section">
+        <div class="dash-section-title">📚 Mis cursos</div>
+        <div class="dash-courses-grid">
+          ${subjects.map(subj => {
+            const subs = bySubject[subj];
+            const avgC = subs.reduce((acc, ss) => acc + (ss.concentration || 0), 0) / subs.length;
+            const idx = Math.round((avgC / 5) * 100);
+            return `
+              <div class="dash-course-card">
+                <div class="dash-course-name">${esc(subj)}</div>
+                <div class="dash-course-bar-wrap">
+                  <div class="dash-course-bar" style="width:${Math.min(idx,100)}%;"></div>
+                </div>
+                <div class="dash-course-meta">
+                  <span>Índice: ${idx}</span>
+                  <span>${subs.length} sesión${subs.length !== 1 ? 'es' : ''}</span>
+                </div>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>` : '';
+
+    // Timeline últimas 5 sesiones
+    const timelineHtml = sorted.length ? `
+      <div class="dash-section">
+        <div class="dash-section-title">📅 Actividad reciente</div>
+        <div class="dash-timeline">
+          ${sorted.slice(0, 5).map(sess => `
+            <div class="dash-timeline-item">
+              <div class="dash-tl-icon">📚</div>
+              <div class="dash-tl-body">
+                <div class="dash-tl-title">${esc(sess.subject)}</div>
+                <div class="dash-tl-meta">${_relTime(sess.datetime)} · ${sess.durationMin} min · Concentración ${sess.concentration}/5</div>
               </div>
-              <div class="xp-bar-wrap">
-                <div class="xp-bar" style="width:${levelInfo.progress}%"></div>
-              </div>
-              ${levelInfo.next ? `<div class="xp-label">${levelInfo.progress}% hacia ${esc(levelInfo.next.title)} (${levelInfo.next.xpRequired} XP)</div>` : '<div class="xp-label">¡Nivel máximo alcanzado!</div>'}
+            </div>`).join('')}
+        </div>
+      </div>` : '';
+
+    // Barras de rendimiento
+    const perfHtml = sorted.length ? `
+      <div class="dash-section">
+        <div class="dash-section-title">📈 Rendimiento por sesión</div>
+        <div class="dash-perf-bars">
+          ${sorted.slice(0, 7).map(sess => {
+            const pct = Math.round(((sess.concentration || 0) / 5) * 100);
+            return `
+              <div class="dash-perf-row">
+                <div class="dash-perf-subj">${esc(sess.subject)}</div>
+                <div class="dash-perf-bar-wrap">
+                  <div class="dash-perf-bar" style="width:${pct}%;"></div>
+                </div>
+                <div class="dash-perf-val">${pct}%</div>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>` : '';
+
+    const alertsHtml = alerts.length ? `
+      <div class="dash-alert-panel">
+        <div class="dash-alert-header">⚡ Atención requerida</div>
+        ${alerts.slice(0, 3).map(a => `<div class="dash-alert-item">📌 ${a.msg}</div>`).join('')}
+      </div>` : '';
+
+    return `
+      <div class="dash-institutional">
+        <div class="dash-hero-institutional">
+          <div class="dash-hero-inst-name">${esc(user.name)}</div>
+          <div class="dash-hero-meta">
+            ${school ? `<span class="dash-hero-pill">🏫 ${esc(school.name)}</span>` : ''}
+            ${classroom ? `<span class="dash-hero-pill">🚪 ${esc(classroom.name)}</span>` : ''}
+            <span class="dash-hero-pill">⭐ Nv. ${levelInfo.current.level} — ${esc(levelInfo.current.title)}</span>
+          </div>
+          <div class="dash-hero-inst-stats">
+            <div class="dash-inst-stat">
+              <span class="dash-inst-stat-val">🔥 ${gam.streak || 0}</span>
+              <span class="dash-inst-stat-lbl">días racha</span>
+            </div>
+            <div class="dash-inst-stat">
+              <span class="dash-inst-stat-val">⚡ ${weekXP}</span>
+              <span class="dash-inst-stat-lbl">XP semana</span>
+            </div>
+            <div class="dash-inst-stat">
+              <span class="dash-inst-stat-val">${sum.total}</span>
+              <span class="dash-inst-stat-lbl">sesiones</span>
+            </div>
+            <div class="dash-inst-stat">
+              <span class="dash-inst-stat-val">${sum.avgConc || '—'}</span>
+              <span class="dash-inst-stat-lbl">conc. prom.</span>
             </div>
           </div>
         </div>
-        <div class="streak-widget">
-          <span class="streak-fire">🔥</span>
-          <span class="streak-count">${gam.streak || 0}</span>
-          <span class="streak-label">días<br>seguidos</span>
-        </div>
-        <div class="streak-widget">
-          <span class="streak-fire">⚡</span>
-          <span class="streak-count" style="color:var(--accent);">${weekXP}</span>
-          <span class="streak-label">XP<br>esta semana</span>
-        </div>
-      </div>
 
-      <h1>Hola, ${esc(user.name)} 👋</h1>
-      ${user.institutionType ? `<p class="muted">Institución: <strong>${esc(inst?.label || user.institutionType)}</strong>${user.classroomId && s.classrooms[user.classroomId] ? ` · Aula: <strong>${esc(s.classrooms[user.classroomId].name)}</strong>` : ''}</p>` : ''}
+        ${alertsHtml}
+        ${coursesHtml}
+        ${timelineHtml}
+        ${perfHtml}
+        ${lbHtml}
 
-      <div class="grid cols-4" style="margin:16px 0 4px;">
-        <div class="kpi"><div class="v">${sum.total}</div><div class="l">Sesiones</div></div>
-        <div class="kpi"><div class="v">${sum.avgConc || '—'}</div><div class="l">Concentración prom.</div></div>
-        <div class="kpi"><div class="v">${sum.totalMin}</div><div class="l">Minutos totales</div></div>
-        <div class="kpi"><div class="v">${sum.avgDur || '—'}</div><div class="l">Min/sesión prom.</div></div>
-      </div>
-
-      <div class="grid cols-3" style="margin-top:18px;">
-        <div class="card">
-          <h2>📝 Registrar sesión</h2>
-          <p class="muted">Anota tu última sesión de estudio.</p>
-          <button class="primary" data-go="new-session">Nueva sesión</button>
+        <div class="dash-section">
+          <div class="dash-section-title">🛠 Acceso rápido</div>
+          <div class="dash-tools-grid">
+            <div class="dash-tool-card" data-go="ai-study">
+              <div class="dash-tool-icon">🧠</div>
+              <div class="dash-tool-label">Estudio IA</div>
+            </div>
+            <div class="dash-tool-card" data-go="pomodoro">
+              <div class="dash-tool-icon">🍅</div>
+              <div class="dash-tool-label">Pomodoro</div>
+            </div>
+            <div class="dash-tool-card" data-go="new-session">
+              <div class="dash-tool-icon">📝</div>
+              <div class="dash-tool-label">Nueva sesión</div>
+            </div>
+            <div class="dash-tool-card" data-go="stats">
+              <div class="dash-tool-icon">📊</div>
+              <div class="dash-tool-label">Estadísticas</div>
+            </div>
+            <div class="dash-tool-card" data-go="achievements">
+              <div class="dash-tool-icon">🏆</div>
+              <div class="dash-tool-label">Logros</div>
+            </div>
+            <div class="dash-tool-card" data-go="leaderboard">
+              <div class="dash-tool-icon">🥇</div>
+              <div class="dash-tool-label">Ranking</div>
+            </div>
+          </div>
         </div>
-        <div class="card">
-          <h2>🍅 Pomodoro</h2>
-          <p class="muted">Timer de enfoque con registro automático.</p>
-          <button class="primary" data-go="pomodoro">Iniciar Pomodoro</button>
-        </div>
-        <div class="card">
-          <h2>🏆 Logros</h2>
-          <p class="muted">${(gam.badges || []).length} insignias desbloqueadas.</p>
-          <button class="ghost" data-go="achievements">Ver logros</button>
-        </div>
-        <div class="card">
-          <h2>📊 Estadísticas</h2>
-          <p class="muted">Promedios, gráficas y tendencias.</p>
-          <button class="ghost" data-go="stats">Ver estadísticas</button>
-        </div>
-        <div class="card">
-          <h2>💡 Recomendaciones</h2>
-          <p class="muted">Consejos basados en tus datos.</p>
-          <button class="ghost" data-go="recommend">Ver recomendaciones</button>
-        </div>
-        <div class="card">
-          <h2>👤 Mi Perfil</h2>
-          <p class="muted">Perfil de aprendizaje y resumen.</p>
-          <button class="ghost" data-go="profile">Ver perfil</button>
-        </div>
-      </div>
-
-      ${goalsCard}
-
-      ${leaderboardHtml}`;
+      </div>`;
   }
 
   // Sistema de Metas (Fase 9): tarjeta con 4 objetivos semanales y su progreso.
@@ -430,10 +650,15 @@ const UIStudent = (() => {
   // ---- Chat IA — estado en memoria (no persiste en Storage) ----
   let _chatState = null;
 
+  // Niveles DECO que rotan cada 3 mensajes del alumno
+  const _DECO_LEVELS = ['comprehension', 'application', 'reasoning', 'analysis'];
+
   async function _startAiChat(metadata) {
-    // mode: 'tutor' (guía explicativa) | 'minerva' (socrático puro). Viaja dentro
-    // de metadata → llega solo al system prompt del servidor sin cambiar firmas.
-    metadata.mode = metadata.mode || 'tutor';
+    // Método Minerva + Sistema DECO — siempre activos en TrackFocus Intelligence.
+    // No son opcionales: ambos viajan en metadata al system prompt del servidor.
+    metadata.mode = 'minerva';
+    metadata.decoLevel = _DECO_LEVELS[0]; // inicia en Comprensión, rota cada 3 mensajes
+
     // Memoria Académica (Fase 7): contexto del historial del alumno en esta materia.
     if (typeof AcademicMemory !== 'undefined') {
       const uid = Storage.get().currentUserId;
@@ -442,7 +667,10 @@ const UIStudent = (() => {
     }
     _chatState = {
       metadata, history: [], startedAt: Date.now(), attachedFiles: [],
-      quizQuestions: [], preQuizScore: null
+      messageCount: 0,        // mensajes del alumno enviados
+      decoLevelIndex: 0,      // índice actual en _DECO_LEVELS
+      midDecoTriggered: false, // previene doble auto-trigger DECO
+      quizResult: null        // resultado del quiz opcional (si el alumno lo usó)
     };
     // El chat reemplaza el cuerpo de la pantalla actual. Funciona tanto en
     // 'ai-study' (#aiPanelBody) como en 'new-session' (.session-setup-wrap).
@@ -453,17 +681,18 @@ const UIStudent = (() => {
     panelBody.innerHTML = _renderChatScreen(metadata);
     _wireChatScreen();
 
-    // Mini-quiz inicial (Fase C): punto de partida. Se reutilizan las mismas
-    // preguntas en el quiz final → la comparación pre/post es válida.
-    try {
-      const qs = await Quiz.generate(metadata, metadata.subject);
-      _chatState.quizQuestions = qs;
-      if (qs.length) {
-        _chatState.preQuizScore = await Quiz.present(qs, '📋 Quiz inicial — ' + metadata.subject);
-      }
-    } catch (_) { /* sin quiz → continuar sin bloquear */ }
+    // Quiz inicial automático eliminado — el quiz es ahora opcional (botón "📝 Quiz").
 
-    _sendAiMessage('Hola, estoy listo para comenzar. ¿Qué tema de ' + metadata.subject + ' vas a estudiar hoy?');
+    // Saludo adaptado al modo de estudio seleccionado
+    let greeting;
+    if (metadata.studyMode === 'exam-prep') {
+      greeting = `Hola, me preparo para mi examen de ${metadata.subject}. ¿Por dónde empezamos?`;
+    } else if (metadata.studyMode === 'topic-mastery') {
+      greeting = `Hola, quiero mejorar en ${metadata.topicGoal || metadata.subject}. ¿Cómo empezamos?`;
+    } else {
+      greeting = `Hola, estoy listo para comenzar. ¿Qué tema de ${metadata.subject} vas a estudiar hoy?`;
+    }
+    _sendAiMessage(greeting);
   }
 
   // Lee un File como base64 (sin el prefijo data:...)
@@ -482,11 +711,17 @@ const UIStudent = (() => {
       '4to': '4to Sec.', '5to': '5to Sec.'
     }[metadata.grade] || metadata.grade;
 
+    const modeBadgeText = metadata.studyMode === 'exam-prep'
+      ? '📝 Modo Examen'
+      : metadata.studyMode === 'topic-mastery'
+      ? '🎯 Dominio de Tema'
+      : '';
+
     return `
       <div class="chat-screen">
         <div class="chat-header">
           <div class="chat-header-info">
-            <span class="chat-header-title">🤖 TrackTutor · ${esc(metadata.subject)} <span class="ai-mode-badge" id="chatModeBadge" hidden>🦉 Minerva</span></span>
+            <span class="chat-header-title">🤖 TrackTutor · ${esc(metadata.subject)}${modeBadgeText ? ` <span class="ai-mode-badge">${modeBadgeText}</span>` : ''}</span>
             <span class="chat-header-sub">${esc(gradeLabel)} · ${metadata.durationMin} min planificados</span>
           </div>
           <div class="chat-header-actions">
@@ -513,8 +748,9 @@ const UIStudent = (() => {
           </div>
           <div class="chat-footer-actions">
             <div class="ai-toolbar">
-              <button class="ghost ai-toolbar-btn" id="chatMinervaBtn" title="Modo Minerva: aprendizaje socrático puro (el tutor nunca da la respuesta, solo te guía con preguntas)">🦉 Minerva</button>
-              <button class="ghost ai-toolbar-btn" id="chatDecoBtn" title="Evaluación DECO: preguntas en 4 niveles cognitivos para medir tu comprensión">🎯 DECO</button>
+              <span class="ai-always-on-badge" title="Método Minerva (socrático) y Sistema DECO (4 niveles cognitivos) están activos en toda la sesión">🦉 Minerva · 🎯 DECO activos</span>
+              <button class="ghost ai-toolbar-btn" id="chatQuizBtn" title="Practicar con un Quiz opcional — no interrumpe la sesión">📝 Quiz</button>
+              <span class="li-live-chip" id="chatLiChip" style="display:none;" title="Índice de Aprendizaje estimado en tiempo real">📊 <span id="chatLiVal">—</span></span>
             </div>
             <span class="chat-hint">Enter envía · Shift+Enter salto de línea</span>
           </div>
@@ -633,25 +869,36 @@ const UIStudent = (() => {
 
     finalBtn.addEventListener('click', () => _finalizeChat());
 
-    // Modo Minerva (Fase 4): toggle socrático. Solo cambia el system prompt de
-    // los próximos mensajes; no reescribe el historial ni interrumpe la sesión.
-    const minervaBtn = document.getElementById('chatMinervaBtn');
-    const modeBadge  = document.getElementById('chatModeBadge');
-    minervaBtn?.addEventListener('click', () => {
-      if (!_chatState) return;
-      const on = _chatState.metadata.mode === 'minerva';
-      _chatState.metadata.mode = on ? 'tutor' : 'minerva';
-      minervaBtn.classList.toggle('active', !on);
-      if (modeBadge) modeBadge.hidden = on;
-      UI.flash?.(on
-        ? 'Modo Tutor: explicaciones guiadas activadas.'
-        : '🦉 Modo Minerva: el tutor te guiará solo con preguntas, sin darte la respuesta.',
-        'info');
-    });
+    // Método Minerva + Sistema DECO siempre activos — no hay botón de toggle.
+    // La rotación de niveles DECO y el auto-trigger ocurren en _handleUserMessage.
 
-    // Modo DECO (Fase 5): evaluación en 4 niveles cognitivos dentro del chat.
-    const decoBtn = document.getElementById('chatDecoBtn');
-    decoBtn?.addEventListener('click', () => _launchDeco(decoBtn));
+    // Quiz opcional: el estudiante lo activa cuando quiera practicar.
+    document.getElementById('chatQuizBtn')?.addEventListener('click', () => _launchOptionalQuiz());
+  }
+
+  // Actualiza el chip de Índice de Aprendizaje en tiempo real en el header del chat.
+  function _updateLiChip(value) {
+    const chip  = document.getElementById('chatLiChip');
+    const valEl = document.getElementById('chatLiVal');
+    if (!chip || !valEl) return;
+    chip.style.display = '';
+    valEl.textContent = value != null ? String(value) : '—';
+  }
+
+  // Estimación ligera del Índice de Aprendizaje durante la sesión (antes del finalize).
+  // Considera: engagement (longitud de respuestas) + DECO si ya fue calificado.
+  function _estimateLiveLI() {
+    if (!_chatState) return null;
+    const userMsgs = _chatState.history.filter(m => m.role === 'user');
+    if (userMsgs.length < 2) return null; // muy pocas interacciones para estimar
+    const avgWords = userMsgs.reduce((s, m) => s + m.content.trim().split(/\s+/).length, 0) / userMsgs.length;
+    const wordScore = avgWords < 5 ? 0.2 : avgWords < 15 ? 0.5 : avgWords < 30 ? 0.8 : 1.0;
+    const engagement = Math.min(1, userMsgs.length / 10);
+    let decoScore = 0.5;
+    if (_chatState.decoResult && _chatState.decoResult.total > 0) {
+      decoScore = _chatState.decoResult.decoScore / _chatState.decoResult.total;
+    }
+    return Math.round((decoScore * 0.5 + wordScore * 0.3 + engagement * 0.2) * 100);
   }
 
   // Genera y presenta la evaluación DECO como tarjeta expandible en el chat.
@@ -675,8 +922,132 @@ const UIStudent = (() => {
       return;
     }
     Deco.renderInto(messages, blocks, (result) => {
-      _chatState.decoResult = result;
-      UI.flash?.(`DECO calificado: ${result.decoScore}/${result.total}. Se reflejará en tu Índice de Aprendizaje al finalizar.`, 'success');
+      if (_chatState) _chatState.decoResult = result;
+      // Actualizar el indicador de Índice de Aprendizaje con el resultado real
+      const liEstimate = (typeof Deco !== 'undefined') ? Deco.learningIndex({}, result) : _estimateLiveLI();
+      if (liEstimate != null) _updateLiChip(liEstimate);
+      UI.flash?.(`DECO calificado: ${result.decoScore}/${result.total}. Índice de Aprendizaje actualizado: ${liEstimate ?? '—'}/100 📊`, 'success');
+    });
+  }
+
+  // Quiz opcional: muestra panel de config → genera preguntas → presenta quiz integrado.
+  // No interrumpe el chat — el estudiante puede cerrar y seguir conversando.
+  async function _launchOptionalQuiz() {
+    if (!_chatState) return;
+    const messages = document.getElementById('chatMessages');
+    if (!messages) return;
+
+    // Si ya hay un quiz abierto, no abrir otro
+    if (messages.querySelector('.quiz-chat-panel, .quiz-config-card')) {
+      UI.flash?.('Ya hay un quiz abierto en el chat.', 'info');
+      messages.querySelector('.quiz-chat-panel, .quiz-config-card')?.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+
+    // Panel de configuración
+    const configCard = document.createElement('div');
+    configCard.className = 'quiz-config-card';
+    configCard.innerHTML = `
+      <div class="quiz-panel-header">
+        <span class="quiz-panel-title">📝 Practicar con un Quiz</span>
+        <button class="ghost quiz-close-inline" style="font-size:12px;padding:4px 10px;">✕</button>
+      </div>
+      <p class="muted" style="font-size:13px;margin:0 0 14px;">Genera preguntas basadas en lo que estás estudiando ahora.</p>
+      <div class="quiz-config-grid">
+        <div class="field">
+          <label>Preguntas</label>
+          <select id="quizCountSel">
+            <option value="5" selected>5 preguntas</option>
+            <option value="10">10 preguntas</option>
+            <option value="15">15 preguntas</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Dificultad</label>
+          <select id="quizDiffSel">
+            <option value="basica">Básica</option>
+            <option value="intermedia" selected>Intermedia</option>
+            <option value="avanzada">Avanzada</option>
+            <option value="adaptativa">Adaptativa (IA)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Enfoque</label>
+          <select id="quizFocusSel">
+            <option value="mixto" selected>Mixto</option>
+            <option value="comprehension">Comprensión</option>
+            <option value="application">Aplicación</option>
+            <option value="reasoning">Razonamiento</option>
+            <option value="analysis">Análisis crítico</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end;">
+        <button class="ghost quiz-close-inline">Cancelar</button>
+        <button class="primary" id="quizConfigStart">Comenzar Quiz →</button>
+      </div>`;
+
+    messages.appendChild(configCard);
+    messages.scrollTop = messages.scrollHeight;
+
+    configCard.querySelectorAll('.quiz-close-inline').forEach(btn =>
+      btn.addEventListener('click', () => configCard.remove())
+    );
+
+    configCard.querySelector('#quizConfigStart')?.addEventListener('click', async () => {
+      const count      = Number(configCard.querySelector('#quizCountSel').value);
+      const difficulty = configCard.querySelector('#quizDiffSel').value;
+      const focus      = configCard.querySelector('#quizFocusSel').value;
+      configCard.remove();
+
+      // Indicador de carga en el chat
+      const loadingEl = document.createElement('div');
+      loadingEl.className = 'chat-bubble-wrap ia';
+      loadingEl.innerHTML = `<div class="chat-bubble ia">⏳ Generando ${count} preguntas de ${difficulty === 'adaptativa' ? 'nivel adaptativo' : difficulty}… esto tarda unos segundos.</div>`;
+      messages.appendChild(loadingEl);
+      messages.scrollTop = messages.scrollHeight;
+
+      // Usar el tema de la conversación si existe
+      const topic = _chatState.firstUserTopic || _chatState.metadata.subject;
+      const config = { count, difficulty, focus };
+
+      let questions = [];
+      try {
+        questions = await Quiz.generateAdvanced(_chatState.metadata, topic, config);
+      } catch (_) {}
+      loadingEl.remove();
+
+      if (!questions || !questions.length) {
+        UI.flash?.('No se pudo generar el quiz ahora. Inténtalo de nuevo.', 'error');
+        return;
+      }
+
+      Quiz.presentInChat(messages, questions, _chatState.metadata, (result) => {
+        if (!result) return; // cerrado sin completar
+
+        // Guardar resultado del quiz para el Índice de Aprendizaje
+        if (_chatState) {
+          _chatState.quizResult = result;
+          const li = _estimateLiveLI();
+          if (li != null) _updateLiChip(li);
+        }
+
+        // Actualizar Memoria Académica con resultados del quiz
+        if (typeof AcademicMemory !== 'undefined' && _chatState && result.pct != null) {
+          const uid = Storage.get().currentUserId;
+          AcademicMemory.update(uid, _chatState.metadata.subject, {
+            topic,
+            learningIndex: result.pct,
+            quizScore: result.score,
+            quizTotal: result.total
+          });
+        }
+
+        // Opción de hacer otro quiz
+        if (result.retake) {
+          setTimeout(() => _launchOptionalQuiz(), 400);
+        }
+      });
     });
   }
 
@@ -841,6 +1212,35 @@ const UIStudent = (() => {
         files  // archivos adjuntos multimodal
       );
       _chatState.history.push({ role: 'model', content: fullText, timestamp: Date.now() });
+
+      // Rotar nivel DECO cada 3 mensajes del alumno
+      _chatState.messageCount = (_chatState.messageCount || 0) + 1;
+      _chatState.decoLevelIndex = Math.floor(_chatState.messageCount / 3) % _DECO_LEVELS.length;
+      _chatState.metadata.decoLevel = _DECO_LEVELS[_chatState.decoLevelIndex];
+
+      // Actualizar indicador de Índice de Aprendizaje en tiempo real
+      const liveLI = _estimateLiveLI();
+      if (liveLI != null) _updateLiChip(liveLI);
+
+      // Auto-trigger evaluación DECO completa al 6° mensaje del alumno (mitad de sesión)
+      const userMsgCount = _chatState.history.filter(m => m.role === 'user').length;
+      if (userMsgCount === 6 && !_chatState.midDecoTriggered) {
+        _chatState.midDecoTriggered = true;
+        setTimeout(() => {
+          const msgs = document.getElementById('chatMessages');
+          if (msgs) {
+            const notice = document.createElement('div');
+            notice.className = 'chat-bubble-wrap ia';
+            notice.innerHTML = `<div class="chat-bubble ia" style="border:1px solid var(--accent);background:var(--accent-bg,#f5f0ff);padding:12px 14px;">
+              <strong>📊 Evaluación DECO automática</strong><br>
+              <span style="font-size:13px;">Llevas 6 intercambios — es el momento perfecto para medir tu comprensión real en los 4 niveles cognitivos.</span>
+            </div>`;
+            msgs.appendChild(notice);
+            msgs.scrollTop = msgs.scrollHeight;
+          }
+          _launchDeco(null);
+        }, 1500);
+      }
     } catch (err) {
       if (bubble) bubble.remove();
       _chatState.history.pop();
@@ -907,15 +1307,9 @@ const UIStudent = (() => {
       // Persistir la última materia utilizada para pre-selección futura
       Subjects.saveLastSubject(user.id, _chatState.metadata.subject);
 
-      // Quiz final (Fase C): mismas preguntas que el inicial → mide aprendizaje real.
-      let postQuizScore = null;
-      if (_chatState.quizQuestions && _chatState.quizQuestions.length) {
-        postQuizScore = await Quiz.present(
-          _chatState.quizQuestions, '✅ Quiz final — ' + _chatState.metadata.subject
-        );
-      }
+      // Quiz final automático eliminado — el quiz es opcional (botón "📝 Quiz" en el chat).
       const timeSpentSeconds = (Date.now() - (_chatState.startedAt || Date.now())) / 1000;
-      const preQuizScore = _chatState.preQuizScore;
+      const quizResult = _chatState.quizResult || null;
 
       // Memoria Académica (Fase 7): actualiza lo que el tutor recuerda de esta materia.
       if (typeof AcademicMemory !== 'undefined') {
@@ -932,7 +1326,7 @@ const UIStudent = (() => {
       // Fire-and-forget: tiene su propia cola offline (Pilot.flushOutbox).
       _recordPilot({
         sessionId: record.id, focusScore: concentration, timeSpentSeconds,
-        preQuizScore, postQuizScore,
+        preQuizScore: null, postQuizScore: quizResult ? quizResult.score : null,
         decoScore: decoResult ? decoResult.decoScore : null,
         learningIndex,
         decoByLevel: decoResult ? decoResult.byLevel : null
@@ -945,13 +1339,10 @@ const UIStudent = (() => {
         : [];
       try { sessionStorage.setItem('tf-last-recommendations', JSON.stringify({ at: Date.now(), subject: record.subject, recs })); } catch (_) {}
 
-      const mejora = (preQuizScore != null && postQuizScore != null)
-        ? ` · Quiz: ${preQuizScore}→${postQuizScore}`
-        : '';
       const idxTxt = (learningIndex != null) ? ` · Índice ${learningIndex}/100 📊` : '';
       const goPanel = () => {
         App.go('dashboard');
-        UI.flash(`Sesión guardada · Concentración deducida: ${concentration}/5 🎯${mejora}${idxTxt}`, 'success');
+        UI.flash(`Sesión guardada · Concentración deducida: ${concentration}/5 🎯${idxTxt}`, 'success');
         showXpToast(gamResult.xpEarned, gamResult.newBadges);
       };
 
@@ -1798,13 +2189,35 @@ const UIStudent = (() => {
                 </select>
               </div>
             </div>
+            <div class="row">
+              <div class="field" style="flex:1;">
+                <label>Modo de estudio</label>
+                <select name="studyMode" id="studyModeSelectAI">
+                  <option value="tutor">🦉 Aprendizaje guiado (Minerva + DECO)</option>
+                  <option value="exam-prep">📝 Prepararme para un examen</option>
+                  <option value="topic-mastery">🎯 Mejorar en un tema específico</option>
+                </select>
+              </div>
+            </div>
+            <div class="row" id="examPrepFieldsAI" style="display:none;">
+              <div class="field" style="flex:1;">
+                <label>Fecha del examen (aproximada)</label>
+                <input type="date" name="examDate" />
+              </div>
+            </div>
+            <div class="row" id="topicMasteryFieldsAI" style="display:none;">
+              <div class="field" style="flex:1;">
+                <label>Tema específico que quieres dominar</label>
+                <input type="text" name="topicGoal" placeholder="Ej. Ecuaciones cuadráticas, Revolución Francesa, Fotosíntesis…" />
+              </div>
+            </div>
             <input type="hidden" name="datetime" value="${local}" />
             <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
               <button class="primary" type="submit">Comenzar sesión ✨</button>
             </div>
           </form>
           <p class="muted" style="font-size:12px;margin-top:12px;text-align:center;">
-            TrackFocus Intelligence evaluará tu concentración y aprendizaje de forma invisible mientras estudias.
+            🦉 Método Minerva + 🎯 Sistema DECO activos en toda sesión. TrackFocus Intelligence te guía mientras aprendes.
           </p>
 
           <!-- Sección Progreso -->
@@ -1853,6 +2266,18 @@ const UIStudent = (() => {
     if (setupForm) {
       _wireSubjectOtro('subjectSelectAI', 'customSubjectWrapAI', 'customSubjectInputAI');
 
+      // Mostrar/ocultar campos extra según el modo de estudio seleccionado
+      const modeSelAI     = document.getElementById('studyModeSelectAI');
+      const examFieldsAI  = document.getElementById('examPrepFieldsAI');
+      const topicFieldsAI = document.getElementById('topicMasteryFieldsAI');
+      function _updateModeFields() {
+        const val = modeSelAI?.value;
+        if (examFieldsAI)  examFieldsAI.style.display  = val === 'exam-prep'      ? '' : 'none';
+        if (topicFieldsAI) topicFieldsAI.style.display = val === 'topic-mastery'  ? '' : 'none';
+      }
+      modeSelAI?.addEventListener('change', _updateModeFields);
+      _updateModeFields(); // estado inicial
+
       // Demo guiada: pre-llenar el formulario y auto-submitear
       if (window.__TF_DEMO_GUIDED_META) {
         const meta = window.__TF_DEMO_GUIDED_META;
@@ -1872,12 +2297,16 @@ const UIStudent = (() => {
         const userId = Storage.get().currentUserId;
         const subject = _resolveSubject('subjectSelectAI', 'customSubjectInputAI', userId);
         if (!subject) return;
+        const studyMode = fd.get('studyMode') || 'tutor';
         const metadata = {
           datetime:         new Date(fd.get('datetime')).toISOString(),
           durationMin:      Number(fd.get('durationMin')),
           subject,
           grade:            fd.get('grade'),
-          previousActivity: fd.get('previousActivity')
+          previousActivity: fd.get('previousActivity'),
+          studyMode,
+          examDate:         studyMode === 'exam-prep'      ? (fd.get('examDate') || null)    : null,
+          topicGoal:        studyMode === 'topic-mastery'  ? (fd.get('topicGoal') || null)   : null
         };
         _startAiChat(metadata);
       });

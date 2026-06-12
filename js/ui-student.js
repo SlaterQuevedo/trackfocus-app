@@ -108,118 +108,341 @@ const UIStudent = (() => {
     });
   }
 
-  // ---- Pantalla: Dashboard ----
+  // ---- Pantalla: Dashboard (bifurca entre personal e institucional) ----
   function screenDashboard() {
     const s = Storage.get();
     const user = s.users[s.currentUserId];
-    const inst = Subjects.getInstitution(user.institutionType);
     const sessions = Sessions.listFor(user.id);
-    const sum = Stats.summary(sessions);
+    const isPersonal = !user.schoolId;
+    return isPersonal ? _dashPersonal(user, sessions, s) : _dashInstitutional(user, sessions, s);
+  }
+
+  function _relTime(dateStr) {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const d = Math.floor(diff / 86400000);
+    if (d === 0) return 'Hoy';
+    if (d === 1) return 'Ayer';
+    if (d < 7) return `Hace ${d} días`;
+    const w = Math.floor(d / 7);
+    return `Hace ${w} semana${w > 1 ? 's' : ''}`;
+  }
+
+  function _dashPersonal(user, sessions, s) {
     const gam = user.gamification || {};
     const levelInfo = Gamification.getLevelInfo(gam.xp || 0);
+    const sum = Stats.summary(sessions);
     const alerts = Analytics.generateAlerts(user.id);
     const weekXP = Gamification.getWeeklyXP(user.id);
+    const learningIndex = sum.avgConc ? Math.round((parseFloat(sum.avgConc) / 5) * 100) : 0;
+    const hours = Math.round(((sum.totalMin || 0) / 60) * 10) / 10;
 
-    // Leaderboard del aula (top 5)
-    let leaderboardHtml = '';
+    const subtitles = [
+      'Cada sesión te acerca más a tu meta.',
+      'Hoy es un buen día para aprender algo nuevo.',
+      'Tu progreso se construye una sesión a la vez.',
+      'La constancia es tu superpoder.',
+      'Estudia con propósito, avanza con confianza.'
+    ];
+    const subtitle = subtitles[new Date().getDay() % subtitles.length];
+
+    const sorted = [...sessions].sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
+    const last = sorted[0] || null;
+
+    const continueBlock = last ? `
+      <div class="dash-section">
+        <div class="dash-section-title">▶ Continúa donde te quedaste</div>
+        <div class="dash-continue-card">
+          <div class="dash-continue-icon">📚</div>
+          <div class="dash-continue-body">
+            <div class="dash-continue-subject">${esc(last.subject)}</div>
+            <div class="dash-continue-meta">${_relTime(last.datetime)} · ${last.durationMin} min · Concentración ${last.concentration}/5</div>
+          </div>
+          <button class="primary" data-go="ai-study" style="flex-shrink:0;white-space:nowrap;">Estudiar →</button>
+        </div>
+      </div>` : `
+      <div class="dash-section">
+        <div class="dash-section-title">▶ Empieza tu primera sesión</div>
+        <div class="dash-continue-card">
+          <div class="dash-continue-icon">🚀</div>
+          <div class="dash-continue-body">
+            <div class="dash-continue-subject">¡Comienza hoy!</div>
+            <div class="dash-continue-meta">Registra tu primera sesión de estudio.</div>
+          </div>
+          <button class="primary" data-go="new-session" style="flex-shrink:0;white-space:nowrap;">Nueva sesión →</button>
+        </div>
+      </div>`;
+
+    const recsHtml = alerts.length ? `
+      <div class="dash-section">
+        <div class="dash-section-title">💡 Recomendaciones</div>
+        <div class="dash-recommendations">
+          ${alerts.slice(0, 3).map(a => `<div class="dash-rec-item">${a.msg}</div>`).join('')}
+        </div>
+      </div>` : '';
+
+    return `
+      <div class="dash-personal">
+        <div class="dash-hero-personal">
+          <div>
+            <h1 class="dash-hero-title">Hola, ${esc(user.name)} 👋</h1>
+            <p class="dash-hero-sub">${subtitle}</p>
+          </div>
+          <div class="dash-stat-chips">
+            <div class="dash-stat-chip dash-chip-primary">
+              <span class="dash-chip-val">Nv. ${levelInfo.current.level}</span>
+              <span class="dash-chip-lbl">Nivel</span>
+            </div>
+            <div class="dash-stat-chip">
+              <span class="dash-chip-val">${gam.xp || 0}</span>
+              <span class="dash-chip-lbl">XP total</span>
+            </div>
+            <div class="dash-stat-chip dash-chip-fire">
+              <span class="dash-chip-val">🔥 ${gam.streak || 0}</span>
+              <span class="dash-chip-lbl">días racha</span>
+            </div>
+            <div class="dash-stat-chip dash-chip-accent">
+              <span class="dash-chip-val">${learningIndex}</span>
+              <span class="dash-chip-lbl">Índice</span>
+            </div>
+          </div>
+        </div>
+
+        ${continueBlock}
+
+        <div class="dash-section">
+          <div class="dash-section-title">📊 Tu progreso</div>
+          <div class="dash-progress-row">
+            <div class="dash-prog-card">
+              <div class="dash-prog-icon">📚</div>
+              <div class="dash-prog-val">${sum.total}</div>
+              <div class="dash-prog-lbl">Sesiones</div>
+            </div>
+            <div class="dash-prog-card">
+              <div class="dash-prog-icon">⏱</div>
+              <div class="dash-prog-val">${hours}h</div>
+              <div class="dash-prog-lbl">Horas totales</div>
+            </div>
+            <div class="dash-prog-card">
+              <div class="dash-prog-icon">⚡</div>
+              <div class="dash-prog-val">${weekXP}</div>
+              <div class="dash-prog-lbl">XP esta semana</div>
+            </div>
+            <div class="dash-prog-card">
+              <div class="dash-prog-icon">🧠</div>
+              <div class="dash-prog-val">${sum.avgConc || '—'}</div>
+              <div class="dash-prog-lbl">Concentración</div>
+            </div>
+          </div>
+        </div>
+
+        ${recsHtml}
+
+        <div class="dash-section">
+          <div class="dash-section-title">🛠 Herramientas</div>
+          <div class="dash-tools-grid">
+            <div class="dash-tool-card" data-go="pomodoro">
+              <div class="dash-tool-icon">🍅</div>
+              <div class="dash-tool-label">Concentración</div>
+            </div>
+            <div class="dash-tool-card" data-go="ai-study">
+              <div class="dash-tool-icon">🧠</div>
+              <div class="dash-tool-label">Estudio IA</div>
+            </div>
+            <div class="dash-tool-card" data-go="new-session">
+              <div class="dash-tool-icon">📝</div>
+              <div class="dash-tool-label">Nueva sesión</div>
+            </div>
+            <div class="dash-tool-card" data-go="achievements">
+              <div class="dash-tool-icon">🏆</div>
+              <div class="dash-tool-label">Logros</div>
+            </div>
+            <div class="dash-tool-card" data-go="recommend">
+              <div class="dash-tool-icon">💡</div>
+              <div class="dash-tool-label">Recomend.</div>
+            </div>
+            <div class="dash-tool-card" data-go="stats">
+              <div class="dash-tool-icon">📈</div>
+              <div class="dash-tool-label">Estadísticas</div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function _dashInstitutional(user, sessions, s) {
+    const gam = user.gamification || {};
+    const levelInfo = Gamification.getLevelInfo(gam.xp || 0);
+    const sum = Stats.summary(sessions);
+    const alerts = Analytics.generateAlerts(user.id);
+    const weekXP = Gamification.getWeeklyXP(user.id);
+    const school = user.schoolId ? s.schools[user.schoolId] : null;
+    const classroom = user.classroomId ? s.classrooms[user.classroomId] : null;
+    const sorted = [...sessions].sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
+
+    // Leaderboard del aula
+    let lbHtml = '';
     if (user.classroomId) {
       const lb = Gamification.getLeaderboard('classroom', user.classroomId, 'week').slice(0, 5);
       if (lb.length > 0) {
-        leaderboardHtml = `
-          <div class="card" style="margin-top:0;">
-            <h3>🏅 Ranking del Aula (esta semana)</h3>
-            <table class="table">
-              <thead><tr><th>#</th><th>Estudiante</th><th>XP</th><th>Racha</th></tr></thead>
-              <tbody>
-                ${lb.map(e => `
-                  <tr class="${e.userId === user.id ? 'self-row' : ''}">
-                    <td class="rank-medal-${e.rank}">${e.rank <= 3 ? ['🥇','🥈','🥉'][e.rank-1] : e.rank}</td>
-                    <td><span class="avatar-initials">${esc(e.name.slice(0,2).toUpperCase())}</span> ${esc(e.name)}</td>
-                    <td><strong>${e.xp}</strong></td>
-                    <td>🔥 ${e.streak}</td>
-                  </tr>`).join('')}
-              </tbody>
-            </table>
-            <button class="ghost" style="margin-top:10px;width:100%;" data-go="leaderboard">Ver ranking completo</button>
+        lbHtml = `
+          <div class="dash-section">
+            <div class="dash-section-title">🏅 Ranking del Aula — esta semana</div>
+            <div class="card" style="padding:14px;">
+              <table class="table">
+                <thead><tr><th>#</th><th>Estudiante</th><th>XP</th><th>Racha</th></tr></thead>
+                <tbody>
+                  ${lb.map(e => `
+                    <tr class="${e.userId === user.id ? 'self-row' : ''}">
+                      <td class="rank-medal-${e.rank}">${e.rank <= 3 ? ['🥇','🥈','🥉'][e.rank-1] : e.rank}</td>
+                      <td><span class="avatar-initials">${esc(e.name.slice(0,2).toUpperCase())}</span> ${esc(e.name)}</td>
+                      <td><strong>${e.xp}</strong></td>
+                      <td>🔥 ${e.streak}</td>
+                    </tr>`).join('')}
+                </tbody>
+              </table>
+              <button class="ghost" style="margin-top:10px;width:100%;" data-go="leaderboard">Ver ranking completo</button>
+            </div>
           </div>`;
       }
     }
 
-    return `
-      ${alerts.map(a => `<div class="alert ${a.type === 'success' ? 'success' : a.type === 'error' ? 'error' : 'info'}">${a.msg}</div>`).join('')}
+    // Cursos por materia
+    const bySubject = {};
+    sessions.forEach(sess => {
+      if (!bySubject[sess.subject]) bySubject[sess.subject] = [];
+      bySubject[sess.subject].push(sess);
+    });
+    const subjects = Object.keys(bySubject).sort((a, b) => bySubject[b].length - bySubject[a].length).slice(0, 6);
 
-      <div class="student-hero">
-        <div class="xp-section">
-          <div class="level-badge-wrap">
-            <div class="level-badge">Nv.<br>${levelInfo.current.level}</div>
-            <div style="flex:1;">
-              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
-                <span style="font-weight:600;color:var(--text);">${esc(levelInfo.current.title)}</span>
-                <span class="muted">${gam.xp || 0} XP</span>
+    const coursesHtml = subjects.length ? `
+      <div class="dash-section">
+        <div class="dash-section-title">📚 Mis cursos</div>
+        <div class="dash-courses-grid">
+          ${subjects.map(subj => {
+            const subs = bySubject[subj];
+            const avgC = subs.reduce((acc, ss) => acc + (ss.concentration || 0), 0) / subs.length;
+            const idx = Math.round((avgC / 5) * 100);
+            return `
+              <div class="dash-course-card">
+                <div class="dash-course-name">${esc(subj)}</div>
+                <div class="dash-course-bar-wrap">
+                  <div class="dash-course-bar" style="width:${Math.min(idx,100)}%;"></div>
+                </div>
+                <div class="dash-course-meta">
+                  <span>Índice: ${idx}</span>
+                  <span>${subs.length} sesión${subs.length !== 1 ? 'es' : ''}</span>
+                </div>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>` : '';
+
+    // Timeline últimas 5 sesiones
+    const timelineHtml = sorted.length ? `
+      <div class="dash-section">
+        <div class="dash-section-title">📅 Actividad reciente</div>
+        <div class="dash-timeline">
+          ${sorted.slice(0, 5).map(sess => `
+            <div class="dash-timeline-item">
+              <div class="dash-tl-icon">📚</div>
+              <div class="dash-tl-body">
+                <div class="dash-tl-title">${esc(sess.subject)}</div>
+                <div class="dash-tl-meta">${_relTime(sess.datetime)} · ${sess.durationMin} min · Concentración ${sess.concentration}/5</div>
               </div>
-              <div class="xp-bar-wrap">
-                <div class="xp-bar" style="width:${levelInfo.progress}%"></div>
-              </div>
-              ${levelInfo.next ? `<div class="xp-label">${levelInfo.progress}% hacia ${esc(levelInfo.next.title)} (${levelInfo.next.xpRequired} XP)</div>` : '<div class="xp-label">¡Nivel máximo alcanzado!</div>'}
+            </div>`).join('')}
+        </div>
+      </div>` : '';
+
+    // Barras de rendimiento (últimas 7 sesiones)
+    const perfHtml = sorted.length ? `
+      <div class="dash-section">
+        <div class="dash-section-title">📈 Rendimiento por sesión</div>
+        <div class="dash-perf-bars">
+          ${sorted.slice(0, 7).map(sess => {
+            const pct = Math.round(((sess.concentration || 0) / 5) * 100);
+            return `
+              <div class="dash-perf-row">
+                <div class="dash-perf-subj">${esc(sess.subject)}</div>
+                <div class="dash-perf-bar-wrap">
+                  <div class="dash-perf-bar" style="width:${pct}%;"></div>
+                </div>
+                <div class="dash-perf-val">${pct}%</div>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>` : '';
+
+    const alertsHtml = alerts.length ? `
+      <div class="dash-alert-panel">
+        <div class="dash-alert-header">⚡ Atención requerida</div>
+        ${alerts.slice(0, 3).map(a => `<div class="dash-alert-item">📌 ${a.msg}</div>`).join('')}
+      </div>` : '';
+
+    return `
+      <div class="dash-institutional">
+        <div class="dash-hero-institutional">
+          <div class="dash-hero-inst-name">${esc(user.name)}</div>
+          <div class="dash-hero-meta">
+            ${school ? `<span class="dash-hero-pill">🏫 ${esc(school.name)}</span>` : ''}
+            ${classroom ? `<span class="dash-hero-pill">🚪 ${esc(classroom.name)}</span>` : ''}
+            <span class="dash-hero-pill">⭐ Nv. ${levelInfo.current.level} — ${esc(levelInfo.current.title)}</span>
+          </div>
+          <div class="dash-hero-inst-stats">
+            <div class="dash-inst-stat">
+              <span class="dash-inst-stat-val">🔥 ${gam.streak || 0}</span>
+              <span class="dash-inst-stat-lbl">días racha</span>
+            </div>
+            <div class="dash-inst-stat">
+              <span class="dash-inst-stat-val">⚡ ${weekXP}</span>
+              <span class="dash-inst-stat-lbl">XP semana</span>
+            </div>
+            <div class="dash-inst-stat">
+              <span class="dash-inst-stat-val">${sum.total}</span>
+              <span class="dash-inst-stat-lbl">sesiones</span>
+            </div>
+            <div class="dash-inst-stat">
+              <span class="dash-inst-stat-val">${sum.avgConc || '—'}</span>
+              <span class="dash-inst-stat-lbl">conc. prom.</span>
             </div>
           </div>
         </div>
-        <div class="streak-widget">
-          <span class="streak-fire">🔥</span>
-          <span class="streak-count">${gam.streak || 0}</span>
-          <span class="streak-label">días<br>seguidos</span>
-        </div>
-        <div class="streak-widget">
-          <span class="streak-fire">⚡</span>
-          <span class="streak-count" style="color:var(--accent);">${weekXP}</span>
-          <span class="streak-label">XP<br>esta semana</span>
-        </div>
-      </div>
 
-      <h1>Hola, ${esc(user.name)} 👋</h1>
-      ${user.institutionType ? `<p class="muted">Institución: <strong>${esc(inst?.label || user.institutionType)}</strong>${user.classroomId && s.classrooms[user.classroomId] ? ` · Aula: <strong>${esc(s.classrooms[user.classroomId].name)}</strong>` : ''}</p>` : ''}
+        ${alertsHtml}
+        ${coursesHtml}
+        ${timelineHtml}
+        ${perfHtml}
+        ${lbHtml}
 
-      <div class="grid cols-4" style="margin:16px 0 4px;">
-        <div class="kpi"><div class="v">${sum.total}</div><div class="l">Sesiones</div></div>
-        <div class="kpi"><div class="v">${sum.avgConc || '—'}</div><div class="l">Concentración prom.</div></div>
-        <div class="kpi"><div class="v">${sum.totalMin}</div><div class="l">Minutos totales</div></div>
-        <div class="kpi"><div class="v">${sum.avgDur || '—'}</div><div class="l">Min/sesión prom.</div></div>
-      </div>
-
-      <div class="grid cols-3" style="margin-top:18px;">
-        <div class="card">
-          <h2>📝 Registrar sesión</h2>
-          <p class="muted">Anota tu última sesión de estudio.</p>
-          <button class="primary" data-go="new-session">Nueva sesión</button>
+        <div class="dash-section">
+          <div class="dash-section-title">🛠 Acceso rápido</div>
+          <div class="dash-tools-grid">
+            <div class="dash-tool-card" data-go="ai-study">
+              <div class="dash-tool-icon">🧠</div>
+              <div class="dash-tool-label">Estudio IA</div>
+            </div>
+            <div class="dash-tool-card" data-go="pomodoro">
+              <div class="dash-tool-icon">🍅</div>
+              <div class="dash-tool-label">Pomodoro</div>
+            </div>
+            <div class="dash-tool-card" data-go="new-session">
+              <div class="dash-tool-icon">📝</div>
+              <div class="dash-tool-label">Nueva sesión</div>
+            </div>
+            <div class="dash-tool-card" data-go="stats">
+              <div class="dash-tool-icon">📊</div>
+              <div class="dash-tool-label">Estadísticas</div>
+            </div>
+            <div class="dash-tool-card" data-go="achievements">
+              <div class="dash-tool-icon">🏆</div>
+              <div class="dash-tool-label">Logros</div>
+            </div>
+            <div class="dash-tool-card" data-go="leaderboard">
+              <div class="dash-tool-icon">🥇</div>
+              <div class="dash-tool-label">Ranking</div>
+            </div>
+          </div>
         </div>
-        <div class="card">
-          <h2>🍅 Pomodoro</h2>
-          <p class="muted">Timer de enfoque con registro automático.</p>
-          <button class="primary" data-go="pomodoro">Iniciar Pomodoro</button>
-        </div>
-        <div class="card">
-          <h2>🏆 Logros</h2>
-          <p class="muted">${(gam.badges || []).length} insignias desbloqueadas.</p>
-          <button class="ghost" data-go="achievements">Ver logros</button>
-        </div>
-        <div class="card">
-          <h2>📊 Estadísticas</h2>
-          <p class="muted">Promedios, gráficas y tendencias.</p>
-          <button class="ghost" data-go="stats">Ver estadísticas</button>
-        </div>
-        <div class="card">
-          <h2>💡 Recomendaciones</h2>
-          <p class="muted">Consejos basados en tus datos.</p>
-          <button class="ghost" data-go="recommend">Ver recomendaciones</button>
-        </div>
-        <div class="card">
-          <h2>👤 Mi Perfil</h2>
-          <p class="muted">Perfil de aprendizaje y resumen.</p>
-          <button class="ghost" data-go="profile">Ver perfil</button>
-        </div>
-      </div>
-
-      ${leaderboardHtml}`;
+      </div>`;
   }
 
   function wireDashboard() {
