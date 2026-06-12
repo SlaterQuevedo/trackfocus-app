@@ -114,6 +114,26 @@ const Tracky = (() => {
     const streak = gam.streak || 0;
     const name = (user?.name || '').split(' ')[0];
 
+    if (route === 'dashboard') {
+      const isPersonal = !user?.schoolId;
+      if (isPersonal) {
+        const profile = JSON.parse(localStorage.getItem('tf-academic-profile-v3') || '{}');
+        if (profile.university) {
+          const nearest = (profile.examDates || [])
+            .map(e => ({ ...e, days: Math.ceil((new Date(e.date) - Date.now()) / 86400000) }))
+            .filter(e => e.days > 0).sort((a, b) => a.days - b.days)[0];
+          if (nearest) return `Faltan ${nearest.days} días para ${nearest.label}. ¡Sigue en racha!`;
+          return `¿Ya configuraste tu meta universitaria? Te ayudo a prepararte.`;
+        }
+      } else {
+        const profile2 = JSON.parse(localStorage.getItem('tf-school-profile-v1') || '{}');
+        const nearest = (profile2.exams || [])
+          .map(e => ({ ...e, days: Math.ceil((new Date(e.date) - Date.now()) / 86400000) }))
+          .filter(e => e.days > 0).sort((a, b) => a.days - b.days)[0];
+        if (nearest && nearest.days <= 3) return `¡Examen de ${nearest.subject} en ${nearest.days} día${nearest.days > 1 ? 's' : ''}! ¿Practicamos?`;
+      }
+    }
+
     if (route === 'ai-study' || route === 'new-session') {
       return '📚 ¿Qué estudias hoy? ¡Estoy aquí para ayudarte!';
     }

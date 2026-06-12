@@ -114,7 +114,7 @@ const UIStudent = (() => {
     const user = s.users[s.currentUserId];
     const sessions = Sessions.listFor(user.id);
     const isPersonal = !user.schoolId;
-    return isPersonal ? _dashPersonal(user, sessions, s) : _dashInstitutional(user, sessions, s);
+    return isPersonal ? _dashPersonal(user, sessions, s) : _dashStudent(user, sessions, s);
   }
 
   function _relTime(dateStr) {
@@ -127,323 +127,361 @@ const UIStudent = (() => {
     return `Hace ${w} semana${w > 1 ? 's' : ''}`;
   }
 
+  function _pickSubjectToday(sessions, profile) {
+    if (!profile?.enabledSubjects?.length) return null;
+    const bySubj = {};
+    profile.enabledSubjects.forEach(subj => { bySubj[subj] = { count: 0, total: 0 }; });
+    const weekAgo = Date.now() - 7 * 86400000;
+    sessions.filter(s => new Date(s.datetime) > weekAgo).forEach(sess => {
+      if (bySubj[sess.subject] !== undefined) {
+        bySubj[sess.subject].count++;
+        bySubj[sess.subject].total += (sess.concentration || 0);
+      }
+    });
+    return [...profile.enabledSubjects].sort((a, b) => {
+      const avgA = bySubj[a].count ? bySubj[a].total / bySubj[a].count : 0;
+      const avgB = bySubj[b].count ? bySubj[b].total / bySubj[b].count : 0;
+      return avgA - avgB;
+    })[0];
+  }
+
+  function _calcPrep(user, sessions, profile) {
+    const gam = user.gamification || {};
+    const sum = Stats.summary(sessions);
+    const streak  = Math.min((gam.streak || 0) / 30, 1) * 25;
+    const scount  = Math.min(sessions.length / 20, 1) * 20;
+    const xpLevel = Math.min((gam.xp || 0) / 1000, 1) * 30;
+    const concent = ((parseFloat(sum.avgConc) || 0) / 5) * 15;
+    const tiempo  = Math.min((sum.totalMin || 0) / 600, 1) * 10;
+    return Math.round(streak + scount + xpLevel + concent + tiempo);
+  }
+
   function _dashPersonal(user, sessions, s) {
     const gam = user.gamification || {};
     const levelInfo = Gamification.getLevelInfo(gam.xp || 0);
     const sum = Stats.summary(sessions);
-    const alerts = Analytics.generateAlerts(user.id);
-    const weekXP = Gamification.getWeeklyXP(user.id);
-    const learningIndex = sum.avgConc ? Math.round((parseFloat(sum.avgConc) / 5) * 100) : 0;
-    const hours = Math.round(((sum.totalMin || 0) / 60) * 10) / 10;
     const goalsCard = _renderGoalsCard(user, sessions, gam);
 
-    const subtitles = [
-      'Cada sesión te acerca más a tu meta.',
-      'Hoy es un buen día para aprender algo nuevo.',
-      'Tu progreso se construye una sesión a la vez.',
-      'La constancia es tu superpoder.',
-      'Estudia con propósito, avanza con confianza.'
-    ];
-    const subtitle = subtitles[new Date().getDay() % subtitles.length];
-
     const sorted = [...sessions].sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
-    const last = sorted[0] || null;
+    const profile = JSON.parse(localStorage.getItem('tf-academic-profile-v3') || '{}');
+    const prepPct = _calcPrep(user, sessions, profile);
+    const todaySubject = _pickSubjectToday(sessions, profile);
+    const lastSession = sorted[0] || null;
+    const studySubject = todaySubject || lastSession?.subject || null;
+    const nowMs = Date.now();
+    const sortedExams = (profile.examDates || [])
+      .map(e => ({ ...e, days: Math.ceil((new Date(e.date) - nowMs) / 86400000) }))
+      .filter(e => e.days > 0)
+      .sort((a, b) => a.days - b.days);
+    const nearestExam = sortedExams[0] || null;
 
-    const continueBlock = last ? `
-      <div class="dash-section">
-        <div class="dash-section-title">▶ Continúa donde te quedaste</div>
-        <div class="dash-continue-card">
-          <div class="dash-continue-icon">📚</div>
-          <div class="dash-continue-body">
-            <div class="dash-continue-subject">${esc(last.subject)}</div>
-            <div class="dash-continue-meta">${_relTime(last.datetime)} · ${last.durationMin} min · Concentración ${last.concentration}/5</div>
-          </div>
-          <button class="primary" data-go="ai-study" style="flex-shrink:0;white-space:nowrap;">Estudiar →</button>
+    const heroHtml = `
+      <div class="dp-hero">
+        <div class="dp-hero-name">👋 Hola, ${esc(user.name.split(' ')[0])}</div>
+        ${profile.university ? `
+          <div class="dp-hero-goal">${esc(profile.career || 'Tu carrera')} · ${esc(profile.university)}</div>
+          <div class="dp-prep-wrap">
+            <div class="dp-prep-bar-wrap"><div class="dp-prep-bar" style="width:${prepPct}%;"></div></div>
+            <div class="dp-prep-label">${prepPct}% preparación${nearestExam ? ` · 📅 ${nearestExam.days} días para ${esc(nearestExam.label)}` : ''}</div>
+          </div>` : `
+          <div class="dp-hero-goal">Configura tu meta universitaria para personalizar tu ruta →</div>`}
+      </div>`;
+
+    const tabsHtml = `
+      <div class="dp-tabs">
+        <button class="dp-tab-btn active" data-tab="hoy">Hoy</button>
+        <button class="dp-tab-btn" data-tab="ruta">Mi Ruta</button>
+        <button class="dp-tab-btn" data-tab="calendario">Calendario</button>
+      </div>`;
+
+    const studyNowHtml = studySubject ? `
+      <div class="dp-study-now">
+        <div class="dp-study-header">🎯 Estudia esto hoy</div>
+        <div class="dp-study-subject">${esc(studySubject)}</div>
+        <div class="dp-study-reason">${todaySubject ? 'Concentración más baja esta semana' : `Continúa donde te quedaste · ${_relTime(lastSession.datetime)}`}</div>
+        <div class="dp-study-actions">
+          <button class="primary dp-study-btn" data-go="ai-study">▶ Estudiar con Minerva</button>
+          <button class="ghost dp-study-btn" data-go="new-session">⚡ Nueva sesión</button>
         </div>
       </div>` : `
-      <div class="dash-section">
-        <div class="dash-section-title">▶ Empieza tu primera sesión</div>
-        <div class="dash-continue-card">
-          <div class="dash-continue-icon">🚀</div>
-          <div class="dash-continue-body">
-            <div class="dash-continue-subject">¡Comienza hoy!</div>
-            <div class="dash-continue-meta">Registra tu primera sesión de estudio.</div>
-          </div>
-          <button class="primary" data-go="new-session" style="flex-shrink:0;white-space:nowrap;">Nueva sesión →</button>
+      <div class="dp-study-now dp-study-empty">
+        <div class="dp-study-header">🎯 ¿Qué estudias hoy?</div>
+        <div class="dp-study-reason">Configura tu ruta universitaria para recomendaciones personalizadas.</div>
+        <div class="dp-study-actions">
+          <button class="primary dp-study-btn" data-go="new-session">+ Comenzar sesión</button>
         </div>
       </div>`;
 
-    const recsHtml = alerts.length ? `
-      <div class="dash-section">
-        <div class="dash-section-title">💡 Recomendaciones</div>
-        <div class="dash-recommendations">
-          ${alerts.slice(0, 3).map(a => `<div class="dash-rec-item">${a.msg}</div>`).join('')}
+    const chipsHtml = `
+      <div class="dp-chips-row">
+        <div class="dp-chip dp-chip-fire">🔥 ${gam.streak || 0} días</div>
+        <div class="dp-chip dp-chip-xp">💎 ${gam.xp || 0} XP</div>
+        <div class="dp-chip dp-chip-conc">🧠 ${sum.avgConc || '—'} conc.</div>
+        <div class="dp-chip dp-chip-session">📚 ${sum.total} sesiones</div>
+      </div>`;
+
+    const navGridHtml = `
+      <div class="dp-nav-grid">
+        <div class="dp-nav-card" data-go="achievements">
+          <div class="dp-nav-icon">🏆</div>
+          <div class="dp-nav-body">
+            <div class="dp-nav-title">Logros</div>
+            <div class="dp-nav-sub">Nivel ${levelInfo.current.level} — ${esc(levelInfo.current.title)}</div>
+          </div>
+          <div class="dp-nav-arrow">→</div>
         </div>
-      </div>` : '';
+        <div class="dp-nav-card" data-go="stats">
+          <div class="dp-nav-icon">📊</div>
+          <div class="dp-nav-body">
+            <div class="dp-nav-title">Estadísticas</div>
+            <div class="dp-nav-sub">${sum.total} sesiones · ${Math.round(((sum.totalMin||0)/60)*10)/10}h totales</div>
+          </div>
+          <div class="dp-nav-arrow">→</div>
+        </div>
+      </div>`;
+
+    const tabHoyHtml = `
+      <div class="dp-tab-panel active" data-tab="hoy">
+        ${studyNowHtml}
+        ${chipsHtml}
+        ${navGridHtml}
+        ${goalsCard ? `<div style="margin-top:12px;">${goalsCard}</div>` : ''}
+      </div>`;
+
+    let tabRutaHtml;
+    if (!profile.university) {
+      tabRutaHtml = `
+        <div class="dp-tab-panel" data-tab="ruta">
+          <div class="dp-setup-card">
+            <div class="dp-setup-icon">🎓</div>
+            <div class="dp-setup-title">Configura tu meta universitaria</div>
+            <div class="dp-setup-sub">Selecciona tu universidad y carrera para obtener una ruta de preparación personalizada.</div>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px;">
+              <select id="dp-uni-select" style="width:100%;padding:10px;border-radius:var(--radius-sm);background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;">
+                <option value="">Selecciona universidad</option>
+                <option value="UNI">UNI — Universidad Nacional de Ingeniería</option>
+                <option value="UNMSM">UNMSM — Universidad Mayor de San Marcos</option>
+                <option value="PUCP">PUCP — Pontificia Universidad Católica del Perú</option>
+                <option value="UNAC">UNAC — Universidad Nacional del Callao</option>
+                <option value="Beca 18">Beca 18</option>
+                <option value="otro">Otra universidad</option>
+              </select>
+              <input type="text" id="dp-custom-uni" placeholder="Nombre de tu universidad" style="display:none;padding:10px;border-radius:var(--radius-sm);background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;" />
+              <input type="text" id="dp-career-input" placeholder="¿Qué carrera quieres estudiar?" style="padding:10px;border-radius:var(--radius-sm);background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;" />
+              <button class="primary" id="dp-save-goal" style="width:100%;">Guardar mi meta 🎯</button>
+            </div>
+          </div>
+        </div>`;
+    } else {
+      const enabledSubjects = profile.enabledSubjects || [];
+      const subjectStats = {};
+      enabledSubjects.forEach(subj => { subjectStats[subj] = { count: 0, total: 0 }; });
+      sessions.forEach(sess => {
+        if (subjectStats[sess.subject] !== undefined) {
+          subjectStats[sess.subject].count++;
+          subjectStats[sess.subject].total += (sess.concentration || 0);
+        }
+      });
+      const routeRows = enabledSubjects.map(subj => {
+        const st = subjectStats[subj];
+        const idx = st.count ? Math.round((st.total / st.count / 5) * 100) : 0;
+        return `
+          <div class="dp-route-row">
+            <div class="dp-route-name">${esc(subj)}</div>
+            <div class="dp-route-bar-wrap"><div class="dp-route-bar" style="width:${Math.min(idx,100)}%;"></div></div>
+            <div class="dp-route-stats">
+              <span>${st.count} ses.</span>
+              <span class="dp-route-idx">${idx > 0 ? idx + '%' : '—'}</span>
+            </div>
+            <button class="dp-route-btn ghost" data-go="ai-study">▶</button>
+          </div>`;
+      }).join('');
+      tabRutaHtml = `
+        <div class="dp-tab-panel" data-tab="ruta">
+          <div class="dp-route-header">
+            <span>${esc(profile.career)} · ${esc(profile.university)}</span>
+            <button class="dp-change-goal ghost" id="dp-change-goal">Cambiar meta</button>
+          </div>
+          <div class="dp-route-list">${routeRows || '<p class="muted" style="text-align:center;padding:20px;">Aún no tienes sesiones en estas materias.</p>'}</div>
+        </div>`;
+    }
+
+    const examsListHtml = sortedExams.length ? sortedExams.slice(0, 5).map(e => {
+      const cls = e.days <= 7 ? 'dp-date-urgent' : e.days <= 30 ? 'dp-date-soon' : '';
+      return `
+        <div class="dp-date-item ${cls}">
+          <div class="dp-date-label">${esc(e.label)}</div>
+          <div class="dp-date-badge">${e.days} días</div>
+        </div>`;
+    }).join('') : '';
+
+    const addDateFormHtml = `
+      <div id="dp-date-form" style="display:none;margin-top:12px;padding:14px;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-sm);">
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <input type="text" id="dp-date-label" placeholder="Ej. Examen UNI" style="padding:10px;border-radius:var(--radius-sm);background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:14px;" />
+          <input type="date" id="dp-date-date" style="padding:10px;border-radius:var(--radius-sm);background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:14px;" />
+          <button class="primary" id="dp-save-date">Guardar fecha</button>
+        </div>
+      </div>`;
+
+    const tabCalHtml = `
+      <div class="dp-tab-panel" data-tab="calendario">
+        ${sortedExams.length ? `
+          <div class="dp-dates-list">${examsListHtml}</div>
+          <button class="ghost" style="margin-top:10px;width:100%;" id="dp-show-date-form">+ Agregar fecha</button>
+        ` : `
+          <div class="dp-setup-card">
+            <div class="dp-setup-icon">📅</div>
+            <div class="dp-setup-title">Sin fechas registradas</div>
+            <div class="dp-setup-sub">Agrega tus exámenes y simulacros para ver la cuenta regresiva.</div>
+            <button class="primary" style="margin-top:14px;width:100%;" id="dp-show-date-form">+ Agregar fecha de examen</button>
+          </div>`}
+        ${addDateFormHtml}
+      </div>`;
 
     return `
-      <div class="dash-personal">
-        <div class="dash-hero-personal">
-          <div>
-            <h1 class="dash-hero-title">Hola, ${esc(user.name)} 👋</h1>
-            <p class="dash-hero-sub">${subtitle}</p>
-          </div>
-          <div class="dash-stat-chips">
-            <div class="dash-stat-chip dash-chip-primary">
-              <span class="dash-chip-val">Nv. ${levelInfo.current.level}</span>
-              <span class="dash-chip-lbl">Nivel</span>
-            </div>
-            <div class="dash-stat-chip">
-              <span class="dash-chip-val">${gam.xp || 0}</span>
-              <span class="dash-chip-lbl">XP total</span>
-            </div>
-            <div class="dash-stat-chip dash-chip-fire">
-              <span class="dash-chip-val">🔥 ${gam.streak || 0}</span>
-              <span class="dash-chip-lbl">días racha</span>
-            </div>
-            <div class="dash-stat-chip dash-chip-accent">
-              <span class="dash-chip-val">${learningIndex}</span>
-              <span class="dash-chip-lbl">Índice</span>
-            </div>
-          </div>
-        </div>
-
-        ${continueBlock}
-
-        <div class="dash-section">
-          <div class="dash-section-title">📊 Tu progreso</div>
-          <div class="dash-progress-row">
-            <div class="dash-prog-card">
-              <div class="dash-prog-icon">📚</div>
-              <div class="dash-prog-val">${sum.total}</div>
-              <div class="dash-prog-lbl">Sesiones</div>
-            </div>
-            <div class="dash-prog-card">
-              <div class="dash-prog-icon">⏱</div>
-              <div class="dash-prog-val">${hours}h</div>
-              <div class="dash-prog-lbl">Horas totales</div>
-            </div>
-            <div class="dash-prog-card">
-              <div class="dash-prog-icon">⚡</div>
-              <div class="dash-prog-val">${weekXP}</div>
-              <div class="dash-prog-lbl">XP esta semana</div>
-            </div>
-            <div class="dash-prog-card">
-              <div class="dash-prog-icon">🧠</div>
-              <div class="dash-prog-val">${sum.avgConc || '—'}</div>
-              <div class="dash-prog-lbl">Concentración</div>
-            </div>
-          </div>
-        </div>
-
-        ${recsHtml}
-        ${goalsCard ? `<div class="dash-section">${goalsCard}</div>` : ''}
-
-        <div class="dash-section">
-          <div class="dash-section-title">🛠 Herramientas</div>
-          <div class="dash-tools-grid">
-            <div class="dash-tool-card" data-go="pomodoro">
-              <div class="dash-tool-icon">🍅</div>
-              <div class="dash-tool-label">Concentración</div>
-            </div>
-            <div class="dash-tool-card" data-go="ai-study">
-              <div class="dash-tool-icon">🧠</div>
-              <div class="dash-tool-label">Estudio IA</div>
-            </div>
-            <div class="dash-tool-card" data-go="new-session">
-              <div class="dash-tool-icon">📝</div>
-              <div class="dash-tool-label">Nueva sesión</div>
-            </div>
-            <div class="dash-tool-card" data-go="achievements">
-              <div class="dash-tool-icon">🏆</div>
-              <div class="dash-tool-label">Logros</div>
-            </div>
-            <div class="dash-tool-card" data-go="recommend">
-              <div class="dash-tool-icon">💡</div>
-              <div class="dash-tool-label">Recomend.</div>
-            </div>
-            <div class="dash-tool-card" data-go="stats">
-              <div class="dash-tool-icon">📈</div>
-              <div class="dash-tool-label">Estadísticas</div>
-            </div>
-          </div>
-        </div>
+      <div class="dp-wrap">
+        ${heroHtml}
+        ${tabsHtml}
+        ${tabHoyHtml}
+        ${tabRutaHtml}
+        ${tabCalHtml}
       </div>`;
   }
 
-  function _dashInstitutional(user, sessions, s) {
+  function _dashStudent(user, sessions, s) {
     const gam = user.gamification || {};
-    const levelInfo = Gamification.getLevelInfo(gam.xp || 0);
     const sum = Stats.summary(sessions);
     const alerts = Analytics.generateAlerts(user.id);
-    const weekXP = Gamification.getWeeklyXP(user.id);
     const school = user.schoolId ? s.schools[user.schoolId] : null;
     const classroom = user.classroomId ? s.classrooms[user.classroomId] : null;
     const sorted = [...sessions].sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
+    const schoolProfile = JSON.parse(localStorage.getItem('tf-school-profile-v1') || '{}');
+    const nowMs = Date.now();
+    const exams = (schoolProfile.exams || [])
+      .map(e => ({ ...e, days: Math.ceil((new Date(e.date) - nowMs) / 86400000) }))
+      .filter(e => e.days > 0)
+      .sort((a, b) => a.days - b.days);
+    const todayStr = new Date().toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long' });
 
-    // Leaderboard del aula
-    let lbHtml = '';
-    if (user.classroomId) {
-      const lb = Gamification.getLeaderboard('classroom', user.classroomId, 'week').slice(0, 5);
-      if (lb.length > 0) {
-        lbHtml = `
-          <div class="dash-section">
-            <div class="dash-section-title">🏅 Ranking del Aula — esta semana</div>
-            <div class="card" style="padding:14px;">
-              <table class="table">
-                <thead><tr><th>#</th><th>Estudiante</th><th>XP</th><th>Racha</th></tr></thead>
-                <tbody>
-                  ${lb.map(e => `
-                    <tr class="${e.userId === user.id ? 'self-row' : ''}">
-                      <td class="rank-medal-${e.rank}">${e.rank <= 3 ? ['🥇','🥈','🥉'][e.rank-1] : e.rank}</td>
-                      <td><span class="avatar-initials">${esc(e.name.slice(0,2).toUpperCase())}</span> ${esc(e.name)}</td>
-                      <td><strong>${e.xp}</strong></td>
-                      <td>🔥 ${e.streak}</td>
-                    </tr>`).join('')}
-                </tbody>
-              </table>
-              <button class="ghost" style="margin-top:10px;width:100%;" data-go="leaderboard">Ver ranking completo</button>
-            </div>
-          </div>`;
-      }
+    const heroHtml = `
+      <div class="ds-hero">
+        <div class="ds-hero-name">🎓 ${esc(user.name)}</div>
+        <div class="ds-hero-meta">
+          ${classroom ? `<span class="ds-hero-pill">${esc(classroom.name)}</span>` : ''}
+          ${school ? `<span class="ds-hero-pill">🏫 ${esc(school.name)}</span>` : ''}
+        </div>
+        <div class="ds-hero-date">${todayStr}</div>
+      </div>`;
+
+    const urgent = exams[0] || null;
+    let priorityHtml;
+    if (urgent && urgent.days <= 3) {
+      priorityHtml = `
+        <div class="ds-priority ds-priority-urgent">
+          <div class="ds-priority-label">⚠️ Examen ${urgent.days === 1 ? 'mañana' : `en ${urgent.days} días`}:</div>
+          <div class="ds-priority-subject">${esc(urgent.subject || urgent.label)}</div>
+          <button class="primary" data-go="ai-study" style="margin-top:10px;width:100%;">▶ Repasar con IA ahora</button>
+        </div>`;
+    } else if (urgent) {
+      priorityHtml = `
+        <div class="ds-priority">
+          <div class="ds-priority-label">📅 Próxima evaluación en ${urgent.days} días:</div>
+          <div class="ds-priority-subject">${esc(urgent.subject || urgent.label)}</div>
+          <button class="ghost" data-go="ai-study" style="margin-top:8px;width:100%;">Estudiar para esta evaluación →</button>
+        </div>`;
+    } else if (sorted[0]) {
+      priorityHtml = `
+        <div class="ds-priority">
+          <div class="ds-priority-label">▶ Continúa donde te quedaste:</div>
+          <div class="ds-priority-subject">${esc(sorted[0].subject)} · ${_relTime(sorted[0].datetime)}</div>
+          <button class="ghost" data-go="ai-study" style="margin-top:8px;width:100%;">Continuar →</button>
+        </div>`;
+    } else {
+      priorityHtml = `
+        <div class="ds-priority">
+          <div class="ds-priority-label">🚀 ¡Comienza tu primera sesión!</div>
+          <button class="primary" data-go="new-session" style="margin-top:8px;width:100%;">+ Nueva sesión</button>
+        </div>`;
     }
 
-    // Cursos por materia
-    const bySubject = {};
-    sessions.forEach(sess => {
-      if (!bySubject[sess.subject]) bySubject[sess.subject] = [];
-      bySubject[sess.subject].push(sess);
-    });
-    const subjects = Object.keys(bySubject).sort((a, b) => bySubject[b].length - bySubject[a].length).slice(0, 6);
+    let rankText = '#—';
+    let rankSub = 'Sin datos aún';
+    if (user.classroomId) {
+      try {
+        const lb = Gamification.getLeaderboard('classroom', user.classroomId, 'week');
+        const me = lb.find(e => e.userId === user.id);
+        if (me) { rankText = `#${me.rank}`; rankSub = `de ${lb.length} alumnos`; }
+      } catch (_) {}
+    }
+    const coursesCount = new Set(sessions.map(sess => sess.subject)).size;
+    const examsCount = exams.length;
 
-    const coursesHtml = subjects.length ? `
-      <div class="dash-section">
-        <div class="dash-section-title">📚 Mis cursos</div>
-        <div class="dash-courses-grid">
-          ${subjects.map(subj => {
-            const subs = bySubject[subj];
-            const avgC = subs.reduce((acc, ss) => acc + (ss.concentration || 0), 0) / subs.length;
-            const idx = Math.round((avgC / 5) * 100);
-            return `
-              <div class="dash-course-card">
-                <div class="dash-course-name">${esc(subj)}</div>
-                <div class="dash-course-bar-wrap">
-                  <div class="dash-course-bar" style="width:${Math.min(idx,100)}%;"></div>
-                </div>
-                <div class="dash-course-meta">
-                  <span>Índice: ${idx}</span>
-                  <span>${subs.length} sesión${subs.length !== 1 ? 'es' : ''}</span>
-                </div>
-              </div>`;
-          }).join('')}
+    const hubHtml = `
+      <div class="ds-hub-grid">
+        <div class="ds-hub-card" data-go="stats">
+          <div class="ds-hub-icon">📚</div>
+          <div class="ds-hub-body">
+            <div class="ds-hub-title">Mis Cursos</div>
+            <div class="ds-hub-sub">${coursesCount > 0 ? `${coursesCount} materias activas` : 'Sin sesiones aún'}</div>
+          </div>
+          <div class="ds-hub-arrow">→</div>
         </div>
-      </div>` : '';
+        <div class="ds-hub-card" data-go="leaderboard">
+          <div class="ds-hub-icon">🏆</div>
+          <div class="ds-hub-body">
+            <div class="ds-hub-title">Ranking</div>
+            <div class="ds-hub-sub">${rankText} ${rankSub}</div>
+          </div>
+          <div class="ds-hub-arrow">→</div>
+        </div>
+        <div class="ds-hub-card" id="ds-hub-exams" style="cursor:pointer;">
+          <div class="ds-hub-icon">📅</div>
+          <div class="ds-hub-body">
+            <div class="ds-hub-title">Evaluaciones</div>
+            <div class="ds-hub-sub">${examsCount > 0 ? `${examsCount} próxima${examsCount !== 1 ? 's' : ''}` : 'Agrega fechas'}</div>
+          </div>
+          <div class="ds-hub-arrow" id="ds-exams-arrow">↓</div>
+        </div>
+        <div class="ds-hub-card" data-go="ai-study">
+          <div class="ds-hub-icon">🤖</div>
+          <div class="ds-hub-body">
+            <div class="ds-hub-title">Estudio IA</div>
+            <div class="ds-hub-sub">Minerva + DECO</div>
+          </div>
+          <div class="ds-hub-arrow">→</div>
+        </div>
+      </div>`;
 
-    // Timeline últimas 5 sesiones
-    const timelineHtml = sorted.length ? `
-      <div class="dash-section">
-        <div class="dash-section-title">📅 Actividad reciente</div>
-        <div class="dash-timeline">
-          ${sorted.slice(0, 5).map(sess => `
-            <div class="dash-timeline-item">
-              <div class="dash-tl-icon">📚</div>
-              <div class="dash-tl-body">
-                <div class="dash-tl-title">${esc(sess.subject)}</div>
-                <div class="dash-tl-meta">${_relTime(sess.datetime)} · ${sess.durationMin} min · Concentración ${sess.concentration}/5</div>
-              </div>
-            </div>`).join('')}
-        </div>
-      </div>` : '';
+    const examsRowsHtml = exams.length ? exams.slice(0, 5).map(e => `
+      <div class="ds-exam-item ${e.days <= 3 ? 'urgent' : e.days <= 7 ? 'soon' : ''}">
+        <div class="ds-exam-name">${esc(e.subject || e.label)}</div>
+        <div class="ds-exam-days">${e.days} días</div>
+      </div>`).join('') : `<p class="muted" style="text-align:center;padding:12px 0;font-size:13px;">Sin evaluaciones registradas.</p>`;
 
-    // Barras de rendimiento
-    const perfHtml = sorted.length ? `
-      <div class="dash-section">
-        <div class="dash-section-title">📈 Rendimiento por sesión</div>
-        <div class="dash-perf-bars">
-          ${sorted.slice(0, 7).map(sess => {
-            const pct = Math.round(((sess.concentration || 0) / 5) * 100);
-            return `
-              <div class="dash-perf-row">
-                <div class="dash-perf-subj">${esc(sess.subject)}</div>
-                <div class="dash-perf-bar-wrap">
-                  <div class="dash-perf-bar" style="width:${pct}%;"></div>
-                </div>
-                <div class="dash-perf-val">${pct}%</div>
-              </div>`;
-          }).join('')}
+    const examsPanelHtml = `
+      <div id="ds-exams-panel" style="display:none;margin-bottom:12px;padding:14px;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-sm);">
+        <div class="ds-exams-list">${examsRowsHtml}</div>
+        <button class="ghost" id="ds-show-add-exam" style="width:100%;margin-top:8px;">+ Agregar evaluación</button>
+        <div id="ds-add-exam-form" style="display:none;flex-direction:column;gap:8px;margin-top:8px;">
+          <input type="text" id="ds-exam-subject" placeholder="Materia (ej. Álgebra)" style="padding:10px;border-radius:var(--radius-sm);background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:14px;" />
+          <input type="date" id="ds-exam-date" style="padding:10px;border-radius:var(--radius-sm);background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:14px;" />
+          <button class="primary" id="ds-save-exam">Guardar evaluación</button>
         </div>
-      </div>` : '';
+      </div>`;
 
     const alertsHtml = alerts.length ? `
-      <div class="dash-alert-panel">
-        <div class="dash-alert-header">⚡ Atención requerida</div>
-        ${alerts.slice(0, 3).map(a => `<div class="dash-alert-item">📌 ${a.msg}</div>`).join('')}
+      <div class="ds-alerts">
+        ${alerts.slice(0, 2).map(a => `<div class="ds-alert-item">⚡ ${a.msg}</div>`).join('')}
       </div>` : '';
 
     return `
-      <div class="dash-institutional">
-        <div class="dash-hero-institutional">
-          <div class="dash-hero-inst-name">${esc(user.name)}</div>
-          <div class="dash-hero-meta">
-            ${school ? `<span class="dash-hero-pill">🏫 ${esc(school.name)}</span>` : ''}
-            ${classroom ? `<span class="dash-hero-pill">🚪 ${esc(classroom.name)}</span>` : ''}
-            <span class="dash-hero-pill">⭐ Nv. ${levelInfo.current.level} — ${esc(levelInfo.current.title)}</span>
-          </div>
-          <div class="dash-hero-inst-stats">
-            <div class="dash-inst-stat">
-              <span class="dash-inst-stat-val">🔥 ${gam.streak || 0}</span>
-              <span class="dash-inst-stat-lbl">días racha</span>
-            </div>
-            <div class="dash-inst-stat">
-              <span class="dash-inst-stat-val">⚡ ${weekXP}</span>
-              <span class="dash-inst-stat-lbl">XP semana</span>
-            </div>
-            <div class="dash-inst-stat">
-              <span class="dash-inst-stat-val">${sum.total}</span>
-              <span class="dash-inst-stat-lbl">sesiones</span>
-            </div>
-            <div class="dash-inst-stat">
-              <span class="dash-inst-stat-val">${sum.avgConc || '—'}</span>
-              <span class="dash-inst-stat-lbl">conc. prom.</span>
-            </div>
-          </div>
-        </div>
-
+      <div class="ds-wrap">
+        ${heroHtml}
+        ${priorityHtml}
+        ${hubHtml}
+        ${examsPanelHtml}
         ${alertsHtml}
-        ${coursesHtml}
-        ${timelineHtml}
-        ${perfHtml}
-        ${lbHtml}
-
-        <div class="dash-section">
-          <div class="dash-section-title">🛠 Acceso rápido</div>
-          <div class="dash-tools-grid">
-            <div class="dash-tool-card" data-go="ai-study">
-              <div class="dash-tool-icon">🧠</div>
-              <div class="dash-tool-label">Estudio IA</div>
-            </div>
-            <div class="dash-tool-card" data-go="pomodoro">
-              <div class="dash-tool-icon">🍅</div>
-              <div class="dash-tool-label">Pomodoro</div>
-            </div>
-            <div class="dash-tool-card" data-go="new-session">
-              <div class="dash-tool-icon">📝</div>
-              <div class="dash-tool-label">Nueva sesión</div>
-            </div>
-            <div class="dash-tool-card" data-go="stats">
-              <div class="dash-tool-icon">📊</div>
-              <div class="dash-tool-label">Estadísticas</div>
-            </div>
-            <div class="dash-tool-card" data-go="achievements">
-              <div class="dash-tool-icon">🏆</div>
-              <div class="dash-tool-label">Logros</div>
-            </div>
-            <div class="dash-tool-card" data-go="leaderboard">
-              <div class="dash-tool-icon">🥇</div>
-              <div class="dash-tool-label">Ranking</div>
-            </div>
-          </div>
-        </div>
       </div>`;
   }
 
@@ -493,6 +531,106 @@ const UIStudent = (() => {
   function wireDashboard() {
     root().querySelectorAll('[data-go]').forEach(b =>
       b.addEventListener('click', () => App.go(b.dataset.go)));
+
+    // Personal: tab switching
+    root().querySelectorAll('.dp-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        root().querySelectorAll('.dp-tab-btn').forEach(b => b.classList.remove('active'));
+        root().querySelectorAll('.dp-tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        const panel = root().querySelector(`.dp-tab-panel[data-tab="${btn.dataset.tab}"]`);
+        if (panel) panel.classList.add('active');
+      });
+    });
+
+    // Personal: university selector
+    root().querySelector('#dp-uni-select')?.addEventListener('change', function() {
+      const customInput = root().querySelector('#dp-custom-uni');
+      if (customInput) customInput.style.display = this.value === 'otro' ? 'block' : 'none';
+    });
+
+    // Personal: save goal
+    root().querySelector('#dp-save-goal')?.addEventListener('click', () => {
+      const uniSelect = root().querySelector('#dp-uni-select');
+      const customUni = root().querySelector('#dp-custom-uni');
+      const careerInput = root().querySelector('#dp-career-input');
+      const uniVal = uniSelect?.value;
+      const university = uniVal === 'otro' ? customUni?.value.trim() : uniVal;
+      const career = careerInput?.value.trim();
+      if (!university || !career) return;
+      const MALLAS = {
+        'UNI':     ['Álgebra', 'Aritmética', 'Geometría', 'Trigonometría', 'Física', 'Química', 'R. Matemático', 'R. Verbal'],
+        'UNMSM':   ['Biología', 'Química', 'Física', 'Álgebra', 'Aritmética', 'Geometría', 'Comprensión Lectora', 'R. Verbal'],
+        'PUCP':    ['Matemáticas', 'Comprensión Lectora', 'Argumentación', 'Redacción', 'Pensamiento Crítico'],
+        'UNAC':    ['Matemáticas', 'Física', 'Química', 'Comprensión Aplicada'],
+        'Beca 18': ['Comprensión Lectora', 'R. Verbal', 'R. Matemático', 'Pensamiento Crítico', 'Hábitos de Estudio']
+      };
+      const existing = JSON.parse(localStorage.getItem('tf-academic-profile-v3') || '{}');
+      localStorage.setItem('tf-academic-profile-v3', JSON.stringify({
+        ...existing,
+        university: uniVal === 'otro' ? 'otro' : university,
+        customUniversity: uniVal === 'otro' ? university : undefined,
+        career,
+        enabledSubjects: MALLAS[university] || []
+      }));
+      App.go('dashboard');
+    });
+
+    // Personal: clear goal
+    root().querySelector('#dp-change-goal')?.addEventListener('click', () => {
+      const existing = JSON.parse(localStorage.getItem('tf-academic-profile-v3') || '{}');
+      delete existing.university; delete existing.career; delete existing.enabledSubjects;
+      localStorage.setItem('tf-academic-profile-v3', JSON.stringify(existing));
+      App.go('dashboard');
+    });
+
+    // Personal: toggle date form
+    root().querySelector('#dp-show-date-form')?.addEventListener('click', () => {
+      const form = root().querySelector('#dp-date-form');
+      if (form) form.style.display = form.style.display === 'none' ? 'flex' : 'none';
+    });
+
+    // Personal: save exam date
+    root().querySelector('#dp-save-date')?.addEventListener('click', () => {
+      const label = root().querySelector('#dp-date-label')?.value.trim();
+      const date = root().querySelector('#dp-date-date')?.value;
+      if (!label || !date) return;
+      const profile = JSON.parse(localStorage.getItem('tf-academic-profile-v3') || '{}');
+      profile.examDates = profile.examDates || [];
+      profile.examDates.push({ label, type: 'examen', date });
+      profile.examDates.sort((a, b) => new Date(a.date) - new Date(b.date));
+      localStorage.setItem('tf-academic-profile-v3', JSON.stringify(profile));
+      App.go('dashboard');
+    });
+
+    // Institutional: toggle exams panel
+    root().querySelector('#ds-hub-exams')?.addEventListener('click', () => {
+      const panel = root().querySelector('#ds-exams-panel');
+      if (!panel) return;
+      const isOpen = panel.style.display !== 'none';
+      panel.style.display = isOpen ? 'none' : 'block';
+      const arrow = root().querySelector('#ds-exams-arrow');
+      if (arrow) arrow.textContent = isOpen ? '↓' : '↑';
+    });
+
+    // Institutional: show add exam form
+    root().querySelector('#ds-show-add-exam')?.addEventListener('click', () => {
+      const form = root().querySelector('#ds-add-exam-form');
+      if (form) form.style.display = form.style.display === 'none' ? 'flex' : 'none';
+    });
+
+    // Institutional: save exam
+    root().querySelector('#ds-save-exam')?.addEventListener('click', () => {
+      const subject = root().querySelector('#ds-exam-subject')?.value.trim();
+      const date = root().querySelector('#ds-exam-date')?.value;
+      if (!subject || !date) return;
+      const profile = JSON.parse(localStorage.getItem('tf-school-profile-v1') || '{}');
+      profile.exams = profile.exams || [];
+      profile.exams.push({ subject, label: subject, date });
+      profile.exams.sort((a, b) => new Date(a.date) - new Date(b.date));
+      localStorage.setItem('tf-school-profile-v1', JSON.stringify(profile));
+      App.go('dashboard');
+    });
 
     // Sistema de Metas (Fase 9): editar el valor objetivo de cada meta.
     const labels = {
