@@ -356,6 +356,15 @@ const App = (() => {
       return;
     }
 
+    // En desarrollo (localhost): limpiar sesión para siempre ver el landing desde cero
+    if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+      try {
+        sessionStorage.clear();
+        localStorage.removeItem('supabase.auth.token');
+        await Auth.signOut();
+      } catch (_) {}
+    }
+
     if (!window.SB_READY) {
       go('welcome');
       // Mostrar aviso amable si supabase-config.js no está configurado
