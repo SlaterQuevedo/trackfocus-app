@@ -7,7 +7,7 @@ const Tracky = (() => {
   const LS_HIDDEN = 'tf-tracky-hidden';
   const IDLE_MS = 25 * 60 * 1000;       // 25 min sin interacción → sugerir descanso
   const BUBBLE_MS = 8000;               // el globo se autooculta tras 8s
-  const NO_TRACKY_ROUTES = ['welcome', 'consent', 'role-selector', 'student-onboarding',
+  const NO_TRACKY_ROUTES = ['welcome', 'consent', 'student-onboarding',
                             'teacher-promote', 'admin-promote', 'pending-approval'];
 
   let _root = null;

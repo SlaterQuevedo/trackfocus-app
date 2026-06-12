@@ -4,7 +4,6 @@ const App = (() => {
   const ROUTE_ROLES = {
     // Públicas
     'welcome':            null,
-    'role-selector':      null,
     'student-onboarding': null,
     'teacher-promote':    null,
     'admin-promote':      null,
@@ -66,7 +65,6 @@ const App = (() => {
 
     const allScreens = {
       welcome:              { render: screenWelcome,           wire: wireWelcome },
-      'role-selector':      { render: screenRoleSelector,      wire: wireRoleSelector },
       'student-onboarding': { render: screenStudentOnboarding, wire: wireStudentOnboarding },
       'teacher-promote':    { render: screenTeacherPromote,    wire: wireTeacherPromote },
       'admin-promote':      { render: screenAdminPromote,      wire: wireAdminPromote },
@@ -202,6 +200,12 @@ const App = (() => {
     });
     document.getElementById('logoutBtn').addEventListener('click', async () => {
       await Auth.logout();
+      sessionStorage.removeItem('tf.loginInProgress');
+      go('welcome');
+    });
+    document.getElementById('changeAccountBtn')?.addEventListener('click', async () => {
+      await Auth.logout();
+      sessionStorage.clear(); // limpia preferencias de sesión para no auto-loguear
       go('welcome');
     });
   }
@@ -369,10 +373,26 @@ const App = (() => {
       return;
     }
 
-    // 1. ¿Hay sesión Google activa?
+    // 1. ¿Hay sesión activa? (persistida desde la última visita)
+    const _isAutoLogin = !sessionStorage.getItem('tf.loginInProgress');
     const authSession = await Auth.getSession();
     if (!authSession) return go('welcome');
-    console.log('[App] Auth session:', { email: authSession.user?.email, isSuperAdmin: authSession.isSuperAdmin, roles: authSession.availableRoles?.map(r => r.role) });
+    sessionStorage.removeItem('tf.loginInProgress'); // consumir el flag
+
+    // Nombre pendiente: si el usuario eligió un nombre manual en el modal de conflicto
+    // antes de ser redirigido a Google OAuth, aplicarlo ahora.
+    const _pendingDisplay = sessionStorage.getItem('tf.pendingDisplayUpdate');
+    if (_pendingDisplay) {
+      sessionStorage.removeItem('tf.pendingDisplayUpdate');
+      try {
+        const { firstName, lastName } = JSON.parse(_pendingDisplay);
+        const email = (authSession.user?.email || authSession.session?.user?.email || '').toLowerCase();
+        if (email && firstName) {
+          await Auth.updateDisplayName(email, firstName, lastName || '');
+        }
+      } catch (_) {}
+    }
+    console.log('[App] Auth session:', { email: authSession.user?.email, isSuperAdmin: authSession.isSuperAdmin, roles: authSession.availableRoles?.map(r => r.role), autoLogin: _isAutoLogin });
 
     // 2. Verificar roles disponibles y multi-rol.
     // NEW: Si es super_admin oficial, auto-seleccionar su rol admin (skip selector)
@@ -384,14 +404,8 @@ const App = (() => {
       }
     }
 
-    // Si tiene múltiples roles y no hay uno activo seleccionado: mostrar selector
-    if (authSession.hasMultipleRoles && !Auth.getActiveRole()) {
-      sessionStorage.setItem('_AVAILABLE_ROLES', JSON.stringify(authSession.availableRoles));
-      return go('role-selector');
-    }
-
-    // Si tiene un solo rol: auto-seleccionar
-    if (authSession.availableRoles?.length === 1 && !Auth.getActiveRole()) {
+    // Auto-seleccionar el primer rol disponible (sin mostrar selector)
+    if (authSession.availableRoles?.length && !Auth.getActiveRole()) {
       Auth.setActiveRole(authSession.availableRoles[0]);
     }
 
@@ -411,7 +425,7 @@ const App = (() => {
     Storage.bindRealtime(() => {
       // Repintar la pantalla actual cuando llegan cambios, EXCEPTO si interrumpiría
       // al usuario (rendimiento + UX): chat IA en curso o un modal/quiz abierto.
-      if (!_current || _current === 'welcome' || _current === 'role-selector' || _current === 'consent') return;
+      if (!_current || _current === 'welcome' || _current === 'consent') return;
       if (_current === 'ai-study') return;
       if (document.querySelector('.quiz-modal') || document.querySelector('.pom-modal:not(.hidden)')) return;
       go(_current);
@@ -431,6 +445,12 @@ const App = (() => {
     }
     console.log('[App] Current user:', { email: user.email, role: user.role });
 
+    // Auto-login: sesión restaurada automáticamente → saludo de bienvenida
+    if (_isAutoLogin) {
+      const firstName = (user.name || '').split(' ')[0] || 'de nuevo';
+      setTimeout(() => UI.flash?.(`Bienvenido de nuevo, ${firstName} 👋`, 'success'), 300);
+    }
+
     // 3. ¿Hay intención de rol pendiente del click pre-OAuth?
     const intent = Auth.getRoleIntent();
 
@@ -446,8 +466,10 @@ const App = (() => {
       return go('dashboard');
     }
 
-    // Si es admin pendiente, mostrar pantalla de contraseña (NO para super_admin oficial)
-    if (intent === 'admin' && user.role !== 'super_admin') return go('admin-promote');
+    // Director pendiente de validar código de colegio
+    if (intent === 'admin' && user.role !== 'super_admin' && !user.schoolId) return go('admin-promote');
+    // Director ya validado → ir directo al panel docente
+    if (intent === 'admin' && user.role === 'teacher') return go('teacher-dashboard');
     if (intent === 'teacher' && user.role === 'student' && !user.schoolId) return go('teacher-promote');
 
     // 4. Rutado por rol
@@ -463,55 +485,6 @@ const App = (() => {
     if (!user.parentalConsent) return go('consent');
     return go('dashboard');
   }
-
-  // ---- Pantalla: Selector de rol (multi-rol) ----
-  function screenRoleSelector() {
-    const availableRoles = JSON.parse(sessionStorage.getItem('_AVAILABLE_ROLES') || '[]');
-    if (!availableRoles.length) {
-      return `<div class="alert error">No tienes roles disponibles. <a href="#" onclick="App.go('welcome'); return false;" style="color:var(--accent);">Volver</a></div>`;
-    }
-
-    const roleIcons = { student: '🎒', teacher: '👩‍🏫', super_admin: '🛡️' };
-    const roleLabels = { student: 'Estudiante', teacher: 'Docente', super_admin: 'Administrador' };
-
-    return `
-      <div style="max-width:600px;margin:80px auto;text-align:center;">
-        <h1>¿Cómo deseas ingresar?</h1>
-        <p class="muted" style="font-size:15px;margin-bottom:32px;">Tienes acceso a múltiples roles. Elige cuál deseas usar en esta sesión.</p>
-
-        <div style="display:flex;flex-direction:column;gap:12px;">
-          ${availableRoles.map((role, idx) => {
-            const contextInfo = role.school_id ? `colegio: ${role.school_id}` : role.classroom_id ? `aula: ${role.classroom_id}` : '';
-            return `
-              <div class="card" style="padding:24px;text-align:center;cursor:pointer;transition:all 0.2s;" data-role-idx="${idx}">
-                <div style="font-size:36px;margin-bottom:12px;">${roleIcons[role.role] || '👤'}</div>
-                <h3 style="margin:0 0 4px;">${roleLabels[role.role] || role.role}</h3>
-                ${contextInfo ? `<p class="muted" style="margin:0;font-size:12px;">${contextInfo}</p>` : ''}
-              </div>
-            `;
-          }).join('')}
-        </div>
-
-        <button class="ghost" style="margin-top:24px;" onclick="Auth.setActiveRole(null); sessionStorage.removeItem('_AVAILABLE_ROLES'); App.go('welcome'); return false;">Volver a login</button>
-      </div>`;
-  }
-
-  function wireRoleSelector() {
-    const availableRoles = JSON.parse(sessionStorage.getItem('_AVAILABLE_ROLES') || '[]');
-    document.querySelectorAll('[data-role-idx]').forEach((el) => {
-      el.addEventListener('click', () => {
-        const idx = parseInt(el.dataset.roleIdx);
-        const roleEntry = availableRoles[idx];
-        Auth.setActiveRole(roleEntry);
-        sessionStorage.removeItem('_AVAILABLE_ROLES');
-        Storage.clear();
-        App.go('dashboard');
-      });
-    });
-  }
-
-  // ---- Pantalla de bienvenida — versión legacy (backup) ----
-  // function screenWelcomeLegacy() { /* backup de la versión anterior — no eliminar */ }
 
   // ---- Pantalla de bienvenida rediseñada (institucional) ----
   function screenWelcome() {
@@ -549,8 +522,7 @@ const App = (() => {
 
         <div class="lp-hero-cta">
           <button class="lp-btn-hero-primary" id="lpScrollCards2">Comenzar a estudiar gratis</button>
-          <a href="?demo=guided" class="lp-btn-hero-ghost">🚀 Demo del chat IA</a>
-          <a href="?demo=student" class="lp-btn-hero-ghost">🎒 Demo estudiante</a>
+          <a href="?demo=1" class="lp-btn-hero-ghost">🎯 Ver demostración</a>
         </div>
 
         <div class="lp-impact-stats">
@@ -778,23 +750,23 @@ const App = (() => {
     return `
       <div class="lp-section-label">Elige tu acceso</div>
       <h2 class="lp-section-title">¿Cómo utilizarás TrackFocus?</h2>
-      <p class="lp-wizard-sub">Elige el entorno que mejor represente cómo aprenderás o gestionarás el aprendizaje.</p>
+      <p class="lp-wizard-sub">Elige la experiencia que mejor se adapte a tu forma de aprender o gestionar el aprendizaje.</p>
       <div class="lp-cards lp-cards--2col">
         <div class="lp-card lp-card--gold" data-access="personal">
           <div class="lp-icon-ring">${svgPersonal}</div>
           <h3>USO PERSONAL</h3>
-          <p>Aprende a tu ritmo o gestiona grupos pequeños de preparación.</p>
+          <p>Estudia a tu ritmo, desarrolla hábitos y mejora tu comprensión.</p>
           <div class="lp-card-foot">
-            <span style="font-size:12px;color:#52525B;">Autodidacta · Academia</span>
+            <span style="font-size:12px;color:#52525B;">Continuar →</span>
             <button class="lp-arrow-btn" tabindex="-1">${svgArrow}</button>
           </div>
         </div>
         <div class="lp-card lp-card--blue" data-access="institutional">
           <div class="lp-icon-ring">${svgInst}</div>
           <h3>USO INSTITUCIONAL</h3>
-          <p>Gestiona estudiantes, aulas y el progreso académico de tu colegio.</p>
+          <p>Gestiona estudiantes, aulas y el progreso académico.</p>
           <div class="lp-card-foot">
-            <span style="font-size:12px;color:#52525B;">Colegio · Institución</span>
+            <span style="font-size:12px;color:#52525B;">Continuar →</span>
             <button class="lp-arrow-btn" tabindex="-1">${svgArrow}</button>
           </div>
         </div>
@@ -934,6 +906,107 @@ const App = (() => {
   // Logo oficial de Google (Material) para el botón de login
   const GOOGLE_SVG = `<svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>`;
 
+  // Modal de conflicto de nombre: Escenario B (Google primero, luego intento manual)
+  // existingName: nombre actual en el perfil (de Google)
+  // newName: nombre que el usuario ingresó en el formulario
+  // email: correo del usuario
+  // role: rol seleccionado en el wizard
+  function _showNameConflictModal(existingName, newName, email, role) {
+    // Parsear el nombre nuevo en first/last para poder guardarlo después
+    const newParts     = (newName || '').trim().split(' ');
+    const newFirstName = newParts[0] || '';
+    const newLastName  = newParts.slice(1).join(' ') || '';
+
+    // Crear overlay del modal
+    const overlay = document.createElement('div');
+    overlay.id = 'tfNameConflictOverlay';
+    overlay.style.cssText = `
+      position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;
+      align-items:center;justify-content:center;z-index:9999;padding:16px;`;
+
+    overlay.innerHTML = `
+      <div style="background:var(--card-bg,#1a1a2e);border:1px solid var(--border,rgba(255,255,255,0.1));
+                  border-radius:16px;padding:28px;max-width:440px;width:100%;">
+        <h3 style="margin:0 0 8px;font-size:18px;">Ya tienes una cuenta</h3>
+        <p style="margin:0 0 20px;color:var(--muted-2,#71717a);font-size:14px;line-height:1.5;">
+          El correo <strong>${email}</strong> ya está registrado con Google.<br>
+          ¿Cómo quieres que te llamemos en TrackFocus?
+        </p>
+
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+          <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;
+                        border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:10px;
+                        cursor:pointer;font-size:14px;" id="tfNameOptExisting">
+            <input type="radio" name="tfNameChoice" value="existing" checked style="accent-color:var(--accent,#a78bfa);" />
+            <span>Mantener: <strong>${existingName || 'nombre de Google'}</strong></span>
+          </label>
+          ${newName ? `
+          <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;
+                        border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:10px;
+                        cursor:pointer;font-size:14px;" id="tfNameOptNew">
+            <input type="radio" name="tfNameChoice" value="new" style="accent-color:var(--accent,#a78bfa);" />
+            <span>Actualizar a: <strong>${newName}</strong></span>
+          </label>` : ''}
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <button id="tfNameConflictContinue" style="
+            display:flex;align-items:center;justify-content:center;gap:10px;
+            padding:12px 20px;border-radius:10px;border:none;cursor:pointer;
+            background:rgba(255,255,255,0.08);color:inherit;font-size:14px;font-weight:500;">
+            ${GOOGLE_SVG} <span>Continuar con Google</span>
+          </button>
+          <button id="tfNameConflictCancel" style="
+            background:none;border:none;color:var(--muted-2,#71717a);
+            cursor:pointer;font-size:13px;padding:8px;">
+            Cancelar
+          </button>
+        </div>
+      </div>`;
+
+    document.body.appendChild(overlay);
+
+    document.getElementById('tfNameConflictContinue').addEventListener('click', async () => {
+      const choice = overlay.querySelector('input[name="tfNameChoice"]:checked')?.value;
+      if (choice === 'new' && newFirstName) {
+        // Guardar la elección: se aplicará en App.start() después del redirect OAuth
+        sessionStorage.setItem('tf.pendingDisplayUpdate', JSON.stringify({
+          firstName: newFirstName,
+          lastName:  newLastName
+        }));
+      }
+      overlay.remove();
+      // Autenticar con Google (la cuenta ya existe ahí)
+      sessionStorage.setItem('tf.loginInProgress', '1');
+      sessionStorage.setItem('tf.accessType', role === 'student'
+        ? (sessionStorage.getItem('tf.accessType') || 'institutional')
+        : 'institutional');
+      try {
+        await Auth.signInWithGoogle(role);
+      } catch (err) {
+        UI.flash(err.message || 'No se pudo iniciar Google.', 'error');
+      }
+    });
+
+    document.getElementById('tfNameConflictCancel').addEventListener('click', () => {
+      overlay.remove();
+    });
+
+    // Resaltar el label seleccionado al cambiar radio
+    const continueBtn = document.getElementById('tfNameConflictContinue');
+    overlay.querySelectorAll('input[name="tfNameChoice"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        overlay.querySelectorAll('label[id^="tfNameOpt"]').forEach(l => l.style.borderColor = '');
+        if (radio.checked) {
+          radio.closest('label').style.borderColor = 'var(--accent,#a78bfa)';
+        }
+      });
+    });
+    // Resaltar el default
+    const checkedRadio = overlay.querySelector('input[name="tfNameChoice"]:checked');
+    if (checkedRadio) checkedRadio.closest('label').style.borderColor = 'var(--accent,#a78bfa)';
+  }
+
   function renderAuthForm(role) {
     const container = document.getElementById('authForm');
     if (!container) return;
@@ -941,13 +1014,22 @@ const App = (() => {
     container.classList.remove('hidden', 'lp-form--purple', 'lp-form--blue');
 
     const cfg = {
-      student: { cls: 'lp-form-emoji--gold',   emoji: '🎒', title: 'Comenzar a estudiar',  subtitle: 'Inicia sesión con Google. Tu perfil estará listo al instante.' },
-      teacher: { cls: 'lp-form-emoji--purple', emoji: '👩‍🏫', title: 'Entrar como Profesor', subtitle: 'Inicia sesión con tu cuenta institucional de Google.' },
-      admin:   { cls: 'lp-form-emoji--blue',   emoji: '🏫', title: 'Acceso Director',       subtitle: 'Inicia sesión con Google y luego ingresa la contraseña de administrador.' }
+      student: { cls: 'lp-form-emoji--gold',   emoji: '🎒', title: 'Comenzar a estudiar',
+                 subtitle: 'Crea tu cuenta o inicia sesión para empezar.',
+                 btnCls: '' },
+      teacher: { cls: 'lp-form-emoji--purple', emoji: '👩‍🏫', title: 'Entrar como Profesor',
+                 subtitle: 'Necesitarás el código de tu colegio y aula al ingresar.',
+                 btnCls: 'lp-btn-submit--purple' },
+      admin:   { cls: 'lp-form-emoji--blue',   emoji: '🏫', title: 'Acceso Director',
+                 subtitle: 'Necesitarás el código de tu institución al ingresar.',
+                 btnCls: 'lp-btn-submit--blue' }
     }[role];
 
+    if (!cfg) return;
     if (role === 'teacher') container.classList.add('lp-form--purple');
     if (role === 'admin')   container.classList.add('lp-form--blue');
+
+    const calSvg = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
 
     container.innerHTML = `
       <div class="lp-form-head">
@@ -957,6 +1039,25 @@ const App = (() => {
           <p>${cfg.subtitle}</p>
         </div>
       </div>
+
+      <form id="emailAuthForm" autocomplete="on" novalidate>
+        <div class="lp-fields-row">
+          ${_lpField('Nombres', _lpInput('user', 'name="firstName" autocomplete="given-name" placeholder="Tus nombres"'))}
+          ${_lpField('Apellidos', _lpInput('user', 'name="lastName" autocomplete="family-name" placeholder="Tus apellidos"'))}
+        </div>
+        ${_lpField('Correo electrónico', _lpInput('mail', 'type="email" name="email" autocomplete="email" placeholder="tucorreo@gmail.com" required'))}
+        ${_lpField('Contraseña', _lpInput('lock', 'type="password" name="password" autocomplete="current-password" placeholder="Mínimo 6 caracteres" required minlength="6"'))}
+        ${_lpField('Confirmar contraseña', _lpInput('lock', 'type="password" name="confirmPassword" autocomplete="new-password" placeholder="Repite tu contraseña" required'))}
+        ${_lpField('Fecha de nacimiento',
+          `<div class="lp-input-row"><span class="lp-input-ico">${calSvg}</span><input type="date" name="birthdate" style="padding-left:40px;" /></div>`,
+          'opcional')}
+        <button class="lp-btn-submit ${cfg.btnCls}" type="submit" id="emailAuthBtn">
+          Crear cuenta / Ingresar ${_svgIco.arrow}
+        </button>
+      </form>
+
+      <div class="lp-or-sep"><span>o</span></div>
+
       <button class="lp-btn-google" type="button" id="googleSignInBtn">
         ${GOOGLE_SVG}
         <span>Continuar con Google</span>
@@ -964,7 +1065,53 @@ const App = (() => {
       <p class="lp-form-foot">Al continuar aceptas que tus datos se sincronicen de forma segura en la nube.</p>
     `;
 
+    // Formulario email/contraseña
+    document.getElementById('emailAuthForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const fd       = new FormData(e.target);
+      const email    = (fd.get('email') || '').trim();
+      const password = fd.get('password') || '';
+      const confirm  = fd.get('confirmPassword') || '';
+      const nombre   = `${(fd.get('firstName') || '').trim()} ${(fd.get('lastName') || '').trim()}`.trim();
+      const birth    = fd.get('birthdate') || '';
+
+      if (!email || !password) { UI.flash('Ingresa tu correo y contraseña.', 'error'); return; }
+      if (password.length < 6) { UI.flash('La contraseña debe tener al menos 6 caracteres.', 'error'); return; }
+      if (password !== confirm) { UI.flash('Las contraseñas no coinciden.', 'error'); return; }
+
+      const btn = document.getElementById('emailAuthBtn');
+      btn.disabled = true;
+      btn.innerHTML = 'Ingresando…';
+
+      try {
+        sessionStorage.setItem('tf.accessType', role === 'student'
+          ? (sessionStorage.getItem('tf.accessType') || 'institutional')
+          : 'institutional');
+        sessionStorage.setItem('tf.loginInProgress', '1');
+
+        await Auth.signInOrRegisterWithEmail(email, password, nombre, birth, role);
+        // Recargar para que App.start() arranque limpio (igual que el flujo OAuth)
+        window.location.reload();
+      } catch (err) {
+        btn.disabled = false;
+        btn.innerHTML = `Crear cuenta / Ingresar ${_svgIco.arrow}`;
+
+        // Escenario B: el correo ya existe con Google → mostrar modal de elección de nombre
+        if (err.type === 'name_conflict') {
+          _showNameConflictModal(err.existingName, nombre, email, role);
+          return;
+        }
+
+        UI.flash(err.message || 'Error de autenticación. Inténtalo de nuevo.', 'error');
+      }
+    });
+
+    // Google OAuth
     document.getElementById('googleSignInBtn').addEventListener('click', async () => {
+      sessionStorage.setItem('tf.accessType', role === 'student'
+        ? (sessionStorage.getItem('tf.accessType') || 'institutional')
+        : 'institutional');
+      sessionStorage.setItem('tf.loginInProgress', '1');
       try {
         await Auth.signInWithGoogle(role);
       } catch (err) {
@@ -1102,17 +1249,18 @@ const App = (() => {
     });
   }
 
-  // ---- Pantalla para promover a super admin ----
+  // ---- Pantalla para verificar director (código de colegio) ----
   function screenAdminPromote() {
+    const u = Roles.current();
     return `
       <div class="card" style="max-width:520px;margin:48px auto;">
-        <h2 style="margin:0 0 8px;">Acceso de administrador</h2>
-        <p class="muted" style="margin:0 0 22px;">Ingresa la contraseña maestra para acceder al panel global.</p>
+        <h2 style="margin:0 0 8px;">Verificación de director</h2>
+        <p class="muted" style="margin:0 0 22px;">Ingresa el código de tu colegio para acceder como director. Si no lo tienes, contáctate con el administrador de TrackFocus.</p>
         <form id="adminPromoteForm">
-          <label>Contraseña</label>
-          <input name="password" type="password" required placeholder="Contraseña secreta" />
+          <label>Código del colegio</label>
+          <input name="schoolCode" maxlength="6" required placeholder="6 caracteres" style="text-transform:uppercase;" />
           <div style="display:flex;gap:10px;margin-top:18px;">
-            <button class="primary" type="submit">Entrar al panel</button>
+            <button class="primary" type="submit">Verificar y entrar</button>
             <button class="ghost" type="button" id="cancelAdminPromote">Cancelar</button>
           </div>
         </form>
@@ -1124,9 +1272,9 @@ const App = (() => {
       const fd = new FormData(e.target);
       try {
         const u = Roles.current();
-        await Auth.promoteToSuperAdmin(u.id, fd.get('password'));
+        await Auth.promoteToDirector(u.id, fd.get('schoolCode'));
         await Storage.flush();
-        go('admin-dashboard');
+        go('teacher-dashboard');
       } catch (err) { UI.flash(err.message, 'error'); }
     });
     document.getElementById('cancelAdminPromote')?.addEventListener('click', async () => {

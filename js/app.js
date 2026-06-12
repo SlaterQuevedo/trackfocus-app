@@ -4,7 +4,6 @@ const App = (() => {
   const ROUTE_ROLES = {
     // Públicas
     'welcome':            null,
-    'role-selector':      null,
     'student-onboarding': null,
     'teacher-promote':    null,
     'admin-promote':      null,
@@ -66,7 +65,6 @@ const App = (() => {
 
     const allScreens = {
       welcome:              { render: screenWelcome,           wire: wireWelcome },
-      'role-selector':      { render: screenRoleSelector,      wire: wireRoleSelector },
       'student-onboarding': { render: screenStudentOnboarding, wire: wireStudentOnboarding },
       'teacher-promote':    { render: screenTeacherPromote,    wire: wireTeacherPromote },
       'admin-promote':      { render: screenAdminPromote,      wire: wireAdminPromote },
@@ -380,14 +378,8 @@ const App = (() => {
       }
     }
 
-    // Si tiene múltiples roles y no hay uno activo seleccionado: mostrar selector
-    if (authSession.hasMultipleRoles && !Auth.getActiveRole()) {
-      sessionStorage.setItem('_AVAILABLE_ROLES', JSON.stringify(authSession.availableRoles));
-      return go('role-selector');
-    }
-
-    // Si tiene un solo rol: auto-seleccionar
-    if (authSession.availableRoles?.length === 1 && !Auth.getActiveRole()) {
+    // Auto-seleccionar el primer rol disponible (sin mostrar selector)
+    if (authSession.availableRoles?.length && !Auth.getActiveRole()) {
       Auth.setActiveRole(authSession.availableRoles[0]);
     }
 
@@ -407,7 +399,7 @@ const App = (() => {
     Storage.bindRealtime(() => {
       // Repintar la pantalla actual cuando llegan cambios, EXCEPTO si interrumpiría
       // al usuario (rendimiento + UX): chat IA en curso o un modal/quiz abierto.
-      if (!_current || _current === 'welcome' || _current === 'role-selector' || _current === 'consent') return;
+      if (!_current || _current === 'welcome' || _current === 'consent') return;
       if (_current === 'ai-study') return;
       if (document.querySelector('.quiz-modal') || document.querySelector('.pom-modal:not(.hidden)')) return;
       go(_current);
@@ -446,52 +438,6 @@ const App = (() => {
     // (y nunca se registran datos del piloto). Cumplimiento LPDP para menores.
     if (!user.parentalConsent) return go('consent');
     return go('dashboard');
-  }
-
-  // ---- Pantalla: Selector de rol (multi-rol) ----
-  function screenRoleSelector() {
-    const availableRoles = JSON.parse(sessionStorage.getItem('_AVAILABLE_ROLES') || '[]');
-    if (!availableRoles.length) {
-      return `<div class="alert error">No tienes roles disponibles. <a href="#" onclick="App.go('welcome'); return false;" style="color:var(--accent);">Volver</a></div>`;
-    }
-
-    const roleIcons = { student: '🎒', teacher: '👩‍🏫', super_admin: '🛡️' };
-    const roleLabels = { student: 'Estudiante', teacher: 'Docente', super_admin: 'Administrador' };
-
-    return `
-      <div style="max-width:600px;margin:80px auto;text-align:center;">
-        <h1>¿Cómo deseas ingresar?</h1>
-        <p class="muted" style="font-size:15px;margin-bottom:32px;">Tienes acceso a múltiples roles. Elige cuál deseas usar en esta sesión.</p>
-
-        <div style="display:flex;flex-direction:column;gap:12px;">
-          ${availableRoles.map((role, idx) => {
-            const contextInfo = role.school_id ? `colegio: ${role.school_id}` : role.classroom_id ? `aula: ${role.classroom_id}` : '';
-            return `
-              <div class="card" style="padding:24px;text-align:center;cursor:pointer;transition:all 0.2s;" data-role-idx="${idx}">
-                <div style="font-size:36px;margin-bottom:12px;">${roleIcons[role.role] || '👤'}</div>
-                <h3 style="margin:0 0 4px;">${roleLabels[role.role] || role.role}</h3>
-                ${contextInfo ? `<p class="muted" style="margin:0;font-size:12px;">${contextInfo}</p>` : ''}
-              </div>
-            `;
-          }).join('')}
-        </div>
-
-        <button class="ghost" style="margin-top:24px;" onclick="Auth.setActiveRole(null); sessionStorage.removeItem('_AVAILABLE_ROLES'); App.go('welcome'); return false;">Volver a login</button>
-      </div>`;
-  }
-
-  function wireRoleSelector() {
-    const availableRoles = JSON.parse(sessionStorage.getItem('_AVAILABLE_ROLES') || '[]');
-    document.querySelectorAll('[data-role-idx]').forEach((el) => {
-      el.addEventListener('click', () => {
-        const idx = parseInt(el.dataset.roleIdx);
-        const roleEntry = availableRoles[idx];
-        Auth.setActiveRole(roleEntry);
-        sessionStorage.removeItem('_AVAILABLE_ROLES');
-        Storage.clear();
-        App.go('dashboard');
-      });
-    });
   }
 
   // ---- Pantalla de bienvenida premium (3 roles) ----
