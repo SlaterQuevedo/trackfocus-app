@@ -85,7 +85,7 @@ const Subjects = (() => {
       const sel = name === selectedValue ? ' selected' : '';
       return `<option value="${name}"${sel}>${icon} ${name}</option>`;
     });
-    opts.push(`<option value="__otro__">➕ Otro curso…</option>`);
+    opts.push(`<option value="__otro__">➕ Otra materia…</option>`);
     return opts.join('');
   }
 

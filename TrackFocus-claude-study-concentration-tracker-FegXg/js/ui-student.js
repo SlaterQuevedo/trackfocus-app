@@ -348,7 +348,7 @@ const UIStudent = (() => {
           <div class="ds-hub-card" data-go="stats">
             <div class="ds-hub-icon">📚</div>
             <div class="ds-hub-body">
-              <div class="ds-hub-title">Mis Cursos</div>
+              <div class="ds-hub-title">Mis Materias</div>
               <div class="ds-hub-sub">${coursesCount > 0 ? `${coursesCount} materias activas` : 'Sin sesiones aún'}</div>
             </div>
             <div class="ds-hub-arrow">→</div>
@@ -365,7 +365,7 @@ const UIStudent = (() => {
             <div class="ds-hub-icon">👤</div>
             <div class="ds-hub-body">
               <div class="ds-hub-title">Mi Perfil</div>
-              <div class="ds-hub-sub">${examsCount > 0 ? `${examsCount} evaluación${examsCount !== 1 ? 'es' : ''} próxima${examsCount !== 1 ? 's' : ''}` : 'Evaluaciones · Cursos · Ajustes'}</div>
+              <div class="ds-hub-sub">${examsCount > 0 ? `${examsCount} evaluación${examsCount !== 1 ? 'es' : ''} próxima${examsCount !== 1 ? 's' : ''}` : 'Evaluaciones · Materias · Ajustes'}</div>
             </div>
             <div class="ds-hub-arrow">→</div>
           </div>
@@ -487,12 +487,12 @@ const UIStudent = (() => {
           </div>
           <div class="row">
             <div class="field">
-              <label>Curso / materia</label>
+              <label>Materia</label>
               <select name="subject" id="subjectSelectNS" required>
                 ${Subjects.renderOptions(subjects, lastSubject)}
               </select>
               <div id="customSubjectWrapNS" style="display:none;margin-top:8px;">
-                <input type="text" id="customSubjectInputNS" placeholder="Escribe el nombre del curso…"
+                <input type="text" id="customSubjectInputNS" placeholder="Escribe el nombre de la materia…"
                   style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;font-family:inherit;box-sizing:border-box;min-height:44px;" />
               </div>
             </div>
@@ -571,7 +571,7 @@ const UIStudent = (() => {
     const input = document.getElementById(inputId);
     const custom = (input?.value || '').trim();
     if (!custom) {
-      UI.flash('Escribe el nombre del curso personalizado.', 'error');
+      UI.flash('Escribe el nombre de la materia personalizada.', 'error');
       input?.focus();
       return null;
     }
@@ -1309,14 +1309,14 @@ const UIStudent = (() => {
 
     return `
       <h1>Materias</h1>
-      <p class="muted">Materias disponibles para tu institución. Puedes agregar cursos personalizados.</p>
+      <p class="muted">Materias disponibles para tu institución. Puedes agregar materias personalizadas.</p>
       <div class="card">
         <h3>Materias predefinidas</h3>
         <div>${base.map(x => `<span class="chip">${esc(x)}</span>`).join('') || '<span class="muted">Ninguna</span>'}</div>
       </div>
       <div class="card">
-        <h3>Cursos personalizados</h3>
-        <div id="customList">${custom.map(x => `<span class="chip">${esc(x)}<span class="x" data-del="${esc(x)}">✕</span></span>`).join('') || '<span class="muted">Aún no agregaste cursos.</span>'}</div>
+        <h3>Materias personalizadas</h3>
+        <div id="customList">${custom.map(x => `<span class="chip">${esc(x)}<span class="x" data-del="${esc(x)}">✕</span></span>`).join('') || '<span class="muted">Aún no agregaste materias.</span>'}</div>
         <form id="addSubjectForm" style="margin-top:14px;display:flex;gap:8px;">
           <input name="subject" placeholder="Ej. Robótica, Filosofía…" style="flex:1;background:var(--bg-2);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px;" />
           <button class="primary" type="submit">Agregar</button>
@@ -1329,7 +1329,7 @@ const UIStudent = (() => {
     document.getElementById('addSubjectForm').addEventListener('submit', (e) => {
       e.preventDefault();
       const name = new FormData(e.target).get('subject');
-      try { Subjects.addCustomSubject(userId, name); App.go('subjects'); UI.flash('Curso agregado.', 'success'); }
+      try { Subjects.addCustomSubject(userId, name); App.go('subjects'); UI.flash('Materia agregada.', 'success'); }
       catch (err) { UI.flash(err.message, 'error'); }
     });
     root().querySelectorAll('[data-del]').forEach(el => {
@@ -1777,7 +1777,7 @@ const UIStudent = (() => {
             ${Subjects.renderOptions(subjects, lastSubject)}
           </select>
           <div id="customSubjectWrapPom" style="display:none;margin-top:8px;">
-            <input type="text" id="customSubjectInputPom" placeholder="¿Qué curso deseas estudiar?"
+            <input type="text" id="customSubjectInputPom" placeholder="¿Qué materia deseas estudiar?"
               style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;font-family:inherit;box-sizing:border-box;min-height:44px;" />
           </div>
         </div>
@@ -2264,7 +2264,7 @@ const UIStudent = (() => {
     }).join('');
     const panelCourses = `
       <div class="ps-panel" data-panel="courses">
-        <h2 class="pp-section-title">Mis Cursos</h2>
+        <h2 class="pp-section-title">Mis Materias</h2>
         <div class="ps-courses-list">${courseRowsHtml}</div>
       </div>`;
 
@@ -2405,7 +2405,7 @@ const UIStudent = (() => {
           <nav class="ps-nav">
             <button class="ps-nav-item active" data-panel="profile">👤 Mi Perfil</button>
             <button class="ps-nav-item" data-panel="evals">📅 Evaluaciones</button>
-            <button class="ps-nav-item" data-panel="courses">📚 Mis Cursos</button>
+            <button class="ps-nav-item" data-panel="courses">📚 Mis Materias</button>
             <button class="ps-nav-item" data-panel="ranking">🏆 Ranking</button>
             <button class="ps-nav-item" data-panel="cognitive">🧠 Perfil Cognitivo</button>
             <button class="ps-nav-item" data-panel="prefs">⚙️ Ajustes</button>
@@ -2767,12 +2767,12 @@ const UIStudent = (() => {
           <form id="sessionSetupForm" class="card ai-config-card">
             <div class="row">
               <div class="field">
-                <label>Curso / materia</label>
+                <label>Materia</label>
                 <select name="subject" id="subjectSelectAI" required>
                   ${Subjects.renderOptions(subjects, lastSubject)}
                 </select>
                 <div id="customSubjectWrapAI" style="display:none;margin-top:8px;">
-                  <input type="text" id="customSubjectInputAI" placeholder="¿Qué curso deseas estudiar?"
+                  <input type="text" id="customSubjectInputAI" placeholder="¿Qué materia deseas estudiar?"
                     style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;font-family:inherit;box-sizing:border-box;min-height:44px;" />
                 </div>
               </div>
