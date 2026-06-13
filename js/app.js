@@ -472,7 +472,7 @@ const App = (() => {
       <div class="lp-hero">
         <div class="lp-pill">
           <span class="lp-pill-dot"></span>
-          Plataforma Educativa Inteligente
+          Tu sistema para aprender mejor
         </div>
         <h1 class="lp-title">Mide lo que aprendes<br>No lo que estudias</h1>
         <p class="lp-subtitle">IA socrática y métricas de concentración que convierten tu tiempo de estudio en aprendizaje comprobable.</p>
