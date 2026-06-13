@@ -1421,8 +1421,10 @@ html[data-theme="light"] {
 
 .focus-player {
   position: fixed;
+  /* Posición inicial gestionada por focus-player.js (guardada en localStorage).
+     Fallback: bottom-left, lejos de Tracky y botones de Estudio IA. */
   bottom: 24px;
-  right: 24px;
+  left: 24px;
   z-index: 9000;
   width: 340px;
   background: rgba(14, 17, 23, 0.88);
@@ -1439,6 +1441,44 @@ html[data-theme="light"] {
   user-select: none;
 }
 .focus-player.hidden { display: none; }
+.focus-player.fp-dragging {
+  transition: none;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.55);
+  opacity: 0.95;
+}
+
+/* Pill de restauración cuando el player está minimizado */
+.fp-pill {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 9000;
+  background: rgba(14, 17, 23, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50px;
+  padding: 8px 16px 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  transition: transform 150ms, box-shadow 150ms;
+  user-select: none;
+}
+.fp-pill:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.45);
+}
+.fp-pill.hidden { display: none; }
+.fp-pill-icon { font-size: 15px; line-height: 1; }
+[data-theme="light"] .fp-pill {
+  background: rgba(255,255,255,0.92);
+  border-color: rgba(0,0,0,0.12);
+}
 
 /* Temas claro */
 [data-theme="light"] .focus-player {
