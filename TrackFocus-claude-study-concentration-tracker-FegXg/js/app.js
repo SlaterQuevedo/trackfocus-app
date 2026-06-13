@@ -526,12 +526,10 @@ const App = (() => {
         <p class="lp-subtitle">Convierte cada sesión de estudio en aprendizaje medible. Tutor IA socrático, evaluación por niveles cognitivos e Índice de Aprendizaje en tiempo real.</p>
 
         <div class="lp-hero-cta">
-          <div class="lp-cta-primary-wrap">
-            <button class="lp-btn-hero-primary" id="lpScrollCards2">Comenzar</button>
-            <p class="lp-cta-subtext">Elige cómo usar TrackFocus en menos de un minuto.</p>
-          </div>
+          <button class="lp-btn-hero-primary" id="lpScrollCards2">Comenzar</button>
           <a href="?demo=1" class="lp-btn-hero-ghost">🎯 Ver demostración</a>
         </div>
+        <p class="lp-cta-subtext">Elige cómo usar TrackFocus en menos de un minuto.</p>
 
         <div class="lp-impact-stats">
           <span>🧠 4 niveles cognitivos</span>
@@ -708,7 +706,6 @@ const App = (() => {
             </div>
           </div>
 
-          <button class="lp-ai-cta" id="lpAICta">Comenzar</button>
         </div>
 
         <!-- SECCIÓN INSTITUCIONAL -->
@@ -878,7 +875,7 @@ const App = (() => {
     renderStep(_wizardStep0());
 
     // Botones del hero que scrollean a la sección de acceso
-    ['lpScrollCards', 'lpScrollCards2', 'lpAICta', 'lpCtaFinal'].forEach(id => {
+    ['lpScrollCards', 'lpScrollCards2', 'lpCtaFinal'].forEach(id => {
       document.getElementById(id)?.addEventListener('click', () => {
         root().querySelector('#lpRolesSection')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       });
