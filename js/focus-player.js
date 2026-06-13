@@ -1,6 +1,28 @@
-// Focus Player — expand/collapse y sincronización del modal.
+// Focus Player — expand/collapse, sync de modal, y auto-población de materias.
 // No modifica la lógica de Pomodoro ni app.js. Solo UI pura.
 const FocusPlayer = (() => {
+
+  // Llena #pomBarSubject con las materias del usuario activo, si aún está vacío.
+  // Replica la lógica de _refreshSubjects() de app.js sin tocar ese archivo.
+  function _fillSubjects() {
+    const sel = document.getElementById('pomBarSubject');
+    if (!sel || sel.options.length > 0) return;
+    try {
+      const s    = Storage.get();
+      const user = s?.users?.[s.currentUserId];
+      if (!user) return;
+      const subs = Subjects.listSubjects(user.institutionType || 'colegio', user.id);
+      sel.innerHTML = subs.map(x =>
+        `<option>${x.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</option>`
+      ).join('');
+      // Restaurar la última materia usada si el Pomodoro tiene sesión activa
+      const pState = Pomodoro.getState();
+      if (pState.subject) {
+        const opt = [...sel.options].find(o => o.value === pState.subject);
+        if (opt) sel.value = opt.value;
+      }
+    } catch (_) {}
+  }
 
   function _syncModal() {
     const clock  = document.getElementById('fpModalClock');
@@ -25,6 +47,7 @@ const FocusPlayer = (() => {
   function _open() {
     const modal = document.getElementById('fpModal');
     if (!modal) return;
+    _fillSubjects();
     _syncModal();
     modal.classList.remove('hidden');
   }
@@ -34,16 +57,25 @@ const FocusPlayer = (() => {
   }
 
   function init() {
-    const bar     = document.getElementById('pomBar');
-    const trigger = document.getElementById('fpExpandTrigger');
+    const bar      = document.getElementById('pomBar');
+    const trigger  = document.getElementById('fpExpandTrigger');
     const backdrop = document.getElementById('fpBackdrop');
     const minimize = document.getElementById('fpMinimize');
 
     if (!bar) return;
 
+    // Poblar materias en cuanto el player es visible por primera vez
+    _fillSubjects();
+
+    // Observar cuando el bar deja de ser 'hidden' para rellenar materias
+    const barObs = new MutationObserver(() => _fillSubjects());
+    barObs.observe(bar, { attributes: true, attributeFilter: ['class'] });
+
     // Expand al hacer clic en el bloque reloj/modo
     trigger?.addEventListener('click', _open);
-    trigger?.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); _open(); } });
+    trigger?.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); _open(); }
+    });
 
     // Cerrar modal
     minimize?.addEventListener('click', _close);
@@ -64,7 +96,7 @@ const FocusPlayer = (() => {
     delegate('fpModalSkip',  'pomBarSkip');
     delegate('fpModalReset', 'pomBarReset');
 
-    // Sincronizar inputs del modal de vuelta a los inputs reales
+    // Sincronizar inputs de duración del modal → inputs reales
     document.getElementById('fpModalFocus')?.addEventListener('input', e => {
       const t = document.getElementById('pomBarFocus');
       if (t) t.value = e.target.value;
@@ -74,7 +106,7 @@ const FocusPlayer = (() => {
       if (t) t.value = e.target.value;
     });
 
-    // MutationObserver para mantener el modal sincronizado con el reloj en tiempo real
+    // MutationObserver: mantener el modal sincronizado con el reloj en tiempo real
     const displayEl = document.getElementById('pomBarDisplay');
     if (displayEl) {
       const obs = new MutationObserver(() => {
@@ -94,10 +126,11 @@ const FocusPlayer = (() => {
           : txt.includes('pausado')  ? 'paused'
           : 'idle';
         bar.setAttribute('data-mode', mode);
+        // Re-sincronizar modal si está abierto
+        const modal = document.getElementById('fpModal');
+        if (modal && !modal.classList.contains('hidden')) _syncModal();
       });
       modeObs.observe(modeEl, { childList: true, characterData: true, subtree: true });
-      // Aplicar estado inicial
-      modeEl.dispatchEvent(new Event('change'));
     }
 
     // Atajo de teclado: Espacio = pausar/reanudar cuando el modal está abierto
@@ -112,7 +145,7 @@ const FocusPlayer = (() => {
     });
   }
 
-  // Esperar a que todos los scripts defer hayan cargado (incluye app.js)
+  // Esperar a que todos los scripts defer (incluye app.js, Storage, Subjects) hayan cargado
   window.addEventListener('load', init);
 
   return { open: _open, close: _close };

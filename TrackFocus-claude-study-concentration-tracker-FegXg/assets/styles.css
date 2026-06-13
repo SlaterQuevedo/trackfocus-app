@@ -1654,6 +1654,14 @@ html[data-theme="light"] {
   padding: 4px 8px;
   border-radius: 8px;
   min-width: 0;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text);
+  cursor: pointer;
+}
+[data-theme="light"] .fp-subject {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.15);
 }
 
 .fp-icon-btn {
