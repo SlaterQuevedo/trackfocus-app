@@ -5,6 +5,19 @@ const UIStudent = (() => {
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c =>
     ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 
+  function formatGrade(g) {
+    if (!g) return '';
+    const n = parseInt(g, 10);
+    if (!n || n < 1 || n > 5) return String(g);
+    return `${n}° de Secundaria`;
+  }
+  function formatGradeShort(g) {
+    if (!g) return '';
+    const n = parseInt(g, 10);
+    if (!n || n < 1 || n > 5) return String(g);
+    return `${n}° Sec.`;
+  }
+
   const _MALLAS = {
     'UNI':     ['Álgebra', 'Aritmética', 'Geometría', 'Trigonometría', 'Física', 'Química', 'R. Matemático', 'R. Verbal'],
     'UNMSM':   ['Biología', 'Química', 'Física', 'Álgebra', 'Aritmética', 'Geometría', 'Comprensión Lectora', 'R. Verbal'],
@@ -381,11 +394,11 @@ const UIStudent = (() => {
     const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 
     const grades = [
-      { id: '1ro', label: '1ro de Secundaria' },
-      { id: '2do', label: '2do de Secundaria' },
-      { id: '3ro', label: '3ro de Secundaria' },
-      { id: '4to', label: '4to de Secundaria' },
-      { id: '5to', label: '5to de Secundaria' }
+      { id: '1ro', label: '1° de Secundaria' },
+      { id: '2do', label: '2° de Secundaria' },
+      { id: '3ro', label: '3° de Secundaria' },
+      { id: '4to', label: '4° de Secundaria' },
+      { id: '5to', label: '5° de Secundaria' }
     ];
 
     return `
@@ -492,10 +505,7 @@ const UIStudent = (() => {
   }
 
   function _renderChatScreen(metadata) {
-    const gradeLabel = {
-      '1ro': '1ro Sec.', '2do': '2do Sec.', '3ro': '3ro Sec.',
-      '4to': '4to Sec.', '5to': '5to Sec.'
-    }[metadata.grade] || metadata.grade;
+    const gradeLabel = formatGradeShort(metadata.grade);
 
     return `
       <div class="chat-screen">
@@ -1664,7 +1674,7 @@ const UIStudent = (() => {
             <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;">
               ${classroom ? `<span class="ps-pill">🏫 ${esc(classroom.name)}</span>` : ''}
               ${school ? `<span class="ps-pill">🏛️ ${esc(school.name)}</span>` : ''}
-              ${user.grade ? `<span class="ps-pill">📚 ${esc(user.grade)}</span>` : ''}
+              ${user.grade ? `<span class="ps-pill">📚 ${formatGrade(user.grade)}</span>` : ''}
             </div>
           </div>
         </div>
@@ -2217,11 +2227,11 @@ const UIStudent = (() => {
       .slice(0, 5);
 
     const grades = [
-      { id: '1ro', label: '1ro de Secundaria' },
-      { id: '2do', label: '2do de Secundaria' },
-      { id: '3ro', label: '3ro de Secundaria' },
-      { id: '4to', label: '4to de Secundaria' },
-      { id: '5to', label: '5to de Secundaria' }
+      { id: '1ro', label: '1° de Secundaria' },
+      { id: '2do', label: '2° de Secundaria' },
+      { id: '3ro', label: '3° de Secundaria' },
+      { id: '4to', label: '4° de Secundaria' },
+      { id: '5to', label: '5° de Secundaria' }
     ];
 
     const now = new Date();
