@@ -37,25 +37,47 @@
     </div>
   </header>
 
-  <!-- Barra Pomodoro global — visible en todas las páginas cuando está activo -->
-  <div id="pomBar" class="pom-bar hidden">
-    <div class="pom-bar-timer">
-      <span id="pomBarDisplay">25:00</span>
-      <span id="pomBarMode">LISTO</span>
+  <!-- Focus Player — reproductor flotante persistente. Los IDs son requeridos por app.js. -->
+  <div id="pomBar" class="focus-player hidden">
+    <div class="fp-header">
+      <span class="fp-dot" id="fpDot"></span>
+      <div class="fp-time-block" id="fpExpandTrigger" title="Expandir" tabindex="0" role="button" aria-label="Expandir Focus Player">
+        <span id="pomBarDisplay" class="fp-clock">25:00</span>
+        <span id="pomBarMode" class="fp-mode">LISTO</span>
+      </div>
+      <select id="pomBarSubject" class="fp-subject"></select>
+      <button id="pomBarToggle" class="fp-icon-btn" title="Ocultar">—</button>
     </div>
-    <div class="pom-bar-center">
-      <select id="pomBarSubject"></select>
-      <div class="pom-bar-controls">
-        <button id="pomBarStart" class="primary">▶ Iniciar</button>
-        <button id="pomBarPause" class="ghost">⏸</button>
-        <button id="pomBarSkip" class="ghost">⏭</button>
-        <button id="pomBarReset" class="ghost">↺</button>
+    <div class="fp-row">
+      <button id="pomBarStart" class="primary fp-start-btn">▶ Iniciar</button>
+      <button id="pomBarPause" class="fp-icon-btn">⏸</button>
+      <button id="pomBarSkip" class="fp-icon-btn">⏭</button>
+      <button id="pomBarReset" class="fp-icon-btn">↺</button>
+      <div class="fp-durs">
+        <label>Enf.<input type="number" id="pomBarFocus" value="25" min="1" max="120" class="fp-dur"/></label>
+        <label>Des.<input type="number" id="pomBarBreak" value="5" min="1" max="30" class="fp-dur"/></label>
       </div>
     </div>
-    <div class="pom-bar-right">
-      <label>Enf. <input type="number" id="pomBarFocus" value="25" min="1" max="120" /></label>
-      <label>Des. <input type="number" id="pomBarBreak" value="5" min="1" max="30" /></label>
-      <button class="ghost" id="pomBarToggle" title="Ocultar">✕</button>
+  </div>
+
+  <!-- Focus Player — modal expandido (wired en focus-player.js) -->
+  <div id="fpModal" class="fp-modal hidden" role="dialog" aria-modal="true" aria-label="Focus Player expandido">
+    <div class="fp-modal-bg" id="fpBackdrop"></div>
+    <div class="fp-modal-card">
+      <div class="fp-modal-badge" id="fpModalMode">LISTO</div>
+      <div class="fp-modal-clock" id="fpModalClock">25:00</div>
+      <div class="fp-modal-subj" id="fpModalSubj">—</div>
+      <div class="fp-modal-btns">
+        <button class="primary fp-modal-btn" id="fpModalStart">▶ Iniciar</button>
+        <button class="ghost fp-modal-btn" id="fpModalPause">⏸</button>
+        <button class="ghost fp-modal-btn" id="fpModalSkip">⏭</button>
+        <button class="ghost fp-modal-btn" id="fpModalReset">↺</button>
+      </div>
+      <div class="fp-modal-settings">
+        <label>Enfoque (min)<input type="number" id="fpModalFocus" value="25" min="1" max="120" class="fp-modal-input"/></label>
+        <label>Descanso (min)<input type="number" id="fpModalBreak" value="5" min="1" max="30" class="fp-modal-input"/></label>
+      </div>
+      <button class="ghost fp-modal-minimize" id="fpMinimize">↓ Minimizar</button>
     </div>
   </div>
 
@@ -109,6 +131,7 @@
   <script defer src="js/roles.js"></script>
   <script defer src="js/demo.js"></script>
   <script defer src="js/tracky.js"></script>
+  <script defer src="js/focus-player.js"></script>
   <script defer src="js/app.js"></script>
   <!-- Vercel analytics solo en producción -->
   <script>
