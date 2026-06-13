@@ -236,7 +236,7 @@
   gap: 18px;
   max-width: 880px;
   width: 100%;
-  margin-bottom: 36px;
+  margin: 0 auto 36px;
   animation: lpIn 0.4s ease 0.2s both;
 }
 
@@ -585,6 +585,33 @@
   text-align: center;
   margin: 16px 0 0;
   line-height: 1.55;
+}
+
+/* ── Separador "o" entre formulario y Google ── */
+.lp-or-sep {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0 4px;
+  color: var(--muted-2);
+  font-size: 12px;
+}
+.lp-or-sep::before,
+.lp-or-sep::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255,255,255,0.07);
+}
+
+/* ── Nombres + Apellidos en dos columnas ── */
+.lp-fields-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 480px) {
+  .lp-fields-row { grid-template-columns: 1fr; }
 }
 
 /* ---- FOOTER ---- */
@@ -1007,6 +1034,7 @@
   align-items: center;
   gap: 8px;
   padding: 16px 36px;
+  margin-bottom: 40px;
   border-radius: 100px;
   border: none;
   background: linear-gradient(135deg, #C89B6D 0%, #8B5CF6 100%);
@@ -1350,6 +1378,8 @@ a.lp-btn-hero-ghost {
 .lp-cards.lp-cards--2col {
   grid-template-columns: repeat(2, 1fr);
   max-width: 660px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 @media (max-width: 600px) {
