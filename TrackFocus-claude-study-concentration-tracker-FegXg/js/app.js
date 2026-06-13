@@ -531,31 +531,6 @@ const App = (() => {
         </div>
         <p class="lp-cta-subtext">Elige cómo usar TrackFocus en menos de un minuto.</p>
 
-        <div class="lp-impact-stats">
-          <span>🧠 4 niveles cognitivos</span>
-          <span class="lp-stat-sep-inline">·</span>
-          <span>📊 Índice de Aprendizaje 0–100</span>
-          <span class="lp-stat-sep-inline">·</span>
-          <span>🦉 Tutor IA socrático</span>
-        </div>
-
-        <div class="lp-stats">
-          <div class="lp-stat">
-            <span class="lp-stat-n" data-count="100" data-prefix="+">+100</span>
-            <span class="lp-stat-l">Horas de progreso registradas</span>
-          </div>
-          <div class="lp-stat-sep"></div>
-          <div class="lp-stat">
-            <span class="lp-stat-n" data-count="20">20</span>
-            <span class="lp-stat-l">Niveles para superar</span>
-          </div>
-          <div class="lp-stat-sep"></div>
-          <div class="lp-stat">
-            <span class="lp-stat-n" data-count="11">11</span>
-            <span class="lp-stat-l">Logros para desbloquear</span>
-          </div>
-        </div>
-
         <!-- PROBLEMA -->
         <section class="lp-section lp-problem">
           <div class="lp-section-label">El problema</div>
@@ -1296,34 +1271,6 @@ const App = (() => {
 
   function wireLandingAnimations() {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    // --- Animated counters ---
-    const counters = root().querySelectorAll('.lp-stat-n[data-count]');
-    if (counters.length) {
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (!entry.isIntersecting) return;
-          observer.unobserve(entry.target);
-          const el = entry.target;
-          const target = parseInt(el.dataset.count, 10);
-          const prefix = el.dataset.prefix || '';
-          if (reduced) {
-            el.textContent = prefix + target;
-            return;
-          }
-          const duration = target >= 100 ? 2000 : target >= 20 ? 1800 : 1500;
-          const start = performance.now();
-          function step(now) {
-            const t = Math.min((now - start) / duration, 1);
-            const ease = 1 - Math.pow(1 - t, 3);
-            el.textContent = prefix + Math.round(ease * target);
-            if (t < 1) requestAnimationFrame(step);
-          }
-          requestAnimationFrame(step);
-        });
-      }, { threshold: 0.5 });
-      counters.forEach(el => observer.observe(el));
-    }
 
     // --- Scroll reveal ---
     const reveals = root().querySelectorAll('.reveal');
