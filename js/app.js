@@ -468,7 +468,6 @@ const App = (() => {
           <span>TrackFocus</span>
         </div>
         <div class="lp-header-actions">
-          <button class="theme-toggle lp-theme-btn" onclick="Theme.toggle()" title="Cambiar tema">🌙</button>
           <button class="lp-header-btn" id="lpScrollCards">Iniciar sesión</button>
         </div>
       </header>
