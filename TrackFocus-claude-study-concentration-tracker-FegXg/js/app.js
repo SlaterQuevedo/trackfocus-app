@@ -522,7 +522,7 @@ const App = (() => {
           <span class="lp-pill-dot"></span>
           Plataforma Educativa con IA
         </div>
-        <h1 class="lp-title">Mide lo que aprendes.<br>No lo que estudias.</h1>
+        <h1 class="lp-title">Mide lo que aprendes<br>No lo que estudias</h1>
         <p class="lp-subtitle">IA socrática y métricas de concentración que convierten tu tiempo de estudio en aprendizaje comprobable.</p>
 
         <div class="lp-hero-cta">
@@ -685,7 +685,7 @@ const App = (() => {
 
         <section class="lp-section lp-cta-final">
           <p class="lp-cta-final-lead">El progreso no ocurre por accidente.</p>
-          <h2 class="lp-cta-final-title">Empieza con una sesión.<br>Construye un hábito.<br>Cambia tu futuro.</h2>
+          <h2 class="lp-cta-final-title">Empieza con una sesión<br>Construye un hábito<br>Cambia tu futuro</h2>
           <button class="lp-btn-final" id="lpCtaFinal">Empieza tu camino con TrackFocus</button>
           <p class="lp-cta-final-sub">Estudiantes, docentes e instituciones comienzan aquí.</p>
         </section>
