@@ -522,8 +522,8 @@ const App = (() => {
           <span class="lp-pill-dot"></span>
           Plataforma Educativa con IA
         </div>
-        <h1 class="lp-title">Estudia con propósito.<br>Aprende con inteligencia.<br>Construye tu futuro.</h1>
-        <p class="lp-subtitle">Convierte cada sesión de estudio en aprendizaje medible. Tutor IA socrático, evaluación por niveles cognitivos e Índice de Aprendizaje en tiempo real.</p>
+        <h1 class="lp-title">Mide lo que aprendes.<br>No lo que estudias.</h1>
+        <p class="lp-subtitle">IA socrática y métricas de concentración que convierten tu tiempo de estudio en aprendizaje comprobable.</p>
 
         <div class="lp-hero-cta">
           <button class="lp-btn-hero-primary" id="lpScrollCards2">Comenzar</button>

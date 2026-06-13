@@ -474,8 +474,8 @@ const App = (() => {
           <span class="lp-pill-dot"></span>
           Plataforma Educativa Inteligente
         </div>
-        <h1 class="lp-title">Convierte tu<br>esfuerzo en resultados</h1>
-        <p class="lp-subtitle">Mejora tu concentración, construye disciplina y descubre la mejor forma de estudiar para alcanzar tus objetivos académicos.</p>
+        <h1 class="lp-title">Mide lo que aprendes.<br>No lo que estudias.</h1>
+        <p class="lp-subtitle">IA socrática y métricas de concentración que convierten tu tiempo de estudio en aprendizaje comprobable.</p>
 
         <div class="lp-cards reveal">
           <div class="lp-card lp-card--gold reveal" data-role="student" data-delay="0">
