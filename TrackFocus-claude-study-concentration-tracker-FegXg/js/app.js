@@ -683,32 +683,6 @@ const App = (() => {
 
         </div>
 
-        <!-- SECCIÓN INSTITUCIONAL -->
-        <section class="lp-section lp-institutional">
-          <div class="lp-inst-content">
-            <div class="lp-section-label">Para instituciones</div>
-            <h2 class="lp-section-title lp-inst-title">Para docentes y directores</h2>
-            <p class="lp-inst-desc">TrackFocus no es solo para estudiantes. Docentes y directores pueden monitorear el progreso real de sus alumnos, detectar quiénes necesitan apoyo y tomar decisiones basadas en datos.</p>
-          </div>
-          <div class="lp-inst-cards">
-            <div class="lp-inst-card">
-              <span class="lp-inst-card-icon">📋</span>
-              <h5>Dashboard docente</h5>
-              <p>Visualiza el progreso individual y grupal de tus alumnos en tiempo real.</p>
-            </div>
-            <div class="lp-inst-card">
-              <span class="lp-inst-card-icon">📈</span>
-              <h5>Métricas por aula</h5>
-              <p>Concentración, Índice de Aprendizaje y rachas agregadas por grupo.</p>
-            </div>
-            <div class="lp-inst-card">
-              <span class="lp-inst-card-icon">🏫</span>
-              <h5>Panel institucional</h5>
-              <p>Gestión de aulas, docentes y estadísticas globales del colegio.</p>
-            </div>
-          </div>
-        </section>
-
         <section class="lp-section lp-cta-final">
           <p class="lp-cta-final-lead">El progreso no ocurre por accidente.</p>
           <h2 class="lp-cta-final-title">Empieza con una sesión.<br>Construye un hábito.<br>Cambia tu futuro.</h2>
