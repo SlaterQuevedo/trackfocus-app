@@ -1583,6 +1583,7 @@ html[data-theme="light"] {
   user-select: none;
 }
 .focus-player.hidden { display: none; }
+.focus-player.fp-minimized { display: none; }
 .focus-player.fp-dragging {
   transition: none;
   box-shadow: 0 16px 48px rgba(0,0,0,0.55);

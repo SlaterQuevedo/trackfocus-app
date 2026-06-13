@@ -1,5 +1,6 @@
-// Focus Player — drag libre, pill de restauración, expand/collapse, sync de modal.
-// No modifica la lógica de Pomodoro ni app.js. Solo UI pura.
+// Focus Player — drag libre, pill de restauración, expand/collapse, sync modal.
+// No modifica app.js. Usa clase propia 'fp-minimized' para evitar conflicto con
+// el tick del Pomodoro (que en app.js hace bar.classList.remove('hidden') cada segundo).
 const FocusPlayer = (() => {
 
   const LS_POS = 'tf-fp-pos';
@@ -12,7 +13,6 @@ const FocusPlayer = (() => {
   function _savePos(x, y) {
     try { localStorage.setItem(LS_POS, JSON.stringify({ x, y })); } catch (_) {}
   }
-
   function _clampPos(x, y, w, h) {
     const pad = 8;
     return {
@@ -20,7 +20,6 @@ const FocusPlayer = (() => {
       y: Math.max(pad, Math.min(y, window.innerHeight - h - pad))
     };
   }
-
   function _applyPos(bar, x, y) {
     const p = _clampPos(x, y, bar.offsetWidth || 340, bar.offsetHeight || 100);
     bar.style.left   = p.x + 'px';
@@ -30,12 +29,10 @@ const FocusPlayer = (() => {
   }
 
   function _initDrag(bar) {
-    // Posición inicial: guardada o bottom-left por defecto
     const saved = _loadPos();
     if (saved) {
       _applyPos(bar, saved.x, saved.y);
     } else {
-      // Defer hasta que el bar tenga dimensiones
       requestAnimationFrame(() => {
         const bh = bar.offsetHeight || 110;
         _applyPos(bar, 24, window.innerHeight - bh - 24);
@@ -45,13 +42,11 @@ const FocusPlayer = (() => {
     const header = bar.querySelector('.fp-header');
     if (!header) return;
 
-    let dragging = false;
-    let ox = 0, oy = 0;
-
+    let dragging = false, ox = 0, oy = 0;
     header.style.cursor = 'grab';
 
     header.addEventListener('pointerdown', e => {
-      if (e.target.closest('button') || e.target.closest('select') || e.target.closest('[role="button"]')) return;
+      if (e.target.closest('button') || e.target.closest('[role="button"]')) return;
       dragging = true;
       const rect = bar.getBoundingClientRect();
       ox = e.clientX - rect.left;
@@ -67,7 +62,7 @@ const FocusPlayer = (() => {
       _applyPos(bar, e.clientX - ox, e.clientY - oy);
     });
 
-    header.addEventListener('pointerup', e => {
+    header.addEventListener('pointerup', () => {
       if (!dragging) return;
       dragging = false;
       header.style.cursor = 'grab';
@@ -76,48 +71,69 @@ const FocusPlayer = (() => {
       _savePos(rect.left, rect.top);
     });
 
-    // Re-clamp al cambiar tamaño de ventana
     window.addEventListener('resize', () => {
       const rect = bar.getBoundingClientRect();
       _applyPos(bar, rect.left, rect.top);
     }, { passive: true });
   }
 
-  // ── Pill de restauración ───────────────────────────────────────────────────
+  // ── Minimizar/restaurar con clase propia (no 'hidden') ────────────────────
+  // El tick de Pomodoro en app.js llama bar.classList.remove('hidden') cada segundo.
+  // Usar 'fp-minimized' evita ese conflicto: el tick nunca la toca.
 
-  function _initPill(bar) {
-    const pill     = document.getElementById('fpPill');
-    const pillTime = document.getElementById('fpPillTime');
-    if (!pill) return;
+  function _minimize(bar, pill) {
+    bar.classList.add('fp-minimized');
+    if (pill) {
+      pill.classList.remove('hidden');
+      const t = document.getElementById('fpPillTime');
+      if (t) t.textContent = document.getElementById('pomBarDisplay')?.textContent || '25:00';
+    }
+  }
 
-    // Sincronizar tiempo en la pill con el reloj del player
+  function _restore(bar, pill) {
+    bar.classList.remove('fp-minimized');
+    if (pill) pill.classList.add('hidden');
+    _fillSubjects();
+  }
+
+  function _initToggle(bar) {
+    const pill = document.getElementById('fpPill');
+
+    // Interceptar el click del botón — antes que app.js (capture phase).
+    // app.js hace toggle('hidden'); nosotros lo bloqueamos y usamos 'fp-minimized'.
+    const toggleBtn = document.getElementById('pomBarToggle');
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', e => {
+        e.stopImmediatePropagation();   // bloquea el listener de app.js
+        if (bar.classList.contains('fp-minimized')) {
+          _restore(bar, pill);
+        } else {
+          _minimize(bar, pill);
+        }
+      }, { capture: true });
+    }
+
+    // Pill: click para restaurar
+    pill?.addEventListener('click', () => _restore(bar, pill));
+
+    // Sincronizar el tiempo en la pill mientras el timer corre
     const displayEl = document.getElementById('pomBarDisplay');
-    if (displayEl && pillTime) {
+    if (displayEl && pill) {
       const obs = new MutationObserver(() => {
-        pillTime.textContent = displayEl.textContent;
+        if (!pill.classList.contains('hidden')) {
+          const t = document.getElementById('fpPillTime');
+          if (t) t.textContent = displayEl.textContent;
+        }
       });
       obs.observe(displayEl, { childList: true, characterData: true, subtree: true });
     }
 
-    // Observar cuando #pomBar gana/pierde 'hidden' para mostrar/ocultar pill
-    const classObs = new MutationObserver(() => {
-      if (bar.classList.contains('hidden')) {
-        pill.classList.remove('hidden');
-        if (pillTime) pillTime.textContent = document.getElementById('pomBarDisplay')?.textContent || '25:00';
-      } else {
-        pill.classList.add('hidden');
-      }
-    });
-    classObs.observe(bar, { attributes: true, attributeFilter: ['class'] });
-
-    // Click en la pill: restaurar el player
-    pill.addEventListener('click', () => {
-      bar.classList.remove('hidden');
-      document.body.classList.add('pom-active');
-      pill.classList.add('hidden');
-      // Rellenar materias si es necesario
-      _fillSubjects();
-    });
+    // Cuando app.js llama window._showPomBar() (desde Estudio IA), también restaurar
+    const orig = window._showPomBar;
+    window._showPomBar = (...args) => {
+      orig?.(...args);
+      _restore(bar, pill);
+    };
   }
 
   // ── Materias ───────────────────────────────────────────────────────────────
@@ -200,23 +216,25 @@ const FocusPlayer = (() => {
   // ── Init ───────────────────────────────────────────────────────────────────
 
   function init() {
-    const bar      = document.getElementById('pomBar');
-    const trigger  = document.getElementById('fpExpandTrigger');
-    const backdrop = document.getElementById('fpBackdrop');
-    const minimize = document.getElementById('fpMinimize');
-
+    const bar = document.getElementById('pomBar');
     if (!bar) return;
 
     _initDrag(bar);
-    _initPill(bar);
+    _initToggle(bar);
 
     // Rellenar materias cuando el player se hace visible
     const visObs = new MutationObserver(() => {
-      if (!bar.classList.contains('hidden')) _fillSubjects();
+      if (!bar.classList.contains('hidden') && !bar.classList.contains('fp-minimized')) {
+        _fillSubjects();
+      }
     });
     visObs.observe(bar, { attributes: true, attributeFilter: ['class'] });
 
     // Expand/minimize modal
+    const trigger  = document.getElementById('fpExpandTrigger');
+    const backdrop = document.getElementById('fpBackdrop');
+    const minimize = document.getElementById('fpMinimize');
+
     trigger?.addEventListener('click', _open);
     trigger?.addEventListener('keydown', e => {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); _open(); }
@@ -225,7 +243,7 @@ const FocusPlayer = (() => {
     backdrop?.addEventListener('click', _close);
     document.addEventListener('keydown', e => { if (e.key === 'Escape') _close(); });
 
-    // Botones del modal delegan a los reales (que tienen listeners de app.js)
+    // Botones del modal delegan a los reales (listeners de app.js)
     const delegate = (fromId, toId) => {
       document.getElementById(fromId)?.addEventListener('click', () => {
         document.getElementById(toId)?.click();
@@ -237,14 +255,11 @@ const FocusPlayer = (() => {
     delegate('fpModalSkip',  'pomBarSkip');
     delegate('fpModalReset', 'pomBarReset');
 
-    // Selector de materia del modal → select oculto → label mini player
     document.getElementById('fpModalSubjectSel')?.addEventListener('change', e => {
       const hidden = document.getElementById('pomBarSubject');
       if (hidden) hidden.value = e.target.value;
       _updateLabel();
     });
-
-    // Inputs de duración del modal → inputs reales
     document.getElementById('fpModalFocus')?.addEventListener('input', e => {
       const t = document.getElementById('pomBarFocus');
       if (t) t.value = e.target.value;
@@ -257,14 +272,15 @@ const FocusPlayer = (() => {
     // MutationObserver: sincronizar modal con el reloj en tiempo real
     const displayEl = document.getElementById('pomBarDisplay');
     if (displayEl) {
-      const obs = new MutationObserver(_syncModal);
-      obs.observe(displayEl, { childList: true, characterData: true, subtree: true });
+      new MutationObserver(_syncModal).observe(displayEl, {
+        childList: true, characterData: true, subtree: true
+      });
     }
 
-    // Actualizar data-mode en #pomBar para colores CSS por estado
+    // data-mode en #pomBar para colores CSS
     const modeEl = document.getElementById('pomBarMode');
-    if (modeEl && bar) {
-      const modeObs = new MutationObserver(() => {
+    if (modeEl) {
+      new MutationObserver(() => {
         const txt  = modeEl.textContent.toLowerCase();
         const mode = txt.includes('enfocado') ? 'focus'
           : txt.includes('descanso') ? 'break'
@@ -272,8 +288,7 @@ const FocusPlayer = (() => {
           : 'idle';
         bar.setAttribute('data-mode', mode);
         _syncModal();
-      });
-      modeObs.observe(modeEl, { childList: true, characterData: true, subtree: true });
+      }).observe(modeEl, { childList: true, characterData: true, subtree: true });
     }
 
     // Espacio = pausar/reanudar cuando el modal está abierto

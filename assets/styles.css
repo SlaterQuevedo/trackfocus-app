@@ -1441,6 +1441,9 @@ html[data-theme="light"] {
   user-select: none;
 }
 .focus-player.hidden { display: none; }
+/* fp-minimized: oculto por el usuario. A diferencia de 'hidden',
+   el tick del Pomodoro en app.js nunca toca esta clase. */
+.focus-player.fp-minimized { display: none; }
 .focus-player.fp-dragging {
   transition: none;
   box-shadow: 0 16px 48px rgba(0,0,0,0.55);
