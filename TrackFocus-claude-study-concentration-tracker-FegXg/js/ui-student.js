@@ -5,6 +5,14 @@ const UIStudent = (() => {
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c =>
     ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 
+  const _MALLAS = {
+    'UNI':     ['Álgebra', 'Aritmética', 'Geometría', 'Trigonometría', 'Física', 'Química', 'R. Matemático', 'R. Verbal'],
+    'UNMSM':   ['Biología', 'Química', 'Física', 'Álgebra', 'Aritmética', 'Geometría', 'Comprensión Lectora', 'R. Verbal'],
+    'PUCP':    ['Matemáticas', 'Comprensión Lectora', 'Argumentación', 'Redacción', 'Pensamiento Crítico'],
+    'UNAC':    ['Matemáticas', 'Física', 'Química', 'Comprensión Aplicada'],
+    'Beca 18': ['Comprensión Lectora', 'R. Verbal', 'R. Matemático', 'Pensamiento Crítico', 'Hábitos de Estudio']
+  };
+
   function showXpToast(xpEarned, newBadges) {
     const el = document.createElement('div');
     el.className = 'xp-toast';
@@ -161,7 +169,6 @@ const UIStudent = (() => {
     const levelInfo = Gamification.getLevelInfo(gam.xp || 0);
     const sum = Stats.summary(sessions);
     const goalsCard = _renderGoalsCard(user, sessions, gam);
-
     const sorted = [...sessions].sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
     const profile = JSON.parse(localStorage.getItem('tf-academic-profile-v3') || '{}');
     const prepPct = _calcPrep(user, sessions, profile);
@@ -169,11 +176,9 @@ const UIStudent = (() => {
     const lastSession = sorted[0] || null;
     const studySubject = todaySubject || lastSession?.subject || null;
     const nowMs = Date.now();
-    const sortedExams = (profile.examDates || [])
+    const nearestExam = (profile.examDates || [])
       .map(e => ({ ...e, days: Math.ceil((new Date(e.date) - nowMs) / 86400000) }))
-      .filter(e => e.days > 0)
-      .sort((a, b) => a.days - b.days);
-    const nearestExam = sortedExams[0] || null;
+      .filter(e => e.days > 0).sort((a, b) => a.days - b.days)[0] || null;
 
     const heroHtml = `
       <div class="dp-hero">
@@ -184,14 +189,7 @@ const UIStudent = (() => {
             <div class="dp-prep-bar-wrap"><div class="dp-prep-bar" style="width:${prepPct}%;"></div></div>
             <div class="dp-prep-label">${prepPct}% preparación${nearestExam ? ` · 📅 ${nearestExam.days} días para ${esc(nearestExam.label)}` : ''}</div>
           </div>` : `
-          <div class="dp-hero-goal">Configura tu meta universitaria para personalizar tu ruta →</div>`}
-      </div>`;
-
-    const tabsHtml = `
-      <div class="dp-tabs">
-        <button class="dp-tab-btn active" data-tab="hoy">Hoy</button>
-        <button class="dp-tab-btn" data-tab="ruta">Mi Ruta</button>
-        <button class="dp-tab-btn" data-tab="calendario">Calendario</button>
+          <div class="dp-hero-goal">Configura tu meta universitaria en <strong>Mi Perfil → Meta</strong></div>`}
       </div>`;
 
     const studyNowHtml = studySubject ? `
@@ -206,152 +204,62 @@ const UIStudent = (() => {
       </div>` : `
       <div class="dp-study-now dp-study-empty">
         <div class="dp-study-header">🎯 ¿Qué estudias hoy?</div>
-        <div class="dp-study-reason">Configura tu ruta universitaria para recomendaciones personalizadas.</div>
+        <div class="dp-study-reason">Registra tu primera sesión para comenzar.</div>
         <div class="dp-study-actions">
           <button class="primary dp-study-btn" data-go="new-session">+ Comenzar sesión</button>
         </div>
       </div>`;
 
-    const chipsHtml = `
-      <div class="dp-chips-row">
-        <div class="dp-chip dp-chip-fire">🔥 ${gam.streak || 0} días</div>
-        <div class="dp-chip dp-chip-xp">💎 ${gam.xp || 0} XP</div>
-        <div class="dp-chip dp-chip-conc">🧠 ${sum.avgConc || '—'} conc.</div>
-        <div class="dp-chip dp-chip-session">📚 ${sum.total} sesiones</div>
-      </div>`;
-
-    const navGridHtml = `
-      <div class="dp-nav-grid">
-        <div class="dp-nav-card" data-go="achievements">
-          <div class="dp-nav-icon">🏆</div>
-          <div class="dp-nav-body">
-            <div class="dp-nav-title">Logros</div>
-            <div class="dp-nav-sub">Nivel ${levelInfo.current.level} — ${esc(levelInfo.current.title)}</div>
-          </div>
-          <div class="dp-nav-arrow">→</div>
-        </div>
-        <div class="dp-nav-card" data-go="stats">
-          <div class="dp-nav-icon">📊</div>
-          <div class="dp-nav-body">
-            <div class="dp-nav-title">Estadísticas</div>
-            <div class="dp-nav-sub">${sum.total} sesiones · ${Math.round(((sum.totalMin||0)/60)*10)/10}h totales</div>
-          </div>
-          <div class="dp-nav-arrow">→</div>
-        </div>
-      </div>`;
-
-    const tabHoyHtml = `
-      <div class="dp-tab-panel active" data-tab="hoy">
-        ${studyNowHtml}
-        ${chipsHtml}
-        ${navGridHtml}
-        ${goalsCard ? `<div style="margin-top:12px;">${goalsCard}</div>` : ''}
-      </div>`;
-
-    let tabRutaHtml;
-    if (!profile.university) {
-      tabRutaHtml = `
-        <div class="dp-tab-panel" data-tab="ruta">
-          <div class="dp-setup-card">
-            <div class="dp-setup-icon">🎓</div>
-            <div class="dp-setup-title">Configura tu meta universitaria</div>
-            <div class="dp-setup-sub">Selecciona tu universidad y carrera para obtener una ruta de preparación personalizada.</div>
-            <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px;">
-              <select id="dp-uni-select" style="width:100%;padding:10px;border-radius:var(--radius-sm);background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;">
-                <option value="">Selecciona universidad</option>
-                <option value="UNI">UNI — Universidad Nacional de Ingeniería</option>
-                <option value="UNMSM">UNMSM — Universidad Mayor de San Marcos</option>
-                <option value="PUCP">PUCP — Pontificia Universidad Católica del Perú</option>
-                <option value="UNAC">UNAC — Universidad Nacional del Callao</option>
-                <option value="Beca 18">Beca 18</option>
-                <option value="otro">Otra universidad</option>
-              </select>
-              <input type="text" id="dp-custom-uni" placeholder="Nombre de tu universidad" style="display:none;padding:10px;border-radius:var(--radius-sm);background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;" />
-              <input type="text" id="dp-career-input" placeholder="¿Qué carrera quieres estudiar?" style="padding:10px;border-radius:var(--radius-sm);background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;" />
-              <button class="primary" id="dp-save-goal" style="width:100%;">Guardar mi meta 🎯</button>
-            </div>
-          </div>
-        </div>`;
-    } else {
-      const enabledSubjects = profile.enabledSubjects || [];
-      const subjectStats = {};
-      enabledSubjects.forEach(subj => { subjectStats[subj] = { count: 0, total: 0 }; });
-      sessions.forEach(sess => {
-        if (subjectStats[sess.subject] !== undefined) {
-          subjectStats[sess.subject].count++;
-          subjectStats[sess.subject].total += (sess.concentration || 0);
-        }
-      });
-      const routeRows = enabledSubjects.map(subj => {
-        const st = subjectStats[subj];
-        const idx = st.count ? Math.round((st.total / st.count / 5) * 100) : 0;
-        return `
-          <div class="dp-route-row">
-            <div class="dp-route-name">${esc(subj)}</div>
-            <div class="dp-route-bar-wrap"><div class="dp-route-bar" style="width:${Math.min(idx,100)}%;"></div></div>
-            <div class="dp-route-stats">
-              <span>${st.count} ses.</span>
-              <span class="dp-route-idx">${idx > 0 ? idx + '%' : '—'}</span>
-            </div>
-            <button class="dp-route-btn ghost" data-go="ai-study">▶</button>
-          </div>`;
-      }).join('');
-      tabRutaHtml = `
-        <div class="dp-tab-panel" data-tab="ruta">
-          <div class="dp-route-header">
-            <span>${esc(profile.career)} · ${esc(profile.university)}</span>
-            <button class="dp-change-goal ghost" id="dp-change-goal">Cambiar meta</button>
-          </div>
-          <div class="dp-route-list">${routeRows || '<p class="muted" style="text-align:center;padding:20px;">Aún no tienes sesiones en estas materias.</p>'}</div>
-        </div>`;
-    }
-
-    const examsListHtml = sortedExams.length ? sortedExams.slice(0, 5).map(e => {
-      const cls = e.days <= 7 ? 'dp-date-urgent' : e.days <= 30 ? 'dp-date-soon' : '';
-      return `
-        <div class="dp-date-item ${cls}">
-          <div class="dp-date-label">${esc(e.label)}</div>
-          <div class="dp-date-badge">${e.days} días</div>
-        </div>`;
-    }).join('') : '';
-
-    const addDateFormHtml = `
-      <div id="dp-date-form" style="display:none;margin-top:12px;padding:14px;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-sm);">
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <input type="text" id="dp-date-label" placeholder="Ej. Examen UNI" style="padding:10px;border-radius:var(--radius-sm);background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:14px;" />
-          <input type="date" id="dp-date-date" style="padding:10px;border-radius:var(--radius-sm);background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:14px;" />
-          <button class="primary" id="dp-save-date">Guardar fecha</button>
-        </div>
-      </div>`;
-
-    const tabCalHtml = `
-      <div class="dp-tab-panel" data-tab="calendario">
-        ${sortedExams.length ? `
-          <div class="dp-dates-list">${examsListHtml}</div>
-          <button class="ghost" style="margin-top:10px;width:100%;" id="dp-show-date-form">+ Agregar fecha</button>
-        ` : `
-          <div class="dp-setup-card">
-            <div class="dp-setup-icon">📅</div>
-            <div class="dp-setup-title">Sin fechas registradas</div>
-            <div class="dp-setup-sub">Agrega tus exámenes y simulacros para ver la cuenta regresiva.</div>
-            <button class="primary" style="margin-top:14px;width:100%;" id="dp-show-date-form">+ Agregar fecha de examen</button>
-          </div>`}
-        ${addDateFormHtml}
-      </div>`;
-
     return `
       <div class="dp-wrap">
         ${heroHtml}
-        ${tabsHtml}
-        ${tabHoyHtml}
-        ${tabRutaHtml}
-        ${tabCalHtml}
+        ${studyNowHtml}
+        <div class="dp-chips-row">
+          <div class="dp-chip dp-chip-fire">🔥 ${gam.streak || 0} días</div>
+          <div class="dp-chip dp-chip-xp">💎 ${gam.xp || 0} XP</div>
+          <div class="dp-chip dp-chip-conc">🧠 ${sum.avgConc || '—'} conc.</div>
+          <div class="dp-chip dp-chip-session">📚 ${sum.total} sesiones</div>
+        </div>
+        <div class="dp-nav-grid">
+          <div class="dp-nav-card" data-go="achievements">
+            <div class="dp-nav-icon">🏆</div>
+            <div class="dp-nav-body">
+              <div class="dp-nav-title">Logros</div>
+              <div class="dp-nav-sub">Nivel ${levelInfo.current.level} — ${esc(levelInfo.current.title)}</div>
+            </div>
+            <div class="dp-nav-arrow">→</div>
+          </div>
+          <div class="dp-nav-card" data-go="stats">
+            <div class="dp-nav-icon">📊</div>
+            <div class="dp-nav-body">
+              <div class="dp-nav-title">Estadísticas</div>
+              <div class="dp-nav-sub">${sum.total} ses. · ${Math.round(((sum.totalMin||0)/60)*10)/10}h totales</div>
+            </div>
+            <div class="dp-nav-arrow">→</div>
+          </div>
+          <div class="dp-nav-card" data-go="profile">
+            <div class="dp-nav-icon">👤</div>
+            <div class="dp-nav-body">
+              <div class="dp-nav-title">Mi Perfil</div>
+              <div class="dp-nav-sub">Meta · Ruta · Calendario</div>
+            </div>
+            <div class="dp-nav-arrow">→</div>
+          </div>
+          <div class="dp-nav-card" data-go="ai-study">
+            <div class="dp-nav-icon">🤖</div>
+            <div class="dp-nav-body">
+              <div class="dp-nav-title">Estudio IA</div>
+              <div class="dp-nav-sub">Minerva + DECO</div>
+            </div>
+            <div class="dp-nav-arrow">→</div>
+          </div>
+        </div>
+        ${goalsCard ? `<div style="margin-top:12px;">${goalsCard}</div>` : ''}
       </div>`;
   }
 
   function _dashStudent(user, sessions, s) {
     const gam = user.gamification || {};
-    const sum = Stats.summary(sessions);
     const alerts = Analytics.generateAlerts(user.id);
     const school = user.schoolId ? s.schools[user.schoolId] : null;
     const classroom = user.classroomId ? s.classrooms[user.classroomId] : null;
@@ -360,8 +268,7 @@ const UIStudent = (() => {
     const nowMs = Date.now();
     const exams = (schoolProfile.exams || [])
       .map(e => ({ ...e, days: Math.ceil((new Date(e.date) - nowMs) / 86400000) }))
-      .filter(e => e.days > 0)
-      .sort((a, b) => a.days - b.days);
+      .filter(e => e.days > 0).sort((a, b) => a.days - b.days);
     const todayStr = new Date().toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long' });
 
     const heroHtml = `
@@ -405,8 +312,7 @@ const UIStudent = (() => {
         </div>`;
     }
 
-    let rankText = '#—';
-    let rankSub = 'Sin datos aún';
+    let rankText = '#—', rankSub = 'Sin datos aún';
     if (user.classroomId) {
       try {
         const lb = Gamification.getLeaderboard('classroom', user.classroomId, 'week');
@@ -414,62 +320,8 @@ const UIStudent = (() => {
         if (me) { rankText = `#${me.rank}`; rankSub = `de ${lb.length} alumnos`; }
       } catch (_) {}
     }
-    const coursesCount = new Set(sessions.map(sess => sess.subject)).size;
     const examsCount = exams.length;
-
-    const hubHtml = `
-      <div class="ds-hub-grid">
-        <div class="ds-hub-card" data-go="stats">
-          <div class="ds-hub-icon">📚</div>
-          <div class="ds-hub-body">
-            <div class="ds-hub-title">Mis Cursos</div>
-            <div class="ds-hub-sub">${coursesCount > 0 ? `${coursesCount} materias activas` : 'Sin sesiones aún'}</div>
-          </div>
-          <div class="ds-hub-arrow">→</div>
-        </div>
-        <div class="ds-hub-card" data-go="leaderboard">
-          <div class="ds-hub-icon">🏆</div>
-          <div class="ds-hub-body">
-            <div class="ds-hub-title">Ranking</div>
-            <div class="ds-hub-sub">${rankText} ${rankSub}</div>
-          </div>
-          <div class="ds-hub-arrow">→</div>
-        </div>
-        <div class="ds-hub-card" id="ds-hub-exams" style="cursor:pointer;">
-          <div class="ds-hub-icon">📅</div>
-          <div class="ds-hub-body">
-            <div class="ds-hub-title">Evaluaciones</div>
-            <div class="ds-hub-sub">${examsCount > 0 ? `${examsCount} próxima${examsCount !== 1 ? 's' : ''}` : 'Agrega fechas'}</div>
-          </div>
-          <div class="ds-hub-arrow" id="ds-exams-arrow">↓</div>
-        </div>
-        <div class="ds-hub-card" data-go="ai-study">
-          <div class="ds-hub-icon">🤖</div>
-          <div class="ds-hub-body">
-            <div class="ds-hub-title">Estudio IA</div>
-            <div class="ds-hub-sub">Minerva + DECO</div>
-          </div>
-          <div class="ds-hub-arrow">→</div>
-        </div>
-      </div>`;
-
-    const examsRowsHtml = exams.length ? exams.slice(0, 5).map(e => `
-      <div class="ds-exam-item ${e.days <= 3 ? 'urgent' : e.days <= 7 ? 'soon' : ''}">
-        <div class="ds-exam-name">${esc(e.subject || e.label)}</div>
-        <div class="ds-exam-days">${e.days} días</div>
-      </div>`).join('') : `<p class="muted" style="text-align:center;padding:12px 0;font-size:13px;">Sin evaluaciones registradas.</p>`;
-
-    const examsPanelHtml = `
-      <div id="ds-exams-panel" style="display:none;margin-bottom:12px;padding:14px;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-sm);">
-        <div class="ds-exams-list">${examsRowsHtml}</div>
-        <button class="ghost" id="ds-show-add-exam" style="width:100%;margin-top:8px;">+ Agregar evaluación</button>
-        <div id="ds-add-exam-form" style="display:none;flex-direction:column;gap:8px;margin-top:8px;">
-          <input type="text" id="ds-exam-subject" placeholder="Materia (ej. Álgebra)" style="padding:10px;border-radius:var(--radius-sm);background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:14px;" />
-          <input type="date" id="ds-exam-date" style="padding:10px;border-radius:var(--radius-sm);background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:14px;" />
-          <button class="primary" id="ds-save-exam">Guardar evaluación</button>
-        </div>
-      </div>`;
-
+    const coursesCount = new Set(sessions.map(sess => sess.subject)).size;
     const alertsHtml = alerts.length ? `
       <div class="ds-alerts">
         ${alerts.slice(0, 2).map(a => `<div class="ds-alert-item">⚡ ${a.msg}</div>`).join('')}
@@ -479,8 +331,40 @@ const UIStudent = (() => {
       <div class="ds-wrap">
         ${heroHtml}
         ${priorityHtml}
-        ${hubHtml}
-        ${examsPanelHtml}
+        <div class="ds-hub-grid">
+          <div class="ds-hub-card" data-go="stats">
+            <div class="ds-hub-icon">📚</div>
+            <div class="ds-hub-body">
+              <div class="ds-hub-title">Mis Cursos</div>
+              <div class="ds-hub-sub">${coursesCount > 0 ? `${coursesCount} materias activas` : 'Sin sesiones aún'}</div>
+            </div>
+            <div class="ds-hub-arrow">→</div>
+          </div>
+          <div class="ds-hub-card" data-go="leaderboard">
+            <div class="ds-hub-icon">🏆</div>
+            <div class="ds-hub-body">
+              <div class="ds-hub-title">Ranking</div>
+              <div class="ds-hub-sub">${rankText} ${rankSub}</div>
+            </div>
+            <div class="ds-hub-arrow">→</div>
+          </div>
+          <div class="ds-hub-card" data-go="profile">
+            <div class="ds-hub-icon">👤</div>
+            <div class="ds-hub-body">
+              <div class="ds-hub-title">Mi Perfil</div>
+              <div class="ds-hub-sub">${examsCount > 0 ? `${examsCount} evaluación${examsCount !== 1 ? 'es' : ''} próxima${examsCount !== 1 ? 's' : ''}` : 'Evaluaciones · Cursos · Ajustes'}</div>
+            </div>
+            <div class="ds-hub-arrow">→</div>
+          </div>
+          <div class="ds-hub-card" data-go="ai-study">
+            <div class="ds-hub-icon">🤖</div>
+            <div class="ds-hub-body">
+              <div class="ds-hub-title">Estudio IA</div>
+              <div class="ds-hub-sub">Minerva + DECO</div>
+            </div>
+            <div class="ds-hub-arrow">→</div>
+          </div>
+        </div>
         ${alertsHtml}
       </div>`;
   }
@@ -531,106 +415,6 @@ const UIStudent = (() => {
   function wireDashboard() {
     root().querySelectorAll('[data-go]').forEach(b =>
       b.addEventListener('click', () => App.go(b.dataset.go)));
-
-    // Personal: tab switching
-    root().querySelectorAll('.dp-tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        root().querySelectorAll('.dp-tab-btn').forEach(b => b.classList.remove('active'));
-        root().querySelectorAll('.dp-tab-panel').forEach(p => p.classList.remove('active'));
-        btn.classList.add('active');
-        const panel = root().querySelector(`.dp-tab-panel[data-tab="${btn.dataset.tab}"]`);
-        if (panel) panel.classList.add('active');
-      });
-    });
-
-    // Personal: university selector
-    root().querySelector('#dp-uni-select')?.addEventListener('change', function() {
-      const customInput = root().querySelector('#dp-custom-uni');
-      if (customInput) customInput.style.display = this.value === 'otro' ? 'block' : 'none';
-    });
-
-    // Personal: save goal
-    root().querySelector('#dp-save-goal')?.addEventListener('click', () => {
-      const uniSelect = root().querySelector('#dp-uni-select');
-      const customUni = root().querySelector('#dp-custom-uni');
-      const careerInput = root().querySelector('#dp-career-input');
-      const uniVal = uniSelect?.value;
-      const university = uniVal === 'otro' ? customUni?.value.trim() : uniVal;
-      const career = careerInput?.value.trim();
-      if (!university || !career) return;
-      const MALLAS = {
-        'UNI':     ['Álgebra', 'Aritmética', 'Geometría', 'Trigonometría', 'Física', 'Química', 'R. Matemático', 'R. Verbal'],
-        'UNMSM':   ['Biología', 'Química', 'Física', 'Álgebra', 'Aritmética', 'Geometría', 'Comprensión Lectora', 'R. Verbal'],
-        'PUCP':    ['Matemáticas', 'Comprensión Lectora', 'Argumentación', 'Redacción', 'Pensamiento Crítico'],
-        'UNAC':    ['Matemáticas', 'Física', 'Química', 'Comprensión Aplicada'],
-        'Beca 18': ['Comprensión Lectora', 'R. Verbal', 'R. Matemático', 'Pensamiento Crítico', 'Hábitos de Estudio']
-      };
-      const existing = JSON.parse(localStorage.getItem('tf-academic-profile-v3') || '{}');
-      localStorage.setItem('tf-academic-profile-v3', JSON.stringify({
-        ...existing,
-        university: uniVal === 'otro' ? 'otro' : university,
-        customUniversity: uniVal === 'otro' ? university : undefined,
-        career,
-        enabledSubjects: MALLAS[university] || []
-      }));
-      App.go('dashboard');
-    });
-
-    // Personal: clear goal
-    root().querySelector('#dp-change-goal')?.addEventListener('click', () => {
-      const existing = JSON.parse(localStorage.getItem('tf-academic-profile-v3') || '{}');
-      delete existing.university; delete existing.career; delete existing.enabledSubjects;
-      localStorage.setItem('tf-academic-profile-v3', JSON.stringify(existing));
-      App.go('dashboard');
-    });
-
-    // Personal: toggle date form
-    root().querySelector('#dp-show-date-form')?.addEventListener('click', () => {
-      const form = root().querySelector('#dp-date-form');
-      if (form) form.style.display = form.style.display === 'none' ? 'flex' : 'none';
-    });
-
-    // Personal: save exam date
-    root().querySelector('#dp-save-date')?.addEventListener('click', () => {
-      const label = root().querySelector('#dp-date-label')?.value.trim();
-      const date = root().querySelector('#dp-date-date')?.value;
-      if (!label || !date) return;
-      const profile = JSON.parse(localStorage.getItem('tf-academic-profile-v3') || '{}');
-      profile.examDates = profile.examDates || [];
-      profile.examDates.push({ label, type: 'examen', date });
-      profile.examDates.sort((a, b) => new Date(a.date) - new Date(b.date));
-      localStorage.setItem('tf-academic-profile-v3', JSON.stringify(profile));
-      App.go('dashboard');
-    });
-
-    // Institutional: toggle exams panel
-    root().querySelector('#ds-hub-exams')?.addEventListener('click', () => {
-      const panel = root().querySelector('#ds-exams-panel');
-      if (!panel) return;
-      const isOpen = panel.style.display !== 'none';
-      panel.style.display = isOpen ? 'none' : 'block';
-      const arrow = root().querySelector('#ds-exams-arrow');
-      if (arrow) arrow.textContent = isOpen ? '↓' : '↑';
-    });
-
-    // Institutional: show add exam form
-    root().querySelector('#ds-show-add-exam')?.addEventListener('click', () => {
-      const form = root().querySelector('#ds-add-exam-form');
-      if (form) form.style.display = form.style.display === 'none' ? 'flex' : 'none';
-    });
-
-    // Institutional: save exam
-    root().querySelector('#ds-save-exam')?.addEventListener('click', () => {
-      const subject = root().querySelector('#ds-exam-subject')?.value.trim();
-      const date = root().querySelector('#ds-exam-date')?.value;
-      if (!subject || !date) return;
-      const profile = JSON.parse(localStorage.getItem('tf-school-profile-v1') || '{}');
-      profile.exams = profile.exams || [];
-      profile.exams.push({ subject, label: subject, date });
-      profile.exams.sort((a, b) => new Date(a.date) - new Date(b.date));
-      localStorage.setItem('tf-school-profile-v1', JSON.stringify(profile));
-      App.go('dashboard');
-    });
 
     // Sistema de Metas (Fase 9): editar el valor objetivo de cada meta.
     const labels = {
@@ -2066,167 +1850,600 @@ const UIStudent = (() => {
     document.getElementById('pomReset')?.addEventListener('click', () => Pomodoro.reset());
   }
 
-  // ---- Pantalla: Perfil de aprendizaje ----
+  // ---- helpers de Cuenta ----
+  function _roleLabel(user) {
+    if (!user.schoolId) return 'Personal';
+    if (user.institutionType === 'colegio') return 'Estudiante';
+    return 'Institucional';
+  }
+
+  // ---- Pantalla: Perfil (bifurca entre personal e institucional) ----
   function screenProfile() {
     const s = Storage.get();
     const user = s.users[s.currentUserId];
     const sessions = Sessions.listFor(user.id);
+    return user.schoolId
+      ? _profileStudent(user, sessions, s)
+      : _profilePersonal(user, sessions, s);
+  }
+
+  function _profilePersonal(user, sessions, s) {
     const gam = user.gamification || {};
     const levelInfo = Gamification.getLevelInfo(gam.xp || 0);
-    const profile = Analytics.classifyProfile(sessions);
-    const patterns = Analytics.detectPatterns(sessions);
     const sum = Stats.summary(sessions);
+    const acadProfile = JSON.parse(localStorage.getItem('tf-academic-profile-v3') || '{}');
+    const schedule = JSON.parse(localStorage.getItem('tf-weekly-schedule') || '{}');
+    const prefs = JSON.parse(localStorage.getItem('tf-prefs') || '{}');
+    const initials = user.name.split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    const avatarColor = acadProfile.avatarColor || '#C89B6D';
+    const message = acadProfile.message || 'Cada sesión te acerca a tu objetivo.';
+    const prepPct = _calcPrep(user, sessions, acadProfile);
+    const nowMs = Date.now();
+    const nearestExam = (acadProfile.examDates || [])
+      .map(e => ({ ...e, days: Math.ceil((new Date(e.date) - nowMs) / 86400000) }))
+      .filter(e => e.days > 0).sort((a, b) => a.days - b.days)[0] || null;
 
-    // Perfil Cognitivo (Fase 6): 4 dimensiones a partir de las evaluaciones DECO.
-    const cog = Stats.cognitiveProfile(sessions);
-    const consistency = Math.max(0, Math.min(1, ((gam.streak || 0) / 7) * 0.5 + Math.min(sum.total, 10) / 10 * 0.5));
-    const cogDims = [
-      { key: 'comprehension', label: 'Comprensión', icon: '🔵', val: cog.comprehension },
-      { key: 'application',   label: 'Aplicación',  icon: '🟡', val: cog.application },
-      { key: 'analysis',      label: 'Análisis',    icon: '🔴', val: (cog.reasoning != null || cog.analysis != null)
-          ? Math.max(0, Math.min(1, ((cog.reasoning ?? 0) + (cog.analysis ?? 0)) / ((cog.reasoning != null ? 1 : 0) + (cog.analysis != null ? 1 : 0) || 1))) : null },
-      { key: 'consistency',   label: 'Constancia',  icon: '🟢', val: consistency }
-    ];
-    const cogBar = (d) => {
-      const pct = d.val != null ? Math.round(d.val * 100) : null;
-      return `<div class="cog-row">
-        <div class="cog-row-head"><span>${d.icon} ${d.label}</span><span class="muted">${pct != null ? pct + '%' : '—'}</span></div>
-        <div class="cog-bar-wrap"><div class="cog-bar" style="width:${pct != null ? pct : 0}%;"></div></div>
-      </div>`;
-    };
-    const cognitiveCard = cog.samples > 0 ? `
-      <div class="card cognitive-profile" style="margin-top:18px;">
-        <h3 style="margin:0 0 4px;">🧠 Tu Perfil Cognitivo</h3>
-        <p class="muted" style="margin:0 0 14px;font-size:13px;">Cómo aprendes, no solo cuánto estudias. Basado en tus evaluaciones DECO.</p>
-        ${cogDims.map(cogBar).join('')}
-      </div>` : `
-      <div class="card cognitive-profile" style="margin-top:18px;">
-        <h3 style="margin:0 0 4px;">🧠 Tu Perfil Cognitivo</h3>
-        <p class="muted" style="margin:0;font-size:13px;">Completa sesiones con la evaluación 🎯 DECO en Estudio IA para descubrir tus dimensiones cognitivas (comprensión, aplicación, análisis y constancia).</p>
-      </div>`;
+    const AVATAR_COLORS = ['#C89B6D','#8B5CF6','#3B82F6','#22C55E','#EF4444','#F59E0B'];
+    const colorDotsHtml = AVATAR_COLORS.map(c =>
+      `<div class="pp-color-dot${c === avatarColor ? ' active' : ''}" data-color="${esc(c)}" style="background:${esc(c)};"></div>`
+    ).join('');
 
-    // Memoria Académica (Fase 7): lo que TrackFocus Intelligence recuerda por materia.
-    const memSubjects = (typeof AcademicMemory !== 'undefined') ? AcademicMemory.listSubjects(user.id) : [];
-    const memoryCard = memSubjects.length ? `
-      <div class="card" style="margin-top:18px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
-          <h3 style="margin:0;">📚 Memoria de TrackFocus Intelligence</h3>
-          <button class="ghost" id="clearMemoryBtn" style="font-size:12px;padding:6px 12px;">Borrar memoria</button>
-        </div>
-        <p class="muted" style="margin:6px 0 12px;font-size:13px;">El tutor recuerda tu progreso por materia y adapta cada sesión.</p>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          ${memSubjects.map(m => `
-            <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;">
-              <div style="display:flex;justify-content:space-between;font-weight:600;">
-                <span>${esc(m.subject)}</span>
-                <span class="muted" style="font-weight:400;font-size:12px;">${m.sessionCount} sesión(es)${m.lastIndex != null ? ' · Índice ' + m.lastIndex + '/100' : ''}</span>
+    // ── Panel: Mi Perfil ──
+    const panelProfile = `
+      <div class="pp-panel active" data-panel="profile">
+        <h2 class="pp-section-title">Mi Perfil</h2>
+        <div class="pp-avatar-row">
+          <div class="pp-avatar-side">
+            <div class="pp-avatar-big" id="ppAvatarBig" style="background:${esc(avatarColor)};">${esc(initials)}</div>
+            <div class="pp-avatar-colors">${colorDotsHtml}</div>
+          </div>
+          <div class="pp-profile-info">
+            <div class="pp-name">${esc(user.name)}</div>
+            <div class="pp-msg-wrap">
+              <div class="pp-msg-display" id="ppMsgDisplay">
+                <span class="pp-msg-text" id="ppMsgText">${esc(message)}</span>
+                <button class="pp-msg-edit-btn ghost" id="ppMsgEditBtn">✏️</button>
               </div>
-              ${m.lastTopic ? `<div class="muted" style="font-size:13px;margin-top:4px;">Último tema: ${esc(m.lastTopic)}</div>` : ''}
-              ${(m.mastered && m.mastered.length) ? `<div style="font-size:12px;margin-top:4px;">✅ Domina: ${esc(m.mastered.join(', '))}</div>` : ''}
-              ${(m.struggling && m.struggling.length) ? `<div style="font-size:12px;margin-top:2px;">📌 Reforzar: ${esc(m.struggling.join(', '))}</div>` : ''}
-            </div>`).join('')}
+              <div id="ppMsgEdit" style="display:none;flex-direction:column;gap:6px;">
+                <textarea class="pp-msg-textarea" id="ppMsgInput" maxlength="100">${esc(message)}</textarea>
+                <button class="primary pp-msg-edit-btn" id="ppMsgSaveBtn" style="align-self:flex-end;padding:5px 14px;">Guardar</button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>` : '';
+        ${acadProfile.university ? `
+          <div class="pp-summary-card">
+            <div class="pp-summary-uni">${esc(acadProfile.university === 'otro' ? (acadProfile.customUniversity || 'Mi universidad') : acadProfile.university)}</div>
+            <div class="pp-summary-meta">${esc(acadProfile.career || '')}${nearestExam ? ` · 📅 ${nearestExam.days} días para ${esc(nearestExam.label)}` : ''}</div>
+            <div class="pp-summary-bar-wrap"><div class="pp-summary-bar" style="width:${prepPct}%;"></div></div>
+            <div class="pp-summary-prep">${prepPct}% de preparación</div>
+          </div>` : `
+          <div class="pp-cta-card">
+            <div class="pp-cta-icon">🎓</div>
+            <div class="pp-cta-title">Configura tu meta universitaria</div>
+            <div class="pp-cta-sub">Define tu universidad y carrera para personalizar tu ruta de preparación.</div>
+            <button class="primary" id="ppGoToMeta" style="margin-top:4px;">Configurar ahora →</button>
+          </div>`}
+      </div>`;
+
+    // ── Panel: Meta Universitaria ──
+    let panelUniversity;
+    if (acadProfile.university) {
+      const uniDisplay = acadProfile.university === 'otro'
+        ? (acadProfile.customUniversity || 'Mi universidad') : acadProfile.university;
+      panelUniversity = `
+        <div class="pp-panel" data-panel="university">
+          <h2 class="pp-section-title">Meta Universitaria</h2>
+          <div class="card">
+            <div style="font-size:16px;font-weight:700;margin-bottom:4px;">${esc(uniDisplay)}</div>
+            <div style="color:var(--primary);font-size:14px;margin-bottom:10px;">${esc(acadProfile.career || '')}</div>
+            <div style="font-size:13px;color:var(--muted);margin-bottom:14px;">Materias: ${(acadProfile.enabledSubjects || []).map(s => esc(s)).join(', ') || 'Ninguna'}</div>
+            <button class="ghost" id="ppChangeMeta" style="width:100%;">Cambiar meta</button>
+          </div>
+        </div>`;
+    } else {
+      panelUniversity = `
+        <div class="pp-panel" data-panel="university">
+          <h2 class="pp-section-title">Meta Universitaria</h2>
+          <div class="card">
+            <p class="muted" style="font-size:13px;margin-bottom:14px;">Selecciona tu universidad objetivo para obtener una ruta personalizada.</p>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <select id="pp-uni-select" style="padding:10px;border-radius:var(--radius-sm);background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;">
+                <option value="">Selecciona universidad</option>
+                <option value="UNI">UNI — Universidad Nacional de Ingeniería</option>
+                <option value="UNMSM">UNMSM — Universidad Mayor de San Marcos</option>
+                <option value="PUCP">PUCP — Pontificia Universidad Católica del Perú</option>
+                <option value="UNAC">UNAC — Universidad Nacional del Callao</option>
+                <option value="Beca 18">Beca 18</option>
+                <option value="otro">Otra universidad</option>
+              </select>
+              <input type="text" id="pp-custom-uni" placeholder="Nombre de tu universidad" style="display:none;padding:10px;border-radius:var(--radius-sm);background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;" />
+              <input type="text" id="pp-career-input" placeholder="¿Qué carrera quieres estudiar?" style="padding:10px;border-radius:var(--radius-sm);background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;" />
+              <button class="primary" id="pp-save-meta" style="width:100%;">Guardar mi meta 🎯</button>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    // ── Panel: Ruta ──
+    let panelRoute;
+    if (!acadProfile.university || !(acadProfile.enabledSubjects || []).length) {
+      panelRoute = `
+        <div class="pp-panel" data-panel="route">
+          <h2 class="pp-section-title">Ruta de Aprendizaje</h2>
+          <div class="pp-cta-card">
+            <div class="pp-cta-icon">📚</div>
+            <div class="pp-cta-title">Define tu ruta primero</div>
+            <div class="pp-cta-sub">Configura tu meta universitaria para ver tu ruta personalizada.</div>
+            <button class="primary" id="ppGoToMetaRoute" style="margin-top:4px;">Configurar meta →</button>
+          </div>
+        </div>`;
+    } else {
+      const enabledSubjects = acadProfile.enabledSubjects || [];
+      const subjectStats = {};
+      enabledSubjects.forEach(subj => { subjectStats[subj] = { count: 0, total: 0 }; });
+      sessions.forEach(sess => {
+        if (subjectStats[sess.subject] !== undefined) {
+          subjectStats[sess.subject].count++;
+          subjectStats[sess.subject].total += (sess.concentration || 0);
+        }
+      });
+      const routeRows = enabledSubjects.map(subj => {
+        const st = subjectStats[subj];
+        const idx = st.count ? Math.round((st.total / st.count / 5) * 100) : 0;
+        return `
+          <div class="pp-route-row">
+            <div class="pp-route-name">${esc(subj)}</div>
+            <div class="pp-route-bar-wrap"><div class="pp-route-bar" style="width:${Math.min(idx,100)}%;"></div></div>
+            <div class="pp-route-stats">${st.count > 0 ? `${st.count} ses.&nbsp;${idx}%` : '—'}</div>
+            <button class="pp-route-btn ghost" data-go="ai-study">▶</button>
+          </div>`;
+      }).join('');
+      const uniLabel = acadProfile.university === 'otro' ? (acadProfile.customUniversity || '') : acadProfile.university;
+      panelRoute = `
+        <div class="pp-panel" data-panel="route">
+          <h2 class="pp-section-title">Ruta de Aprendizaje</h2>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);margin-bottom:12px;flex-wrap:wrap;gap:6px;">
+            <span>${esc(acadProfile.career)} · ${esc(uniLabel)}</span>
+            <button class="ghost" id="ppChangeMeta2" style="font-size:12px;padding:4px 10px;">Cambiar meta</button>
+          </div>
+          <div class="pp-route-list">${routeRows || '<p class="muted" style="text-align:center;padding:20px;">Aún no tienes sesiones en estas materias.</p>'}</div>
+        </div>`;
+    }
+
+    // ── Panel: Calendario ──
+    const sortedExams = (acadProfile.examDates || [])
+      .map((e, i) => ({ ...e, _i: i, days: Math.ceil((new Date(e.date) - nowMs) / 86400000) }))
+      .filter(e => e.days > 0).sort((a, b) => a.days - b.days);
+    const examItemsHtml = sortedExams.map(e => `
+      <div class="pp-date-item${e.days <= 7 ? ' urgent' : e.days <= 30 ? ' soon' : ''}">
+        <div class="pp-date-label">${esc(e.label)}</div>
+        <div class="pp-date-badge">${e.days} días</div>
+        <button class="pp-date-del" data-idx="${e._i}" title="Eliminar">×</button>
+      </div>`).join('');
+    const panelCalendar = `
+      <div class="pp-panel" data-panel="calendar">
+        <h2 class="pp-section-title">Calendario de Exámenes</h2>
+        ${sortedExams.length
+          ? `<div class="pp-dates-list">${examItemsHtml}</div>`
+          : `<p class="muted" style="text-align:center;padding:24px 0;font-size:13px;">No hay fechas registradas. Agrega tu próximo examen.</p>`}
+        <button class="ghost" id="ppShowDateForm" style="width:100%;margin-bottom:12px;">+ Agregar fecha</button>
+        <div class="pp-add-form" id="ppDateForm" style="display:none;">
+          <input type="text" id="ppDateLabel" placeholder="Ej. Examen UNI" />
+          <input type="date" id="ppDateDate" />
+          <button class="primary" id="ppSaveDate">Guardar fecha</button>
+        </div>
+      </div>`;
+
+    // ── Panel: Planificador Semanal ──
+    const DAYS = [
+      {key:'lunes',label:'Lunes'},{key:'martes',label:'Martes'},{key:'miercoles',label:'Miércoles'},
+      {key:'jueves',label:'Jueves'},{key:'viernes',label:'Viernes'},{key:'sabado',label:'Sábado'},{key:'domingo',label:'Domingo'}
+    ];
+    const schedSubjects = (acadProfile.enabledSubjects || []).length
+      ? acadProfile.enabledSubjects
+      : Subjects.listSubjects(user.institutionType || 'colegio', user.id);
+    const schedSubjOpts = schedSubjects.map(sub => `<option>${esc(sub)}</option>`).join('');
+    const PRIORITY_LABELS = { alta: '🔴', media: '🟡', baja: '🟢' };
+    const daysHtml = DAYS.map(d => {
+      const blocks = schedule[d.key] || [];
+      const blocksHtml = blocks.length
+        ? blocks.map((b, i) => `
+            <div class="pp-sched-block">
+              <span class="pp-sched-prio">${PRIORITY_LABELS[b.priority] || '🟡'}</span>
+              <span class="pp-sched-time">${esc(b.time||'')}</span>
+              <span class="pp-sched-subj">${esc(b.subject||'')}</span>
+              <button class="pp-sched-del" data-day="${d.key}" data-idx="${i}">×</button>
+            </div>`).join('')
+        : `<p class="muted" style="font-size:12px;margin:6px 0;">Sin bloques</p>`;
+      return `
+        <div class="pp-day-block">
+          <div class="pp-day-header">
+            <span class="pp-day-name">${d.label}</span>
+            <button class="pp-day-add-btn ghost" data-day="${d.key}">+ Agregar</button>
+          </div>
+          <div class="pp-day-body">${blocksHtml}</div>
+          <div class="pp-day-form" id="ppDayForm-${d.key}">
+            <div class="pp-day-form-row">
+              <select class="pp-sched-subject-sel">${schedSubjOpts}</select>
+              <input type="time" class="pp-sched-time-inp" value="08:00" />
+              <select class="pp-sched-priority-sel">
+                <option value="alta">🔴 Alta</option>
+                <option value="media" selected>🟡 Media</option>
+                <option value="baja">🟢 Baja</option>
+              </select>
+            </div>
+            <button class="primary pp-sched-save-btn" data-day="${d.key}" style="width:100%;">Agregar</button>
+          </div>
+        </div>`;
+    }).join('');
+    const panelSchedule = `
+      <div class="pp-panel" data-panel="schedule">
+        <h2 class="pp-section-title">Planificador Semanal</h2>
+        <p class="muted" style="font-size:13px;margin-bottom:16px;">Organiza tu semana asignando materias, horarios y prioridades.</p>
+        <div class="pp-days-list">${daysHtml}</div>
+      </div>`;
+
+    // ── Panel: Progreso (compacto — dirige a pantallas existentes) ──
+    const earnedBadges = Gamification.BADGES.filter(b => (gam.badges || []).includes(b.id));
+    const panelProgress = `
+      <div class="pp-panel" data-panel="progress">
+        <h2 class="pp-section-title">Mi Progreso</h2>
+        <div class="pp-kpi-grid">
+          <div class="pp-kpi-card"><div class="pp-kpi-val">${esc(levelInfo.current.title)}</div><div class="pp-kpi-lbl">Nivel ${levelInfo.current.level}</div></div>
+          <div class="pp-kpi-card"><div class="pp-kpi-val">${gam.xp||0}</div><div class="pp-kpi-lbl">XP Total</div></div>
+          <div class="pp-kpi-card"><div class="pp-kpi-val">🔥 ${gam.streak||0}</div><div class="pp-kpi-lbl">Días seguidos</div></div>
+          <div class="pp-kpi-card"><div class="pp-kpi-val">${sum.total}</div><div class="pp-kpi-lbl">Sesiones</div></div>
+          <div class="pp-kpi-card"><div class="pp-kpi-val">${sum.totalMin}</div><div class="pp-kpi-lbl">Minutos</div></div>
+          <div class="pp-kpi-card"><div class="pp-kpi-val">${earnedBadges.length}</div><div class="pp-kpi-lbl">Insignias</div></div>
+        </div>
+        <div class="pp-prog-actions">
+          <button class="primary" data-go="stats" style="width:100%;margin-bottom:10px;">📊 Ver estadísticas completas →</button>
+          <button class="ghost" data-go="achievements" style="width:100%;">🏆 Logros e insignias →</button>
+        </div>
+      </div>`;
+
+    // ── Panel: Cuenta ──
+    const panelAccount = `
+      <div class="pp-panel" data-panel="account">
+        <h2 class="pp-section-title">🔐 Mi Cuenta</h2>
+        <div class="pp-account-card">
+          <div class="pp-account-name">${esc(user.name)}</div>
+          <div class="pp-account-email">${esc(user.email || '—')}</div>
+          <div class="pp-account-role">Modo: ${_roleLabel(user)}</div>
+        </div>
+        <div class="pp-account-actions">
+          <button class="ghost pp-account-btn" id="ppExportBtn">📥 Exportar mis datos</button>
+          <input type="file" id="ppRestoreInput" accept=".json" style="display:none;" />
+          <button class="ghost pp-account-btn" id="ppRestoreBtn">📤 Restaurar respaldo</button>
+          <button class="primary pp-account-btn" id="ppLogoutBtn">Cerrar sesión</button>
+        </div>
+        <div class="pp-version-info">TrackFocus · Todos los datos guardados localmente</div>
+      </div>`;
+
+    // ── Panel: Preferencias ──
+    const currentTheme = localStorage.getItem('tf-theme') || 'light';
+    const panelPrefs = `
+      <div class="pp-panel" data-panel="prefs">
+        <h2 class="pp-section-title">Preferencias</h2>
+        <div class="pp-prefs-section">
+          <div class="pp-prefs-section-title">Apariencia</div>
+          <div class="pp-prefs-row">
+            <div><div class="pp-prefs-label">Tema visual</div><div class="pp-prefs-sub">Modo claro u oscuro</div></div>
+            <div class="pp-theme-btns">
+              <button class="pp-theme-btn${currentTheme==='light'?' active':''}" data-theme="light">☀️ Claro</button>
+              <button class="pp-theme-btn${currentTheme==='dark'?' active':''}" data-theme="dark">🌙 Oscuro</button>
+            </div>
+          </div>
+          <div class="pp-prefs-row">
+            <div><div class="pp-prefs-label">Reducir animaciones</div></div>
+            <input type="checkbox" class="pp-toggle" id="ppToggleMotion"${prefs.reduceMotion?' checked':''} />
+          </div>
+        </div>
+        <div class="pp-prefs-section">
+          <div class="pp-prefs-section-title">Funcionalidades</div>
+          <div class="pp-prefs-row">
+            <div><div class="pp-prefs-label">Mostrar Tracky</div><div class="pp-prefs-sub">Mascota virtual</div></div>
+            <input type="checkbox" class="pp-toggle" id="ppToggleTracky"${prefs.tracky!==false?' checked':''} />
+          </div>
+          <div class="pp-prefs-row">
+            <div><div class="pp-prefs-label">Sonidos Pomodoro</div></div>
+            <input type="checkbox" class="pp-toggle" id="ppToggleSounds"${prefs.sounds!==false?' checked':''} />
+          </div>
+        </div>
+      </div>`;
 
     return `
-      <h1>👤 Mi Perfil de Aprendizaje</h1>
+      <div class="pp-layout">
+        <aside class="pp-sidebar">
+          <div class="pp-avatar-big" style="background:${esc(avatarColor)};">${esc(initials)}</div>
+          <nav class="pp-nav">
+            <button class="pp-nav-item active" data-panel="profile">👤 Mi Perfil</button>
+            <button class="pp-nav-item" data-panel="university">🎯 Meta</button>
+            <button class="pp-nav-item" data-panel="route">📚 Ruta</button>
+            <button class="pp-nav-item" data-panel="calendar">📅 Calendario</button>
+            <button class="pp-nav-item" data-panel="schedule">📋 Planificador</button>
+            <button class="pp-nav-item" data-panel="progress">🏆 Progreso</button>
+            <button class="pp-nav-item" data-panel="prefs">⚙️ Ajustes</button>
+            <button class="pp-nav-item" data-panel="account">🔐 Cuenta</button>
+          </nav>
+        </aside>
+        <main class="pp-content">
+          ${panelProfile}
+          ${panelUniversity}
+          ${panelRoute}
+          ${panelCalendar}
+          ${panelSchedule}
+          ${panelProgress}
+          ${panelPrefs}
+          ${panelAccount}
+        </main>
+      </div>`;
+  }
 
-      ${profile ? `
-      <div class="card" style="text-align:center;padding:30px;">
-        <div style="font-size:48px;margin-bottom:12px;">${profile.icon}</div>
-        <h2 style="margin:0 0 8px;">${esc(profile.label)}</h2>
-        <p class="muted">${esc(profile.desc)}</p>
-      </div>` : `<div class="card"><p class="muted">Registra al menos 3 sesiones para ver tu perfil de aprendizaje.</p></div>`}
+  function _profileStudent(user, sessions, s) {
+    const gam = user.gamification || {};
+    const levelInfo = Gamification.getLevelInfo(gam.xp || 0);
+    const school = user.schoolId ? s.schools[user.schoolId] : null;
+    const classroom = user.classroomId ? s.classrooms[user.classroomId] : null;
+    const schoolProfile = JSON.parse(localStorage.getItem('tf-school-profile-v1') || '{}');
+    const prefs = JSON.parse(localStorage.getItem('tf-prefs') || '{}');
+    const initials = user.name.split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    const nowMs = Date.now();
+    const exams = (schoolProfile.exams || [])
+      .map((e, i) => ({ ...e, _i: i, days: Math.ceil((new Date(e.date) - nowMs) / 86400000) }))
+      .filter(e => e.days > 0).sort((a, b) => a.days - b.days);
 
-      ${cognitiveCard}
-
-      ${memoryCard}
-
-      <div class="grid cols-3" style="margin-top:18px;">
-        <div class="kpi">
-          <div class="v" style="font-size:20px;">${esc(levelInfo.current.title)}</div>
-          <div class="l">Nivel ${levelInfo.current.level}</div>
-        </div>
-        <div class="kpi">
-          <div class="v">${gam.xp || 0}</div>
-          <div class="l">XP total</div>
-        </div>
-        <div class="kpi">
-          <div class="v">🔥 ${gam.streak || 0}</div>
-          <div class="l">Días consecutivos</div>
-        </div>
-        <div class="kpi">
-          <div class="v">${sum.total}</div>
-          <div class="l">Sesiones totales</div>
-        </div>
-        <div class="kpi">
-          <div class="v">${sum.totalMin}</div>
-          <div class="l">Minutos estudiados</div>
-        </div>
-        <div class="kpi">
-          <div class="v">${(gam.badges || []).length}</div>
-          <div class="l">Insignias</div>
-        </div>
-      </div>
-
-      ${patterns ? `
-      <div class="card" style="margin-top:18px;">
-        <h3>Patrones detectados</h3>
-        ${patterns.bestHour !== null ? `<p>⏰ <strong>Mejor hora:</strong> ${patterns.bestHour}:00 — ${patterns.bestHour < 12 ? 'Mañana' : patterns.bestHour < 18 ? 'Tarde' : 'Noche'}</p>` : ''}
-        ${patterns.worstSubject ? `<p>📖 <strong>Materia con menor concentración:</strong> ${esc(patterns.worstSubject)} (${patterns.worstSubjectAvg.toFixed(1)}/5)</p>` : ''}
-        ${patterns.optimalDuration ? `<p>⏱️ <strong>Duración óptima:</strong> Sesiones ${patterns.optimalDuration}</p>` : ''}
-      </div>` : ''}
-
-      <div class="card" style="margin-top:18px;">
-        <h3>Mis insignias obtenidas</h3>
-        <div class="badges-grid">
-          ${Gamification.BADGES.filter(b => (gam.badges || []).includes(b.id)).map(b => `
-            <div class="badge-card">
-              <span class="badge-icon">${b.icon}</span>
-              <div class="badge-name">${esc(b.label)}</div>
-            </div>`).join('') || '<p class="muted">Aún no tienes insignias. ¡Empieza a estudiar!</p>'}
-        </div>
-      </div>
-
-      ${user.classroomId ? `
-      <div class="card" style="margin-top:18px;">
-        <h3>Cambio de aula</h3>
-        <p class="muted" style="font-size:13px;">¿Necesitas cambiarte de aula? Envía una solicitud a tu docente.</p>
-        <form id="changeClassroomForm" style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-top:12px;">
-          <div class="field" style="flex:1;min-width:200px;margin-bottom:0;">
-            <label>Código de invitación del aula destino</label>
-            <input name="targetCode" placeholder="Ej. ABCD1234" maxlength="8" style="text-transform:uppercase;" required />
+    // ── Panel: Mi Perfil ──
+    const panelProfile = `
+      <div class="ps-panel active" data-panel="profile">
+        <h2 class="pp-section-title">Mi Perfil</h2>
+        <div class="pp-avatar-row">
+          <div class="ps-avatar-big">${esc(initials)}</div>
+          <div class="pp-profile-info" style="margin-left:16px;">
+            <div class="pp-name">${esc(user.name)}</div>
+            <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;">
+              ${classroom ? `<span class="ps-pill">🏫 ${esc(classroom.name)}</span>` : ''}
+              ${school ? `<span class="ps-pill">🏛️ ${esc(school.name)}</span>` : ''}
+              ${user.grade ? `<span class="ps-pill">📚 ${esc(user.grade)}</span>` : ''}
+            </div>
           </div>
-          <button class="ghost" type="submit" style="flex-shrink:0;">Solicitar cambio</button>
-        </form>
-      </div>` : ''}
+        </div>
+      </div>`;
 
-      ${user.schoolId && !user.classroomId ? `
-      <div class="card" style="margin-top:18px;">
-        <h3>Unirse a un aula</h3>
-        <p class="muted" style="font-size:13px;">Ingresa el código de invitación de tu aula.</p>
-        <form id="joinClassroomForm" style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-top:12px;">
-          <div class="field" style="flex:1;min-width:200px;margin-bottom:0;">
-            <label>Código de invitación</label>
-            <input name="inviteCode" placeholder="Ej. ABCD1234" maxlength="8" style="text-transform:uppercase;" required />
+    // ── Panel: Evaluaciones ──
+    const evalItemsHtml = exams.map(e => `
+      <div class="pp-date-item${e.days <= 3 ? ' urgent' : e.days <= 7 ? ' soon' : ''}">
+        <div class="pp-date-label">${esc(e.subject || e.label)}</div>
+        <div class="pp-date-badge">${e.days} días</div>
+        <button class="pp-date-del" data-idx="${e._i}" title="Eliminar">×</button>
+      </div>`).join('');
+    const panelEvals = `
+      <div class="ps-panel" data-panel="evals">
+        <h2 class="pp-section-title">Evaluaciones</h2>
+        ${exams.length
+          ? `<div class="pp-dates-list">${evalItemsHtml}</div>`
+          : `<p class="muted" style="text-align:center;padding:24px 0;font-size:13px;">No hay evaluaciones próximas.</p>`}
+        <button class="ghost" id="psShowEvalForm" style="width:100%;margin-bottom:12px;">+ Agregar evaluación</button>
+        <div class="pp-add-form" id="psEvalForm" style="display:none;">
+          <input type="text" id="psEvalSubject" placeholder="Materia (ej. Álgebra)" />
+          <input type="date" id="psEvalDate" />
+          <button class="primary" id="psSaveEval">Guardar evaluación</button>
+        </div>
+      </div>`;
+
+    // ── Panel: Mis Cursos ──
+    const SCHOOL_SUBJECTS = ['Matemática','Comunicación','Inglés','Historia','DPCC','Física','Química','Biología','Arte','Ed. Física'];
+    const subjStats = {};
+    SCHOOL_SUBJECTS.forEach(sub => { subjStats[sub] = { count: 0, total: 0 }; });
+    sessions.forEach(sess => {
+      if (!subjStats[sess.subject]) subjStats[sess.subject] = { count: 0, total: 0 };
+      subjStats[sess.subject].count++;
+      subjStats[sess.subject].total += (sess.concentration || 0);
+    });
+    const activeSubjs = [...new Set([...SCHOOL_SUBJECTS, ...sessions.map(ss => ss.subject)])];
+    const courseRowsHtml = activeSubjs.map(subj => {
+      const st = subjStats[subj] || { count: 0, total: 0 };
+      const idx = st.count ? Math.round((st.total / st.count / 5) * 100) : 0;
+      return `
+        <div class="ps-course-row">
+          <div class="ps-course-name">${esc(subj)}</div>
+          <div class="ps-course-bar-wrap"><div class="ps-course-bar" style="width:${Math.min(idx,100)}%;"></div></div>
+          <div class="ps-course-stats">${st.count > 0 ? `${st.count} ses.` : '—'}</div>
+        </div>`;
+    }).join('');
+    const panelCourses = `
+      <div class="ps-panel" data-panel="courses">
+        <h2 class="pp-section-title">Mis Cursos</h2>
+        <div class="ps-courses-list">${courseRowsHtml}</div>
+      </div>`;
+
+    // ── Panel: Ranking ──
+    let rankingInner;
+    if (user.classroomId) {
+      try {
+        const lb = Gamification.getLeaderboard('classroom', user.classroomId, 'week');
+        const me = lb.find(e => e.userId === user.id);
+        const rowsHtml = lb.slice(0, 10).map(entry => `
+          <tr class="${entry.userId === user.id ? 'ps-rank-me' : ''}">
+            <td>${entry.rank <= 3 ? ['🥇','🥈','🥉'][entry.rank-1] : '#'+entry.rank}</td>
+            <td>${esc(entry.name || 'Estudiante')}</td>
+            <td>${entry.xp||0} XP</td>
+            <td>Nv.${entry.level||1}</td>
+          </tr>`).join('');
+        rankingInner = `
+          ${me ? `<p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Tu posición: <strong style="color:var(--blue);">#${me.rank}</strong> de ${lb.length} alumnos</p>` : ''}
+          <table class="ps-rank-table">
+            <thead><tr><th>#</th><th>Alumno</th><th>XP</th><th>Nivel</th></tr></thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>`;
+      } catch (_) {
+        rankingInner = '<p class="muted" style="text-align:center;padding:24px 0;font-size:13px;">Sin datos de ranking disponibles.</p>';
+      }
+    } else {
+      rankingInner = '<p class="muted" style="text-align:center;padding:24px 0;font-size:13px;">Únete a un aula para ver el ranking.</p>';
+    }
+    const panelRanking = `
+      <div class="ps-panel" data-panel="ranking">
+        <h2 class="pp-section-title">Ranking</h2>
+        ${rankingInner}
+      </div>`;
+
+    // ── Panel: Perfil Cognitivo ──
+    const profileType = Analytics.classifyProfile(sessions);
+    const patterns = Analytics.detectPatterns(sessions);
+    const DECO_DIMS = [
+      {key:'comprension',label:'Comprensión',desc:'Capacidad de entender y procesar nueva información.'},
+      {key:'aplicacion',label:'Aplicación',desc:'Habilidad de usar el conocimiento en ejercicios prácticos.'},
+      {key:'analisis',label:'Análisis',desc:'Descomposición de problemas complejos en partes manejables.'},
+      {key:'constancia',label:'Constancia',desc:'Regularidad y persistencia en tus sesiones de estudio.'}
+    ];
+    const hasDecoData = sessions.some(ss => ss.deco);
+    const decoHtml = hasDecoData
+      ? DECO_DIMS.map(dim => {
+          const vals = sessions.filter(ss => ss.deco && ss.deco[dim.key]);
+          const avg = vals.length ? vals.reduce((acc, ss) => acc + ss.deco[dim.key], 0) / vals.length * 20 : 0;
+          return `
+            <div class="ps-deco-card">
+              <div class="ps-deco-label">${dim.label}</div>
+              <div class="ps-deco-bar-wrap"><div class="ps-deco-bar" style="width:${Math.min(Math.round(avg),100)}%;"></div></div>
+              <div class="ps-deco-desc">${dim.desc}</div>
+            </div>`;
+        }).join('')
+      : `<div class="pp-cta-card">
+           <div class="pp-cta-icon">🧠</div>
+           <div class="pp-cta-title">Perfil Cognitivo DECO</div>
+           <div class="pp-cta-sub">Completa sesiones con la evaluación DECO en Estudio IA para descubrir tus dimensiones cognitivas: comprensión, aplicación, análisis y constancia.</div>
+           <button class="primary" data-go="ai-study" style="margin-top:8px;">Ir a Estudio IA →</button>
+         </div>`;
+    const panelCognitive = `
+      <div class="ps-panel" data-panel="cognitive">
+        <h2 class="pp-section-title">Perfil Cognitivo</h2>
+        ${profileType ? `
+          <div class="pp-prog-profile" style="margin-bottom:16px;">
+            <div class="pp-prog-profile-icon">${profileType.icon}</div>
+            <div class="pp-prog-profile-label">${esc(profileType.label)}</div>
+            <div class="pp-prog-profile-desc">${esc(profileType.desc)}</div>
+          </div>` : ''}
+        ${decoHtml}
+        ${patterns ? `
+          <div class="pp-patterns-card" style="margin-top:12px;">
+            <h3 style="margin:0 0 10px;font-size:15px;">Patrones detectados</h3>
+            ${patterns.bestHour !== null ? `<p style="font-size:13px;margin:6px 0;">⏰ Mejor hora: ${patterns.bestHour}:00</p>` : ''}
+            ${patterns.worstSubject ? `<p style="font-size:13px;margin:6px 0;">📖 Materia débil: ${esc(patterns.worstSubject)} (${patterns.worstSubjectAvg.toFixed(1)}/5)</p>` : ''}
+          </div>` : ''}
+      </div>`;
+
+    // ── Panel: Preferencias ──
+    const currentTheme = localStorage.getItem('tf-theme') || 'light';
+    const panelPrefs = `
+      <div class="ps-panel" data-panel="prefs">
+        <h2 class="pp-section-title">Preferencias</h2>
+        <div class="pp-prefs-section">
+          <div class="pp-prefs-section-title">Apariencia</div>
+          <div class="pp-prefs-row">
+            <div><div class="pp-prefs-label">Tema visual</div></div>
+            <div class="pp-theme-btns">
+              <button class="pp-theme-btn${currentTheme==='light'?' active':''}" data-theme="light">☀️ Claro</button>
+              <button class="pp-theme-btn${currentTheme==='dark'?' active':''}" data-theme="dark">🌙 Oscuro</button>
+            </div>
           </div>
-          <button class="ghost" type="submit" style="flex-shrink:0;">Enviar solicitud</button>
-        </form>
-      </div>` : ''}`;
+          <div class="pp-prefs-row">
+            <div><div class="pp-prefs-label">Reducir animaciones</div></div>
+            <input type="checkbox" class="pp-toggle" id="ppToggleMotion"${prefs.reduceMotion?' checked':''} />
+          </div>
+        </div>
+        <div class="pp-prefs-section">
+          <div class="pp-prefs-section-title">Funcionalidades</div>
+          <div class="pp-prefs-row">
+            <div><div class="pp-prefs-label">Mostrar Tracky</div><div class="pp-prefs-sub">Mascota virtual</div></div>
+            <input type="checkbox" class="pp-toggle" id="ppToggleTracky"${prefs.tracky!==false?' checked':''} />
+          </div>
+          <div class="pp-prefs-row">
+            <div><div class="pp-prefs-label">Sonidos Pomodoro</div></div>
+            <input type="checkbox" class="pp-toggle" id="ppToggleSounds"${prefs.sounds!==false?' checked':''} />
+          </div>
+        </div>
+        ${user.classroomId ? `
+          <div class="pp-prefs-section">
+            <div class="pp-prefs-section-title">Aula</div>
+            <form id="changeClassroomForm" class="card" style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+              <div class="field" style="flex:1;min-width:180px;margin-bottom:0;">
+                <label>Cambio de aula (código de invitación)</label>
+                <input name="targetCode" placeholder="Ej. ABCD1234" maxlength="8" style="text-transform:uppercase;" required />
+              </div>
+              <button class="ghost" type="submit" style="flex-shrink:0;">Solicitar</button>
+            </form>
+          </div>` : ''}
+        ${user.schoolId && !user.classroomId ? `
+          <div class="pp-prefs-section">
+            <div class="pp-prefs-section-title">Aula</div>
+            <form id="joinClassroomForm" class="card" style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+              <div class="field" style="flex:1;min-width:180px;margin-bottom:0;">
+                <label>Unirse a un aula (código de invitación)</label>
+                <input name="inviteCode" placeholder="Ej. ABCD1234" maxlength="8" style="text-transform:uppercase;" required />
+              </div>
+              <button class="ghost" type="submit" style="flex-shrink:0;">Enviar solicitud</button>
+            </form>
+          </div>` : ''}
+      </div>`;
+
+    return `
+      <div class="ps-layout">
+        <aside class="ps-sidebar">
+          <div class="ps-avatar-big">${esc(initials)}</div>
+          <nav class="ps-nav">
+            <button class="ps-nav-item active" data-panel="profile">👤 Mi Perfil</button>
+            <button class="ps-nav-item" data-panel="evals">📅 Evaluaciones</button>
+            <button class="ps-nav-item" data-panel="courses">📚 Mis Cursos</button>
+            <button class="ps-nav-item" data-panel="ranking">🏆 Ranking</button>
+            <button class="ps-nav-item" data-panel="cognitive">🧠 Perfil Cognitivo</button>
+            <button class="ps-nav-item" data-panel="prefs">⚙️ Ajustes</button>
+            <button class="ps-nav-item" data-panel="account">🔐 Cuenta</button>
+          </nav>
+        </aside>
+        <main class="ps-content">
+          ${panelProfile}
+          ${panelEvals}
+          ${panelCourses}
+          ${panelRanking}
+          ${panelCognitive}
+          ${panelPrefs}
+          ${panelAccount}
+        </main>
+      </div>`;
   }
 
   function wireProfile() {
     const s = Storage.get();
     const user = s.users[s.currentUserId];
+    const isPersonal = !user.schoolId;
+    const navSel = isPersonal ? '.pp-nav-item' : '.ps-nav-item';
+    const panelSel = isPersonal ? '.pp-panel' : '.ps-panel';
 
-    // Memoria Académica (Fase 7): borrar lo que el tutor recuerda.
-    document.getElementById('clearMemoryBtn')?.addEventListener('click', () => {
-      if (!confirm('¿Borrar la memoria académica? El tutor olvidará tu historial por materia.')) return;
-      AcademicMemory.clear(user.id);
-      UI.flash('Memoria académica borrada.', 'success');
-      App.go('profile');
-    });
+    root().querySelectorAll('[data-go]').forEach(b =>
+      b.addEventListener('click', () => App.go(b.dataset.go)));
 
+    function _activatePanel(name) {
+      root().querySelectorAll(navSel).forEach(b => b.classList.remove('active'));
+      root().querySelectorAll(panelSel).forEach(p => p.classList.remove('active'));
+      const btn = root().querySelector(`${navSel}[data-panel="${name}"]`);
+      const panel = root().querySelector(`${panelSel}[data-panel="${name}"]`);
+      if (btn) btn.classList.add('active');
+      if (panel) panel.classList.add('active');
+    }
+
+    root().querySelectorAll(navSel).forEach(btn =>
+      btn.addEventListener('click', () => _activatePanel(btn.dataset.panel)));
+
+    const pending = sessionStorage.getItem('tf-profile-panel');
+    if (pending) { sessionStorage.removeItem('tf-profile-panel'); _activatePanel(pending); }
+
+    _wireClassroomForms(user);
+    if (isPersonal) _wireProfilePersonal(user); else _wireProfileStudent(user);
+  }
+
+  function _wireClassroomForms(user) {
     document.getElementById('changeClassroomForm')?.addEventListener('submit', (e) => {
       e.preventDefault();
       const code = new FormData(e.target).get('targetCode').trim().toUpperCase();
@@ -2235,9 +2452,9 @@ const UIStudent = (() => {
       if (cr.id === user.classroomId) return UI.flash('Ya perteneces a esa aula.', 'error');
       Schools.createChangeRequest(user.id, cr.id);
       UI.flash('Solicitud enviada. Tu docente recibirá la notificación.', 'success');
+      sessionStorage.setItem('tf-profile-panel', 'progress');
       App.go('profile');
     });
-
     document.getElementById('joinClassroomForm')?.addEventListener('submit', (e) => {
       e.preventDefault();
       const code = new FormData(e.target).get('inviteCode').trim().toUpperCase();
@@ -2247,6 +2464,247 @@ const UIStudent = (() => {
       Schools.createJoinRequest(user.id, user.schoolId, cr.id);
       UI.flash('Solicitud enviada. Tu docente recibirá la notificación.', 'success');
       App.go('pending-approval');
+    });
+  }
+
+  function _wireProfilePersonal(user) {
+    const r = () => root();
+
+    r().querySelectorAll('.pp-color-dot').forEach(dot => {
+      dot.addEventListener('click', () => {
+        const color = dot.dataset.color;
+        const profile = JSON.parse(localStorage.getItem('tf-academic-profile-v3') || '{}');
+        profile.avatarColor = color;
+        localStorage.setItem('tf-academic-profile-v3', JSON.stringify(profile));
+        r().querySelectorAll('.pp-avatar-big').forEach(el => el.style.background = color);
+        r().querySelectorAll('.pp-color-dot').forEach(d => d.classList.toggle('active', d.dataset.color === color));
+      });
+    });
+
+    r().querySelector('#ppMsgEditBtn')?.addEventListener('click', () => {
+      const input = r().querySelector('#ppMsgInput');
+      if (input) input.value = r().querySelector('#ppMsgText')?.textContent || '';
+      r().querySelector('#ppMsgDisplay').style.display = 'none';
+      r().querySelector('#ppMsgEdit').style.display = 'flex';
+      r().querySelector('#ppMsgInput')?.focus();
+    });
+    r().querySelector('#ppMsgSaveBtn')?.addEventListener('click', () => {
+      const val = r().querySelector('#ppMsgInput')?.value.trim() || '';
+      const profile = JSON.parse(localStorage.getItem('tf-academic-profile-v3') || '{}');
+      profile.message = val;
+      localStorage.setItem('tf-academic-profile-v3', JSON.stringify(profile));
+      const textEl = r().querySelector('#ppMsgText');
+      if (textEl) textEl.textContent = val;
+      r().querySelector('#ppMsgDisplay').style.display = '';
+      r().querySelector('#ppMsgEdit').style.display = 'none';
+    });
+
+    r().querySelector('#ppGoToMeta')?.addEventListener('click', () => {
+      sessionStorage.setItem('tf-profile-panel', 'university');
+      App.go('profile');
+    });
+    r().querySelector('#ppGoToMetaRoute')?.addEventListener('click', () => {
+      sessionStorage.setItem('tf-profile-panel', 'university');
+      App.go('profile');
+    });
+
+    r().querySelector('#ppChangeMeta')?.addEventListener('click', () => _clearMeta());
+    r().querySelector('#ppChangeMeta2')?.addEventListener('click', () => _clearMeta());
+    function _clearMeta() {
+      const p = JSON.parse(localStorage.getItem('tf-academic-profile-v3') || '{}');
+      delete p.university; delete p.career; delete p.enabledSubjects;
+      localStorage.setItem('tf-academic-profile-v3', JSON.stringify(p));
+      sessionStorage.setItem('tf-profile-panel', 'university');
+      App.go('profile');
+    }
+
+    r().querySelector('#pp-uni-select')?.addEventListener('change', function() {
+      const customInput = r().querySelector('#pp-custom-uni');
+      if (customInput) customInput.style.display = this.value === 'otro' ? 'block' : 'none';
+    });
+    r().querySelector('#pp-save-meta')?.addEventListener('click', () => {
+      const uniSelect = r().querySelector('#pp-uni-select');
+      const customUni = r().querySelector('#pp-custom-uni');
+      const careerInput = r().querySelector('#pp-career-input');
+      const uniVal = uniSelect?.value;
+      const university = uniVal === 'otro' ? customUni?.value.trim() : uniVal;
+      const career = careerInput?.value.trim();
+      if (!university || !career) return UI.flash('Completa universidad y carrera.', 'error');
+      const existing = JSON.parse(localStorage.getItem('tf-academic-profile-v3') || '{}');
+      localStorage.setItem('tf-academic-profile-v3', JSON.stringify({
+        ...existing,
+        university: uniVal === 'otro' ? 'otro' : university,
+        customUniversity: uniVal === 'otro' ? university : undefined,
+        career,
+        enabledSubjects: _MALLAS[university] || []
+      }));
+      UI.flash('¡Meta guardada! Tu ruta está lista.', 'success');
+      sessionStorage.setItem('tf-profile-panel', 'route');
+      App.go('profile');
+    });
+
+    r().querySelector('#ppShowDateForm')?.addEventListener('click', () => {
+      const form = r().querySelector('#ppDateForm');
+      if (form) form.style.display = form.style.display === 'none' ? 'flex' : 'none';
+    });
+    r().querySelector('#ppSaveDate')?.addEventListener('click', () => {
+      const label = r().querySelector('#ppDateLabel')?.value.trim();
+      const date  = r().querySelector('#ppDateDate')?.value;
+      if (!label || !date) return UI.flash('Completa el nombre y la fecha.', 'error');
+      const profile = JSON.parse(localStorage.getItem('tf-academic-profile-v3') || '{}');
+      profile.examDates = profile.examDates || [];
+      profile.examDates.push({ label, type: 'examen', date });
+      profile.examDates.sort((a, b) => new Date(a.date) - new Date(b.date));
+      localStorage.setItem('tf-academic-profile-v3', JSON.stringify(profile));
+      sessionStorage.setItem('tf-profile-panel', 'calendar');
+      App.go('profile');
+    });
+    r().querySelectorAll('.pp-dates-list .pp-date-del').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.idx, 10);
+        const profile = JSON.parse(localStorage.getItem('tf-academic-profile-v3') || '{}');
+        if (Array.isArray(profile.examDates)) {
+          profile.examDates = profile.examDates.filter((_, i) => i !== idx);
+          localStorage.setItem('tf-academic-profile-v3', JSON.stringify(profile));
+        }
+        sessionStorage.setItem('tf-profile-panel', 'calendar');
+        App.go('profile');
+      });
+    });
+
+    r().querySelectorAll('.pp-day-add-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const form = r().querySelector(`#ppDayForm-${btn.dataset.day}`);
+        if (form) form.classList.toggle('open');
+      });
+    });
+    r().querySelectorAll('.pp-sched-save-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const form = btn.closest('.pp-day-form');
+        const subject  = form?.querySelector('.pp-sched-subject-sel')?.value;
+        const time     = form?.querySelector('.pp-sched-time-inp')?.value;
+        const priority = form?.querySelector('.pp-sched-priority-sel')?.value || 'media';
+        if (!subject || !time) return;
+        const sched = JSON.parse(localStorage.getItem('tf-weekly-schedule') || '{}');
+        if (!sched[btn.dataset.day]) sched[btn.dataset.day] = [];
+        sched[btn.dataset.day].push({ subject, time, priority });
+        sched[btn.dataset.day].sort((a, b) => a.time.localeCompare(b.time));
+        localStorage.setItem('tf-weekly-schedule', JSON.stringify(sched));
+        sessionStorage.setItem('tf-profile-panel', 'schedule');
+        App.go('profile');
+      });
+    });
+    r().querySelectorAll('.pp-sched-del').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const sched = JSON.parse(localStorage.getItem('tf-weekly-schedule') || '{}');
+        const day = btn.dataset.day;
+        const idx = parseInt(btn.dataset.idx, 10);
+        if (Array.isArray(sched[day])) {
+          sched[day].splice(idx, 1);
+          localStorage.setItem('tf-weekly-schedule', JSON.stringify(sched));
+        }
+        sessionStorage.setItem('tf-profile-panel', 'schedule');
+        App.go('profile');
+      });
+    });
+
+    _wirePreferences();
+    _wireAccountPanel(user);
+  }
+
+  function _wireProfileStudent(user) {
+    const r = () => root();
+
+    r().querySelector('#psShowEvalForm')?.addEventListener('click', () => {
+      const form = r().querySelector('#psEvalForm');
+      if (form) form.style.display = form.style.display === 'none' ? 'flex' : 'none';
+    });
+    r().querySelector('#psSaveEval')?.addEventListener('click', () => {
+      const subject = r().querySelector('#psEvalSubject')?.value.trim();
+      const date    = r().querySelector('#psEvalDate')?.value;
+      if (!subject || !date) return UI.flash('Completa la materia y la fecha.', 'error');
+      const profile = JSON.parse(localStorage.getItem('tf-school-profile-v1') || '{}');
+      profile.exams = profile.exams || [];
+      profile.exams.push({ subject, label: subject, date });
+      profile.exams.sort((a, b) => new Date(a.date) - new Date(b.date));
+      localStorage.setItem('tf-school-profile-v1', JSON.stringify(profile));
+      sessionStorage.setItem('tf-profile-panel', 'evals');
+      App.go('profile');
+    });
+    r().querySelectorAll('.pp-dates-list .pp-date-del').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.idx, 10);
+        const profile = JSON.parse(localStorage.getItem('tf-school-profile-v1') || '{}');
+        if (Array.isArray(profile.exams)) {
+          profile.exams = profile.exams.filter((_, i) => i !== idx);
+          localStorage.setItem('tf-school-profile-v1', JSON.stringify(profile));
+        }
+        sessionStorage.setItem('tf-profile-panel', 'evals');
+        App.go('profile');
+      });
+    });
+
+    _wirePreferences();
+    _wireAccountPanel(user);
+  }
+
+  function _wireAccountPanel(user) {
+    const r = () => root();
+    r().querySelector('#ppLogoutBtn')?.addEventListener('click', () => {
+      document.getElementById('logoutBtn')?.click();
+    });
+    r().querySelector('#ppExportBtn')?.addEventListener('click', () => {
+      try {
+        Exporter.backupJSON('trackfocus-backup-' + new Date().toISOString().slice(0, 10) + '.json');
+        UI.flash('Backup exportado correctamente.', 'success');
+      } catch (_) { UI.flash('Error al exportar. Intenta de nuevo.', 'error'); }
+    });
+    r().querySelector('#ppRestoreBtn')?.addEventListener('click', () => {
+      r().querySelector('#ppRestoreInput')?.click();
+    });
+    r().querySelector('#ppRestoreInput')?.addEventListener('change', async function() {
+      const file = this.files?.[0];
+      if (!file) return;
+      try {
+        await Exporter.readBackupFile(file);
+        UI.flash('Respaldo restaurado. Recargando...', 'success');
+        setTimeout(() => location.reload(), 1200);
+      } catch (_) { UI.flash('Error al restaurar el respaldo.', 'error'); }
+    });
+  }
+
+  function _wirePreferences() {
+    const r = () => root();
+    r().querySelectorAll('.pp-theme-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const theme = btn.dataset.theme;
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('tf-theme', theme);
+        document.querySelectorAll('.theme-toggle').forEach(b => {
+          b.textContent = theme === 'dark' ? '☀️' : '🌙';
+          b.title = theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro';
+        });
+        r().querySelectorAll('.pp-theme-btn').forEach(b =>
+          b.classList.toggle('active', b.dataset.theme === theme));
+      });
+    });
+    r().querySelector('#ppToggleTracky')?.addEventListener('change', function() {
+      const el = document.getElementById('tracky-root');
+      if (el) el.style.display = this.checked ? '' : 'none';
+      const p = JSON.parse(localStorage.getItem('tf-prefs') || '{}');
+      p.tracky = this.checked;
+      localStorage.setItem('tf-prefs', JSON.stringify(p));
+    });
+    r().querySelector('#ppToggleSounds')?.addEventListener('change', function() {
+      const p = JSON.parse(localStorage.getItem('tf-prefs') || '{}');
+      p.sounds = this.checked;
+      localStorage.setItem('tf-prefs', JSON.stringify(p));
+    });
+    r().querySelector('#ppToggleMotion')?.addEventListener('change', function() {
+      document.documentElement.classList.toggle('reduce-motion', this.checked);
+      const p = JSON.parse(localStorage.getItem('tf-prefs') || '{}');
+      p.reduceMotion = this.checked;
+      localStorage.setItem('tf-prefs', JSON.stringify(p));
     });
   }
 
