@@ -46,7 +46,8 @@
         <span id="pomBarDisplay" class="fp-clock">25:00</span>
         <span id="pomBarMode" class="fp-mode">LISTO</span>
       </div>
-      <select id="pomBarSubject" class="fp-subject"></select>
+      <span class="fp-subject-label" id="fpSubjectLabel">—</span>
+      <select id="pomBarSubject" hidden></select>
       <button id="pomBarToggle" class="fp-icon-btn" title="Ocultar">—</button>
     </div>
     <div class="fp-row">
@@ -75,6 +76,7 @@
         <button class="ghost fp-modal-btn" id="fpModalReset">↺</button>
       </div>
       <div class="fp-modal-settings">
+        <label>Materia<select id="fpModalSubjectSel" class="fp-modal-input fp-modal-subject"></select></label>
         <label>Enfoque (min)<input type="number" id="fpModalFocus" value="25" min="1" max="120" class="fp-modal-input"/></label>
         <label>Descanso (min)<input type="number" id="fpModalBreak" value="5" min="1" max="30" class="fp-modal-input"/></label>
       </div>
