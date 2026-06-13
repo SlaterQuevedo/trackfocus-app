@@ -1,4 +1,4 @@
-import { GEMINI_MODEL, GEMINI_BASE, geminiHeaders } from './_lib.js';
+import { GEMINI_MODEL, GEMINI_BASE, geminiHeaders, applyCors } from './_lib.js';
 
 const ANALYZE_PROMPT = `Eres un tutor educativo para estudiantes de secundaria. Analiza el siguiente material de estudio y proporciona un análisis completo en español con este formato exacto:
 
@@ -18,6 +18,8 @@ Proporciona 3 ejercicios prácticos numerados con instrucciones claras y el obje
 Sugiere estrategias de estudio específicas para este material y menciona las áreas que requieren más atención.`;
 
 export default async (req, res) => {
+  if (applyCors(req, res)) return;
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
