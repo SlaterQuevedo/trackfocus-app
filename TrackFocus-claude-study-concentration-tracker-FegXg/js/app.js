@@ -513,9 +513,6 @@ const App = (() => {
           <img src="assets/logo.svg" class="lp-brand-img" alt="TrackFocus">
           <span>TrackFocus</span>
         </div>
-        <div class="lp-header-actions">
-          <button class="lp-header-btn" id="lpScrollCards">Iniciar sesión</button>
-        </div>
       </header>
 
       <div class="lp-hero">
@@ -529,7 +526,10 @@ const App = (() => {
         <p class="lp-subtitle">Convierte cada sesión de estudio en aprendizaje medible. Tutor IA socrático, evaluación por niveles cognitivos e Índice de Aprendizaje en tiempo real.</p>
 
         <div class="lp-hero-cta">
-          <button class="lp-btn-hero-primary" id="lpScrollCards2">Comenzar a estudiar gratis</button>
+          <div class="lp-cta-primary-wrap">
+            <button class="lp-btn-hero-primary" id="lpScrollCards2">Comenzar</button>
+            <p class="lp-cta-subtext">Elige cómo usar TrackFocus en menos de un minuto.</p>
+          </div>
           <a href="?demo=1" class="lp-btn-hero-ghost">🎯 Ver demostración</a>
         </div>
 
@@ -708,7 +708,7 @@ const App = (() => {
             </div>
           </div>
 
-          <button class="lp-ai-cta" id="lpAICta">Comenzar a estudiar gratis</button>
+          <button class="lp-ai-cta" id="lpAICta">Comenzar</button>
         </div>
 
         <!-- SECCIÓN INSTITUCIONAL -->
@@ -717,7 +717,6 @@ const App = (() => {
             <div class="lp-section-label">Para instituciones</div>
             <h2 class="lp-section-title lp-inst-title">Para docentes y directores</h2>
             <p class="lp-inst-desc">TrackFocus no es solo para estudiantes. Docentes y directores pueden monitorear el progreso real de sus alumnos, detectar quiénes necesitan apoyo y tomar decisiones basadas en datos.</p>
-            <button class="lp-btn-inst" data-role="admin">Gestionar mi institución →</button>
           </div>
           <div class="lp-inst-cards">
             <div class="lp-inst-card">
@@ -736,6 +735,13 @@ const App = (() => {
               <p>Gestión de aulas, docentes y estadísticas globales del colegio.</p>
             </div>
           </div>
+        </section>
+
+        <section class="lp-section lp-cta-final">
+          <p class="lp-cta-final-lead">El progreso no ocurre por accidente.</p>
+          <h2 class="lp-cta-final-title">Empieza con una sesión.<br>Construye un hábito.<br>Cambia tu futuro.</h2>
+          <button class="lp-btn-final" id="lpCtaFinal">Empieza tu camino con TrackFocus</button>
+          <p class="lp-cta-final-sub">Estudiantes, docentes e instituciones comienzan aquí.</p>
         </section>
 
         <footer class="lp-footer">
@@ -872,7 +878,7 @@ const App = (() => {
     renderStep(_wizardStep0());
 
     // Botones del hero que scrollean a la sección de acceso
-    ['lpScrollCards', 'lpScrollCards2', 'lpAICta'].forEach(id => {
+    ['lpScrollCards', 'lpScrollCards2', 'lpAICta', 'lpCtaFinal'].forEach(id => {
       document.getElementById(id)?.addEventListener('click', () => {
         root().querySelector('#lpRolesSection')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       });

@@ -1689,3 +1689,105 @@ html[data-theme="light"] .lp-inst-card {
   background: rgba(255,255,255,0.7);
   border-color: rgba(0,0,0,0.08);
 }
+
+/* ── Hero CTA: wrap con botón + subtext ── */
+.lp-cta-primary-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.lp-cta-subtext {
+  font-size: 13px;
+  color: rgba(255,255,255,0.45);
+  margin: 0;
+  text-align: center;
+  letter-spacing: 0.01em;
+}
+
+html[data-theme="light"] .lp-cta-subtext {
+  color: rgba(0,0,0,0.4);
+}
+
+/* ── CTA Final ── */
+.lp-cta-final {
+  text-align: center;
+  padding: 80px 24px 72px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  border-bottom: none;
+  background: transparent;
+}
+
+.lp-cta-final-lead {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #C89B6D;
+  margin: 0 0 20px;
+  opacity: 0.8;
+}
+
+.lp-cta-final-title {
+  font-size: clamp(22px, 4vw, 34px);
+  font-weight: 700;
+  line-height: 1.4;
+  margin: 0 0 40px;
+  color: var(--text, #E4E4E7);
+}
+
+.lp-btn-final {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 40px;
+  border-radius: 50px;
+  border: 1.5px solid rgba(200,155,109,0.45);
+  background: rgba(200,155,109,0.08);
+  color: #C89B6D;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.18s ease;
+  min-height: 52px;
+}
+
+.lp-btn-final:hover {
+  background: rgba(200,155,109,0.16);
+  border-color: rgba(200,155,109,0.75);
+  transform: translateY(-2px);
+}
+
+.lp-btn-final:focus-visible {
+  outline: 2px solid #C89B6D;
+  outline-offset: 3px;
+}
+
+.lp-cta-final-sub {
+  font-size: 13px;
+  color: rgba(255,255,255,0.35);
+  margin: 20px 0 0;
+}
+
+html[data-theme="light"] .lp-cta-final-lead {
+  color: #b08040;
+}
+
+html[data-theme="light"] .lp-cta-final-title {
+  color: #111827;
+}
+
+html[data-theme="light"] .lp-btn-final {
+  border-color: rgba(200,155,109,0.5);
+  background: rgba(200,155,109,0.06);
+  color: #b08040;
+}
+
+html[data-theme="light"] .lp-btn-final:hover {
+  background: rgba(200,155,109,0.14);
+}
+
+html[data-theme="light"] .lp-cta-final-sub {
+  color: rgba(0,0,0,0.35);
+}

@@ -467,9 +467,6 @@ const App = (() => {
           <img src="assets/logo.svg" class="lp-brand-img" alt="TrackFocus">
           <span>TrackFocus</span>
         </div>
-        <div class="lp-header-actions">
-          <button class="lp-header-btn" id="lpScrollCards">Iniciar sesión</button>
-        </div>
       </header>
 
       <div class="lp-hero">
