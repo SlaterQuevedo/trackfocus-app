@@ -5,69 +5,348 @@ const UIAdmin = (() => {
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c =>
     ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 
-  // ---- Pantalla: Dashboard del Super Admin ----
+  // ---- Helpers visuales (CSS puro, sin librerías) ----
+  function _spark(data, color) {
+    const m = Math.max(1, ...data);
+    return `<div style="display:flex;align-items:flex-end;gap:1.5px;height:26px;margin-top:6px;">${
+      data.map(v => `<div style="flex:1;background:${color};border-radius:1px 1px 0 0;height:${Math.max(6, Math.round(v/m*100))}%;opacity:0.75;transition:height .2s;"></div>`).join('')
+    }</div>`;
+  }
+  function _hbar(pct, color) {
+    return `<div style="background:rgba(255,255,255,0.06);border-radius:4px;height:5px;overflow:hidden;margin-top:6px;"><div style="width:${Math.min(100, Math.max(0, pct))}%;height:100%;background:${color};border-radius:4px;"></div></div>`;
+  }
+  function _vbars(data, colors, labels) {
+    const m = Math.max(1, ...data);
+    return `<div style="display:flex;align-items:flex-end;gap:6px;height:88px;">
+      ${data.map((v, i) => `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+        <div style="font-size:9px;color:var(--muted);">${v || ''}</div>
+        <div style="width:100%;background:${colors[i] || 'var(--accent)'};border-radius:3px 3px 0 0;height:${Math.max(4, Math.round(v/m*72))}px;opacity:0.85;"></div>
+      </div>`).join('')}
+    </div>
+    <div style="display:flex;gap:6px;margin-top:4px;">${
+      labels.map(l => `<div style="flex:1;text-align:center;font-size:9px;color:var(--muted);">${l}</div>`).join('')
+    }</div>`;
+  }
+
+  // ---- Pantalla: Dashboard del Super Admin (Centro de Operaciones) ----
   function screenAdminDashboard() {
     const s = Storage.get();
-    const schools = Schools.listSchools();
-    const allStudents = Object.values(s.users).filter(u => u.role === 'student');
-    const allTeachers = Object.values(s.users).filter(u => u.role === 'teacher');
-    const allSessions = s.sessions;
+    const schools    = Schools.listSchools();
+    const allUsers   = Object.values(s.users);
+    const students   = allUsers.filter(u => u.role === 'student');
+    const teachers   = allUsers.filter(u => u.role === 'teacher');
+    const sessions   = s.sessions || [];
+    const classrooms = Object.values(s.classrooms || {});
+    const now = new Date();
 
-    const from7 = new Date(); from7.setDate(from7.getDate() - 7);
-    const sessionsThisWeek = allSessions.filter(se => new Date(se.datetime) >= from7);
-    const avgConc = allSessions.length
-      ? (allSessions.reduce((a, b) => a + b.concentration, 0) / allSessions.length).toFixed(1)
-      : '—';
+    // ── Cálculos base ──
+    const totalMin = sessions.reduce((a, b) => a + (b.durationMin || 0), 0);
+    const avgConc  = sessions.length
+      ? (sessions.reduce((a, b) => a + b.concentration, 0) / sessions.length)
+      : 0;
 
-    const schoolCards = schools.map(sc => {
-      const stats = Schools.getSchoolStats(sc.id);
-      return `
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
-            <h2 style="margin:0;">${esc(sc.name)}</h2>
-            <span class="chip" style="font-family:monospace;font-size:11px;">${sc.code}</span>
-          </div>
-          <div class="grid cols-4" style="gap:8px;margin-bottom:14px;">
-            <div class="kpi" style="padding:8px;"><div class="v" style="font-size:18px;">${stats.studentCount}</div><div class="l">Alumnos</div></div>
-            <div class="kpi" style="padding:8px;"><div class="v" style="font-size:18px;">${stats.classroomCount}</div><div class="l">Aulas</div></div>
-            <div class="kpi" style="padding:8px;"><div class="v" style="font-size:18px;">${stats.sessionCount}</div><div class="l">Sesiones</div></div>
-            <div class="kpi" style="padding:8px;"><div class="v" style="font-size:18px;">${stats.avgConcentration}</div><div class="l">Conc. prom.</div></div>
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="ghost" data-go="manage-schools" data-sid="${esc(sc.id)}">Editar</button>
-            <button class="danger" data-del-school="${esc(sc.id)}" data-name="${esc(sc.name)}">Eliminar</button>
-          </div>
-        </div>`;
+    const from7  = new Date(now); from7.setDate(now.getDate() - 7);
+    const from14 = new Date(now); from14.setDate(now.getDate() - 14);
+    const sessWeek     = sessions.filter(se => new Date(se.datetime) >= from7);
+    const sessLastWeek = sessions.filter(se => {
+      const d = new Date(se.datetime); return d >= from14 && d < from7;
+    });
+    const weekDelta = sessLastWeek.length
+      ? Math.round((sessWeek.length - sessLastWeek.length) / sessLastWeek.length * 100)
+      : sessWeek.length > 0 ? 100 : 0;
+
+    // ── Serie semanal (últimas 8 semanas) ──
+    const weeklyData = [];
+    for (let i = 7; i >= 0; i--) {
+      const e = new Date(now); e.setDate(now.getDate() - i * 7);
+      const st = new Date(e); st.setDate(e.getDate() - 7);
+      weeklyData.push(sessions.filter(se => { const d = new Date(se.datetime); return d > st && d <= e; }).length);
+    }
+    const weekLabels = ['S-7','S-6','S-5','S-4','S-3','S-2','S-1','Hoy'];
+
+    // ── Distribución de concentración (1–5) ──
+    const concBuckets = [0,0,0,0,0];
+    sessions.forEach(se => {
+      const b = Math.min(4, Math.max(0, Math.round(se.concentration) - 1));
+      concBuckets[b]++;
     });
 
+    // ── Stats por colegio ──
+    const schoolRows = schools.map(sc => {
+      const stats = Schools.getSchoolStats(sc.id);
+      const dir = (sc.adminIds || []).map(id => s.users[id]?.name).filter(Boolean)[0] || '—';
+      const status = stats.sessionCount > 0 ? 'Activo'
+        : stats.studentCount > 0 ? 'Nuevo' : 'Sin alumnos';
+      return { ...sc, ...stats, directorName: dir, status };
+    });
+
+    const ranking = [...schoolRows].sort((a, b) => b.sessionCount - a.sessionCount).slice(0, 6);
+    const maxRank = Math.max(1, ...ranking.map(r => r.sessionCount));
+
+    // ── Alertas ──
+    const alertInactive   = schoolRows.filter(sc => sc.studentCount > 0 && sc.sessionCount === 0);
+    const alertLowConc    = schoolRows.filter(sc => { const c = parseFloat(sc.avgConcentration); return !isNaN(c) && c < 3 && c > 0; });
+    const alertSuspended  = allUsers.filter(u => u.suspended);
+    const alertNoSess     = students.filter(u => {
+      const us = sessions.filter(se => se.email === u.id);
+      if (!us.length) return true;
+      return (now - new Date(us[us.length-1].datetime)) > 7 * 86400000;
+    });
+
+    // ── Usuarios recientes ──
+    const recentUsers = allUsers
+      .filter(u => u.role !== 'super_admin')
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 6);
+
+    const trendBadge = (v) => v > 0
+      ? `<span style="color:#22c55e;font-size:10px;">▲ ${v}%</span>`
+      : v < 0
+        ? `<span style="color:#ef4444;font-size:10px;">▼ ${Math.abs(v)}%</span>`
+        : `<span style="color:var(--muted);font-size:10px;">—</span>`;
+
     return `
-      <h1>⚙️ Panel de Control — Super Admin</h1>
+<style>
+  .ops-wrap { display:flex; flex-direction:column; gap:14px; }
+  .ops-header { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px; }
+  .ops-strip { display:flex; gap:10px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; }
+  .ops-strip::-webkit-scrollbar { display:none; }
+  .ops-kpi { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px 16px; min-width:130px; flex:1; position:relative; overflow:hidden; }
+  .ops-kpi::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(139,92,246,.04),transparent); pointer-events:none; }
+  .ops-kpi-v { font-size:24px; font-weight:800; line-height:1; letter-spacing:-0.5px; }
+  .ops-kpi-l { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; margin-top:2px; }
+  .ops-kpi-sub { font-size:10px; margin-top:2px; }
+  .ops-2col { display:grid; grid-template-columns:1fr 320px; gap:14px; }
+  .ops-row2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .ops-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+  .ops-card-body { padding:16px; }
+  .ops-card-hd { padding:12px 16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+  .ops-label { font-size:10px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); font-weight:600; }
+  .ops-status { display:inline-block; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:700; letter-spacing:.3px; }
+  .ops-status-a { background:rgba(34,197,94,.14); color:#22c55e; }
+  .ops-status-n { background:rgba(245,158,11,.14); color:#f59e0b; }
+  .ops-status-s { background:rgba(100,100,100,.15); color:var(--muted); }
+  .ops-alert-row { display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid var(--border); }
+  .ops-alert-row:last-child { border-bottom:none; padding-bottom:0; }
+  .ops-rank-item { margin-bottom:9px; }
+  .ops-rank-label { display:flex; justify-content:space-between; font-size:12px; margin-bottom:3px; }
+  @media(max-width:900px){ .ops-2col,.ops-row2 { grid-template-columns:1fr; } }
+</style>
 
-      <div class="grid cols-4" style="margin-bottom:24px;">
-        <div class="kpi"><div class="v">${schools.length}</div><div class="l">Colegios</div></div>
-        <div class="kpi"><div class="v">${allStudents.length}</div><div class="l">Estudiantes</div></div>
-        <div class="kpi"><div class="v">${allTeachers.length}</div><div class="l">Docentes</div></div>
-        <div class="kpi"><div class="v">${allSessions.length}</div><div class="l">Sesiones totales</div></div>
+<div class="ops-wrap">
+
+  <!-- Header -->
+  <div class="ops-header">
+    <div>
+      <h1 style="margin:0;font-size:20px;font-weight:800;letter-spacing:-.3px;">⚙️ Centro de Operaciones</h1>
+      <p class="muted" style="margin:3px 0 0;font-size:12px;">${now.toLocaleDateString('es-PE', { weekday:'long', year:'numeric', month:'long', day:'numeric' })} · TrackFocus Admin</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="primary" data-go="manage-schools">+ Crear colegio</button>
+      <button class="ghost" data-go="manage-users">Gestionar usuarios</button>
+      <button class="ghost" id="btnDiagLog">🩺 Diagnóstico</button>
+    </div>
+  </div>
+
+  <!-- KPI Strip -->
+  <div class="ops-strip">
+    <div class="ops-kpi">
+      <div class="ops-kpi-v" style="color:var(--accent-2);">${schools.length}</div>
+      <div class="ops-kpi-l">Colegios</div>
+      ${_hbar(schools.length ? 100 : 0, 'var(--accent)')}
+    </div>
+    <div class="ops-kpi">
+      <div class="ops-kpi-v" style="color:var(--accent-2);">${classrooms.length}</div>
+      <div class="ops-kpi-l">Aulas activas</div>
+      ${_hbar(schools.length ? Math.min(100, classrooms.length / Math.max(1, schools.length * 5) * 100) : 0, 'var(--accent)')}
+    </div>
+    <div class="ops-kpi">
+      <div class="ops-kpi-v">${students.length}</div>
+      <div class="ops-kpi-l">Estudiantes</div>
+      ${_spark(weeklyData.map(w => w > 0 ? students.length : 0).fill(students.length), 'var(--primary)')}
+    </div>
+    <div class="ops-kpi">
+      <div class="ops-kpi-v">${teachers.length}</div>
+      <div class="ops-kpi-l">Docentes</div>
+      ${_hbar(teachers.length / Math.max(1, students.length) * 100 * 5, 'var(--primary)')}
+    </div>
+    <div class="ops-kpi">
+      <div class="ops-kpi-v">${sessions.length.toLocaleString()}</div>
+      <div class="ops-kpi-l">Sesiones totales</div>
+      ${_spark(weeklyData, 'var(--accent)')}
+    </div>
+    <div class="ops-kpi">
+      <div class="ops-kpi-v">${sessWeek.length}</div>
+      <div class="ops-kpi-l">Sesiones esta semana</div>
+      <div class="ops-kpi-sub">${trendBadge(weekDelta)} vs semana anterior</div>
+      ${_spark(weeklyData.slice(-4), 'var(--good)')}
+    </div>
+    <div class="ops-kpi">
+      <div class="ops-kpi-v">${sessions.length ? avgConc.toFixed(1) + '/5' : '—'}</div>
+      <div class="ops-kpi-l">Concentración prom.</div>
+      ${_hbar(sessions.length ? avgConc / 5 * 100 : 0, avgConc >= 4 ? '#22c55e' : avgConc >= 3 ? 'var(--primary)' : '#ef4444')}
+    </div>
+    <div class="ops-kpi">
+      <div class="ops-kpi-v">${Math.round(totalMin / 60).toLocaleString()} h</div>
+      <div class="ops-kpi-l">Horas estudiadas</div>
+      ${_spark(weeklyData.map(w => w * 25), '#a78bfa')}
+    </div>
+  </div>
+
+  <!-- Main 2-col -->
+  <div class="ops-2col">
+
+    <!-- Left: Centro de Control Institucional -->
+    <div class="ops-card">
+      <div class="ops-card-hd">
+        <div>
+          <div class="ops-label">Centro de Control Institucional</div>
+          <span style="font-size:12px;color:var(--muted);">${schools.length} colegio${schools.length !== 1 ? 's' : ''}</span>
+        </div>
       </div>
+      ${schools.length === 0
+        ? '<div style="padding:32px;text-align:center;color:var(--muted);font-size:13px;">Sin colegios registrados. Usa el botón superior para crear el primero.</div>'
+        : `<div style="overflow-x:auto;">
+        <table class="table" style="font-size:12px;">
+          <thead><tr>
+            <th>Colegio</th><th>Código</th><th>Director</th><th>Aulas</th><th>Alumnos</th><th>Sesiones</th><th>Conc.</th><th>Estado</th><th></th>
+          </tr></thead>
+          <tbody>
+            ${schoolRows.map(sc => `<tr>
+              <td><strong style="font-size:13px;">${esc(sc.name)}</strong></td>
+              <td><code style="background:rgba(139,92,246,.12);color:var(--accent-2);padding:2px 6px;border-radius:4px;font-size:11px;">${sc.code}</code></td>
+              <td class="muted">${esc(sc.directorName)}</td>
+              <td>${sc.classroomCount}</td>
+              <td>${sc.studentCount}</td>
+              <td>${sc.sessionCount}</td>
+              <td>${sc.avgConcentration !== '—' ? sc.avgConcentration + '/5' : '—'}</td>
+              <td><span class="ops-status ${sc.status === 'Activo' ? 'ops-status-a' : sc.status === 'Nuevo' ? 'ops-status-n' : 'ops-status-s'}">${sc.status}</span></td>
+              <td>
+                <button class="ghost" style="padding:3px 8px;font-size:11px;" data-go="manage-schools" data-sid="${esc(sc.id)}">Editar</button>
+              </td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+        </div>`}
+    </div>
 
-      <div class="grid cols-3" style="margin-bottom:24px;">
-        <div class="kpi"><div class="v">${sessionsThisWeek.length}</div><div class="l">Sesiones esta semana</div></div>
-        <div class="kpi"><div class="v">${avgConc}</div><div class="l">Concentración prom. global</div></div>
-        <div class="kpi"><div class="v">${allSessions.reduce((a, b) => a + b.durationMin, 0)}</div><div class="l">Minutos totales</div></div>
-      </div>
+    <!-- Right: Alertas + Ranking -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
 
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <h2 style="margin:0;">Colegios registrados</h2>
-        <div style="display:flex;gap:8px;">
-          <button class="primary" data-go="manage-schools">+ Crear colegio</button>
-          <button class="ghost" data-go="manage-users">Gestionar usuarios</button>
-          <button class="ghost" id="btnDiagLog">🩺 Registro de errores</button>
+      <!-- Alertas del sistema -->
+      <div class="ops-card ops-card-body">
+        <div class="ops-label" style="margin-bottom:12px;">Alertas del sistema</div>
+        <div class="ops-alert-row">
+          <div>
+            <div style="font-size:13px;font-weight:600;">⚠️ Colegios sin actividad</div>
+            <div style="font-size:11px;color:var(--muted);">Con alumnos, sin sesiones</div>
+          </div>
+          <span style="font-size:18px;font-weight:800;color:${alertInactive.length > 0 ? '#f59e0b' : '#22c55e'};">${alertInactive.length}</span>
+        </div>
+        <div class="ops-alert-row">
+          <div>
+            <div style="font-size:13px;font-weight:600;">📉 Concentración baja</div>
+            <div style="font-size:11px;color:var(--muted);">Colegios con prom. &lt; 3/5</div>
+          </div>
+          <span style="font-size:18px;font-weight:800;color:${alertLowConc.length > 0 ? '#ef4444' : '#22c55e'};">${alertLowConc.length}</span>
+        </div>
+        <div class="ops-alert-row">
+          <div>
+            <div style="font-size:13px;font-weight:600;">😴 Usuarios inactivos</div>
+            <div style="font-size:11px;color:var(--muted);">Sin sesiones en 7+ días</div>
+          </div>
+          <span style="font-size:18px;font-weight:800;color:${alertNoSess.length > 3 ? '#f59e0b' : '#22c55e'};">${alertNoSess.length}</span>
+        </div>
+        <div class="ops-alert-row">
+          <div>
+            <div style="font-size:13px;font-weight:600;">🔴 Cuentas suspendidas</div>
+            <div style="font-size:11px;color:var(--muted);">Acceso bloqueado</div>
+          </div>
+          <span style="font-size:18px;font-weight:800;color:${alertSuspended.length > 0 ? '#ef4444' : '#22c55e'};">${alertSuspended.length}</span>
         </div>
       </div>
 
-      ${schoolCards.length > 0
-        ? `<div class="grid cols-2">${schoolCards.join('')}</div>`
-        : '<div class="card empty">No hay colegios registrados. Crea el primero.</div>'}`;
+      <!-- Ranking de colegios -->
+      ${ranking.length > 0 ? `
+      <div class="ops-card ops-card-body">
+        <div class="ops-label" style="margin-bottom:12px;">Ranking por sesiones</div>
+        ${ranking.map((r, i) => `
+          <div class="ops-rank-item">
+            <div class="ops-rank-label">
+              <span style="font-weight:${i === 0 ? 700 : 400};">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1)+'.'} ${esc(r.name)}</span>
+              <span style="color:var(--muted);font-size:11px;">${r.sessionCount} ses.</span>
+            </div>
+            <div style="background:rgba(255,255,255,.06);border-radius:4px;height:5px;overflow:hidden;">
+              <div style="width:${Math.round(r.sessionCount/maxRank*100)}%;height:100%;background:${i===0?'var(--primary)':i===1?'var(--accent-2)':'rgba(139,92,246,.45)'};border-radius:4px;"></div>
+            </div>
+          </div>`).join('')}
+      </div>` : ''}
+    </div>
+  </div>
+
+  <!-- Analytics row -->
+  <div class="ops-row2">
+
+    <!-- Weekly growth bars -->
+    <div class="ops-card ops-card-body">
+      <div class="ops-label" style="margin-bottom:12px;">Crecimiento semanal — sesiones registradas</div>
+      ${_vbars(
+        weeklyData,
+        weeklyData.map((_, i) => i === weeklyData.length-1 ? 'var(--primary)' : 'rgba(139,92,246,.55)'),
+        weekLabels
+      )}
+    </div>
+
+    <!-- Concentration distribution -->
+    <div class="ops-card ops-card-body">
+      <div class="ops-label" style="margin-bottom:12px;">Distribución de concentración global</div>
+      ${_vbars(
+        concBuckets,
+        ['#ef4444','#f97316','#f59e0b','#22c55e','#10b981'],
+        ['1★','2★','3★','4★','5★']
+      )}
+      ${sessions.length === 0 ? '<p class="muted" style="font-size:12px;text-align:center;margin:8px 0 0;">Sin sesiones registradas aún.</p>' : ''}
+    </div>
+  </div>
+
+  <!-- Usuarios recientes -->
+  <div class="ops-card">
+    <div class="ops-card-hd">
+      <div class="ops-label">Usuarios registrados recientemente</div>
+      <button class="ghost" style="font-size:12px;padding:4px 12px;" data-go="manage-users">Ver todos →</button>
+    </div>
+    ${recentUsers.length === 0
+      ? '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">Sin usuarios registrados.</div>'
+      : `<div style="overflow-x:auto;">
+      <table class="table" style="font-size:12px;">
+        <thead><tr>
+          <th>Nombre</th><th>Email</th><th>Rol</th><th>Colegio</th><th>Aula</th><th>Estado</th><th>Registrado</th>
+        </tr></thead>
+        <tbody>
+          ${recentUsers.map(u => {
+            const rolLabel = { student: 'Estudiante', teacher: 'Docente', super_admin: 'Admin' }[u.role] || u.role;
+            const schoolName = u.schoolId ? (s.schools[u.schoolId]?.name || '—') : '—';
+            const crName = u.classroomId ? (s.classrooms[u.classroomId]?.name || '—') : '—';
+            let badge = '—';
+            if (u.suspended) badge = '<span class="ops-status" style="background:rgba(239,68,68,.12);color:#ef4444;">Suspendido</span>';
+            else if (u.approvalStatus === 'pending') badge = '<span class="ops-status ops-status-n">Pendiente</span>';
+            else if (u.approvalStatus === 'approved' || u.classroomId) badge = '<span class="ops-status ops-status-a">Activo</span>';
+            return `<tr>
+              <td><strong>${esc(u.name)}</strong></td>
+              <td class="muted">${esc(u.email)}</td>
+              <td><span class="chip" style="font-size:10px;">${rolLabel}</span></td>
+              <td class="muted">${esc(schoolName)}</td>
+              <td class="muted">${esc(crName)}</td>
+              <td>${badge}</td>
+              <td class="muted">${new Date(u.createdAt).toLocaleDateString('es-PE')}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+      </div>`}
+  </div>
+
+</div>`;
   }
 
   function wireAdminDashboard() {
@@ -103,10 +382,6 @@ const UIAdmin = (() => {
     const classrooms = editId ? Schools.listClassrooms(editId) : [];
     const schoolStudents = editId ? Schools.listStudentsInSchool(editId) : [];
 
-    const classroomOptions = classrooms.map(cr =>
-      `<option value="${esc(cr.id)}">${esc(cr.name)}</option>`
-    ).join('');
-
     const studentsSection = (editSchool && schoolStudents.length > 0) ? `
       <div class="card" style="padding:0;overflow:auto;">
         <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
@@ -131,7 +406,8 @@ const UIAdmin = (() => {
                       <option value="">Sin aula</option>
                       ${classrooms.map(cr => `<option value="${esc(cr.id)}"${st.classroomId === cr.id ? ' selected' : ''}>${esc(cr.name)}</option>`).join('')}
                     </select>
-                    <button class="ghost" style="font-size:12px;padding:4px 10px;" data-assign-student="${esc(st.id)}">Asignar</button>` : '<span class="muted" style="font-size:12px;">Sin aulas creadas</span>'}
+                    <button class="ghost" style="font-size:12px;padding:4px 10px;" data-assign-student="${esc(st.id)}">Asignar</button>`
+                    : '<span class="muted" style="font-size:12px;">Sin aulas creadas</span>'}
                     ${st.classroomId ? `<button class="ghost" style="font-size:12px;padding:4px 10px;color:#f59e0b;" data-remove-student="${esc(st.id)}" data-remove-from="${esc(st.classroomId)}">Quitar del aula</button>` : ''}
                   </div>
                 </td>
@@ -210,8 +486,8 @@ const UIAdmin = (() => {
                 <div style="display:flex;gap:6px;align-items:center;">
                   <input class="cr-code-input" data-cr-id="${esc(cr.id)}" value="${esc(cr.inviteCode)}" maxlength="8"
                     style="font-family:monospace;font-size:12px;letter-spacing:1px;width:110px;text-transform:uppercase;padding:4px 8px;" />
-                  <button class="ghost" style="padding:4px 10px;font-size:12px;" data-save-cr-code="${esc(cr.id)}" title="Guardar código">✓ Guardar</button>
-                  <button class="ghost" style="padding:4px 10px;font-size:12px;" data-regen-cr="${esc(cr.id)}" title="Generar código automático">↻ Auto</button>
+                  <button class="ghost" style="padding:4px 10px;font-size:12px;" data-save-cr-code="${esc(cr.id)}">✓ Guardar</button>
+                  <button class="ghost" style="padding:4px 10px;font-size:12px;" data-regen-cr="${esc(cr.id)}">↻ Auto</button>
                 </div>
               </td>
               <td>${(cr.studentIds || []).length}</td>
