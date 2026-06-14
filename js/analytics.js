@@ -1,6 +1,29 @@
 // Análisis inteligente basado en reglas: patrones, alertas y perfil de aprendizaje.
 const Analytics = (() => {
 
+  // Materias "abandonadas": con historial suficiente (>=minSessions) cuya última
+  // sesión es de hace >=minDays días. Función pura sobre el array de sesiones.
+  function _abandonedSubjects(sessions, minSessions = 2, minDays = 5) {
+    const now = Date.now();
+    const map = {};
+    for (const se of sessions || []) {
+      if (!se || !se.subject) continue;
+      const t = new Date(se.datetime).getTime();
+      if (isNaN(t)) continue;
+      if (!map[se.subject]) map[se.subject] = { count: 0, last: 0 };
+      map[se.subject].count++;
+      if (t > map[se.subject].last) map[se.subject].last = t;
+    }
+    const out = [];
+    for (const subject in map) {
+      const d = map[subject];
+      if (d.count < minSessions || !d.last) continue;
+      const days = Math.floor((now - d.last) / 86400000);
+      if (days >= minDays) out.push({ subject, days, count: d.count });
+    }
+    return out.sort((a, b) => b.days - a.days);
+  }
+
   function classifyProfile(sessions) {
     if (sessions.length < 3) return null;
 
@@ -77,6 +100,13 @@ const Analytics = (() => {
     const streak = s.users[userId]?.gamification?.streak || 0;
     if (streak >= 5) {
       alerts.push({ type: 'success', msg: `🔥 ¡Llevas ${streak} días seguidos estudiando! Estás en tu mejor racha. ¡Sigue así!` });
+    }
+
+    // Materia sin práctica reciente (invitación, sin culpabilizar)
+    const abandoned = _abandonedSubjects(allSessions);
+    if (abandoned.length) {
+      const a = abandoned[0];
+      alerts.push({ type: 'info', msg: `📚 Hace ${a.days} días que no estudias ${a.subject}. ¿Le damos un repaso hoy?` });
     }
 
     return alerts;
@@ -185,6 +215,12 @@ const Analytics = (() => {
     if (byAct['ejercicio']?.count >= 2) {
       const avgEj = byAct['ejercicio'].sum / byAct['ejercicio'].count;
       if (avgEj >= 3.5) tips.push({ type: 'success', text: `🏃 El ejercicio previo mejora tu concentración (${avgEj.toFixed(1)}/5). ¡Sigue moviéndote antes de estudiar!` });
+    }
+
+    // Materias sin práctica reciente (repaso breve para no perder lo avanzado)
+    const abandoned = _abandonedSubjects(sessions);
+    for (const a of abandoned.slice(0, 2)) {
+      tips.push({ type: 'info', text: `📚 No practicas ${a.subject} hace ${a.days} días. Un repaso corto evita que se enfríe lo que ya aprendiste.` });
     }
 
     return tips;
