@@ -162,6 +162,28 @@ const UIAdmin = (() => {
   .um-user-row td:first-child { display:block; width:100%; padding:0 0 6px; }
   .um-school-cell,.um-date-cell,.um-act-cell { font-size:11px; }
 }
+
+/* Checkboxes */
+.um-cb { width:15px; height:15px; cursor:pointer; accent-color:var(--accent); }
+.um-th-cb { width:34px; padding:0 6px !important; text-align:center; }
+.um-td-cb { width:34px; padding:0 6px !important; text-align:center; }
+
+/* Bulk action bar */
+.um-bulk-bar { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#1e2535; border:1px solid rgba(139,92,246,.4); border-radius:14px; padding:12px 20px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; z-index:999; box-shadow:0 8px 32px rgba(0,0,0,.5); transition:opacity .2s; }
+.um-bulk-count { font-size:13px; font-weight:700; color:var(--accent-2); white-space:nowrap; padding-right:8px; border-right:1px solid var(--border); }
+.um-bulk-btn { padding:7px 14px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; border:1px solid; white-space:nowrap; transition:opacity .15s; }
+.um-bulk-btn:hover { opacity:.82; }
+.um-bulk-move    { background:rgba(139,92,246,.15); border-color:rgba(139,92,246,.35); color:var(--accent-2); }
+.um-bulk-suspend { background:rgba(245,158,11,.12); border-color:rgba(245,158,11,.3); color:#f59e0b; }
+.um-bulk-reactivate { background:rgba(34,197,94,.12); border-color:rgba(34,197,94,.3); color:#22c55e; }
+.um-bulk-quitar  { background:rgba(249,115,22,.1);  border-color:rgba(249,115,22,.25); color:#f97316; }
+.um-bulk-cancel  { background:transparent; border-color:var(--border); color:var(--muted); }
+.um-bulk-move-form { display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding-top:8px; border-top:1px solid var(--border); width:100%; }
+
+/* Change classroom section in detail panel */
+.um-change-cr-btn  { background:rgba(59,130,246,.12); border:1px solid rgba(59,130,246,.3); color:#3b82f6; }
+.um-change-cr-section { background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px; margin-top:4px; }
+.um-change-cr-section label { font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); font-weight:600; }
 </style>`;
 
   // ══════════════════════════════════════════════
@@ -405,6 +427,31 @@ const UIAdmin = (() => {
         </div>
 
         <div class="um-detail-actions">
+          ${u.role === 'student'
+            ? (function(){
+              var crs = Schools.listClassrooms(u.schoolId || '');
+              return `<button class="um-act-btn um-change-cr-btn" id="umBtnChangeCr">
+                Cambiar colegio / aula
+                <span class="um-act-btn-desc">Reasignar directamente sin código.</span>
+              </button>
+              <div class="um-change-cr-section" id="umChangeCrSection" style="display:none;">
+                <label>Colegio</label>
+                <select class="um-select" id="umChangeCrSchool" style="width:100%;">
+                  <option value="">Sin colegio</option>
+                  ${schools.map(function(sc){return '<option value="'+esc(sc.id)+'"'+(u.schoolId===sc.id?' selected':'')+'>'+esc(sc.name)+'</option>';}).join('')}
+                </select>
+                <label>Aula</label>
+                <select class="um-select" id="umChangeCrClass" style="width:100%;">
+                  <option value="">Sin aula</option>
+                  ${crs.map(function(cr){return '<option value="'+esc(cr.id)+'"'+(u.classroomId===cr.id?' selected':'')+'>'+esc(cr.name)+'</option>';}).join('')}
+                </select>
+                <div style="display:flex;gap:6px;">
+                  <button class="um-btn-apply" id="umSaveChangeCr" data-uid="${esc(u.id)}">Guardar asignación</button>
+                  <button class="um-btn-clear" id="umCancelChangeCr">Cancelar</button>
+                </div>
+              </div>`;
+            })()
+            : ''}
           ${!u.suspended && !u.temporarilyDeleted
             ? `<button class="um-act-btn um-act-suspend" data-action-suspend="${esc(u.id)}" data-action-name="${esc(u.name)}">
                 Suspender temporalmente
@@ -449,6 +496,7 @@ const UIAdmin = (() => {
       const searchData = [(u.name||''), (u.email||''), schoolName, crName].join(' ').toLowerCase();
 
       return `<tr class="um-user-row${isSelected ? ' um-row-selected' : ''}" data-uid="${esc(u.id)}" data-search="${esc(searchData)}">
+        <td class="um-td-cb" onclick="event.stopPropagation()"><input type="checkbox" class="um-row-cb um-cb" data-uid="${esc(u.id)}" /></td>
         <td>
           <div class="um-user-cell">
             ${avatarEl(u.name, 36, st)}
@@ -562,6 +610,7 @@ const UIAdmin = (() => {
         : `<div style="overflow-x:auto;">
           <table class="um-table">
             <thead><tr>
+              <th class="um-th-cb"><input type="checkbox" class="um-cb" id="umSelectAll" title="Seleccionar todos" /></th>
               <th>Usuario</th>
               <th>Rol</th>
               <th>Colegio</th>
@@ -580,6 +629,29 @@ const UIAdmin = (() => {
     <!-- Detail panel -->
     ${hasPanel ? renderDetailPanel(selectedUser) : ''}
 
+  </div>
+</div>
+
+<!-- Bulk action bar (hidden until checkboxes selected) -->
+<div class="um-bulk-bar" id="umBulkBar" style="display:none;">
+  <span class="um-bulk-count" id="umBulkCount">0 seleccionados</span>
+  <div id="umBulkActions" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+    <button class="um-bulk-btn um-bulk-move" id="umBulkMoveBtn">Mover a aula</button>
+    <button class="um-bulk-btn um-bulk-suspend" id="umBulkSuspendBtn">Suspender</button>
+    <button class="um-bulk-btn um-bulk-reactivate" id="umBulkReactivateBtn">Reactivar</button>
+    <button class="um-bulk-btn um-bulk-quitar" id="umBulkQuitarBtn">Quitar aula</button>
+    <button class="um-bulk-btn um-bulk-cancel" id="umBulkCancelBtn">✕ Cancelar</button>
+  </div>
+  <div class="um-bulk-move-form" id="umBulkMoveForm" style="display:none;">
+    <select class="um-select" id="umBulkSchoolSel">
+      <option value="">Seleccionar colegio...</option>
+      ${schools.map(function(sc){return '<option value="'+esc(sc.id)+'">'+esc(sc.name)+'</option>';}).join('')}
+    </select>
+    <select class="um-select" id="umBulkClassSel" disabled>
+      <option value="">Elige colegio primero</option>
+    </select>
+    <button class="um-btn-apply" id="umBulkMoveConfirm">Mover seleccionados</button>
+    <button class="um-btn-clear" id="umBulkMoveCancel">Cancelar</button>
   </div>
 </div>`;
   }
@@ -807,6 +879,162 @@ const UIAdmin = (() => {
         UI.flash('Sesiones cerradas. "' + name + '" deberá iniciar sesión nuevamente.', 'success');
       });
     });
+
+    // ── Cambiar aula (panel detalle, solo estudiantes) ──
+    var btnChangeCr = document.getElementById('umBtnChangeCr');
+    var changeCrSection = document.getElementById('umChangeCrSection');
+    btnChangeCr && btnChangeCr.addEventListener('click', function() {
+      changeCrSection.style.display = changeCrSection.style.display === 'none' ? '' : 'none';
+    });
+    var cancelChangeCr = document.getElementById('umCancelChangeCr');
+    cancelChangeCr && cancelChangeCr.addEventListener('click', function() {
+      if (changeCrSection) changeCrSection.style.display = 'none';
+    });
+    // School changes → update classroom dropdown
+    var changeCrSchoolSel = document.getElementById('umChangeCrSchool');
+    var changeCrClassSel  = document.getElementById('umChangeCrClass');
+    changeCrSchoolSel && changeCrSchoolSel.addEventListener('change', function() {
+      var sid = changeCrSchoolSel.value;
+      var crs = sid ? Schools.listClassrooms(sid) : [];
+      changeCrClassSel.innerHTML = '<option value="">Sin aula</option>' +
+        crs.map(function(cr) { return '<option value="'+cr.id+'">'+cr.name+'</option>'; }).join('');
+    });
+    var saveChangeCr = document.getElementById('umSaveChangeCr');
+    saveChangeCr && saveChangeCr.addEventListener('click', function() {
+      var uid = saveChangeCr.dataset.uid;
+      var newSchool = changeCrSchoolSel ? changeCrSchoolSel.value : '';
+      var newClass  = changeCrClassSel  ? changeCrClassSel.value  : '';
+      if (!uid) return;
+      Schools.assignStudentDirectly(uid, newSchool || null, newClass || null);
+      try { Storage.flush && Storage.flush(); } catch(_) {}
+      var sn = newSchool ? (Storage.get().schools[newSchool]||{}).name || '' : 'sin colegio';
+      var cn = newClass  ? (Storage.get().classrooms[newClass]||{}).name || '' : 'sin aula';
+      UI.flash('Asignación actualizada: ' + sn + (cn ? ' / ' + cn : '') + '.', 'success');
+      App.go('manage-users');
+    });
+
+    // ── Select all checkbox ──
+    var selectAll = document.getElementById('umSelectAll');
+    var bulkBar   = document.getElementById('umBulkBar');
+    var bulkCount = document.getElementById('umBulkCount');
+    function updateBulkBar() {
+      var checked = root().querySelectorAll('.um-row-cb:checked');
+      if (checked.length > 0) {
+        bulkBar && (bulkBar.style.display = 'flex');
+        bulkCount && (bulkCount.textContent = checked.length + ' seleccionado' + (checked.length !== 1 ? 's' : ''));
+      } else {
+        bulkBar && (bulkBar.style.display = 'none');
+      }
+    }
+    function getSelectedIds() {
+      return Array.from(root().querySelectorAll('.um-row-cb:checked')).map(function(cb) { return cb.dataset.uid; });
+    }
+    selectAll && selectAll.addEventListener('change', function() {
+      root().querySelectorAll('.um-row-cb').forEach(function(cb) {
+        var row = cb.closest('tr');
+        if (!row || row.style.display === 'none') return;
+        cb.checked = selectAll.checked;
+      });
+      updateBulkBar();
+    });
+    root().querySelectorAll('.um-row-cb').forEach(function(cb) {
+      cb.addEventListener('change', function() {
+        updateBulkBar();
+        var allCbs = root().querySelectorAll('.um-row-cb');
+        var allChecked = Array.from(allCbs).every(function(c) { return c.checked; });
+        if (selectAll) selectAll.checked = allChecked;
+      });
+    });
+
+    // ── Bulk: Cancel ──
+    var bulkCancelBtn = document.getElementById('umBulkCancelBtn');
+    bulkCancelBtn && bulkCancelBtn.addEventListener('click', function() {
+      root().querySelectorAll('.um-row-cb').forEach(function(cb) { cb.checked = false; });
+      if (selectAll) selectAll.checked = false;
+      bulkBar && (bulkBar.style.display = 'none');
+      var mf = document.getElementById('umBulkMoveForm');
+      if (mf) mf.style.display = 'none';
+    });
+
+    // ── Bulk: Suspender ──
+    var bulkSuspendBtn = document.getElementById('umBulkSuspendBtn');
+    bulkSuspendBtn && bulkSuspendBtn.addEventListener('click', function() {
+      var ids = getSelectedIds();
+      if (!ids.length) return;
+      if (!confirm('¿Suspender ' + ids.length + ' usuario' + (ids.length !== 1 ? 's' : '') + '?')) return;
+      var now = new Date().toISOString();
+      Storage.set(function(st) { ids.forEach(function(id) { if (st.users[id]) { st.users[id].suspended = true; st.users[id].suspendedAt = now; } }); });
+      try { Storage.flush && Storage.flush(); } catch(_) {}
+      UI.flash(ids.length + ' usuario' + (ids.length !== 1 ? 's' : '') + ' suspendido' + (ids.length !== 1 ? 's' : '') + '.', 'success');
+      App.go('manage-users');
+    });
+
+    // ── Bulk: Reactivar ──
+    var bulkReactivateBtn = document.getElementById('umBulkReactivateBtn');
+    bulkReactivateBtn && bulkReactivateBtn.addEventListener('click', function() {
+      var ids = getSelectedIds();
+      if (!ids.length) return;
+      Storage.set(function(st) { ids.forEach(function(id) { if (st.users[id]) { delete st.users[id].suspended; delete st.users[id].suspendedAt; } }); });
+      try { Storage.flush && Storage.flush(); } catch(_) {}
+      UI.flash(ids.length + ' cuenta' + (ids.length !== 1 ? 's' : '') + ' reactivada' + (ids.length !== 1 ? 's' : '') + '.', 'success');
+      App.go('manage-users');
+    });
+
+    // ── Bulk: Quitar aula ──
+    var bulkQuitarBtn = document.getElementById('umBulkQuitarBtn');
+    bulkQuitarBtn && bulkQuitarBtn.addEventListener('click', function() {
+      var ids = getSelectedIds();
+      if (!ids.length) return;
+      if (!confirm('¿Quitar el aula a ' + ids.length + ' estudiante' + (ids.length !== 1 ? 's' : '') + '?')) return;
+      Storage.set(function(st) {
+        ids.forEach(function(id) {
+          var u = st.users[id]; if (!u) return;
+          if (u.classroomId && st.classrooms[u.classroomId]) {
+            st.classrooms[u.classroomId].studentIds = (st.classrooms[u.classroomId].studentIds||[]).filter(function(x){return x!==id;});
+          }
+          u.classroomId = null; u.approvalStatus = null;
+        });
+      });
+      try { Storage.flush && Storage.flush(); } catch(_) {}
+      UI.flash('Aulas removidas.', 'success');
+      App.go('manage-users');
+    });
+
+    // ── Bulk: Mover a aula ──
+    var bulkMoveBtn  = document.getElementById('umBulkMoveBtn');
+    var bulkMoveForm = document.getElementById('umBulkMoveForm');
+    var bulkSchoolSel = document.getElementById('umBulkSchoolSel');
+    var bulkClassSel  = document.getElementById('umBulkClassSel');
+    bulkMoveBtn && bulkMoveBtn.addEventListener('click', function() {
+      if (bulkMoveForm) bulkMoveForm.style.display = bulkMoveForm.style.display === 'none' ? 'flex' : 'none';
+    });
+    bulkSchoolSel && bulkSchoolSel.addEventListener('change', function() {
+      var sid = bulkSchoolSel.value;
+      var crs = sid ? Schools.listClassrooms(sid) : [];
+      if (bulkClassSel) {
+        bulkClassSel.disabled = !sid;
+        bulkClassSel.innerHTML = '<option value="">Seleccionar aula...</option>' +
+          crs.map(function(cr) { return '<option value="'+cr.id+'">'+cr.name+'</option>'; }).join('');
+      }
+    });
+    var bulkMoveConfirm = document.getElementById('umBulkMoveConfirm');
+    bulkMoveConfirm && bulkMoveConfirm.addEventListener('click', function() {
+      var newClass = bulkClassSel && bulkClassSel.value;
+      var newSchool = bulkSchoolSel && bulkSchoolSel.value;
+      if (!newClass) { UI.flash('Selecciona un aula de destino.', 'error'); return; }
+      var ids = getSelectedIds();
+      if (!ids.length) return;
+      if (!confirm('¿Mover ' + ids.length + ' estudiante' + (ids.length!==1?'s':'') + ' al aula seleccionada?')) return;
+      ids.forEach(function(id) { Schools.assignStudentDirectly(id, newSchool || undefined, newClass); });
+      try { Storage.flush && Storage.flush(); } catch(_) {}
+      var crName = (Storage.get().classrooms[newClass]||{}).name || '';
+      UI.flash(ids.length + ' estudiante' + (ids.length!==1?'s':'') + ' movido' + (ids.length!==1?'s':'') + ' a ' + crName + '.', 'success');
+      App.go('manage-users');
+    });
+    var bulkMoveCancel = document.getElementById('umBulkMoveCancel');
+    bulkMoveCancel && bulkMoveCancel.addEventListener('click', function() {
+      if (bulkMoveForm) bulkMoveForm.style.display = 'none';
+    });
   }
 
   // ══════════════════════════════════════════════
@@ -892,6 +1120,21 @@ const UIAdmin = (() => {
   .cp-st-row:last-child { border-bottom:none; }
   .cp-st-name { font-size:13px; font-weight:600; flex:1; min-width:100px; }
   .cp-st-current { font-size:11px; color:var(--muted); }
+  /* Ordering */
+  .cp-sort-bar { display:flex; align-items:center; gap:8px; padding:10px 16px; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+  .cp-sort-label { font-size:11px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+  .cp-sort-btn { background:rgba(255,255,255,.05); border:1px solid var(--border); color:var(--muted); border-radius:7px; padding:5px 12px; font-size:12px; font-weight:600; cursor:pointer; transition:all .15s; white-space:nowrap; }
+  .cp-sort-btn:hover { border-color:rgba(139,92,246,.4); color:var(--accent-2); }
+  .cp-sort-btn.active { background:rgba(139,92,246,.12); border-color:rgba(139,92,246,.35); color:var(--accent-2); }
+  .cp-drag-handle { color:var(--muted); cursor:grab; font-size:16px; padding:0 4px; user-select:none; opacity:.6; }
+  .cp-drag-handle:hover { opacity:1; color:var(--text); }
+  .cp-cr-tr.cp-dragging { opacity:.4; }
+  .cp-cr-tr.cp-drag-over td { background:rgba(139,92,246,.1); }
+  .cp-move-btn { background:rgba(255,255,255,.05); border:1px solid var(--border); color:var(--muted); border-radius:6px; padding:4px 8px; font-size:13px; cursor:pointer; line-height:1; min-height:32px; transition:all .15s; }
+  .cp-move-btn:hover:not([disabled]) { border-color:rgba(139,92,246,.4); color:var(--accent-2); }
+  .cp-move-btn[disabled] { opacity:.3; cursor:default; }
+  .cp-copy-btn { background:rgba(255,255,255,.05); border:1px solid var(--border); color:var(--muted); border-radius:6px; padding:5px 8px; font-size:13px; cursor:pointer; transition:all .15s; min-height:32px; line-height:1; }
+  .cp-copy-btn:hover { border-color:rgba(34,197,94,.4); color:#22c55e; }
 </style>`;
 
   // ══════════════════════════════════════════════
@@ -978,11 +1221,19 @@ const UIAdmin = (() => {
     const stats = Schools.getSchoolStats(editId);
     const dirs = (editSchool.adminIds||[]).map(function(id) { return s.users[id]; }).filter(Boolean);
 
+    const sortBar = `
+      <div class="cp-sort-bar">
+        <span class="cp-sort-label">Ordenar:</span>
+        <button class="cp-sort-btn" data-autosort="desc" title="5°, 4°, 3°... (descendente)">5→1 Desc</button>
+        <button class="cp-sort-btn" data-autosort="asc"  title="1°, 2°, 3°... (ascendente)">1→5 Asc</button>
+        <span style="font-size:11px;color:var(--muted);">o arrastra para orden personalizado</span>
+      </div>`;
+
     const classroomTable = classrooms.length === 0
-      ? `<div style="padding:32px;text-align:center;color:var(--muted);font-size:13px;">Sin aulas. Usa el formulario de abajo para crear la primera.</div>`
-      : `<div style="overflow-x:auto;"><table class="cp-cr-table"><thead><tr><th>Aula</th><th>Código de acceso</th><th style="text-align:center;">Alumnos</th><th style="text-align:center;">Docentes</th><th></th></tr></thead><tbody>
-        ${classrooms.map(function(cr) {
-          return `<tr><td><span class="cp-cr-name">${esc(cr.name)}</span></td><td><input class="cp-cr-code-input cr-code-input" data-cr-id="${esc(cr.id)}" value="${esc(cr.inviteCode)}" maxlength="8" /></td><td style="text-align:center;"><span class="cp-badge-num">${(cr.studentIds||[]).length}</span></td><td style="text-align:center;"><span class="cp-badge-num">${(cr.teacherIds||[]).length}</span></td><td><div class="cp-cr-actions"><button class="cp-cr-save" data-save-cr-code="${esc(cr.id)}">✓ Guardar</button><button class="cp-cr-auto" data-regen-cr="${esc(cr.id)}">↻ Auto</button><button class="cp-cr-del" data-del-cr="${esc(cr.id)}" data-del-cr-name="${esc(cr.name)}">Eliminar</button></div></td></tr>`;
+      ? `${sortBar}<div style="padding:32px;text-align:center;color:var(--muted);font-size:13px;">Sin aulas. Usa el formulario de abajo para crear la primera.</div>`
+      : `${sortBar}<div style="overflow-x:auto;"><table class="cp-cr-table"><thead><tr><th style="width:28px;"></th><th>Aula</th><th>Código de acceso</th><th style="text-align:center;">Alumnos</th><th style="text-align:center;">Docentes</th><th></th></tr></thead><tbody>
+        ${classrooms.map(function(cr, idx) {
+          return `<tr class="cp-cr-tr" draggable="true" data-cr-id="${esc(cr.id)}"><td style="width:28px;"><span class="cp-drag-handle" title="Arrastrar para reordenar">⠿</span></td><td><span class="cp-cr-name">${esc(cr.name)}</span></td><td><div style="display:flex;gap:4px;align-items:center;"><input class="cp-cr-code-input cr-code-input" data-cr-id="${esc(cr.id)}" value="${esc(cr.inviteCode)}" maxlength="8" /><button class="cp-copy-btn" data-copy-code="${esc(cr.inviteCode)}" title="Copiar código">⧉</button></div></td><td style="text-align:center;"><span class="cp-badge-num">${(cr.studentIds||[]).length}</span></td><td style="text-align:center;"><span class="cp-badge-num">${(cr.teacherIds||[]).length}</span></td><td><div class="cp-cr-actions"><button class="cp-move-btn" data-move-up="${esc(cr.id)}" ${idx===0?'disabled':''} title="Subir">↑</button><button class="cp-move-btn" data-move-down="${esc(cr.id)}" ${idx===classrooms.length-1?'disabled':''} title="Bajar">↓</button><button class="cp-cr-save" data-save-cr-code="${esc(cr.id)}">✓ Guardar</button><button class="cp-cr-auto" data-regen-cr="${esc(cr.id)}">↻ Auto</button><button class="cp-cr-del" data-del-cr="${esc(cr.id)}" data-del-cr-name="${esc(cr.name)}">Eliminar</button></div></td></tr>`;
         }).join('')}
         </tbody></table></div>`;
 
@@ -1079,6 +1330,86 @@ const UIAdmin = (() => {
     root().querySelectorAll('[data-del-cr]').forEach(function(btn){btn.addEventListener('click',function(){var crId=btn.dataset.delCr;var name=btn.dataset.delCrName;if(!confirm('¿Eliminar el aula "'+name+'"?'))return;Schools.deleteClassroom(crId);try{Storage.flush&&Storage.flush();}catch(_){}UI.flash('Aula eliminada.','success');App.go('manage-schools');});});
     root().querySelectorAll('[data-assign-student]').forEach(function(btn){btn.addEventListener('click',function(){var sid=btn.dataset.assignStudent;var sel=root().querySelector('.st-cr-select[data-st-id="'+sid+'"]');var cid=sel&&sel.value;if(!cid){UI.flash('Selecciona un aula primero.','error');return;}Schools.addStudentToClassroom(sid,cid);try{Storage.flush&&Storage.flush();}catch(_){}UI.flash('Estudiante asignado.','success');App.go('manage-schools');});});
     root().querySelectorAll('[data-remove-student]').forEach(function(btn){btn.addEventListener('click',function(){var sid=btn.dataset.removeStudent;var cid=btn.dataset.removeFrom;if(!confirm('¿Quitar al estudiante del aula?'))return;Schools.removeStudentFromClassroom(sid,cid);try{Storage.flush&&Storage.flush();}catch(_){}UI.flash('Estudiante removido.','success');App.go('manage-schools');});});
+
+    // ── Mover aula arriba / abajo ──
+    root().querySelectorAll('[data-move-up]').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        if(btn.disabled||btn.getAttribute('disabled')!=null)return;
+        Schools.moveClassroomUp(btn.dataset.moveUp);
+        try{Storage.flush&&Storage.flush();}catch(_){}
+        App.go('manage-schools');
+      });
+    });
+    root().querySelectorAll('[data-move-down]').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        if(btn.disabled||btn.getAttribute('disabled')!=null)return;
+        Schools.moveClassroomDown(btn.dataset.moveDown);
+        try{Storage.flush&&Storage.flush();}catch(_){}
+        App.go('manage-schools');
+      });
+    });
+
+    // ── Auto-sort ──
+    root().querySelectorAll('[data-autosort]').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var dir=btn.dataset.autosort;
+        var eid=App._editSchoolId;
+        if(!eid)return;
+        Schools.autoSortClassrooms(eid,dir);
+        try{Storage.flush&&Storage.flush();}catch(_){}
+        UI.flash('Aulas reordenadas ('+(dir==='asc'?'ascendente':'descendente')+').','success');
+        App.go('manage-schools');
+      });
+    });
+
+    // ── Drag & drop para reordenar aulas ──
+    (function(){
+      var dragSrcId=null;
+      root().querySelectorAll('.cp-cr-tr').forEach(function(row){
+        row.addEventListener('dragstart',function(e){
+          dragSrcId=row.dataset.crId;
+          row.classList.add('cp-dragging');
+          e.dataTransfer.effectAllowed='move';
+        });
+        row.addEventListener('dragend',function(){
+          row.classList.remove('cp-dragging');
+          root().querySelectorAll('.cp-cr-tr').forEach(function(r){r.classList.remove('cp-drag-over');});
+        });
+        row.addEventListener('dragover',function(e){
+          e.preventDefault();
+          e.dataTransfer.dropEffect='move';
+          root().querySelectorAll('.cp-cr-tr').forEach(function(r){r.classList.remove('cp-drag-over');});
+          if(dragSrcId!==row.dataset.crId)row.classList.add('cp-drag-over');
+        });
+        row.addEventListener('drop',function(e){
+          e.preventDefault();
+          row.classList.remove('cp-drag-over');
+          if(!dragSrcId||dragSrcId===row.dataset.crId)return;
+          var allRows=root().querySelectorAll('.cp-cr-tr');
+          var currentOrder=Array.from(allRows).map(function(r){return r.dataset.crId;});
+          var si=currentOrder.indexOf(dragSrcId);
+          var ti=currentOrder.indexOf(row.dataset.crId);
+          if(si===-1||ti===-1)return;
+          var newOrder=currentOrder.slice();
+          newOrder.splice(si,1);
+          newOrder.splice(ti,0,dragSrcId);
+          Schools.setClassroomOrder(App._editSchoolId,newOrder);
+          try{Storage.flush&&Storage.flush();}catch(_){}
+          App.go('manage-schools');
+        });
+      });
+    })();
+
+    // ── Copiar código ──
+    root().querySelectorAll('[data-copy-code]').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var code=btn.dataset.copyCode;
+        navigator.clipboard&&navigator.clipboard.writeText(code).then(function(){
+          btn.textContent='✓';
+          setTimeout(function(){btn.textContent='⧉';},1500);
+        }).catch(function(){UI.flash(code,'success');});
+      });
+    });
   }
 
   // ══════════════════════════════════════════════

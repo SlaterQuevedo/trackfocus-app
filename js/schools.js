@@ -73,15 +73,29 @@ const Schools = (() => {
     return Storage.uuid().toUpperCase().replace(/-/g, '').slice(0, 8);
   }
 
+  function _ensureOrderIndexes(schoolId) {
+    const classrooms = Object.values(Storage.get().classrooms).filter(c => c.schoolId === schoolId);
+    if (classrooms.some(c => c.orderIndex === undefined)) {
+      Storage.set(s => {
+        Object.values(s.classrooms)
+          .filter(c => c.schoolId === schoolId)
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .forEach((c, i) => { s.classrooms[c.id].orderIndex = i; });
+      });
+    }
+  }
+
   function createClassroom(schoolId, grade, section) {
     const id = Storage.uuid();
     const name = `${grade.trim()} ${section.trim()}`;
     const inviteCode = _generateInviteCode();
+    const existingCount = Object.values(Storage.get().classrooms).filter(c => c.schoolId === schoolId).length;
     Storage.set(s => {
       s.classrooms[id] = {
         id, schoolId, name, grade: grade.trim(), section: section.trim(),
         teacherIds: [], studentIds: [],
         inviteCode,
+        orderIndex: existingCount,
         createdAt: new Date().toISOString()
       };
     });
@@ -100,9 +114,73 @@ const Schools = (() => {
   }
 
   function listClassrooms(schoolId) {
+    _ensureOrderIndexes(schoolId);
     return Object.values(Storage.get().classrooms)
       .filter(c => c.schoolId === schoolId)
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .sort((a, b) => {
+        const oa = a.orderIndex !== undefined ? a.orderIndex : 999;
+        const ob = b.orderIndex !== undefined ? b.orderIndex : 999;
+        if (oa !== ob) return oa - ob;
+        return a.name.localeCompare(b.name);
+      });
+  }
+
+  function setClassroomOrder(schoolId, orderedIds) {
+    Storage.set(s => {
+      orderedIds.forEach((id, i) => { if (s.classrooms[id]) s.classrooms[id].orderIndex = i; });
+    });
+  }
+
+  function moveClassroomUp(classroomId) {
+    const cr = Storage.get().classrooms[classroomId];
+    if (!cr) return;
+    const sorted = listClassrooms(cr.schoolId);
+    const idx = sorted.findIndex(c => c.id === classroomId);
+    if (idx <= 0) return;
+    const newOrder = sorted.map(c => c.id);
+    newOrder.splice(idx, 1); newOrder.splice(idx - 1, 0, classroomId);
+    setClassroomOrder(cr.schoolId, newOrder);
+  }
+
+  function moveClassroomDown(classroomId) {
+    const cr = Storage.get().classrooms[classroomId];
+    if (!cr) return;
+    const sorted = listClassrooms(cr.schoolId);
+    const idx = sorted.findIndex(c => c.id === classroomId);
+    if (idx < 0 || idx >= sorted.length - 1) return;
+    const newOrder = sorted.map(c => c.id);
+    newOrder.splice(idx, 1); newOrder.splice(idx + 1, 0, classroomId);
+    setClassroomOrder(cr.schoolId, newOrder);
+  }
+
+  function autoSortClassrooms(schoolId, direction) {
+    function gradeNum(name) { const m = name.match(/(\d+)/); return m ? parseInt(m[1], 10) : 999; }
+    const sorted = listClassrooms(schoolId).slice().sort((a, b) => {
+      const na = gradeNum(a.name), nb = gradeNum(b.name);
+      if (na !== nb) return direction === 'asc' ? na - nb : nb - na;
+      return a.name.localeCompare(b.name);
+    });
+    setClassroomOrder(schoolId, sorted.map(c => c.id));
+  }
+
+  function assignStudentDirectly(studentId, newSchoolId, newClassroomId) {
+    Storage.set(s => {
+      const u = s.users[studentId];
+      if (!u) return;
+      if (u.classroomId && s.classrooms[u.classroomId]) {
+        s.classrooms[u.classroomId].studentIds = (s.classrooms[u.classroomId].studentIds || []).filter(x => x !== studentId);
+      }
+      if (newSchoolId !== undefined) u.schoolId = newSchoolId || null;
+      if (newClassroomId) {
+        u.classroomId = newClassroomId;
+        u.approvalStatus = 'approved';
+        const cr = s.classrooms[newClassroomId];
+        if (cr) { if (!cr.studentIds) cr.studentIds = []; if (!cr.studentIds.includes(studentId)) cr.studentIds.push(studentId); }
+      } else {
+        u.classroomId = null;
+        u.approvalStatus = null;
+      }
+    });
   }
 
   function getClassroom(id) {
@@ -310,7 +388,8 @@ const Schools = (() => {
     createSchool, listSchools, getSchool, deleteSchool, updateSchool, updateSchoolCode, updateClassroomCode,
     createClassroom, listClassrooms, getClassroom, deleteClassroom,
     regenerateInviteCode, findClassroomByCode,
-    addStudentToClassroom, removeStudentFromClassroom, moveStudent,
+    setClassroomOrder, moveClassroomUp, moveClassroomDown, autoSortClassrooms,
+    addStudentToClassroom, removeStudentFromClassroom, moveStudent, assignStudentDirectly,
     listStudentsInClassroom, listStudentsInSchool, getSchoolStats,
     createJoinRequest, createChangeRequest, listRequestsForSchool,
     getPendingCount, approveRequest, rejectRequest, getStudentRequests
