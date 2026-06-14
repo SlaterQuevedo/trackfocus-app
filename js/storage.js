@@ -16,7 +16,18 @@ const Storage = (() => {
     uploadedFiles: {},
     availableRoles: [],  // NEW: roles disponibles para el usuario actual
     subjectsByInstitution: {
-      colegio: ['Matemática', 'Comunicación', 'Física', 'Química', 'Inglés', 'Historia']
+      colegio: [
+        'Matemática',
+        'Comunicación',
+        'Ciencia y Tecnología',
+        'Ciencias Sociales',
+        'Desarrollo Personal, Ciudadanía y Cívica',
+        'Educación Religiosa',
+        'Tutoría',
+        'Educación Física',
+        'Arte y Cultura',
+        'Inglés'
+      ]
     },
     customSubjects: {},
     students: {},

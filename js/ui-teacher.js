@@ -105,15 +105,28 @@ const UITeacher = (() => {
 
     const pendingCount = school ? Schools.getPendingCount(school.id) : 0;
 
+    // Índice de Aprendizaje promedio del colegio (Fase 11): de las sesiones de IA
+    // de los alumnos (sin exponer conversaciones; solo el agregado numérico).
+    const schoolStudentIds = new Set();
+    classrooms.forEach(cr => Schools.listStudentsInClassroom(cr.id).forEach(st => schoolStudentIds.add(st.id)));
+    const allIndices = s.sessions
+      .filter(se => schoolStudentIds.has(se.email))
+      .map(se => Stats.parseMetrics(se).learning_index)
+      .filter(v => typeof v === 'number' && !isNaN(v));
+    const avgLearningIndex = allIndices.length
+      ? Math.round(allIndices.reduce((a, b) => a + b, 0) / allIndices.length)
+      : null;
+
     return `
       <h1>Panel del Docente</h1>
       ${school ? `<p class="muted">Colegio: <strong>${esc(school.name)}</strong> · Código de colegio: <strong>${school.code}</strong></p>` : '<p class="muted">No estás asignado a ningún colegio.</p>'}
 
       ${school ? _pendingRequestsPanel(school.id, user.id) : ''}
 
-      <div class="grid cols-3" style="margin:16px 0;">
+      <div class="grid cols-4" style="margin:16px 0;">
         <div class="kpi"><div class="v">${totalStudents}</div><div class="l">Total alumnos</div></div>
         <div class="kpi"><div class="v">${totalSessions}</div><div class="l">Sesiones esta semana</div></div>
+        <div class="kpi"><div class="v" style="color:var(--accent);">${avgLearningIndex != null ? avgLearningIndex + '/100' : '—'}</div><div class="l">Índice aprendizaje prom.</div></div>
         <div class="kpi"><div class="v" style="color:${atRiskStudents > 0 ? 'var(--bad)' : 'var(--good)'};">${atRiskStudents}</div><div class="l">Alumnos en riesgo</div></div>
       </div>
 
@@ -130,7 +143,13 @@ const UITeacher = (() => {
             <input type="file" id="restoreFile" accept=".json,application/json" style="display:none">
           </div>
         </div>
-        <div id="pilotCardBody"><p class="muted" style="margin:12px 0 0;">Cargando métricas del piloto…</p></div>
+        <div id="pilotCardBody">
+          <div class="grid cols-3" style="gap:8px;margin-top:12px;">
+            <div class="skeleton skeleton-kpi"></div>
+            <div class="skeleton skeleton-kpi"></div>
+            <div class="skeleton skeleton-kpi"></div>
+          </div>
+        </div>
       </div>
 
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
@@ -322,7 +341,7 @@ const UITeacher = (() => {
           ${students.length === 0 ? '<div class="empty">Aún no hay alumnos en esta aula. Los estudiantes se unen con el código del colegio.</div>' : `
           <table class="table">
             <thead><tr>
-              <th>Nombre</th><th>Nivel</th><th>XP</th><th>Racha</th><th>Conc. prom. (7d)</th><th>Última sesión</th><th>Estado</th><th></th>
+              <th>Nombre</th><th>Nivel</th><th>XP</th><th>Racha</th><th>Conc. prom. (7d)</th><th>Índice apr.</th><th>Última sesión</th><th>Estado</th><th></th>
             </tr></thead>
             <tbody>
               ${students.map(st => {
@@ -333,6 +352,13 @@ const UITeacher = (() => {
                 const avgRecent = recent.length
                   ? (recent.reduce((a, b) => a + b.concentration, 0) / recent.length).toFixed(1)
                   : '—';
+                // Índice de Aprendizaje promedio del alumno (de sus sesiones de Estudio IA).
+                const stIndices = stSessions
+                  .map(se => Stats.parseMetrics(se).learning_index)
+                  .filter(v => typeof v === 'number' && !isNaN(v));
+                const avgIndex = stIndices.length
+                  ? Math.round(stIndices.reduce((a, b) => a + b, 0) / stIndices.length)
+                  : null;
                 const lastSession = stSessions.sort((a, b) => b.datetime.localeCompare(a.datetime))[0];
                 const last5 = stSessions.slice(-5);
                 const avg5 = last5.length >= 5 ? last5.reduce((a, b) => a + b.concentration, 0) / last5.length : null;
@@ -344,6 +370,7 @@ const UITeacher = (() => {
                   <td>${gam.xp || 0}</td>
                   <td>🔥 ${gam.streak || 0}</td>
                   <td>${avgRecent}</td>
+                  <td>${avgIndex != null ? avgIndex + '/100' : '—'}</td>
                   <td>${lastSession ? new Date(lastSession.datetime).toLocaleDateString('es-PE') : '—'}</td>
                   <td>${isAtRisk ? '<span class="risk-badge">En riesgo</span>' : '<span class="ok-badge">OK</span>'}</td>
                   <td>
@@ -528,6 +555,14 @@ const UITeacher = (() => {
       : '—';
     const totalMin = allCrSessions.reduce((a, b) => a + b.durationMin, 0);
 
+    // Índice de Aprendizaje promedio del aula (Fase 11).
+    const crIndices = allCrSessions
+      .map(se => Stats.parseMetrics(se).learning_index)
+      .filter(v => typeof v === 'number' && !isNaN(v));
+    const avgIndex = crIndices.length
+      ? Math.round(crIndices.reduce((a, b) => a + b, 0) / crIndices.length)
+      : null;
+
     // Semanas (8 últimas)
     const weekLabels = [];
     const weekAvgs = [];
@@ -571,6 +606,7 @@ const UITeacher = (() => {
       <div class="grid cols-4" style="margin-bottom:18px;">
         <div class="kpi"><div class="v">${students.length}</div><div class="l">Alumnos</div></div>
         <div class="kpi"><div class="v">${avgConc}</div><div class="l">Conc. prom. total</div></div>
+        <div class="kpi"><div class="v" style="color:var(--accent);">${avgIndex != null ? avgIndex + '/100' : '—'}</div><div class="l">Índice apr. prom.</div></div>
         <div class="kpi"><div class="v">${allCrSessions.length}</div><div class="l">Sesiones totales</div></div>
         <div class="kpi"><div class="v">${totalMin}</div><div class="l">Minutos estudiados</div></div>
       </div>
@@ -579,12 +615,14 @@ const UITeacher = (() => {
         <div class="card">
           <h3>Concentración semanal (últimas 8 semanas)</h3>
           <div class="chart-container">
+            <div class="chart-skeleton skeleton"></div>
             <canvas id="chartWeekly"></canvas>
           </div>
         </div>
         <div class="card">
           <h3>Concentración por materia</h3>
           <div class="chart-container">
+            <div class="chart-skeleton skeleton"></div>
             <canvas id="chartSubject"></canvas>
           </div>
         </div>
