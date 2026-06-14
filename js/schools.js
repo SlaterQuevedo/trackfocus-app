@@ -249,14 +249,44 @@ const Schools = (() => {
     const studentIds = students.map(u => u.id);
     const sessions = s.sessions.filter(se => studentIds.includes(se.email));
     const classrooms = listClassrooms(schoolId);
+    const tutorCount = classrooms.filter(c => !!c.tutorId).length;
     return {
       studentCount: students.length,
       classroomCount: classrooms.length,
       sessionCount: sessions.length,
+      tutorCount,
       avgConcentration: sessions.length
         ? (sessions.reduce((a, b) => a + b.concentration, 0) / sessions.length).toFixed(1)
         : '—'
     };
+  }
+
+  // --- Tutores de aula (un único docente responsable por aula) ---
+
+  function getTutorClassroom(teacherId) {
+    return Object.values(Storage.get().classrooms).find(c => c.tutorId === teacherId) || null;
+  }
+
+  function setClassroomTutor(classroomId, teacherId) {
+    const s = Storage.get();
+    const cr = s.classrooms[classroomId];
+    if (!cr) throw new Error('Aula no encontrada.');
+    const teacher = s.users[teacherId];
+    if (!teacher || teacher.role !== 'teacher') throw new Error('El usuario seleccionado no es docente.');
+    // Validate: teacher already tutor of another classroom
+    const existing = getTutorClassroom(teacherId);
+    if (existing && existing.id !== classroomId) {
+      throw new Error('Este docente ya es tutor del aula "' + existing.name + '". Quítalo primero de ese aula antes de asignarlo aquí.');
+    }
+    Storage.set(st => {
+      // Remove this teacher from any other classroom's tutorId (safety)
+      Object.values(st.classrooms).forEach(c => { if (c.tutorId === teacherId && c.id !== classroomId) delete c.tutorId; });
+      st.classrooms[classroomId].tutorId = teacherId;
+    });
+  }
+
+  function removeClassroomTutor(classroomId) {
+    Storage.set(s => { if (s.classrooms[classroomId]) delete s.classrooms[classroomId].tutorId; });
   }
 
   // --- Sistema de solicitudes ---
@@ -391,6 +421,7 @@ const Schools = (() => {
     setClassroomOrder, moveClassroomUp, moveClassroomDown, autoSortClassrooms,
     addStudentToClassroom, removeStudentFromClassroom, moveStudent, assignStudentDirectly,
     listStudentsInClassroom, listStudentsInSchool, getSchoolStats,
+    getTutorClassroom, setClassroomTutor, removeClassroomTutor,
     createJoinRequest, createChangeRequest, listRequestsForSchool,
     getPendingCount, approveRequest, rejectRequest, getStudentRequests
   };

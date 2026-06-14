@@ -290,8 +290,10 @@ const UIAdmin = (() => {
         return `<div class="um-quick-stats">Sesiones realizadas: ${ses.length} · Minutos estudiados: ${mins}</div>`;
       }
       if (u.role === 'teacher' && !directorIds.has(u.id)) {
+        const tutorCr = Schools.getTutorClassroom(u.id);
+        if (tutorCr) return `<div class="um-quick-stats" style="color:var(--primary);font-weight:700;">Tutor de ${esc(tutorCr.name)}</div>`;
         const cls = Object.values(s.classrooms || {}).filter(function(c) { return (c.teacherIds||[]).includes(u.id); });
-        return cls.length ? `<div class="um-quick-stats">Aulas gestionadas: ${cls.length}</div>` : '';
+        return cls.length ? `<div class="um-quick-stats">Aulas gestionadas: ${cls.length}</div>` : '<div class="um-quick-stats">Sin aula asignada</div>';
       }
       if (directorIds.has(u.id)) {
         const scs = schools.filter(function(sc) { return (sc.adminIds||[]).includes(u.id); });
@@ -1302,6 +1304,24 @@ const UIAdmin = (() => {
   .cp-move-btn[disabled] { opacity:.3; cursor:default; }
   .cp-copy-btn { background:rgba(255,255,255,.05); border:1px solid var(--border); color:var(--muted); border-radius:6px; padding:5px 8px; font-size:13px; cursor:pointer; transition:all .15s; min-height:32px; line-height:1; }
   .cp-copy-btn:hover { border-color:rgba(34,197,94,.4); color:#22c55e; }
+  /* Tutor UI */
+  .cp-tutor-cell { min-width:140px; }
+  .cp-tutor-name { font-size:13px; font-weight:600; color:var(--text); display:block; }
+  .cp-tutor-email { font-size:10px; color:var(--muted); display:block; margin-top:1px; }
+  .cp-tutor-badge { display:inline-block; background:rgba(200,155,109,.15); color:var(--primary); border:1px solid rgba(200,155,109,.3); border-radius:6px; padding:2px 8px; font-size:10px; font-weight:700; margin-bottom:4px; }
+  .cp-no-tutor { font-size:11px; color:var(--muted); font-style:italic; }
+  .cp-tutor-form { background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-top:6px; display:flex; flex-direction:column; gap:7px; }
+  .cp-tutor-form label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--primary); }
+  .cp-tutor-select { background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:7px; color:var(--text); padding:7px 10px; font-size:13px; width:100%; }
+  .cp-tutor-search { background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:7px; color:var(--text); padding:7px 10px; font-size:12px; width:100%; box-sizing:border-box; }
+  .cp-tutor-search:focus,.cp-tutor-select:focus { outline:none; border-color:rgba(200,155,109,.5); }
+  .cp-tutor-save  { background:rgba(200,155,109,.15); border:1px solid rgba(200,155,109,.3); color:var(--primary); border-radius:6px; padding:6px 12px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; transition:all .15s; }
+  .cp-tutor-save:hover { background:rgba(200,155,109,.25); }
+  .cp-tutor-remove { background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.2); color:#ef4444; border-radius:6px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer; white-space:nowrap; transition:all .15s; }
+  .cp-tutor-remove:hover { background:rgba(239,68,68,.18); }
+  .cp-tutor-toggle { background:rgba(255,255,255,.05); border:1px solid var(--border); color:var(--muted); border-radius:6px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer; white-space:nowrap; transition:all .15s; }
+  .cp-tutor-toggle:hover { border-color:rgba(200,155,109,.4); color:var(--primary); }
+  .cp-tutor-form-wrap { display:none; }
 </style>`;
 
   // ══════════════════════════════════════════════
@@ -1328,13 +1348,15 @@ const UIAdmin = (() => {
       return sts.studentCount > 0 && sts.sessionCount === 0;
     });
     const weeklyGlobal = _weeklyData(sessions, 6);
+    const classroomsWithTutor = classrooms.filter(function(c) { return !!c.tutorId; }).length;
+    const tutorCoverage = classrooms.length ? Math.round(classroomsWithTutor / classrooms.length * 100) : 0;
 
     const kpiStrip = `
     <div class="cp-kpi-strip">
       <div class="cp-kpi"><div class="cp-kpi-val" style="color:var(--primary);">${schools.length}</div><div class="cp-kpi-lbl">Colegios activos</div>${_spark(weeklyGlobal.map(function() { return schools.length; }), 'var(--primary)')}</div>
       <div class="cp-kpi"><div class="cp-kpi-val" style="color:var(--accent-2);">${classrooms.length}</div><div class="cp-kpi-lbl">Aulas registradas</div>${_spark(weeklyGlobal.map(function() { return classrooms.length; }), 'var(--accent)')}</div>
       <div class="cp-kpi"><div class="cp-kpi-val">${students.length}</div><div class="cp-kpi-lbl">Estudiantes</div>${_spark(weeklyGlobal, '#22c55e')}</div>
-      <div class="cp-kpi"><div class="cp-kpi-val">${directors.length}</div><div class="cp-kpi-lbl">Directores</div>${_spark(weeklyGlobal.map(function() { return directors.length; }), 'var(--primary)')}</div>
+      <div class="cp-kpi"><div class="cp-kpi-val" style="color:${tutorCoverage===100?'#22c55e':tutorCoverage>50?'var(--primary)':'#f59e0b'};">${classroomsWithTutor}/${classrooms.length}</div><div class="cp-kpi-lbl">Aulas con tutor</div><div style="font-size:10px;color:var(--muted);margin-top:2px;">${tutorCoverage}% cobertura</div></div>
       <div class="cp-kpi"><div class="cp-kpi-val" style="color:${sessions.length?(parseFloat(avgConc)>=4?'#22c55e':parseFloat(avgConc)>=3?'var(--primary)':'#ef4444'):'var(--muted)'};">${sessions.length ? avgConc+'/5' : '—'}</div><div class="cp-kpi-lbl">Concentración prom.</div>${_spark(weeklyGlobal, 'var(--accent)')}</div>
       <div class="cp-kpi"><div class="cp-kpi-val" style="color:${inactiveSchools.length>0?'#f59e0b':'var(--muted)'};">${inactiveSchools.length}</div><div class="cp-kpi-lbl">Colegios inactivos</div>${_spark(weeklyGlobal.map(function() { return inactiveSchools.length; }), '#f59e0b')}</div>
     </div>`;
@@ -1387,6 +1409,8 @@ const UIAdmin = (() => {
     const schoolStudents = Schools.listStudentsInSchool(editId);
     const stats = Schools.getSchoolStats(editId);
     const dirs = (editSchool.adminIds||[]).map(function(id) { return s.users[id]; }).filter(Boolean);
+    // Teachers in this school (for tutor selector)
+    const schoolTeachers = Object.values(s.users).filter(function(u) { return u.role === 'teacher' && u.schoolId === editId; });
 
     const sortBar = `
       <div class="cp-sort-bar">
@@ -1398,9 +1422,45 @@ const UIAdmin = (() => {
 
     const classroomTable = classrooms.length === 0
       ? `${sortBar}<div style="padding:32px;text-align:center;color:var(--muted);font-size:13px;">Sin aulas. Usa el formulario de abajo para crear la primera.</div>`
-      : `${sortBar}<div style="overflow-x:auto;"><table class="cp-cr-table"><thead><tr><th style="width:28px;"></th><th>Aula</th><th>Código de acceso</th><th style="text-align:center;">Alumnos</th><th style="text-align:center;">Docentes</th><th></th></tr></thead><tbody>
+      : `${sortBar}<div style="overflow-x:auto;"><table class="cp-cr-table"><thead><tr><th style="width:28px;"></th><th>Aula</th><th>Código de acceso</th><th style="text-align:center;">Alumnos</th><th>Tutor del aula</th><th></th></tr></thead><tbody>
         ${classrooms.map(function(cr, idx) {
-          return `<tr class="cp-cr-tr" draggable="true" data-cr-id="${esc(cr.id)}"><td style="width:28px;"><span class="cp-drag-handle" title="Arrastrar para reordenar">⠿</span></td><td><span class="cp-cr-name">${esc(cr.name)}</span></td><td><div style="display:flex;gap:4px;align-items:center;"><input class="cp-cr-code-input cr-code-input" data-cr-id="${esc(cr.id)}" value="${esc(cr.inviteCode)}" maxlength="8" /><button class="cp-copy-btn" data-copy-code="${esc(cr.inviteCode)}" title="Copiar código">⧉</button></div></td><td style="text-align:center;"><span class="cp-badge-num">${(cr.studentIds||[]).length}</span></td><td style="text-align:center;"><span class="cp-badge-num">${(cr.teacherIds||[]).length}</span></td><td><div class="cp-cr-actions"><button class="cp-move-btn" data-move-up="${esc(cr.id)}" ${idx===0?'disabled':''} title="Subir">↑</button><button class="cp-move-btn" data-move-down="${esc(cr.id)}" ${idx===classrooms.length-1?'disabled':''} title="Bajar">↓</button><button class="cp-cr-save" data-save-cr-code="${esc(cr.id)}">✓ Guardar</button><button class="cp-cr-auto" data-regen-cr="${esc(cr.id)}">↻ Auto</button><button class="cp-cr-del" data-del-cr="${esc(cr.id)}" data-del-cr-name="${esc(cr.name)}">Eliminar</button></div></td></tr>`;
+          var tutor = cr.tutorId ? s.users[cr.tutorId] : null;
+          var tutorCell = tutor
+            ? `<div class="cp-tutor-cell"><span class="cp-tutor-badge">Tutor</span><span class="cp-tutor-name">${esc(tutor.name)}</span><span class="cp-tutor-email">${esc(tutor.email)}</span></div>`
+            : `<span class="cp-no-tutor">Sin tutor asignado</span>`;
+          var tutorFormHtml = `<div class="cp-tutor-form-wrap" id="tutorForm-${esc(cr.id)}">
+            <div class="cp-tutor-form">
+              <label>${tutor ? 'Cambiar tutor' : 'Asignar tutor'}</label>
+              <input type="text" class="cp-tutor-search" id="tutorSearch-${esc(cr.id)}" placeholder="Buscar docente..." />
+              <select class="cp-tutor-select" id="tutorSel-${esc(cr.id)}">
+                <option value="">Seleccionar docente...</option>
+                ${schoolTeachers.map(function(t){
+                  var alreadyTutor = Schools.getTutorClassroom(t.id);
+                  var label = esc(t.name) + (alreadyTutor && alreadyTutor.id !== cr.id ? ' (ya tutor de '+esc(alreadyTutor.name)+')' : '');
+                  return '<option value="'+esc(t.id)+'"'+(t.id===cr.tutorId?' selected':'')+(alreadyTutor&&alreadyTutor.id!==cr.id?' class="cp-warn"':'')+'>'+label+'</option>';
+                }).join('')}
+              </select>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <button class="cp-tutor-save" data-save-tutor="${esc(cr.id)}">Guardar tutor</button>
+                ${tutor ? `<button class="cp-tutor-remove" data-remove-tutor="${esc(cr.id)}" data-tutor-name="${esc(tutor.name)}">Quitar tutor</button>` : ''}
+                <button class="cp-tutor-toggle" data-toggle-tutor="${esc(cr.id)}">Cancelar</button>
+              </div>
+            </div>
+          </div>`;
+          return `<tr class="cp-cr-tr" draggable="true" data-cr-id="${esc(cr.id)}">
+            <td style="width:28px;"><span class="cp-drag-handle" title="Arrastrar para reordenar">⠿</span></td>
+            <td><span class="cp-cr-name">${esc(cr.name)}</span></td>
+            <td><div style="display:flex;gap:4px;align-items:center;"><input class="cp-cr-code-input cr-code-input" data-cr-id="${esc(cr.id)}" value="${esc(cr.inviteCode)}" maxlength="8" /><button class="cp-copy-btn" data-copy-code="${esc(cr.inviteCode)}" title="Copiar código">⧉</button></div></td>
+            <td style="text-align:center;"><span class="cp-badge-num">${(cr.studentIds||[]).length}</span></td>
+            <td>${tutorCell}${tutorFormHtml}<button class="cp-tutor-toggle" data-toggle-tutor="${esc(cr.id)}" style="margin-top:6px;">${tutor ? 'Cambiar tutor' : 'Asignar tutor'}</button></td>
+            <td><div class="cp-cr-actions">
+              <button class="cp-move-btn" data-move-up="${esc(cr.id)}" ${idx===0?'disabled':''} title="Subir">↑</button>
+              <button class="cp-move-btn" data-move-down="${esc(cr.id)}" ${idx===classrooms.length-1?'disabled':''} title="Bajar">↓</button>
+              <button class="cp-cr-save" data-save-cr-code="${esc(cr.id)}">✓ Guardar</button>
+              <button class="cp-cr-auto" data-regen-cr="${esc(cr.id)}">↻ Auto</button>
+              <button class="cp-cr-del" data-del-cr="${esc(cr.id)}" data-del-cr-name="${esc(cr.name)}">Eliminar</button>
+            </div></td>
+          </tr>`;
         }).join('')}
         </tbody></table></div>`;
 
@@ -1577,6 +1637,64 @@ const UIAdmin = (() => {
         }).catch(function(){UI.flash(code,'success');});
       });
     });
+
+    // ── Tutor: toggle formulario ──
+    root().querySelectorAll('[data-toggle-tutor]').forEach(function(btn){
+      btn.addEventListener('click',function(e){
+        e.stopPropagation();
+        var crId = btn.dataset.toggleTutor;
+        var form = document.getElementById('tutorForm-'+crId);
+        if (!form) return;
+        var open = form.style.display !== 'none' && form.style.display !== '';
+        root().querySelectorAll('.cp-tutor-form-wrap').forEach(function(f){f.style.display='none';});
+        form.style.display = open ? 'none' : '';
+      });
+    });
+
+    // ── Tutor: búsqueda en select ──
+    root().querySelectorAll('.cp-tutor-search').forEach(function(inp){
+      var crId = inp.id.replace('tutorSearch-','');
+      var sel  = document.getElementById('tutorSel-'+crId);
+      if (!sel) return;
+      var allOpts = Array.from(sel.options);
+      inp.addEventListener('input',function(){
+        var q = inp.value.toLowerCase();
+        allOpts.forEach(function(opt){
+          opt.style.display = !q || opt.text.toLowerCase().includes(q) ? '' : 'none';
+        });
+      });
+    });
+
+    // ── Tutor: guardar ──
+    root().querySelectorAll('[data-save-tutor]').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var crId = btn.dataset.saveTutor;
+        var sel  = document.getElementById('tutorSel-'+crId);
+        var tid  = sel && sel.value;
+        if (!tid){ UI.flash('Selecciona un docente.','error'); return; }
+        try {
+          Schools.setClassroomTutor(crId, tid);
+          try{Storage.flush&&Storage.flush();}catch(_){}
+          var cr = Storage.get().classrooms[crId];
+          var tu = Storage.get().users[tid];
+          UI.flash((tu?tu.name:'Docente')+' asignado como tutor de '+(cr?cr.name:'aula')+'.',  'success');
+          App.go('manage-schools');
+        } catch(err){ UI.flash(err.message,'error'); }
+      });
+    });
+
+    // ── Tutor: quitar ──
+    root().querySelectorAll('[data-remove-tutor]').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var crId = btn.dataset.removeTutor;
+        var name = btn.dataset.tutorName;
+        if (!confirm('¿Quitar a "'+name+'" como tutor de esta aula?\n\nSu cuenta e historial se conservan.')) return;
+        Schools.removeClassroomTutor(crId);
+        try{Storage.flush&&Storage.flush();}catch(_){}
+        UI.flash('"'+name+'" ya no es tutor de esta aula.','success');
+        App.go('manage-schools');
+      });
+    });
   }
 
   // ══════════════════════════════════════════════
@@ -1653,6 +1771,7 @@ const UIAdmin = (() => {
     <div class="ops-kpi"><div class="ops-kpi-v" style="color:var(--accent-2);">${classrooms.length}</div><div class="ops-kpi-l">Aulas activas</div>${hb(classrooms.length?Math.min(100,classrooms.length/Math.max(1,schools.length*5)*100):0,'var(--accent)')}</div>
     <div class="ops-kpi"><div class="ops-kpi-v">${students.length}</div><div class="ops-kpi-l">Estudiantes</div>${spk(weeklyData.map(function(){return students.length;}),'var(--primary)')}</div>
     <div class="ops-kpi"><div class="ops-kpi-v">${teachers.length}</div><div class="ops-kpi-l">Docentes</div>${hb(teachers.length/Math.max(1,students.length)*100*5,'var(--primary)')}</div>
+    <div class="ops-kpi"><div class="ops-kpi-v" style="color:var(--primary);">${classrooms.filter(function(c){return !!c.tutorId;}).length}/${classrooms.length}</div><div class="ops-kpi-l">Aulas con tutor</div>${hb(classrooms.length?classrooms.filter(function(c){return !!c.tutorId;}).length/classrooms.length*100:0,'var(--primary)')}</div>
     <div class="ops-kpi"><div class="ops-kpi-v">${sessions.length.toLocaleString()}</div><div class="ops-kpi-l">Sesiones totales</div>${spk(weeklyData,'var(--accent)')}</div>
     <div class="ops-kpi"><div class="ops-kpi-v">${sessWeek.length}</div><div class="ops-kpi-l">Esta semana</div><div style="font-size:10px;margin-top:2px;">${trendBadge(weekDelta)}</div>${spk(weeklyData.slice(-4),'var(--good)')}</div>
     <div class="ops-kpi"><div class="ops-kpi-v">${sessions.length?avgConc.toFixed(1)+'/5':'—'}</div><div class="ops-kpi-l">Concentración prom.</div>${hb(sessions.length?avgConc/5*100:0,avgConc>=4?'#22c55e':avgConc>=3?'var(--primary)':'#ef4444')}</div>
