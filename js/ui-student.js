@@ -1130,6 +1130,10 @@ const UIStudent = (() => {
         </div>
       </div>
 
+      <div style="margin:4px 0 18px;">
+        <button class="primary" id="btnProgressReport">📄 Mi reporte de progreso (PDF)</button>
+      </div>
+
       <div class="badges-grid">
         ${Gamification.BADGES.map(b => `
           <div class="badge-card ${earned.has(b.id) ? '' : 'locked'}">
@@ -1139,6 +1143,64 @@ const UIStudent = (() => {
             ${earned.has(b.id) ? '<div class="badge-date">✓ Obtenida</div>' : '<div class="badge-date" style="color:var(--muted);">Bloqueada</div>'}
           </div>`).join('')}
       </div>`;
+  }
+
+  // Reporte personal de progreso (PDF) — evidencia antes/después por estudiante.
+  // Reusa Stats.summary + Stats.learningIndexSeries + Exporter.printHTML.
+  function _studentProgressReport(user, sessions) {
+    const sum = Stats.summary(sessions);
+    const idxSeries = (typeof Stats !== 'undefined' && Stats.learningIndexSeries)
+      ? Stats.learningIndexSeries(sessions) : [];
+    const avgIdx = idxSeries.length
+      ? Math.round(idxSeries.reduce((a, p) => a + p.value, 0) / idxSeries.length) : null;
+
+    const now = new Date();
+    const weeks = [];
+    for (let i = 5; i >= 0; i--) {
+      const end = new Date(now); end.setDate(now.getDate() - i * 7);
+      const start = new Date(end); start.setDate(end.getDate() - 7);
+      const wk = sessions.filter(se => { const d = new Date(se.datetime); return d > start && d <= end; });
+      const conc = wk.length ? (wk.reduce((a, se) => a + (se.concentration || 0), 0) / wk.length) : 0;
+      const min = wk.reduce((a, se) => a + (se.durationMin || 0), 0);
+      weeks.push({ label: i === 0 ? 'Esta sem.' : `-${i} sem`, count: wk.length, min, conc: Math.round(conc * 10) / 10 });
+    }
+
+    const sorted = [...sessions].sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
+    const avg = arr => arr.length ? (arr.reduce((a, se) => a + (se.concentration || 0), 0) / arr.length) : 0;
+    const beforeC = avg(sorted.slice(0, 3));
+    const afterC = avg(sorted.slice(-3));
+    const delta = afterC - beforeC;
+
+    const weeklyRows = weeks.map(w =>
+      `<tr><td>${esc(w.label)}</td><td>${w.count}</td><td>${w.min} min</td><td>${w.conc || '—'}/5</td></tr>`).join('');
+
+    const body = `
+      <h1>Mi reporte de progreso — TrackFocus</h1>
+      <p class="sub">${esc(user.name)} · generado el ${new Date().toLocaleDateString('es-PE')}</p>
+      <h2>Resumen</h2>
+      <div class="kpis">
+        <div class="kpi"><div class="v">${sum.total}</div><div class="l">Sesiones</div></div>
+        <div class="kpi"><div class="v">${Math.round(sum.totalMin / 60)} h</div><div class="l">Tiempo estudiado</div></div>
+        <div class="kpi"><div class="v">${sum.avgConc}/5</div><div class="l">Concentración prom.</div></div>
+        <div class="kpi"><div class="v">${sum.avgDur} min</div><div class="l">Duración prom.</div></div>
+        ${avgIdx != null ? `<div class="kpi"><div class="v">${avgIdx}/100</div><div class="l">Índice de Aprendizaje</div></div>` : ''}
+      </div>
+      <h2>Antes y después</h2>
+      <p>Tus primeras sesiones promediaron <strong>${beforeC.toFixed(1)}/5</strong> de concentración; tus últimas, <strong>${afterC.toFixed(1)}/5</strong>${
+        sorted.length >= 4 ? ` (${delta >= 0 ? '+' : ''}${delta.toFixed(1)}).` : '.'}</p>
+      <h2>Evolución semanal</h2>
+      <table><thead><tr><th>Semana</th><th>Sesiones</th><th>Tiempo</th><th>Concentración</th></tr></thead><tbody>${weeklyRows}</tbody></table>`;
+    Exporter.printHTML('Mi reporte de progreso — TrackFocus', body);
+  }
+
+  function wireAchievements() {
+    const s = Storage.get();
+    const user = s.users[s.currentUserId];
+    const sessions = Sessions.listFor(user.id);
+    root().querySelector('#btnProgressReport')?.addEventListener('click', () => {
+      if (!sessions.length) { UI.flash('Registra al menos una sesión para generar tu reporte.', 'info'); return; }
+      _studentProgressReport(user, sessions);
+    });
   }
 
   // ---- Pantalla: Leaderboard ----
@@ -2660,7 +2722,7 @@ const UIStudent = (() => {
       history:      { render: () => screenHistory(App._historyFilters || {}), wire: wireHistory },
       stats:        { render: screenStats,        wire: wireStats },
       recommend:    { render: screenRecommend,    wire: () => {} },
-      achievements: { render: screenAchievements, wire: () => {} },
+      achievements: { render: screenAchievements, wire: wireAchievements },
       leaderboard:  { render: screenLeaderboard,  wire: wireLeaderboard },
       pomodoro:     { render: screenPomodoro,     wire: wirePomodoro },
       profile:      { render: screenProfile,      wire: wireProfile },
