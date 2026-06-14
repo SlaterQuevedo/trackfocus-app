@@ -9,25 +9,29 @@ const Cloud = (() => {
 
   const toDb = {
     user: u => ({
-      id:                 u.id,
-      email:              u.email,
-      name:               u.name,
-      avatar_url:         u.avatarUrl || null,
-      role:               u.role,
-      school_id:          u.schoolId || null,
-      classroom_id:       u.classroomId || null,
-      institution_type:   u.institutionType || null,
-      approval_status:    u.approvalStatus || null,
-      xp:                 u.gamification?.xp ?? 0,
-      level:              u.gamification?.level ?? 1,
-      streak:             u.gamification?.streak ?? 0,
-      last_study_date:    u.gamification?.lastStudyDate || null,
-      badges:             u.gamification?.badges || [],
-      challenge_progress: u.gamification?.challengeProgress || {},
-      classroom_ids:      u.classroomIds || [],
-      parental_consent:   !!u.parentalConsent,
-      consent_at:         u.consentAt || null,
-      updated_at:         new Date().toISOString()
+      id:                   u.id,
+      email:                u.email,
+      name:                 u.name,
+      avatar_url:           u.avatarUrl || null,
+      role:                 u.role,
+      school_id:            u.schoolId || null,
+      classroom_id:         u.classroomId || null,
+      institution_type:     u.institutionType || null,
+      approval_status:      u.approvalStatus || null,
+      xp:                   u.gamification?.xp ?? 0,
+      level:                u.gamification?.level ?? 1,
+      streak:               u.gamification?.streak ?? 0,
+      last_study_date:      u.gamification?.lastStudyDate || null,
+      badges:               u.gamification?.badges || [],
+      challenge_progress:   u.gamification?.challengeProgress || {},
+      classroom_ids:        u.classroomIds || [],
+      parental_consent:     !!u.parentalConsent,
+      consent_at:           u.consentAt || null,
+      display_first_name:   u.displayFirstName || null,
+      display_last_name:    u.displayLastName  || null,
+      profile_source:       u.profileSource    || null,
+      google_linked:        !!u.googleLinked,
+      updated_at:           new Date().toISOString()
     }),
     school: s => ({
       id: s.id, name: s.name, code: s.code,
@@ -82,29 +86,39 @@ const Cloud = (() => {
   };
 
   const fromDb = {
-    user: r => ({
-      id: r.id,
-      email: r.email,
-      name: r.name,
-      avatarUrl: r.avatar_url,
-      role: r.role,
-      schoolId: r.school_id,
-      classroomId: r.classroom_id,
-      institutionType: r.institution_type,
-      approvalStatus: r.approval_status,
-      classroomIds: r.classroom_ids || [],
-      parentalConsent: !!r.parental_consent,
-      consentAt: r.consent_at || null,
-      createdAt: r.created_at,
-      gamification: {
-        xp: r.xp || 0,
-        level: r.level || 1,
-        streak: r.streak || 0,
-        lastStudyDate: r.last_study_date,
-        badges: r.badges || [],
-        challengeProgress: r.challenge_progress || {}
-      }
-    }),
+    user: r => {
+      // Si el usuario registró su nombre manualmente, ese tiene prioridad sobre Google.
+      const displayName = r.display_first_name
+        ? `${r.display_first_name} ${r.display_last_name || ''}`.trim()
+        : r.name;
+      return {
+        id: r.id,
+        email: r.email,
+        name: displayName,
+        avatarUrl: r.avatar_url,
+        role: r.role,
+        schoolId: r.school_id,
+        classroomId: r.classroom_id,
+        institutionType: r.institution_type,
+        approvalStatus: r.approval_status,
+        classroomIds: r.classroom_ids || [],
+        parentalConsent: !!r.parental_consent,
+        consentAt: r.consent_at || null,
+        createdAt: r.created_at,
+        displayFirstName: r.display_first_name || null,
+        displayLastName:  r.display_last_name  || null,
+        profileSource:    r.profile_source     || 'google',
+        googleLinked:     !!r.google_linked,
+        gamification: {
+          xp: r.xp || 0,
+          level: r.level || 1,
+          streak: r.streak || 0,
+          lastStudyDate: r.last_study_date,
+          badges: r.badges || [],
+          challengeProgress: r.challenge_progress || {}
+        }
+      };
+    },
     school: r => ({
       id: r.id, name: r.name, code: r.code,
       adminIds: r.admin_ids || [],

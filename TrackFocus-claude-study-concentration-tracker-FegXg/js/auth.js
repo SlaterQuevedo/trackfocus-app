@@ -44,18 +44,39 @@ const Auth = (() => {
     const { data: { session } } = await window.SB.auth.getSession();
     if (!session) return null;
 
-    const user = await fetchProfile(session.user.email.toLowerCase());
+    const userEmail = session.user.email.toLowerCase();
+    const user = await fetchProfile(userEmail);
     if (!user) return { session };
+
+    // Protección de nombre manual: si el usuario registró su nombre manualmente,
+    // restaurar ese nombre en la DB por si el trigger de Google lo sobreescribió.
+    if (user.profileSource === 'manual' && user.displayFirstName) {
+      const correctedName = `${user.displayFirstName} ${user.displayLastName || ''}`.trim();
+      if (user.name !== correctedName) {
+        window.SB.from('users').update({
+          name: correctedName,
+          updated_at: new Date().toISOString()
+        }).eq('id', userEmail).then(() => {});
+      }
+    }
+
+    // Marcar google_linked si accedió con Google y aún no está marcado
+    const provider = session.user.app_metadata?.provider;
+    if (provider === 'google' && !user.googleLinked) {
+      window.SB.from('users').update({
+        google_linked: true,
+        updated_at: new Date().toISOString()
+      }).eq('id', userEmail).then(() => {});
+    }
 
     // Consultar user_roles para este usuario
     const rolesRes = await window.SB
       .from('user_roles')
       .select('*')
-      .eq('email', session.user.email.toLowerCase());
+      .eq('email', userEmail);
 
     const availableRoles = rolesRes.data || [];
     const hasMultipleRoles = availableRoles.length > 1;
-    const userEmail = (user.email || session.user.email).toLowerCase();
     const isSuperAdmin = SUPER_ADMIN_EMAILS.includes(userEmail);
 
     return {
@@ -202,6 +223,129 @@ const Auth = (() => {
     return Storage.uuid().toUpperCase().replace(/-/g, '').slice(0, 6);
   }
 
+  // ----- Email / Contraseña -----
+
+  // Intenta login; si las credenciales no existen crea la cuenta.
+  // Devuelve { session, user } de Supabase o lanza un Error legible.
+  // CASO ESPECIAL: si el email ya existe con Google, lanza un error con type='name_conflict'
+  // que app.js captura para mostrar el modal de elección de nombre.
+  async function signInOrRegisterWithEmail(email, password, fullName, birthdate, roleIntent) {
+    if (!window.SB) throw new Error('Supabase no está configurado. Revisa supabase-config.js');
+
+    const cleanEmail = email.toLowerCase().trim();
+    if (roleIntent) sessionStorage.setItem(ROLE_INTENT_KEY, roleIntent);
+
+    // 1. Intentar login con contraseña
+    const { data: loginData, error: loginErr } = await window.SB.auth.signInWithPassword({
+      email: cleanEmail, password
+    });
+    if (!loginErr) return loginData;
+
+    const isInvalidCreds =
+      loginErr.code === 'invalid_credentials' ||
+      (loginErr.message || '').includes('Invalid login credentials');
+
+    if (!isInvalidCreds) throw loginErr;
+
+    // 2. Intentar registro (usuario nuevo)
+    const { data: regData, error: regErr } = await window.SB.auth.signUp({
+      email: cleanEmail,
+      password,
+      options: { data: { full_name: fullName || cleanEmail.split('@')[0], birth_date: birthdate } }
+    });
+
+    if (regErr) throw new Error(regErr.message || 'No se pudo crear la cuenta.');
+
+    // Supabase devuelve identities:[] cuando el email ya existe con otro método (ej. Google).
+    // En vez de error genérico, lanzar un error tipado para que app.js muestre el modal.
+    if (regData?.user?.identities?.length === 0) {
+      const existingProfile = await fetchProfile(cleanEmail);
+      const err = new Error('name_conflict');
+      err.type = 'name_conflict';
+      err.existingName = existingProfile?.name || '';
+      err.existingProfileSource = existingProfile?.profileSource || 'google';
+      throw err;
+    }
+
+    if (!regData?.session) {
+      throw new Error('Cuenta creada. Revisa tu correo electrónico para confirmarla antes de ingresar.');
+    }
+
+    // Garantizar que el perfil exista con datos de identidad manual (el trigger puede tardar)
+    const nombre = (fullName || '').trim() || cleanEmail.split('@')[0];
+    // Parsear nombres para las columnas display_*
+    const nameParts = nombre.split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName  = nameParts.slice(1).join(' ') || '';
+
+    await Promise.allSettled([
+      window.SB.from('users').upsert(
+        { id: cleanEmail, email: cleanEmail, name: nombre, role: 'student',
+          institution_type: null, parental_consent: false,
+          display_first_name: firstName || null,
+          display_last_name:  lastName  || null,
+          profile_source: 'manual',
+          google_linked: false,
+          updated_at: new Date().toISOString() },
+        { onConflict: 'id' }
+      ),
+      window.SB.from('user_roles').insert(
+        { user_id: cleanEmail, email: cleanEmail, role: 'student' }
+      ).then(r => r) // ignorar si ya existe
+    ]);
+
+    return regData;
+  }
+
+  // Actualiza el nombre de display del usuario (elección manual de nombre).
+  // Llamado después de que el usuario elige un nombre diferente al de Google.
+  async function updateDisplayName(email, firstName, lastName) {
+    if (!window.SB) return;
+    const cleanEmail = email.toLowerCase().trim();
+    const displayName = `${firstName} ${lastName}`.trim();
+    await window.SB.from('users').update({
+      display_first_name: firstName || null,
+      display_last_name:  lastName  || null,
+      profile_source: 'manual',
+      name: displayName || null,
+      updated_at: new Date().toISOString()
+    }).eq('id', cleanEmail);
+  }
+
+  // ----- Director: promover con código de colegio -----
+
+  async function promoteToDirector(email, schoolCode) {
+    const s = Storage.get();
+    const code = schoolCode.trim().toUpperCase();
+    const school = Object.values(s.schools).find(sc => sc.code === code);
+    if (!school) throw new Error('Código de colegio inválido. Verifica con el administrador.');
+
+    Storage.set(st => {
+      const u = st.users[email];
+      if (!u) return;
+      u.role = 'teacher';
+      u.schoolId = school.id;
+      u.institutionType = 'colegio';
+      if (!Array.isArray(u.classroomIds)) u.classroomIds = [];
+      if (!st.schools[school.id].adminIds.includes(email)) {
+        st.schools[school.id].adminIds.push(email);
+      }
+    });
+
+    if (window.SB) {
+      try {
+        await window.SB.from('user_roles').upsert(
+          { user_id: email, email, role: 'teacher', school_id: school.id },
+          { onConflict: 'user_id,role,school_id' }
+        );
+      } catch (err) {
+        console.warn('[Auth] Failed to upsert director role:', err);
+      }
+    }
+
+    return Storage.get().users[email];
+  }
+
   // ----- API legacy (compatibilidad con código existente) -----
   // Estas firmas existían en la versión vieja.  Las mantenemos para no romper
   // ningún caller, pero ahora delegan al flujo Google + códigos.
@@ -218,11 +362,14 @@ const Auth = (() => {
 
   return {
     signInWithGoogle,
+    signInOrRegisterWithEmail,
+    updateDisplayName,
     getSession,
     fetchProfile,
     getRoleIntent,
     applyStudentCodes,
     promoteToTeacher,
+    promoteToDirector,
     promoteToSuperAdmin,
     logout,
     generateSchoolCode,
