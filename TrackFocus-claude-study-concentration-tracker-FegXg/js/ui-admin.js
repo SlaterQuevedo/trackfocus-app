@@ -184,6 +184,19 @@ const UIAdmin = (() => {
 .um-change-cr-btn  { background:rgba(59,130,246,.12); border:1px solid rgba(59,130,246,.3); color:#3b82f6; }
 .um-change-cr-section { background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px; margin-top:4px; }
 .um-change-cr-section label { font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); font-weight:600; }
+
+/* Role management section */
+.um-role-mgmt-btn { background:rgba(200,155,109,.12); border:1px solid rgba(200,155,109,.3); color:var(--primary); }
+.um-role-section { background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:10px; padding:14px; display:flex; flex-direction:column; gap:10px; margin-top:4px; }
+.um-role-section-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--primary); }
+.um-role-option { display:flex; align-items:flex-start; gap:10px; padding:9px 11px; border-radius:8px; border:1px solid var(--border); cursor:pointer; transition:all .15s; }
+.um-role-option:hover { background:rgba(139,92,246,.06); border-color:rgba(139,92,246,.3); }
+.um-role-option input[type=radio] { margin-top:2px; accent-color:var(--accent); flex-shrink:0; }
+.um-role-option-lbl { font-size:13px; font-weight:600; }
+.um-role-option-desc { font-size:11px; color:var(--muted); margin-top:1px; }
+.um-role-option.selected-opt { background:rgba(139,92,246,.1); border-color:rgba(139,92,246,.4); }
+.um-audit-strip { font-size:11px; color:var(--muted); background:rgba(255,255,255,.03); border-radius:7px; padding:8px 10px; line-height:1.6; }
+.um-audit-title { font-size:9px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); font-weight:700; margin-bottom:4px; }
 </style>`;
 
   // ══════════════════════════════════════════════
@@ -374,6 +387,9 @@ const UIAdmin = (() => {
       const totalMins = uSessions.reduce(function(a, b) { return a + (b.durationMin||0); }, 0);
       const avgConc = uSessions.length ? (uSessions.reduce(function(a, b) { return a + b.concentration; }, 0) / uSessions.length).toFixed(1) : '—';
 
+      // Audit log for this user
+      const auditLogs = ((s.roleChangeLogs)||[]).filter(function(l){ return l.userId === u.id; }).slice(-3).reverse();
+
       const feedDots = [
         { color:'#22c55e', text: `${uSessions.length} sesiones registradas` },
         { color:'var(--primary)', text: `${totalMins} minutos estudiados` },
@@ -424,9 +440,49 @@ const UIAdmin = (() => {
             </div>`;
           }).join('')}
           ${u.schoolId ? `<div class="um-detail-feed-item"><div class="um-detail-feed-dot" style="background:var(--muted);"></div><span>Colegio: ${esc(schoolName)}</span></div>` : ''}
+          ${auditLogs.length > 0 ? `<div style="margin-top:8px;"><div class="um-audit-title">Historial de cambios de rol</div>${auditLogs.map(function(l){
+            var rd = (function(lbl){return {'student':'Estudiante','teacher':'Docente','director':'Director','super_admin':'Super Admin'}[lbl]||lbl;})(l.fromRole);
+            var rn = (function(lbl){return {'student':'Estudiante','teacher':'Docente','director':'Director','super_admin':'Super Admin'}[lbl]||lbl;})(l.toRole);
+            return '<div class="um-audit-strip">'+rd+' → '+rn+' · por '+esc(l.adminName)+' · '+new Date(l.changedAt).toLocaleDateString('es-PE')+'</div>';
+          }).join('')}</div>` : ''}
         </div>
 
         <div class="um-detail-actions">
+          ${u.role !== 'super_admin'
+            ? (function(){
+              var curRoleKey = directorIds.has(u.id) ? 'director' : u.role;
+              var opts = [];
+              if (curRoleKey !== 'student')    opts.push({ key:'student',    label:'Estudiante',  desc:'Acceso a panel personal de estudio.' });
+              if (curRoleKey !== 'teacher')    opts.push({ key:'teacher',    label:'Docente',     desc:'Gestiona aulas y solicitudes de ingreso.' });
+              if (curRoleKey !== 'director')   opts.push({ key:'director',   label:'Director',    desc:'Supervisa el colegio completo.' });
+              if (!opts.length) return '';
+              return `<button class="um-act-btn um-role-mgmt-btn" id="umBtnRoleMgmt">
+                Gestionar rol
+                <span class="um-act-btn-desc">Rol actual: <strong>${curRoleKey==='director'?'Director':curRoleKey==='teacher'?'Docente':'Estudiante'}</strong> · Sin perder datos ni historial.</span>
+              </button>
+              <div class="um-role-section" id="umRoleSection" style="display:none;">
+                <div class="um-role-section-title">Cambiar rol de ${esc(u.name)}</div>
+                <div style="font-size:11px;color:var(--muted);">Rol actual: <strong>${curRoleKey==='director'?'Director':curRoleKey==='teacher'?'Docente':'Estudiante'}</strong> — Todo el historial se conserva.</div>
+                ${opts.map(function(opt){
+                  return '<label class="um-role-option"><input type="radio" name="umNewRole" value="'+opt.key+'" /><div><div class="um-role-option-lbl">'+opt.label+'</div><div class="um-role-option-desc">'+opt.desc+'</div></div></label>';
+                }).join('')}
+                ${opts.some(function(o){return o.key==='director';}) ? `<div id="umRoleDirectorSchool" style="display:none;">
+                  <label style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600;">Asignar al colegio</label>
+                  <select class="um-select" id="umDirectorSchoolSel" style="width:100%;margin-top:4px;">
+                    <option value="${esc(u.schoolId||'')}">Mismo colegio${u.schoolId&&s.schools[u.schoolId]?' ('+esc(s.schools[u.schoolId].name)+')':''}</option>
+                    ${schools.filter(function(sc){return sc.id!==u.schoolId;}).map(function(sc){return '<option value="'+esc(sc.id)+'">'+esc(sc.name)+'</option>';}).join('')}
+                  </select>
+                </div>` : ''}
+                <div>
+                  <input type="text" class="um-search" id="umRoleMotivo" placeholder="Motivo del cambio (opcional)" style="margin-bottom:0;min-width:0;width:100%;box-sizing:border-box;" />
+                </div>
+                <div style="display:flex;gap:6px;">
+                  <button class="um-btn-apply" id="umSaveRoleChange" data-uid="${esc(u.id)}" data-current-role="${esc(curRoleKey)}">Guardar cambio</button>
+                  <button class="um-btn-clear" id="umCancelRoleChange">Cancelar</button>
+                </div>
+              </div>`;
+            })()
+            : ''}
           ${u.role === 'student'
             ? (function(){
               var crs = Schools.listClassrooms(u.schoolId || '');
@@ -910,6 +966,117 @@ const UIAdmin = (() => {
       var sn = newSchool ? (Storage.get().schools[newSchool]||{}).name || '' : 'sin colegio';
       var cn = newClass  ? (Storage.get().classrooms[newClass]||{}).name || '' : 'sin aula';
       UI.flash('Asignación actualizada: ' + sn + (cn ? ' / ' + cn : '') + '.', 'success');
+      App.go('manage-users');
+    });
+
+    // ── Gestionar rol ──
+    var btnRoleMgmt  = document.getElementById('umBtnRoleMgmt');
+    var roleSection  = document.getElementById('umRoleSection');
+    btnRoleMgmt && btnRoleMgmt.addEventListener('click', function() {
+      if (roleSection) roleSection.style.display = roleSection.style.display === 'none' ? '' : 'none';
+    });
+    var cancelRoleChg = document.getElementById('umCancelRoleChange');
+    cancelRoleChg && cancelRoleChg.addEventListener('click', function() {
+      if (roleSection) roleSection.style.display = 'none';
+    });
+    // Show director school selector when "director" radio is chosen
+    root().querySelectorAll('input[name="umNewRole"]').forEach(function(radio) {
+      radio.addEventListener('change', function() {
+        var dirSchoolDiv = document.getElementById('umRoleDirectorSchool');
+        if (dirSchoolDiv) dirSchoolDiv.style.display = radio.value === 'director' ? '' : 'none';
+        // Highlight selected option
+        root().querySelectorAll('.um-role-option').forEach(function(opt) { opt.classList.remove('selected-opt'); });
+        radio.closest('.um-role-option') && radio.closest('.um-role-option').classList.add('selected-opt');
+      });
+    });
+
+    var saveRoleChg = document.getElementById('umSaveRoleChange');
+    saveRoleChg && saveRoleChg.addEventListener('click', function() {
+      var uid         = saveRoleChg.dataset.uid;
+      var currentRole = saveRoleChg.dataset.currentRole;
+      var selected    = root().querySelector('input[name="umNewRole"]:checked');
+      if (!selected) { UI.flash('Selecciona un rol de destino.', 'error'); return; }
+      var newRole  = selected.value;
+      var motivo   = (document.getElementById('umRoleMotivo') && document.getElementById('umRoleMotivo').value) || '';
+      var dirSchool = (document.getElementById('umDirectorSchoolSel') && document.getElementById('umDirectorSchoolSel').value) || '';
+
+      if (newRole === currentRole) { UI.flash('El rol seleccionado es el mismo actual.', 'error'); return; }
+
+      // Guard: cannot change super_admin
+      var st = Storage.get();
+      var u  = st.users[uid];
+      if (!u || u.role === 'super_admin') { UI.flash('No se puede cambiar el rol de un Super Admin.', 'error'); return; }
+
+      // Guard: cannot leave system without a super_admin
+      if (u.role === 'super_admin') { UI.flash('Acción no permitida.', 'error'); return; }
+
+      if (!confirm('¿Cambiar el rol de "' + u.name + '" de ' + currentRole + ' a ' + newRole + '?\n\nTodo el historial y datos se conservan.')) return;
+
+      Storage.set(function(s2) {
+        var user = s2.users[uid];
+        if (!user) return;
+        var oldRole = (function() {
+          var isDir = Object.values(s2.schools||{}).some(function(sc){return (sc.adminIds||[]).includes(uid);});
+          return isDir ? 'director' : user.role;
+        })();
+
+        // ── Limpieza del rol anterior ──
+        // Remove from director if was director
+        Object.values(s2.schools||{}).forEach(function(sc) {
+          sc.adminIds = (sc.adminIds||[]).filter(function(x){return x!==uid;});
+        });
+        // Remove from classroom lists if was student
+        if (user.role === 'student') {
+          if (user.classroomId && s2.classrooms[user.classroomId]) {
+            s2.classrooms[user.classroomId].studentIds = (s2.classrooms[user.classroomId].studentIds||[]).filter(function(x){return x!==uid;});
+          }
+          delete user.classroomId;
+          delete user.approvalStatus;
+          delete user.institutionType;
+        }
+        // Remove from teacher's classrooms if was teacher
+        if (user.role === 'teacher') {
+          (user.classroomIds||[]).forEach(function(cid) {
+            if (s2.classrooms[cid]) {
+              s2.classrooms[cid].teacherIds = (s2.classrooms[cid].teacherIds||[]).filter(function(x){return x!==uid;});
+            }
+          });
+          delete user.classroomIds;
+        }
+
+        // ── Aplicar nuevo rol ──
+        if (newRole === 'director') {
+          user.role = 'teacher';
+          var targetSchool = dirSchool || user.schoolId;
+          if (targetSchool && s2.schools[targetSchool]) {
+            if (!s2.schools[targetSchool].adminIds) s2.schools[targetSchool].adminIds = [];
+            if (!s2.schools[targetSchool].adminIds.includes(uid)) s2.schools[targetSchool].adminIds.push(uid);
+          }
+        } else {
+          user.role = newRole; // 'student' or 'teacher'
+        }
+
+        // ── Registro de auditoría ──
+        if (!s2.roleChangeLogs) s2.roleChangeLogs = [];
+        var adminUser = Object.values(s2.users).find(function(au){return au.role==='super_admin';});
+        s2.roleChangeLogs.push({
+          id: Date.now().toString() + '_' + uid,
+          userId:     uid,
+          userName:   user.name,
+          userEmail:  user.email,
+          fromRole:   oldRole,
+          toRole:     newRole,
+          schoolId:   user.schoolId || dirSchool || '',
+          adminId:    adminUser ? adminUser.id : 'super_admin',
+          adminName:  adminUser ? adminUser.name : 'Super Admin',
+          changedAt:  new Date().toISOString(),
+          motivo:     motivo
+        });
+      });
+
+      try { Storage.flush && Storage.flush(); } catch(_) {}
+      var labMap = { student:'Estudiante', teacher:'Docente', director:'Director' };
+      UI.flash('"' + (Storage.get().users[uid]||{}).name + '" ahora es ' + (labMap[newRole]||newRole) + '. Historial conservado.', 'success');
       App.go('manage-users');
     });
 
