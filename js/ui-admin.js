@@ -61,6 +61,7 @@ const UIAdmin = (() => {
         <div style="display:flex;gap:8px;">
           <button class="primary" data-go="manage-schools">+ Crear colegio</button>
           <button class="ghost" data-go="manage-users">Gestionar usuarios</button>
+          <button class="ghost" id="btnDiagLog">🩺 Registro de errores</button>
         </div>
       </div>
 
@@ -76,6 +77,10 @@ const UIAdmin = (() => {
         if (sid) App._editSchoolId = sid;
         App.go(btn.dataset.go);
       });
+    });
+    document.getElementById('btnDiagLog')?.addEventListener('click', () => {
+      try { window.Monitor?.exportLog?.(); UI.flash('Registro de errores exportado.', 'success'); }
+      catch (_) { UI.flash('No se pudo exportar el registro.', 'error'); }
     });
     root().querySelectorAll('[data-del-school]').forEach(btn => {
       btn.addEventListener('click', () => {

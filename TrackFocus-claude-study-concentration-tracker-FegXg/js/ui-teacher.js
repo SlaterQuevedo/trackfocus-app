@@ -139,6 +139,7 @@ const UITeacher = (() => {
             <button class="ghost" id="btnPilotCsv">⬇️ CSV piloto</button>
             <button class="ghost" id="btnBackup">💾 Backup</button>
             <button class="ghost" id="btnRestore">♻️ Restaurar</button>
+            <button class="ghost" id="btnDiagLog">🩺 Registro de errores</button>
             <input type="file" id="restoreFile" accept=".json,application/json" style="display:none">
           </div>
         </div>
@@ -198,6 +199,12 @@ const UITeacher = (() => {
     _loadPilotCard();
     document.getElementById('btnWeeklyReport')?.addEventListener('click', () => _weeklyReport(user));
     document.getElementById('btnPilotCsv')?.addEventListener('click', () => _exportPilotCsv());
+
+    // Observabilidad: exportar el registro de errores capturado por Monitor.
+    document.getElementById('btnDiagLog')?.addEventListener('click', () => {
+      try { window.Monitor?.exportLog?.(); UI.flash('Registro de errores exportado.', 'success'); }
+      catch (_) { UI.flash('No se pudo exportar el registro.', 'error'); }
+    });
 
     // Backups y recuperación (Fase J).
     document.getElementById('btnBackup')?.addEventListener('click', () => Exporter.backupJSON());

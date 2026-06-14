@@ -2126,6 +2126,7 @@ const UIStudent = (() => {
           <button class="ghost pp-account-btn" id="ppExportBtn">📥 Exportar mis datos</button>
           <input type="file" id="ppRestoreInput" accept=".json" style="display:none;" />
           <button class="ghost pp-account-btn" id="ppRestoreBtn">📤 Restaurar respaldo</button>
+          <button class="ghost pp-account-btn" id="ppDiagBtn">🩺 Exportar registro de errores</button>
           <button class="primary pp-account-btn" id="ppLogoutBtn">Cerrar sesión</button>
         </div>
         <div class="pp-version-info">TrackFocus · Todos los datos guardados localmente</div>
@@ -2680,6 +2681,10 @@ const UIStudent = (() => {
         UI.flash('Respaldo restaurado. Recargando...', 'success');
         setTimeout(() => location.reload(), 1200);
       } catch (_) { UI.flash('Error al restaurar el respaldo.', 'error'); }
+    });
+    r().querySelector('#ppDiagBtn')?.addEventListener('click', () => {
+      try { window.Monitor?.exportLog?.(); UI.flash('Registro de errores exportado.', 'success'); }
+      catch (_) { UI.flash('No se pudo exportar el registro.', 'error'); }
     });
   }
 
