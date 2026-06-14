@@ -2217,6 +2217,13 @@ const UIStudent = (() => {
             <input type="checkbox" class="pp-toggle" id="ppToggleSounds"${prefs.sounds!==false?' checked':''} />
           </div>
         </div>
+        <div class="pp-prefs-section">
+          <div class="pp-prefs-section-title">Diagnóstico</div>
+          <div class="pp-prefs-row">
+            <div><div class="pp-prefs-label">Registro de errores</div><div class="pp-prefs-sub">Para soporte técnico</div></div>
+            <button class="ghost" id="ppDiagBtn" style="font-size:12px;padding:6px 12px;">🩺 Exportar</button>
+          </div>
+        </div>
       </div>`;
 
     // ── Panel: Institución (vinculación mediante código) ──
@@ -2485,6 +2492,13 @@ const UIStudent = (() => {
               <button class="ghost" type="submit" style="flex-shrink:0;">Enviar solicitud</button>
             </form>
           </div>` : ''}
+        <div class="pp-prefs-section">
+          <div class="pp-prefs-section-title">Diagnóstico</div>
+          <div class="pp-prefs-row">
+            <div><div class="pp-prefs-label">Registro de errores</div><div class="pp-prefs-sub">Para soporte técnico</div></div>
+            <button class="ghost" id="ppDiagBtn" style="font-size:12px;padding:6px 12px;">🩺 Exportar</button>
+          </div>
+        </div>
       </div>`;
 
     // ── Panel: Institución (estado y gestión de vinculación) ──
