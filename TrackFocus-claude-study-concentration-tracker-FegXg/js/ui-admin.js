@@ -510,6 +510,36 @@ const UIAdmin = (() => {
               </div>`;
             })()
             : ''}
+          ${u.role === 'teacher' && !directorIds.has(u.id)
+            ? (function(){
+              var tutorCr = Schools.getTutorClassroom(u.id);
+              var schoolCrs = u.schoolId ? Schools.listClassrooms(u.schoolId) : [];
+              return `<button class="um-act-btn" id="umBtnTutorMgmt" style="border-color:rgba(200,155,109,.3);color:var(--primary);">
+                ${tutorCr ? 'Tutor de: ' + esc(tutorCr.name) : 'Asignar como tutor de aula'}
+                <span class="um-act-btn-desc" style="color:var(--muted);">${tutorCr ? 'Cambiar o quitar la asignación de tutoría.' : 'Asignar este docente como tutor responsable de un aula.'}</span>
+              </button>
+              <div id="umTutorSection" style="display:none;background:rgba(200,155,109,.06);border:1px solid rgba(200,155,109,.2);border-radius:10px;padding:12px;margin-top:4px;">
+                <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--primary);margin-bottom:8px;">${tutorCr ? 'Cambiar aula de tutoría' : 'Seleccionar aula'}</div>
+                ${schoolCrs.length === 0
+                  ? '<div style="font-size:12px;color:var(--muted);padding:4px 0;">No hay aulas disponibles en el colegio de este docente.</div>'
+                  : `<select class="um-select" id="umTutorClassSel" style="width:100%;margin-bottom:8px;">
+                      <option value="">— Seleccionar aula —</option>
+                      ${schoolCrs.map(function(cr){
+                        var isCurrent = tutorCr && tutorCr.id === cr.id;
+                        var existingTutor = cr.tutorId && cr.tutorId !== u.id && s.users[cr.tutorId];
+                        var label = esc(cr.name) + (isCurrent ? ' ✓ actual' : existingTutor ? ' (tutor: '+esc(existingTutor.name)+')' : '');
+                        return '<option value="'+esc(cr.id)+'"'+(isCurrent?' selected':'')+'>'+label+'</option>';
+                      }).join('')}
+                    </select>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                      <button class="um-btn-apply" id="umSaveTutor" data-uid="${esc(u.id)}">Guardar</button>
+                      ${tutorCr ? `<button class="um-btn-clear" id="umRemoveTutor" data-uid="${esc(u.id)}" data-cr-id="${esc(tutorCr.id)}" data-tutor-name="${esc(u.name)}" style="background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.2);color:#ef4444;">Quitar tutoría</button>` : ''}
+                      <button class="um-btn-clear" id="umCancelTutor">Cancelar</button>
+                    </div>`
+                }
+              </div>`;
+            })()
+            : ''}
           ${!u.suspended && !u.temporarilyDeleted
             ? `<button class="um-act-btn um-act-suspend" data-action-suspend="${esc(u.id)}" data-action-name="${esc(u.name)}">
                 Suspender temporalmente
@@ -1082,6 +1112,43 @@ const UIAdmin = (() => {
       App.go('manage-users');
     });
 
+    // ── Gestionar tutoría (docentes) ──
+    var btnTutorMgmt  = document.getElementById('umBtnTutorMgmt');
+    var tutorSection  = document.getElementById('umTutorSection');
+    btnTutorMgmt && btnTutorMgmt.addEventListener('click', function() {
+      if (!tutorSection) return;
+      tutorSection.style.display = tutorSection.style.display === 'block' ? 'none' : 'block';
+    });
+    var cancelTutor = document.getElementById('umCancelTutor');
+    cancelTutor && cancelTutor.addEventListener('click', function() {
+      if (tutorSection) tutorSection.style.display = 'none';
+    });
+    var saveTutor = document.getElementById('umSaveTutor');
+    saveTutor && saveTutor.addEventListener('click', function() {
+      var uid   = saveTutor.dataset.uid;
+      var sel   = document.getElementById('umTutorClassSel');
+      var crId  = sel && sel.value;
+      if (!crId) { UI.flash('Selecciona un aula.', 'error'); return; }
+      try {
+        Schools.setClassroomTutor(crId, uid);
+        try { Storage.flush && Storage.flush(); } catch(_) {}
+        var cr = Storage.get().classrooms[crId];
+        var tu = Storage.get().users[uid];
+        UI.flash((tu ? tu.name : 'Docente') + ' asignado como tutor de ' + (cr ? cr.name : 'aula') + '.', 'success');
+        App.go('manage-users');
+      } catch(err) { UI.flash(err.message, 'error'); }
+    });
+    var removeTutor = document.getElementById('umRemoveTutor');
+    removeTutor && removeTutor.addEventListener('click', function() {
+      var crId = removeTutor.dataset.crId;
+      var name = removeTutor.dataset.tutorName;
+      if (!confirm('¿Quitar a "' + name + '" como tutor de esta aula?\n\nSu cuenta e historial se conservan.')) return;
+      Schools.removeClassroomTutor(crId);
+      try { Storage.flush && Storage.flush(); } catch(_) {}
+      UI.flash('"' + name + '" ya no es tutor de esa aula.', 'success');
+      App.go('manage-users');
+    });
+
     // ── Select all checkbox ──
     var selectAll = document.getElementById('umSelectAll');
     var bulkBar   = document.getElementById('umBulkBar');
@@ -1645,9 +1712,9 @@ const UIAdmin = (() => {
         var crId = btn.dataset.toggleTutor;
         var form = document.getElementById('tutorForm-'+crId);
         if (!form) return;
-        var open = form.style.display !== 'none' && form.style.display !== '';
+        var isOpen = form.style.display === 'block';
         root().querySelectorAll('.cp-tutor-form-wrap').forEach(function(f){f.style.display='none';});
-        form.style.display = open ? 'none' : '';
+        form.style.display = isOpen ? 'none' : 'block';
       });
     });
 
