@@ -680,7 +680,7 @@ const UIStudent = (() => {
           </div>
           <div class="chat-footer-actions">
             <div class="ai-toolbar">
-              <span class="ai-always-on-badge" title="Método Minerva (socrático) y Sistema DECO (4 niveles cognitivos) están activos en toda la sesión">🦉 Minerva · 🎯 DECO activos</span>
+              <span class="ai-always-on-badge" title="Método Minerva y Sistema DECO (4 niveles cognitivos) están activos en toda la sesión">🦉 Minerva · 🎯 DECO activos</span>
               <button class="ghost ai-toolbar-btn" id="chatQuizBtn" title="Practicar con un Quiz opcional — no interrumpe la sesión">📝 Quiz</button>
               <span class="li-live-chip" id="chatLiChip" style="display:none;" title="Índice de Aprendizaje estimado en tiempo real">📊 <span id="chatLiVal">—</span></span>
             </div>
@@ -1031,7 +1031,7 @@ const UIStudent = (() => {
     card.className = 'tutor-contingency';
     card.innerHTML = `
       <div class="tc-icon">🌿</div>
-      <div class="tc-title">El Tutor Socrático está tomando un respiro</div>
+      <div class="tc-title">El Tutor IA está tomando un respiro</div>
       <div class="tc-text">No pudimos conectar con la IA en este momento. Tu sesión y tu progreso están a salvo. Mientras tanto puedes seguir estudiando:</div>
       <div class="tc-actions">
         <button class="primary" id="tcPomodoro">⏱️ Usar el temporizador Pomodoro</button>

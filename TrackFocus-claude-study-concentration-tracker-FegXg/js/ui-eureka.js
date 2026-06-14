@@ -142,7 +142,7 @@ const UIEureka = (() => {
     if (impEl) impEl.textContent = (sum.quizPairs ? (sum.avgImprovement > 0 ? '+' : '') + sum.avgImprovement + ' pts' : '—');
     if (txtEl) {
       txtEl.innerHTML = sum.quizPairs
-        ? `Sobre <strong>${sum.quizPairs}</strong> sesiones con quiz, el puntaje promedio pasó de <strong>${sum.avgPre}</strong> a <strong>${sum.avgPost}</strong> (de 3). El <strong>${sum.improvedPct}%</strong> de los estudiantes mejoró su resultado tras estudiar con el tutor socrático.`
+        ? `Sobre <strong>${sum.quizPairs}</strong> sesiones con quiz, el puntaje promedio pasó de <strong>${sum.avgPre}</strong> a <strong>${sum.avgPost}</strong> (de 3). El <strong>${sum.improvedPct}%</strong> de los estudiantes mejoró su resultado tras estudiar con el tutor IA.`
         : 'Aún no hay suficientes quizzes completados para mostrar la mejora. Aparecerá cuando los estudiantes completen sesiones de Estudio IA.';
     }
   }

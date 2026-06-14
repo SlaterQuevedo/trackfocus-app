@@ -523,7 +523,7 @@ const App = (() => {
           Tu sistema para aprender mejor
         </div>
         <h1 class="lp-title">Mide lo que aprendes<br>No lo que estudias</h1>
-        <p class="lp-subtitle">IA socrática y métricas de concentración que convierten tu tiempo de estudio en aprendizaje comprobable.</p>
+        <p class="lp-subtitle">Convierte cada sesión de estudio en progreso real con métricas de concentración y orientación personalizada.</p>
 
         <div class="lp-hero-cta">
           <button class="lp-btn-hero-primary" id="lpScrollCards2">Comenzar</button>
@@ -747,7 +747,7 @@ const App = (() => {
         <div class="lp-card lp-card--gold" data-role="student">
           <div class="lp-icon-ring">${svgStudent}</div>
           <h3>ESTUDIANTE</h3>
-          <p>Aprende, practica y mejora tu comprensión con IA socrática.</p>
+          <p>Aprende, practica y mejora tu comprensión con orientación paso a paso.</p>
           <div class="lp-card-foot">
             <span style="font-size:12px;color:#52525B;">Solo Gmail</span>
             <button class="lp-arrow-btn" tabindex="-1">${svgArrow}</button>

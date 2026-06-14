@@ -475,7 +475,7 @@ const App = (() => {
           Tu sistema para aprender mejor
         </div>
         <h1 class="lp-title">Mide lo que aprendes<br>No lo que estudias</h1>
-        <p class="lp-subtitle">IA socrática y métricas de concentración que convierten tu tiempo de estudio en aprendizaje comprobable.</p>
+        <p class="lp-subtitle">Convierte cada sesión de estudio en progreso real con métricas de concentración y orientación personalizada.</p>
 
         <div class="lp-cards reveal">
           <div class="lp-card lp-card--gold reveal" data-role="student" data-delay="0">

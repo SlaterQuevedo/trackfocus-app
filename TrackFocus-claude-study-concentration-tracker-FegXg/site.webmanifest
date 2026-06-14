@@ -1,7 +1,7 @@
 {
   "name": "TrackFocus",
   "short_name": "TrackFocus",
-  "description": "Plataforma educativa inteligente — Concentración, hábitos y aprendizaje con IA socrática",
+  "description": "Plataforma educativa inteligente — Concentración, hábitos y aprendizaje real",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

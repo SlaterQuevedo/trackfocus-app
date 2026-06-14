@@ -257,7 +257,7 @@ const UITeacher = (() => {
     }
 
     body += `<h2>Lectura pedagógica</h2><p>${(sum.avgImprovement > 0)
-      ? `En promedio los estudiantes mejoraron <strong>${sum.avgImprovement} puntos</strong> entre el quiz inicial y el final, lo que sugiere un efecto positivo del acompañamiento del tutor socrático. El ${sum.improvedPct}% de los participantes mejoró su puntaje.`
+      ? `En promedio los estudiantes mejoraron <strong>${sum.avgImprovement} puntos</strong> entre el quiz inicial y el final, lo que sugiere un efecto positivo del acompañamiento del tutor IA. El ${sum.improvedPct}% de los participantes mejoró su puntaje.`
       : `Aún no hay suficiente mejora medible. Se recomienda ampliar la muestra y la duración del piloto para obtener resultados concluyentes.`}</p>`;
 
     Exporter.printHTML('Reporte semanal TrackFocus', body);

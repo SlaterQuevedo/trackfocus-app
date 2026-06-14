@@ -703,7 +703,7 @@ const UIStudent = (() => {
     card.className = 'tutor-contingency';
     card.innerHTML = `
       <div class="tc-icon">🌿</div>
-      <div class="tc-title">El Tutor Socrático está tomando un respiro</div>
+      <div class="tc-title">El Tutor IA está tomando un respiro</div>
       <div class="tc-text">No pudimos conectar con la IA en este momento. Tu sesión y tu progreso están a salvo. Mientras tanto puedes seguir estudiando:</div>
       <div class="tc-actions">
         <button class="primary" id="tcPomodoro">⏱️ Usar el temporizador Pomodoro</button>
