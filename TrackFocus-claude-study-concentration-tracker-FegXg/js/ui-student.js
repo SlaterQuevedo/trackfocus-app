@@ -2294,7 +2294,9 @@ const UIStudent = (() => {
     const levelInfo = Gamification.getLevelInfo(gam.xp || 0);
     const school = user.schoolId ? s.schools[user.schoolId] : null;
     const classroom = user.classroomId ? s.classrooms[user.classroomId] : null;
+    const tutorUser = classroom && classroom.tutorId ? s.users[classroom.tutorId] : null;
     const schoolProfile = JSON.parse(localStorage.getItem('tf-school-profile-v1') || '{}');
+    const acadProfile = JSON.parse(localStorage.getItem('tf-academic-profile-v3') || '{}');
     const prefs = JSON.parse(localStorage.getItem('tf-prefs') || '{}');
     const initials = user.name.split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase();
     const nowMs = Date.now();
@@ -2302,22 +2304,50 @@ const UIStudent = (() => {
       .map((e, i) => ({ ...e, _i: i, days: Math.ceil((new Date(e.date) - nowMs) / 86400000) }))
       .filter(e => e.days > 0).sort((a, b) => a.days - b.days);
 
+    // Pre-calcular bloques HTML para evitar template literals anidados
+    const sum = Stats.summary(sessions);
+    const allSubjs = sessions.map(function(ss) { return ss.subject; });
+    const uniqueSubjs = allSubjs.filter(function(sub, i) { return allSubjs.indexOf(sub) === i; });
+    const activeSubjs = uniqueSubjs.slice(0, 4);
+    const extraSubjs = uniqueSubjs.length > 4 ? uniqueSubjs.length - 4 : 0;
+
+    const pillsCr = classroom ? '<span class="ps-pill">🏫 ' + esc(classroom.name) + '</span>' : '';
+    const pillsSchool = school ? '<span class="ps-pill">🏛️ ' + esc(school.name) + '</span>' : '';
+    const pillsGrade = user.grade ? '<span class="ps-pill">📚 ' + formatGrade(user.grade) + '</span>' : '';
+    const pillsTutor = tutorUser ? '<span class="ps-pill">👤 ' + esc(tutorUser.name) + '</span>' : '';
+
+    const subjPillsHtml = activeSubjs.map(function(sub) {
+      return '<span class="ps-pill" style="background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.25);color:var(--accent-2);">' + esc(sub) + '</span>';
+    }).join('') + (extraSubjs > 0 ? '<span class="ps-pill" style="color:var(--muted);">+' + extraSubjs + ' más</span>' : '');
+
+    const subjsBlock = activeSubjs.length
+      ? '<div style="margin-top:18px;"><div style="font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.06em;margin-bottom:8px;">MATERIAS ACTIVAS</div><div style="display:flex;flex-wrap:wrap;gap:6px;">' + subjPillsHtml + '</div></div>'
+      : '<div style="margin-top:18px;padding:14px;border:1px dashed var(--border);border-radius:8px;text-align:center;"><div class="muted" style="font-size:13px;">Aún no hay sesiones registradas.</div><button class="primary" data-go="new-session" style="margin-top:10px;font-size:12px;padding:7px 16px;">+ Comenzar primera sesión</button></div>';
+
+    const uniDisplay = acadProfile.university === 'otro' ? (acadProfile.customUniversity || 'Mi universidad') : (acadProfile.university || '');
+    const careerLine = acadProfile.career ? '<div style="font-size:13px;color:var(--muted);">' + esc(acadProfile.career) + '</div>' : '';
+    const uniBlock = uniDisplay
+      ? '<div style="margin-top:18px;background:rgba(200,155,109,.07);border:1px solid rgba(200,155,109,.2);border-radius:10px;padding:14px;"><div style="font-size:11px;font-weight:700;color:var(--primary);letter-spacing:.07em;margin-bottom:6px;">PREPARACIÓN UNIVERSITARIA</div><div style="font-weight:700;font-size:15px;margin-bottom:2px;">' + esc(uniDisplay) + '</div>' + careerLine + '</div>'
+      : '<div style="margin-top:18px;background:rgba(139,92,246,.05);border:1px dashed rgba(139,92,246,.2);border-radius:10px;padding:14px;text-align:center;"><div style="font-size:13px;color:var(--muted);margin-bottom:8px;">¿Ya sabes a qué universidad quieres postular?</div><button class="ghost" id="psGoToMetaPersonal" style="font-size:12px;padding:6px 14px;">Configurar meta universitaria →</button></div>';
+
     // ── Panel: Mi Perfil ──
-    const panelProfile = `
-      <div class="ps-panel active" data-panel="profile">
-        <h2 class="pp-section-title">Mi Perfil</h2>
-        <div class="pp-avatar-row">
-          <div class="ps-avatar-big">${esc(initials)}</div>
-          <div class="pp-profile-info" style="margin-left:16px;">
-            <div class="pp-name">${esc(user.name)}</div>
-            <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;">
-              ${classroom ? `<span class="ps-pill">🏫 ${esc(classroom.name)}</span>` : ''}
-              ${school ? `<span class="ps-pill">🏛️ ${esc(school.name)}</span>` : ''}
-              ${user.grade ? `<span class="ps-pill">📚 ${formatGrade(user.grade)}</span>` : ''}
-            </div>
-          </div>
-        </div>
-      </div>`;
+    const panelProfile = '<div class="ps-panel active" data-panel="profile">'
+      + '<h2 class="pp-section-title">Mi Perfil</h2>'
+      + '<div class="pp-avatar-row">'
+      + '<div class="ps-avatar-big">' + esc(initials) + '</div>'
+      + '<div class="pp-profile-info" style="margin-left:16px;">'
+      + '<div class="pp-name">' + esc(user.name) + '</div>'
+      + '<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;">' + pillsCr + pillsSchool + pillsGrade + pillsTutor + '</div>'
+      + '</div></div>'
+      + '<div class="ps-profile-stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:18px 0 0;">'
+      + '<div class="kpi" style="padding:10px 8px;"><div class="v" style="font-size:20px;">' + sum.total + '</div><div class="l">Sesiones</div></div>'
+      + '<div class="kpi" style="padding:10px 8px;"><div class="v" style="font-size:20px;color:var(--warn);">🔥' + (gam.streak || 0) + '</div><div class="l">Racha</div></div>'
+      + '<div class="kpi" style="padding:10px 8px;"><div class="v" style="font-size:20px;">' + (sum.avgConc || '—') + '/5</div><div class="l">Concentración</div></div>'
+      + '<div class="kpi" style="padding:10px 8px;"><div class="v" style="font-size:20px;color:var(--accent);">Nv.' + (levelInfo.level || 1) + '</div><div class="l">' + (gam.xp || 0) + ' XP</div></div>'
+      + '</div>'
+      + subjsBlock
+      + uniBlock
+      + '</div>';
 
     // ── Panel: Evaluaciones ──
     const evalItemsHtml = exams.map(e => `
@@ -2826,6 +2856,11 @@ const UIStudent = (() => {
 
   function _wireProfileStudent(user) {
     const r = () => root();
+
+    var goMeta = r().querySelector('#psGoToMetaPersonal');
+    if (goMeta) goMeta.addEventListener('click', function() {
+      UI.flash('Configura tu meta en Perfil Personal.', 'info');
+    });
 
     r().querySelector('#psShowEvalForm')?.addEventListener('click', () => {
       const form = r().querySelector('#psEvalForm');
