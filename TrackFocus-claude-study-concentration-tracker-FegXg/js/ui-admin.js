@@ -101,6 +101,48 @@ const UIAdmin = (() => {
     const editId = App._editSchoolId;
     const editSchool = editId ? s.schools[editId] : null;
     const classrooms = editId ? Schools.listClassrooms(editId) : [];
+    const schoolStudents = editId ? Schools.listStudentsInSchool(editId) : [];
+
+    const classroomOptions = classrooms.map(cr =>
+      `<option value="${esc(cr.id)}">${esc(cr.name)}</option>`
+    ).join('');
+
+    const studentsSection = (editSchool && schoolStudents.length > 0) ? `
+      <div class="card" style="padding:0;overflow:auto;">
+        <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+          <h3 style="margin:0;">Estudiantes — ${esc(editSchool.name)}</h3>
+          <span class="chip">${schoolStudents.length} alumno${schoolStudents.length !== 1 ? 's' : ''}</span>
+        </div>
+        <table class="table">
+          <thead><tr>
+            <th>Nombre</th><th>Email</th><th>Aula actual</th><th>Asignar / Quitar</th>
+          </tr></thead>
+          <tbody>
+            ${schoolStudents.map(st => {
+              const currentCr = st.classroomId ? (s.classrooms[st.classroomId]?.name || '—') : '—';
+              return `<tr>
+                <td><strong>${esc(st.name)}</strong></td>
+                <td class="muted" style="font-size:12px;">${esc(st.email)}</td>
+                <td>${esc(currentCr)}</td>
+                <td>
+                  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                    ${classrooms.length > 0 ? `
+                    <select class="st-cr-select" data-st-id="${esc(st.id)}" style="font-size:12px;padding:4px 6px;">
+                      <option value="">Sin aula</option>
+                      ${classrooms.map(cr => `<option value="${esc(cr.id)}"${st.classroomId === cr.id ? ' selected' : ''}>${esc(cr.name)}</option>`).join('')}
+                    </select>
+                    <button class="ghost" style="font-size:12px;padding:4px 10px;" data-assign-student="${esc(st.id)}">Asignar</button>` : '<span class="muted" style="font-size:12px;">Sin aulas creadas</span>'}
+                    ${st.classroomId ? `<button class="ghost" style="font-size:12px;padding:4px 10px;color:#f59e0b;" data-remove-student="${esc(st.id)}" data-remove-from="${esc(st.classroomId)}">Quitar del aula</button>` : ''}
+                  </div>
+                </td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>` : (editSchool ? `
+      <div class="card" style="text-align:center;padding:18px;color:var(--muted);">
+        <span style="font-size:13px;">Aún no hay estudiantes vinculados a este colegio.</span>
+      </div>` : '');
 
     return `
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
@@ -134,13 +176,29 @@ const UIAdmin = (() => {
       </div>
 
       ${editSchool ? `
+      <div class="card">
+        <h3 style="margin:0 0 12px;">+ Nueva aula en ${esc(editSchool.name)}</h3>
+        <form id="createClassroomForm" style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+          <div class="field" style="flex:1;min-width:90px;margin-bottom:0;">
+            <label>Grado</label>
+            <input name="grade" placeholder="Ej: 5°" maxlength="10" required />
+          </div>
+          <div class="field" style="flex:1;min-width:90px;margin-bottom:0;">
+            <label>Sección</label>
+            <input name="section" placeholder="Ej: A" maxlength="10" required />
+          </div>
+          <button class="primary" type="submit" style="flex-shrink:0;">Crear aula</button>
+        </form>
+      </div>` : ''}
+
+      ${editSchool ? `
       <div class="card" style="padding:0;overflow:auto;">
         <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
           <h3 style="margin:0;">Aulas — ${esc(editSchool.name)}</h3>
           <span class="chip">${classrooms.length} aula${classrooms.length !== 1 ? 's' : ''}</span>
         </div>
         ${classrooms.length === 0
-          ? '<div class="empty muted" style="padding:18px 16px;font-size:13px;">Sin aulas creadas. Los docentes las crean desde su panel.</div>'
+          ? '<div class="empty muted" style="padding:18px 16px;font-size:13px;">Sin aulas creadas. Usa el formulario de arriba para crear la primera.</div>'
           : `<table class="table">
           <thead><tr>
             <th>Aula</th><th>Código de acceso</th><th>Alumnos</th><th>Docentes</th><th></th>
@@ -163,6 +221,8 @@ const UIAdmin = (() => {
           </tbody>
         </table>`}
       </div>` : ''}
+
+      ${studentsSection}
 
       <div class="card" style="padding:0;overflow:auto;">
         <div style="padding:16px;border-bottom:1px solid var(--border);">
@@ -235,6 +295,20 @@ const UIAdmin = (() => {
       App.go('manage-schools');
     });
 
+    document.getElementById('createClassroomForm')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const grade = fd.get('grade').trim();
+      const section = fd.get('section').trim();
+      if (!grade || !section) return;
+      const editId = App._editSchoolId;
+      if (!editId) return;
+      const cr = Schools.createClassroom(editId, grade, section);
+      try { Storage.flush?.(); } catch (_) {}
+      UI.flash(`Aula "${cr.name}" creada. Código: ${cr.inviteCode}`, 'success');
+      App.go('manage-schools');
+    });
+
     root().querySelectorAll('[data-edit]').forEach(btn => {
       btn.addEventListener('click', () => { App._editSchoolId = btn.dataset.edit; App.go('manage-schools'); });
     });
@@ -282,6 +356,31 @@ const UIAdmin = (() => {
         Schools.deleteClassroom(crId);
         try { Storage.flush?.(); } catch (_) {}
         UI.flash('Aula eliminada.', 'success');
+        App.go('manage-schools');
+      });
+    });
+
+    root().querySelectorAll('[data-assign-student]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const studentId = btn.dataset.assignStudent;
+        const select = root().querySelector(`.st-cr-select[data-st-id="${studentId}"]`);
+        const classroomId = select?.value;
+        if (!classroomId) { UI.flash('Selecciona un aula primero.', 'error'); return; }
+        Schools.addStudentToClassroom(studentId, classroomId);
+        try { Storage.flush?.(); } catch (_) {}
+        UI.flash('Estudiante asignado correctamente.', 'success');
+        App.go('manage-schools');
+      });
+    });
+
+    root().querySelectorAll('[data-remove-student]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const studentId = btn.dataset.removeStudent;
+        const classroomId = btn.dataset.removeFrom;
+        if (!confirm('¿Quitar a este estudiante del aula? Permanecerá en el colegio.')) return;
+        Schools.removeStudentFromClassroom(studentId, classroomId);
+        try { Storage.flush?.(); } catch (_) {}
+        UI.flash('Estudiante removido del aula.', 'success');
         App.go('manage-schools');
       });
     });
