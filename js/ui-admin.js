@@ -276,11 +276,12 @@ const UIAdmin = (() => {
     });
   }
 
+  const _wrap = (typeof window !== 'undefined' && window.__tfSafeScreens) || ((n, s) => s);
   return {
-    screens: {
+    screens: _wrap('admin', {
       'admin-dashboard': { render: screenAdminDashboard, wire: wireAdminDashboard },
       'manage-schools':  { render: screenManageSchools,  wire: wireManageSchools },
       'manage-users':    { render: screenManageUsers,    wire: wireManageUsers }
-    }
+    })
   };
 })();

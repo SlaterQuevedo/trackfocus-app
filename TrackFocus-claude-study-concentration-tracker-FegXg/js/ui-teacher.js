@@ -756,12 +756,13 @@ const UITeacher = (() => {
     });
   }
 
+  const _wrap = (typeof window !== 'undefined' && window.__tfSafeScreens) || ((n, s) => s);
   return {
-    screens: {
+    screens: _wrap('teacher', {
       'teacher-dashboard': { render: screenTeacherDashboard, wire: wireTeacherDashboard },
       'classroom-manage':  { render: screenClassroomManage,  wire: wireClassroomManage },
       'classroom-stats':   { render: screenClassroomStats,   wire: wireClassroomStats },
       'student-detail':    { render: screenStudentDetail,    wire: wireStudentDetail }
-    }
+    })
   };
 })();

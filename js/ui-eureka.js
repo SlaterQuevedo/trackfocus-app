@@ -147,9 +147,10 @@ const UIEureka = (() => {
     }
   }
 
+  const _wrap = (typeof window !== 'undefined' && window.__tfSafeScreens) || ((n, s) => s);
   return {
-    screens: {
+    screens: _wrap('eureka', {
       'eureka': { render: screenEureka, wire: wireEureka }
-    }
+    })
   };
 })();

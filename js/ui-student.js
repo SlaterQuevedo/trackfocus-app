@@ -2645,8 +2645,9 @@ const UIStudent = (() => {
     });
   }
 
+  const _wrap = (typeof window !== 'undefined' && window.__tfSafeScreens) || ((n, s) => s);
   return {
-    screens: {
+    screens: _wrap('student', {
       'pending-approval': { render: screenPendingApproval, wire: wirePendingApproval },
       institution:  { render: screenInstitution,  wire: wireInstitution },
       dashboard:    { render: screenDashboard,    wire: wireDashboard },
@@ -2660,6 +2661,6 @@ const UIStudent = (() => {
       pomodoro:     { render: screenPomodoro,     wire: wirePomodoro },
       profile:      { render: screenProfile,      wire: wireProfile },
       'ai-study':   { render: screenAIStudy,      wire: wireAIStudy }
-    }
+    })
   };
 })();

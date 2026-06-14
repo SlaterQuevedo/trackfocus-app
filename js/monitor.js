@@ -53,11 +53,41 @@ const Monitor = (() => {
     setTimeout(() => URL.revokeObjectURL(url), 1500);
   }
 
-  const api = { log, list, clear, toText, exportLog };
+  // Endurecimiento de pantallas (pre-Eureka): envuelve render/wire de un registro
+  // de pantallas en try/catch. Un fallo registra en el Monitor y muestra un
+  // fallback amable en vez de pantalla blanca. No cambia el flujo: si todo va
+  // bien, el comportamiento es idéntico al original.
+  function safeScreens(moduleName, screens) {
+    const fallback = `
+      <div class="card" style="text-align:center;padding:48px 24px;max-width:520px;margin:40px auto;">
+        <div style="font-size:44px;margin-bottom:8px;">🌿</div>
+        <h2 style="margin:0 0 8px;">Algo no cargó del todo</h2>
+        <p class="muted" style="margin:0 0 20px;">Tu información está a salvo. Recarga la página para volver a intentarlo.</p>
+        <button class="primary" onclick="location.reload()">Recargar</button>
+      </div>`;
+    const out = {};
+    for (const name in screens) {
+      const def = screens[name] || {};
+      out[name] = {
+        render: (p) => {
+          try { return def.render ? def.render(p) : ''; }
+          catch (e) { log('render', `${moduleName}/${name} render falló`, e?.message); return fallback; }
+        },
+        wire: (p) => {
+          try { return def.wire ? def.wire(p) : undefined; }
+          catch (e) { log('render', `${moduleName}/${name} wire falló`, e?.message); }
+        }
+      };
+    }
+    return out;
+  }
+
+  const api = { log, list, clear, toText, exportLog, safeScreens };
 
   // Captura global de errores no atrapados (best-effort, acotada a 50 entradas).
   if (typeof window !== 'undefined') {
     window.Monitor = api;
+    window.__tfSafeScreens = safeScreens;
     window.addEventListener('error', (e) => {
       try { log('critical', e.message || 'Error JS', (e.filename || '') + ':' + (e.lineno || '')); } catch (_) {}
     });
