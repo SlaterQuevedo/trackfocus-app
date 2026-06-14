@@ -121,10 +121,42 @@ const UIEureka = (() => {
 
         ${_leaderboardCard()}
 
-        <div style="text-align:center;margin-top:8px;">
+        <div style="text-align:center;margin-top:8px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+          <button class="primary" id="ekExportPdf">🖨️ Exportar PDF</button>
           <button class="ghost" id="ekBack">← Volver</button>
         </div>
       </div>`;
+  }
+
+  // Reporte imprimible/PDF para jurado y directivos. Reusa _gather (estado local)
+  // + Pilot.summarize (mejora pre/post) + Exporter.printHTML. No crea sistema nuevo.
+  async function _exportEurekaPdf() {
+    const g = _gather();
+    let sum = { quizPairs: 0 };
+    try { if (typeof Pilot !== 'undefined') sum = Pilot.summarize(await Pilot.fetchRows()); } catch (_) {}
+    const improve = sum.quizPairs ? ((sum.avgImprovement > 0 ? '+' : '') + sum.avgImprovement + ' pts') : '—';
+    const weeklyRows = g.weekly.map(w => `<tr><td>${esc(w.label)}</td><td>${w.count}</td></tr>`).join('');
+    const body = `
+      <h1>TrackFocus — Resultados del Piloto</h1>
+      <p class="sub">Evidencia de impacto en concentración y aprendizaje.</p>
+      <h2>Indicadores clave</h2>
+      <div class="kpis">
+        <div class="kpi"><div class="v">${g.students}</div><div class="l">Estudiantes</div></div>
+        <div class="kpi"><div class="v">${g.totalHours} h</div><div class="l">Horas estudiadas</div></div>
+        <div class="kpi"><div class="v">${g.sessions}</div><div class="l">Sesiones</div></div>
+        <div class="kpi"><div class="v">${g.avgConc}/5</div><div class="l">Concentración prom.</div></div>
+        <div class="kpi"><div class="v">${improve}</div><div class="l">Mejora en quiz</div></div>
+        <div class="kpi"><div class="v">${g.activeStreaks}</div><div class="l">Rachas activas</div></div>
+        <div class="kpi"><div class="v">🔥 ${g.maxStreak}</div><div class="l">Mejor racha (días)</div></div>
+        <div class="kpi"><div class="v">${g.badges}</div><div class="l">Logros</div></div>
+      </div>
+      <h2>Aprendizaje (quiz pre vs post)</h2>
+      <p>${sum.quizPairs
+        ? `Sobre <strong>${sum.quizPairs}</strong> sesiones con quiz, el puntaje promedio pasó de <strong>${sum.avgPre}</strong> a <strong>${sum.avgPost}</strong> (de 3). El <strong>${sum.improvedPct}%</strong> de los estudiantes mejoró su resultado.`
+        : 'Aún no hay suficientes quizzes completados para mostrar la mejora.'}</p>
+      <h2>Crecimiento semanal</h2>
+      <table><thead><tr><th>Semana</th><th>Sesiones</th></tr></thead><tbody>${weeklyRows}</tbody></table>`;
+    Exporter.printHTML('Resultados del Piloto — TrackFocus', body);
   }
 
   async function wireEureka() {
@@ -132,6 +164,7 @@ const UIEureka = (() => {
       const u = Roles.current();
       App.go(u && u.role === 'super_admin' ? 'admin-dashboard' : 'teacher-dashboard');
     });
+    document.getElementById('ekExportPdf')?.addEventListener('click', () => { _exportEurekaPdf(); });
 
     // Mejora de aprendizaje del piloto (async).
     if (typeof Pilot === 'undefined') return;
