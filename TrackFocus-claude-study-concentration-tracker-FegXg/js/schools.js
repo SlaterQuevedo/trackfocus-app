@@ -51,6 +51,22 @@ const Schools = (() => {
     Storage.set(s => { if (s.schools[id]) s.schools[id].name = name.trim(); });
   }
 
+  function updateSchoolCode(id, newCode) {
+    const code = (newCode || '').trim().toUpperCase().slice(0, 6);
+    if (!code) throw new Error('El código no puede estar vacío.');
+    const existing = Object.values(Storage.get().schools).find(sc => sc.code === code && sc.id !== id);
+    if (existing) throw new Error('Este código ya está en uso por otro colegio.');
+    Storage.set(s => { if (s.schools[id]) s.schools[id].code = code; });
+  }
+
+  function updateClassroomCode(classroomId, newCode) {
+    const code = (newCode || '').trim().toUpperCase().slice(0, 8);
+    if (!code) throw new Error('El código no puede estar vacío.');
+    const existing = Object.values(Storage.get().classrooms).find(c => c.inviteCode === code && c.id !== classroomId);
+    if (existing) throw new Error('Este código ya está en uso por otra aula.');
+    Storage.set(s => { if (s.classrooms[classroomId]) s.classrooms[classroomId].inviteCode = code; });
+  }
+
   // --- Aulas ---
 
   function _generateInviteCode() {
@@ -291,7 +307,7 @@ const Schools = (() => {
   }
 
   return {
-    createSchool, listSchools, getSchool, deleteSchool, updateSchool,
+    createSchool, listSchools, getSchool, deleteSchool, updateSchool, updateSchoolCode, updateClassroomCode,
     createClassroom, listClassrooms, getClassroom, deleteClassroom,
     regenerateInviteCode, findClassroomByCode,
     addStudentToClassroom, removeStudentFromClassroom, moveStudent,
