@@ -391,6 +391,28 @@ const UITeacher = (() => {
     const pendingForCr = schoolId ? Schools.listRequestsForSchool(schoolId)
       .filter(r => r.status === 'pending' && (r.classroomId === classroomId || (!r.classroomId && !isNew))) : [];
 
+    const unassigned = !isNew && classroomId && school
+      ? Schools.listStudentsInSchool(school.id).filter(u => !u.classroomId && u.approvalStatus !== 'pending')
+      : [];
+    const unassignedHtml = unassigned.length > 0 ? `
+      <div class="card" style="margin-bottom:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <h3 style="margin:0;">Estudiantes sin aula asignada</h3>
+          <span class="chip">${unassigned.length}</span>
+        </div>
+        <p class="muted" style="font-size:13px;margin:0 0 12px;">Pertenecen al colegio pero no están asignados a ningún aula. Puedes incorporarlos directamente.</p>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${unassigned.map(st => `
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--panel);border-radius:8px;border:1px solid var(--border);">
+              <div>
+                <div style="font-weight:500;font-size:14px;">${esc(st.name)}</div>
+                <div class="muted" style="font-size:12px;">${esc(st.email)}</div>
+              </div>
+              <button class="ghost" style="font-size:13px;white-space:nowrap;" data-add-student="${esc(st.id)}">+ Añadir al aula</button>
+            </div>`).join('')}
+        </div>
+      </div>` : '';
+
     return `
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
         <button class="ghost" data-go="teacher-dashboard">← Volver</button>
@@ -400,6 +422,8 @@ const UITeacher = (() => {
       ${inviteCodeHtml}
 
       ${!isNew && pendingForCr.length > 0 && school ? _pendingRequestsPanel(school.id, user.id) : ''}
+
+      ${unassignedHtml}
 
       <div class="card">
         <h3>Crear nueva aula</h3>
@@ -500,6 +524,19 @@ const UITeacher = (() => {
     });
 
     _wireApprovalButtons(user.id);
+
+    // Añadir estudiantes sin aula al aula actual
+    root().querySelectorAll('[data-add-student]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const studentId = btn.dataset.addStudent;
+        const classroomId = App._classroomId;
+        if (!classroomId || classroomId === 'new') return;
+        Schools.addStudentToClassroom(studentId, classroomId);
+        try { await Storage.flush(); } catch (_) {}
+        UI.flash('Estudiante añadido al aula correctamente.', 'success');
+        App.go('classroom-manage');
+      });
+    });
   }
 
   // ---- Pantalla: Estadísticas del Aula ----

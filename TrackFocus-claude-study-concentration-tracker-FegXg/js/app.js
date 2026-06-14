@@ -978,7 +978,7 @@ const App = (() => {
                  subtitle: 'Crea tu cuenta o inicia sesión para empezar.',
                  btnCls: '' },
       teacher: { cls: 'lp-form-emoji--purple', emoji: '👩‍🏫', title: 'Entrar como Profesor',
-                 subtitle: 'Necesitarás el código de tu colegio y aula al ingresar.',
+                 subtitle: 'Necesitarás el código de tu colegio para acceder. El código de aula es opcional.',
                  btnCls: 'lp-btn-submit--purple' },
       admin:   { cls: 'lp-form-emoji--blue',   emoji: '🏫', title: 'Acceso Director',
                  subtitle: 'Necesitarás el código de tu institución al ingresar.',
@@ -1181,10 +1181,12 @@ const App = (() => {
     return `
       <div class="card" style="max-width:520px;margin:48px auto;">
         <h2 style="margin:0 0 8px;">Verificación de docente</h2>
-        <p class="muted" style="margin:0 0 22px;">Ingresa el código del colegio que te dio el administrador.</p>
+        <p class="muted" style="margin:0 0 22px;">Ingresa el código del colegio que te dio el administrador. Si ya tienes un código de aula, también puedes ingresarlo ahora.</p>
         <form id="teacherPromoteForm">
           <label>Código del colegio</label>
           <input name="code" maxlength="6" required placeholder="6 caracteres" style="text-transform:uppercase;" />
+          <label style="margin-top:14px;">Código del aula <span class="muted" style="font-size:12px;">(opcional)</span></label>
+          <input name="inviteCode" maxlength="8" placeholder="8 caracteres" style="text-transform:uppercase;" />
           <div style="display:flex;gap:10px;margin-top:18px;">
             <button class="primary" type="submit">Continuar</button>
             <button class="ghost" type="button" id="cancelTeacherPromote">Cancelar</button>
@@ -1199,6 +1201,20 @@ const App = (() => {
       try {
         const u = Roles.current();
         await Auth.promoteToTeacher(u.id, fd.get('code'));
+        // Vinculación opcional al aula si se ingresó código de aula
+        const inviteCode = (fd.get('inviteCode') || '').trim().toUpperCase();
+        if (inviteCode) {
+          const fresh = Storage.get().users[u.id];
+          const cr = Schools.findClassroomByCode(inviteCode);
+          if (cr && fresh && cr.schoolId === fresh.schoolId) {
+            Storage.set(st => {
+              if (!st.classrooms[cr.id].teacherIds.includes(u.id)) st.classrooms[cr.id].teacherIds.push(u.id);
+              if (!st.users[u.id].classroomIds) st.users[u.id].classroomIds = [];
+              if (!st.users[u.id].classroomIds.includes(cr.id)) st.users[u.id].classroomIds.push(cr.id);
+            });
+            App._classroomId = cr.id;
+          }
+        }
         await Storage.flush();
         go('teacher-dashboard');
       } catch (err) { UI.flash(err.message, 'error'); }

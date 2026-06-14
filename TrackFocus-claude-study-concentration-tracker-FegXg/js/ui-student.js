@@ -2219,6 +2219,37 @@ const UIStudent = (() => {
         </div>
       </div>`;
 
+    // ── Panel: Institución (vinculación mediante código) ──
+    const panelInstitution = `
+      <div class="pp-panel" data-panel="institution">
+        <h2 class="pp-section-title">Mi Institución</h2>
+        <div class="card" style="margin-bottom:14px;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+            <span style="font-size:28px;">🎒</span>
+            <div>
+              <div style="font-weight:600;font-size:15px;">Usuario independiente</div>
+              <div class="muted" style="font-size:13px;margin-top:2px;">No perteneces a ningún colegio.</div>
+            </div>
+          </div>
+          <button class="primary" id="ppJoinInstBtn" style="width:100%;">Unirme mediante código</button>
+        </div>
+        <div id="ppJoinInstForm" style="display:none;">
+          <div class="card">
+            <p class="muted" style="font-size:13px;margin:0 0 14px;">Ingresa el código que te dio tu docente. Puedes ingresar solo el código del colegio, solo el del aula, o ambos. Tu progreso (sesiones, logros, racha) se conservará intacto.</p>
+            <form id="ppJoinSchoolForm">
+              <label style="display:block;margin-bottom:4px;font-size:13px;font-weight:500;">Código de colegio <span class="muted">(opcional)</span></label>
+              <input name="schoolCode" maxlength="6" placeholder="6 caracteres" style="text-transform:uppercase;margin-bottom:12px;width:100%;" />
+              <label style="display:block;margin-bottom:4px;font-size:13px;font-weight:500;">Código de aula <span class="muted">(opcional)</span></label>
+              <input name="inviteCode" maxlength="8" placeholder="8 caracteres" style="text-transform:uppercase;margin-bottom:14px;width:100%;" />
+              <div style="display:flex;gap:8px;">
+                <button class="primary" type="submit" style="flex:1;">Vincularme</button>
+                <button class="ghost" type="button" id="ppCancelJoinInst">Cancelar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>`;
+
     return `
       <div class="pp-layout">
         <aside class="pp-sidebar">
@@ -2230,6 +2261,7 @@ const UIStudent = (() => {
             <button class="pp-nav-item" data-panel="calendar">📅 Calendario</button>
             <button class="pp-nav-item" data-panel="schedule">📋 Planificador</button>
             <button class="pp-nav-item" data-panel="progress">🏆 Progreso</button>
+            <button class="pp-nav-item" data-panel="institution">🏫 Institución</button>
             <button class="pp-nav-item" data-panel="prefs">⚙️ Ajustes</button>
             <button class="pp-nav-item" data-panel="account">🔐 Cuenta</button>
           </nav>
@@ -2241,6 +2273,7 @@ const UIStudent = (() => {
           ${panelCalendar}
           ${panelSchedule}
           ${panelProgress}
+          ${panelInstitution}
           ${panelPrefs}
           ${panelAccount}
         </main>
@@ -2454,6 +2487,53 @@ const UIStudent = (() => {
           </div>` : ''}
       </div>`;
 
+    // ── Panel: Institución (estado y gestión de vinculación) ──
+    const schoolName = school ? school.name : '—';
+    const classroomName = classroom ? classroom.name : null;
+    const panelInstitution = `
+      <div class="ps-panel" data-panel="institution">
+        <h2 class="pp-section-title">Mi Institución</h2>
+        <div class="card" style="margin-bottom:14px;">
+          <div style="margin-bottom:10px;">
+            <div class="muted" style="font-size:11px;font-weight:600;letter-spacing:0.5px;margin-bottom:3px;">COLEGIO</div>
+            <div style="font-weight:600;font-size:15px;">${esc(schoolName)}</div>
+          </div>
+          <div${user.approvalStatus === 'pending' ? ' style="margin-bottom:12px;"' : ''}>
+            <div class="muted" style="font-size:11px;font-weight:600;letter-spacing:0.5px;margin-bottom:3px;">AULA</div>
+            ${classroomName
+              ? `<div style="font-weight:600;font-size:15px;">${esc(classroomName)}</div>`
+              : `<div class="muted" style="font-size:14px;">Sin aula asignada</div>`}
+          </div>
+          ${user.approvalStatus === 'pending' ? `
+          <div style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:10px 12px;font-size:13px;color:#fbbf24;">
+            ⏳ Solicitud pendiente de aprobación por el docente
+          </div>` : ''}
+        </div>
+        ${!classroomName && school && user.approvalStatus !== 'pending' ? `
+        <div class="card" style="margin-bottom:14px;">
+          <h3 style="margin:0 0 8px;font-size:14px;">Unirme a un aula</h3>
+          <p class="muted" style="font-size:12px;margin:0 0 10px;">Ingresa el código de invitación que te compartió tu docente.</p>
+          <form id="psInstJoinClassroomForm">
+            <input name="inviteCode" maxlength="8" placeholder="Código del aula (8 caracteres)" style="text-transform:uppercase;margin-bottom:10px;width:100%;" required />
+            <button class="primary" type="submit" style="width:100%;">Enviar solicitud de ingreso</button>
+          </form>
+        </div>` : ''}
+        ${classroomName ? `
+        <div class="card" style="margin-bottom:14px;">
+          <h3 style="margin:0 0 8px;font-size:14px;">Cambiar de aula</h3>
+          <p class="muted" style="font-size:12px;margin:0 0 10px;">Solicita un cambio con el código del aula destino. Tu docente deberá aprobarlo.</p>
+          <form id="psInstChangeClassroomForm">
+            <input name="targetCode" maxlength="8" placeholder="Código del aula destino" style="text-transform:uppercase;margin-bottom:10px;width:100%;" required />
+            <button class="ghost" type="submit" style="width:100%;">Solicitar cambio de aula</button>
+          </form>
+        </div>` : ''}
+        <div class="card" style="border-color:rgba(239,68,68,0.25);">
+          <h3 style="margin:0 0 6px;font-size:13px;color:var(--danger,#ef4444);">Desvincularme del colegio</h3>
+          <p class="muted" style="font-size:12px;margin:0 0 10px;">Perderás el acceso al aula pero conservarás todo tu progreso: sesiones, logros, XP y rachas.</p>
+          <button class="danger" id="psLeaveSchoolBtn" style="width:100%;">Desvincularme del colegio</button>
+        </div>
+      </div>`;
+
     return `
       <div class="ps-layout">
         <aside class="ps-sidebar">
@@ -2464,6 +2544,7 @@ const UIStudent = (() => {
             <button class="ps-nav-item" data-panel="courses">📚 Mis Materias</button>
             <button class="ps-nav-item" data-panel="ranking">🏆 Ranking</button>
             <button class="ps-nav-item" data-panel="cognitive">🧠 Perfil Cognitivo</button>
+            <button class="ps-nav-item" data-panel="institution">🏫 Institución</button>
             <button class="ps-nav-item" data-panel="prefs">⚙️ Ajustes</button>
             <button class="ps-nav-item" data-panel="account">🔐 Cuenta</button>
           </nav>
@@ -2474,6 +2555,7 @@ const UIStudent = (() => {
           ${panelCourses}
           ${panelRanking}
           ${panelCognitive}
+          ${panelInstitution}
           ${panelPrefs}
           ${panelAccount}
         </main>
@@ -2676,6 +2758,34 @@ const UIStudent = (() => {
 
     _wirePreferences();
     _wireAccountPanel(user);
+
+    // Institución: mostrar/ocultar formulario de vinculación mediante código
+    r().querySelector('#ppJoinInstBtn')?.addEventListener('click', () => {
+      r().querySelector('#ppJoinInstForm').style.display = '';
+      r().querySelector('#ppJoinInstBtn').style.display = 'none';
+    });
+    r().querySelector('#ppCancelJoinInst')?.addEventListener('click', () => {
+      r().querySelector('#ppJoinInstForm').style.display = 'none';
+      r().querySelector('#ppJoinInstBtn').style.display = '';
+    });
+    r().querySelector('#ppJoinSchoolForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const schoolCode = (fd.get('schoolCode') || '').trim();
+      const inviteCode = (fd.get('inviteCode') || '').trim();
+      if (!schoolCode && !inviteCode) { UI.flash('Ingresa al menos un código para continuar.', 'error'); return; }
+      const btn = e.target.querySelector('button[type="submit"]');
+      btn.disabled = true; btn.textContent = 'Vinculando…';
+      try {
+        await Auth.applyStudentCodes(user.id, schoolCode, inviteCode);
+        await Storage.flush();
+        UI.flash('¡Vinculación exitosa! Tu progreso se ha conservado.', 'success');
+        App.go('profile');
+      } catch (err) {
+        btn.disabled = false; btn.textContent = 'Vincularme';
+        UI.flash(err.message || 'Código inválido. Verifica con tu docente.', 'error');
+      }
+    });
   }
 
   function _wireProfileStudent(user) {
@@ -2712,6 +2822,51 @@ const UIStudent = (() => {
 
     _wirePreferences();
     _wireAccountPanel(user);
+
+    // Institución: unirse a un aula
+    r().querySelector('#psInstJoinClassroomForm')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const code = (new FormData(e.target).get('inviteCode') || '').trim().toUpperCase();
+      const cr = Schools.findClassroomByCode(code);
+      if (!cr) return UI.flash('Código de aula inválido.', 'error');
+      if (cr.schoolId !== user.schoolId) return UI.flash('El aula no pertenece a tu colegio.', 'error');
+      Schools.createJoinRequest(user.id, user.schoolId, cr.id);
+      UI.flash('Solicitud enviada. Tu docente recibirá la notificación.', 'success');
+      App.go('pending-approval');
+    });
+    // Institución: cambiar de aula
+    r().querySelector('#psInstChangeClassroomForm')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const code = (new FormData(e.target).get('targetCode') || '').trim().toUpperCase();
+      const cr = Schools.findClassroomByCode(code);
+      if (!cr) return UI.flash('Código de aula inválido.', 'error');
+      if (cr.id === user.classroomId) return UI.flash('Ya perteneces a esa aula.', 'error');
+      Schools.createChangeRequest(user.id, cr.id);
+      UI.flash('Solicitud enviada. Tu docente recibirá la notificación.', 'success');
+      sessionStorage.setItem('tf-profile-panel', 'institution');
+      App.go('profile');
+    });
+    // Institución: desvincular del colegio
+    r().querySelector('#psLeaveSchoolBtn')?.addEventListener('click', async () => {
+      if (!confirm('¿Confirmas que quieres desvincularme del colegio? Conservarás todo tu progreso.')) return;
+      Storage.set(st => {
+        const u = st.users[user.id];
+        if (!u) return;
+        if (u.classroomId && st.classrooms[u.classroomId]) {
+          st.classrooms[u.classroomId].studentIds = (st.classrooms[u.classroomId].studentIds || []).filter(x => x !== user.id);
+        }
+        if (u.schoolId && st.schools[u.schoolId]) {
+          st.schools[u.schoolId].adminIds = (st.schools[u.schoolId].adminIds || []).filter(x => x !== user.id);
+        }
+        u.schoolId = null;
+        u.classroomId = null;
+        u.institutionType = 'personal';
+        u.approvalStatus = null;
+      });
+      try { await Storage.flush(); } catch (_) {}
+      UI.flash('Te has desvinculado del colegio. Tu progreso está intacto.', 'success');
+      App.go('profile');
+    });
   }
 
   function _wireAccountPanel(user) {
