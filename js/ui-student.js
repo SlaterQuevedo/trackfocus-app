@@ -1095,13 +1095,11 @@ const UIStudent = (() => {
   function screenRecommend() {
     const s = Storage.get();
     const sessions = Sessions.listFor(s.currentUserId);
-    const tips = Analytics.buildRecommendations(sessions);
-    const oldTips = Recommend.build(sessions);
-    const allTips = [...tips, ...oldTips.filter(t => !tips.some(n => n.text === t.text))];
+    const allTips = Analytics.buildRecommendations(sessions);
 
     return `
-      <h1>Recomendaciones personalizadas</h1>
-      <p class="muted">Basadas en tus ${sessions.length} sesión${sessions.length === 1 ? '' : 'es'} registrada${sessions.length === 1 ? '' : 's'}.</p>
+      <h1>¿Qué deberías cambiar para aprender mejor?</h1>
+      <p class="muted">Basado en tus ${sessions.length} sesión${sessions.length === 1 ? '' : 'es'} registrada${sessions.length === 1 ? '' : 's'}.</p>
       <div style="margin-top:14px;">
         ${allTips.map(t => `<div class="alert ${t.type}">${esc(t.text || t.msg || '')}</div>`).join('')}
       </div>`;
