@@ -2548,6 +2548,26 @@ const UIStudent = (() => {
         </div>
       </div>`;
 
+    // panelAccount debe definirse aquí porque _profileStudent y _profilePersonal
+    // son funciones separadas — la declaración en _profilePersonal no es visible aquí.
+    const panelAccount = `
+      <div class="ps-panel" data-panel="account">
+        <h2 class="pp-section-title">🔐 Mi Cuenta</h2>
+        <div class="pp-account-card">
+          <div class="pp-account-name">${esc(user.name)}</div>
+          <div class="pp-account-email">${esc(user.email || '—')}</div>
+          <div class="pp-account-role">Rol: ${user.role === 'teacher' ? 'Docente' : 'Estudiante'} institucional</div>
+        </div>
+        <div class="pp-account-actions">
+          <button class="ghost pp-account-btn" id="ppExportBtn">📥 Exportar mis datos</button>
+          <input type="file" id="ppRestoreInput" accept=".json" style="display:none;" />
+          <button class="ghost pp-account-btn" id="ppRestoreBtn">📤 Restaurar respaldo</button>
+          <button class="ghost pp-account-btn" id="ppDiagBtn">🩺 Exportar registro de errores</button>
+          <button class="primary pp-account-btn" id="ppLogoutBtn">Cerrar sesión</button>
+        </div>
+        <div class="pp-version-info">TrackFocus · Datos sincronizados en la nube</div>
+      </div>`;
+
     return `
       <div class="ps-layout">
         <aside class="ps-sidebar">

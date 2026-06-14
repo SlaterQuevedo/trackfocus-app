@@ -181,6 +181,7 @@ const UIStudent = (() => {
     const gam = user.gamification || {};
     const levelInfo = Gamification.getLevelInfo(gam.xp || 0);
     const sum = Stats.summary(sessions);
+    const goalsCard = _renderGoalsCard(user, sessions, gam);
     const sorted = [...sessions].sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
     const profile = JSON.parse(localStorage.getItem('tf-academic-profile-v3') || '{}');
     const prepPct = _calcPrep(user, sessions, profile);
@@ -266,6 +267,7 @@ const UIStudent = (() => {
             <div class="dp-nav-arrow">→</div>
           </div>
         </div>
+        ${goalsCard ? `<div style="margin-top:12px;">${goalsCard}</div>` : ''}
       </div>`;
   }
 
@@ -380,9 +382,74 @@ const UIStudent = (() => {
       </div>`;
   }
 
+  // Sistema de Metas (Fase 9): tarjeta con 4 objetivos semanales y su progreso.
+  function _renderGoalsCard(user, sessions, gam) {
+    if (typeof Goals === 'undefined') return '';
+    const goals = Goals.get(user.id);
+
+    const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+    const weekSessions = sessions.filter(se => new Date(se.datetime) >= weekAgo);
+    const weekMinutes = weekSessions.reduce((a, b) => a + (b.durationMin || 0), 0);
+    const weekHours = Math.round(weekMinutes / 60 * 10) / 10;
+    const liSeries = (typeof Stats !== 'undefined' && Stats.learningIndexSeries) ? Stats.learningIndexSeries(sessions) : [];
+    const lastIndex = liSeries.length ? liSeries[liSeries.length - 1].value : 0;
+
+    const items = [
+      { key: 'studyHours',    icon: '⏱', label: 'Horas de estudio',    cur: weekHours,            tgt: goals.studyHours,    suffix: 'h' },
+      { key: 'sessions',      icon: '📚', label: 'Sesiones',            cur: weekSessions.length,  tgt: goals.sessions,      suffix: '' },
+      { key: 'streak',        icon: '🔥', label: 'Racha (días)',        cur: gam.streak || 0,      tgt: goals.streak,        suffix: '' },
+      { key: 'learningIndex', icon: '📊', label: 'Índice de Aprendizaje', cur: lastIndex,          tgt: goals.learningIndex, suffix: '' }
+    ];
+
+    return `
+      <div class="card" style="margin-top:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+          <h2 style="margin:0;">🎯 Mis Metas (esta semana)</h2>
+          <span class="muted" style="font-size:12px;">Toca el lápiz para ajustar un objetivo.</span>
+        </div>
+        <div class="goals-grid">
+          ${items.map(it => {
+            const pct = it.tgt > 0 ? Math.min(100, Math.round((it.cur / it.tgt) * 100)) : 0;
+            const done = pct >= 100;
+            return `<div class="goal-card${done ? ' goal-done' : ''}">
+              <div class="goal-head">
+                <span>${it.icon} ${it.label}</span>
+                <button class="goal-edit-btn" data-goal="${it.key}" title="Editar meta">✎</button>
+              </div>
+              <div class="goal-val">${it.cur}${it.suffix} <span class="muted">/ ${it.tgt}${it.suffix}</span></div>
+              <div class="goal-progress"><div style="width:${pct}%"></div></div>
+              <div class="goal-pct">${done ? '✅ ¡Meta lograda!' : pct + '%'}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }
+
   function wireDashboard() {
     root().querySelectorAll('[data-go]').forEach(b =>
       b.addEventListener('click', () => App.go(b.dataset.go)));
+
+    // Sistema de Metas (Fase 9): editar el valor objetivo de cada meta.
+    const labels = {
+      studyHours: 'horas de estudio por semana',
+      sessions: 'sesiones por semana',
+      streak: 'días de racha objetivo',
+      learningIndex: 'Índice de Aprendizaje objetivo (0-100)'
+    };
+    root().querySelectorAll('.goal-edit-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (typeof Goals === 'undefined') return;
+        const key = btn.dataset.goal;
+        const current = Goals.get(Storage.get().currentUserId)[key];
+        const input = prompt(`Nueva meta de ${labels[key] || key}:`, current);
+        if (input === null) return;
+        const val = Number(input);
+        if (!val || isNaN(val)) { UI.flash?.('Ingresa un número válido.', 'error'); return; }
+        Goals.set(Storage.get().currentUserId, key, val);
+        UI.flash?.('Meta actualizada.', 'success');
+        App.go('dashboard');
+      });
+    });
   }
 
   // ---- Pantalla: Nueva sesión — Etapa 1: Configuración de metadatos ----
@@ -390,6 +457,7 @@ const UIStudent = (() => {
     const s = Storage.get();
     const user = s.users[s.currentUserId];
     const subjects = Subjects.listSubjects(user.institutionType || 'colegio', user.id);
+    const lastSubject = Subjects.getLastSubject(user.id);
     const now = new Date();
     const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 
@@ -420,9 +488,13 @@ const UIStudent = (() => {
           <div class="row">
             <div class="field">
               <label>Materia</label>
-              <select name="subject" required>
-                ${subjects.map(x => `<option>${esc(x)}</option>`).join('')}
+              <select name="subject" id="subjectSelectNS" required>
+                ${Subjects.renderOptions(subjects, lastSubject)}
               </select>
+              <div id="customSubjectWrapNS" style="display:none;margin-top:8px;">
+                <input type="text" id="customSubjectInputNS" placeholder="Escribe el nombre de la materia…"
+                  style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;font-family:inherit;box-sizing:border-box;min-height:44px;" />
+              </div>
             </div>
             <div class="field">
               <label>Grado escolar</label>
@@ -451,14 +523,17 @@ const UIStudent = (() => {
 
   function wireNewSession() {
     root().querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => App.go(b.dataset.go)));
+    _wireSubjectOtro('subjectSelectNS', 'customSubjectWrapNS', 'customSubjectInputNS');
 
     document.getElementById('sessionSetupForm').addEventListener('submit', (e) => {
       e.preventDefault();
       const fd = new FormData(e.target);
+      const subject = _resolveSubject('subjectSelectNS', 'customSubjectInputNS', Storage.get().users[Storage.get().currentUserId]?.id);
+      if (!subject) return;
       const metadata = {
         datetime:         new Date(fd.get('datetime')).toISOString(),
         durationMin:      Number(fd.get('durationMin')),
-        subject:          fd.get('subject'),
+        subject,
         grade:            fd.get('grade'),
         previousActivity: fd.get('previousActivity')
       };
@@ -466,32 +541,93 @@ const UIStudent = (() => {
     });
   }
 
+  // ---- Helpers: selector "Otro curso" ----
+
+  // Muestra/oculta el input de curso personalizado según selección del select
+  function _wireSubjectOtro(selectId, wrapId, inputId) {
+    const sel = document.getElementById(selectId);
+    const wrap = document.getElementById(wrapId);
+    if (!sel || !wrap) return;
+    sel.addEventListener('change', () => {
+      if (sel.value === '__otro__') {
+        wrap.style.display = 'block';
+        document.getElementById(inputId)?.focus();
+      } else {
+        wrap.style.display = 'none';
+      }
+    });
+    // Estado inicial
+    if (sel.value === '__otro__') wrap.style.display = 'block';
+  }
+
+  // Resuelve el valor final del subject: del select o del input personalizado.
+  // Si es "Otro curso" con input vacío, muestra alert y retorna null.
+  // Si es un curso nuevo personalizado, lo persiste en customSubjects.
+  function _resolveSubject(selectId, inputId, userId) {
+    const sel = document.getElementById(selectId);
+    if (!sel) return null;
+    if (sel.value !== '__otro__') return sel.value;
+
+    const input = document.getElementById(inputId);
+    const custom = (input?.value || '').trim();
+    if (!custom) {
+      UI.flash('Escribe el nombre de la materia personalizada.', 'error');
+      input?.focus();
+      return null;
+    }
+    // Guardar como materia personalizada para reutilización futura
+    if (userId) {
+      try { Subjects.addCustomSubject(userId, custom); } catch (_) {}
+    }
+    return custom;
+  }
+
   // ---- Chat IA — estado en memoria (no persiste en Storage) ----
   let _chatState = null;
-  // Guarda para registrar el listener de borrado de archivos una sola vez
-  let _aiDeleteBound = false;
+
+  // Niveles DECO que rotan cada 3 mensajes del alumno
+  const _DECO_LEVELS = ['comprehension', 'application', 'reasoning', 'analysis'];
 
   async function _startAiChat(metadata) {
+    // Método Minerva + Sistema DECO — siempre activos en TrackFocus Intelligence.
+    // No son opcionales: ambos viajan en metadata al system prompt del servidor.
+    metadata.mode = 'minerva';
+    metadata.decoLevel = _DECO_LEVELS[0]; // inicia en Comprensión, rota cada 3 mensajes
+
+    // Memoria Académica (Fase 7): contexto del historial del alumno en esta materia.
+    if (typeof AcademicMemory !== 'undefined') {
+      const uid = Storage.get().currentUserId;
+      const ctx = AcademicMemory.getContext(uid, metadata.subject);
+      if (ctx) metadata.memoryContext = ctx;
+    }
     _chatState = {
       metadata, history: [], startedAt: Date.now(), attachedFiles: [],
-      quizQuestions: [], preQuizScore: null
+      messageCount: 0,        // mensajes del alumno enviados
+      decoLevelIndex: 0,      // índice actual en _DECO_LEVELS
+      midDecoTriggered: false, // previene doble auto-trigger DECO
+      quizResult: null        // resultado del quiz opcional (si el alumno lo usó)
     };
-    const tabTutor = document.getElementById('tabTutor');
-    if (!tabTutor) return;
-    tabTutor.innerHTML = _renderChatScreen(metadata);
+    // El chat reemplaza el cuerpo de la pantalla actual. Funciona tanto en
+    // 'ai-study' (#aiPanelBody) como en 'new-session' (.session-setup-wrap).
+    const panelBody = document.getElementById('aiPanelBody')
+      || document.querySelector('.session-setup-wrap')
+      || root();
+    if (!panelBody) return;
+    panelBody.innerHTML = _renderChatScreen(metadata);
     _wireChatScreen();
 
-    // Mini-quiz inicial (Fase C): punto de partida. Se reutilizan las mismas
-    // preguntas en el quiz final → la comparación pre/post es válida.
-    try {
-      const qs = await Quiz.generate(metadata, metadata.subject);
-      _chatState.quizQuestions = qs;
-      if (qs.length) {
-        _chatState.preQuizScore = await Quiz.present(qs, '📋 Quiz inicial — ' + metadata.subject);
-      }
-    } catch (_) { /* sin quiz → continuar sin bloquear */ }
+    // Quiz inicial automático eliminado — el quiz es ahora opcional (botón "📝 Quiz").
 
-    _sendAiMessage('Hola, estoy listo para comenzar. ¿Qué tema de ' + metadata.subject + ' vas a estudiar hoy?');
+    // Saludo adaptado al modo de estudio seleccionado
+    let greeting;
+    if (metadata.studyMode === 'exam-prep') {
+      greeting = `Hola, me preparo para mi examen de ${metadata.subject}. ¿Por dónde empezamos?`;
+    } else if (metadata.studyMode === 'topic-mastery') {
+      greeting = `Hola, quiero mejorar en ${metadata.topicGoal || metadata.subject}. ¿Cómo empezamos?`;
+    } else {
+      greeting = `Hola, estoy listo para comenzar. ¿Qué tema de ${metadata.subject} vas a estudiar hoy?`;
+    }
+    _sendAiMessage(greeting);
   }
 
   // Lee un File como base64 (sin el prefijo data:...)
@@ -507,11 +643,17 @@ const UIStudent = (() => {
   function _renderChatScreen(metadata) {
     const gradeLabel = formatGradeShort(metadata.grade);
 
+    const modeBadgeText = metadata.studyMode === 'exam-prep'
+      ? '📝 Modo Examen'
+      : metadata.studyMode === 'topic-mastery'
+      ? '🎯 Dominio de Tema'
+      : '';
+
     return `
       <div class="chat-screen">
         <div class="chat-header">
           <div class="chat-header-info">
-            <span class="chat-header-title">🤖 TrackTutor · ${esc(metadata.subject)}</span>
+            <span class="chat-header-title">🤖 TrackTutor · ${esc(metadata.subject)}${modeBadgeText ? ` <span class="ai-mode-badge">${modeBadgeText}</span>` : ''}</span>
             <span class="chat-header-sub">${esc(gradeLabel)} · ${metadata.durationMin} min planificados</span>
           </div>
           <div class="chat-header-actions">
@@ -537,7 +679,12 @@ const UIStudent = (() => {
             <button class="primary" id="chatSendBtn" style="height:44px;padding:0 18px;flex-shrink:0;">Enviar</button>
           </div>
           <div class="chat-footer-actions">
-            <span class="chat-hint">Enter para enviar · Shift+Enter nueva línea · 📎 adjuntar · 🎤 voz</span>
+            <div class="ai-toolbar">
+              <span class="ai-always-on-badge" title="Método Minerva y Sistema DECO (4 niveles cognitivos) están activos en toda la sesión">🦉 Minerva · 🎯 DECO activos</span>
+              <button class="ghost ai-toolbar-btn" id="chatQuizBtn" title="Practicar con un Quiz opcional — no interrumpe la sesión">📝 Quiz</button>
+              <span class="li-live-chip" id="chatLiChip" style="display:none;" title="Índice de Aprendizaje estimado en tiempo real">📊 <span id="chatLiVal">—</span></span>
+            </div>
+            <span class="chat-hint">Enter envía · Shift+Enter salto de línea</span>
           </div>
         </div>
       </div>`;
@@ -592,7 +739,7 @@ const UIStudent = (() => {
       if (fileInput) fileInput.value = '';
     });
 
-    // Micrófono — Nivel 1: dictado nativo (instantáneo); Nivel 2: grabación + Gemini
+    // Micrófono — Nivel 1: dictado nativo (instantáneo); Nivel 2: grabación + transcripción IA
     const micBtn = document.getElementById('chatMicBtn');
     let _micActive = false;
     function _micIdle() { _micActive = false; micBtn.textContent = '🎤'; micBtn.classList.remove('recording'); }
@@ -612,7 +759,7 @@ const UIStudent = (() => {
         }
         return;
       }
-      // Fallback (sin Web Speech API): grabar + transcribir con Gemini
+      // Fallback (sin Web Speech API): grabar + transcribir con TrackFocus Intelligence
       if (!_micActive) {
         _micActive = true;
         micBtn.textContent = '⏹';
@@ -653,6 +800,187 @@ const UIStudent = (() => {
     });
 
     finalBtn.addEventListener('click', () => _finalizeChat());
+
+    // Método Minerva + Sistema DECO siempre activos — no hay botón de toggle.
+    // La rotación de niveles DECO y el auto-trigger ocurren en _handleUserMessage.
+
+    // Quiz opcional: el estudiante lo activa cuando quiera practicar.
+    document.getElementById('chatQuizBtn')?.addEventListener('click', () => _launchOptionalQuiz());
+  }
+
+  // Actualiza el chip de Índice de Aprendizaje en tiempo real en el header del chat.
+  function _updateLiChip(value) {
+    const chip  = document.getElementById('chatLiChip');
+    const valEl = document.getElementById('chatLiVal');
+    if (!chip || !valEl) return;
+    chip.style.display = '';
+    valEl.textContent = value != null ? String(value) : '—';
+  }
+
+  // Estimación ligera del Índice de Aprendizaje durante la sesión (antes del finalize).
+  // Considera: engagement (longitud de respuestas) + DECO si ya fue calificado.
+  function _estimateLiveLI() {
+    if (!_chatState) return null;
+    const userMsgs = _chatState.history.filter(m => m.role === 'user');
+    if (userMsgs.length < 2) return null; // muy pocas interacciones para estimar
+    const avgWords = userMsgs.reduce((s, m) => s + m.content.trim().split(/\s+/).length, 0) / userMsgs.length;
+    const wordScore = avgWords < 5 ? 0.2 : avgWords < 15 ? 0.5 : avgWords < 30 ? 0.8 : 1.0;
+    const engagement = Math.min(1, userMsgs.length / 10);
+    let decoScore = 0.5;
+    if (_chatState.decoResult && _chatState.decoResult.total > 0) {
+      decoScore = _chatState.decoResult.decoScore / _chatState.decoResult.total;
+    }
+    return Math.round((decoScore * 0.5 + wordScore * 0.3 + engagement * 0.2) * 100);
+  }
+
+  // Genera y presenta la evaluación DECO como tarjeta expandible en el chat.
+  async function _launchDeco(btn) {
+    if (!_chatState || typeof Deco === 'undefined') return;
+    const messages = document.getElementById('chatMessages');
+    if (!messages) return;
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Generando…'; }
+
+    const typingEl = _showTyping();
+    let blocks = null;
+    try {
+      blocks = await Deco.generate(_chatState.metadata, _chatState.metadata.subject);
+    } catch (_) { /* degradación silenciosa */ }
+    typingEl?.remove();
+
+    if (btn) { btn.disabled = false; btn.textContent = '🎯 DECO'; }
+
+    if (!blocks) {
+      UI.flash?.('No se pudo generar la evaluación DECO ahora. Inténtalo de nuevo.', 'error');
+      return;
+    }
+    Deco.renderInto(messages, blocks, (result) => {
+      if (_chatState) _chatState.decoResult = result;
+      // Actualizar el indicador de Índice de Aprendizaje con el resultado real
+      const liEstimate = (typeof Deco !== 'undefined') ? Deco.learningIndex({}, result) : _estimateLiveLI();
+      if (liEstimate != null) _updateLiChip(liEstimate);
+      UI.flash?.(`DECO calificado: ${result.decoScore}/${result.total}. Índice de Aprendizaje actualizado: ${liEstimate ?? '—'}/100 📊`, 'success');
+    });
+  }
+
+  // Quiz opcional: muestra panel de config → genera preguntas → presenta quiz integrado.
+  // No interrumpe el chat — el estudiante puede cerrar y seguir conversando.
+  async function _launchOptionalQuiz() {
+    if (!_chatState) return;
+    const messages = document.getElementById('chatMessages');
+    if (!messages) return;
+
+    // Si ya hay un quiz abierto, no abrir otro
+    if (messages.querySelector('.quiz-chat-panel, .quiz-config-card')) {
+      UI.flash?.('Ya hay un quiz abierto en el chat.', 'info');
+      messages.querySelector('.quiz-chat-panel, .quiz-config-card')?.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+
+    // Panel de configuración
+    const configCard = document.createElement('div');
+    configCard.className = 'quiz-config-card';
+    configCard.innerHTML = `
+      <div class="quiz-panel-header">
+        <span class="quiz-panel-title">📝 Practicar con un Quiz</span>
+        <button class="ghost quiz-close-inline" style="font-size:12px;padding:4px 10px;">✕</button>
+      </div>
+      <p class="muted" style="font-size:13px;margin:0 0 14px;">Genera preguntas basadas en lo que estás estudiando ahora.</p>
+      <div class="quiz-config-grid">
+        <div class="field">
+          <label>Preguntas</label>
+          <select id="quizCountSel">
+            <option value="5" selected>5 preguntas</option>
+            <option value="10">10 preguntas</option>
+            <option value="15">15 preguntas</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Dificultad</label>
+          <select id="quizDiffSel">
+            <option value="basica">Básica</option>
+            <option value="intermedia" selected>Intermedia</option>
+            <option value="avanzada">Avanzada</option>
+            <option value="adaptativa">Adaptativa (IA)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Enfoque</label>
+          <select id="quizFocusSel">
+            <option value="mixto" selected>Mixto</option>
+            <option value="comprehension">Comprensión</option>
+            <option value="application">Aplicación</option>
+            <option value="reasoning">Razonamiento</option>
+            <option value="analysis">Análisis crítico</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end;">
+        <button class="ghost quiz-close-inline">Cancelar</button>
+        <button class="primary" id="quizConfigStart">Comenzar Quiz →</button>
+      </div>`;
+
+    messages.appendChild(configCard);
+    messages.scrollTop = messages.scrollHeight;
+
+    configCard.querySelectorAll('.quiz-close-inline').forEach(btn =>
+      btn.addEventListener('click', () => configCard.remove())
+    );
+
+    configCard.querySelector('#quizConfigStart')?.addEventListener('click', async () => {
+      const count      = Number(configCard.querySelector('#quizCountSel').value);
+      const difficulty = configCard.querySelector('#quizDiffSel').value;
+      const focus      = configCard.querySelector('#quizFocusSel').value;
+      configCard.remove();
+
+      // Indicador de carga en el chat
+      const loadingEl = document.createElement('div');
+      loadingEl.className = 'chat-bubble-wrap ia';
+      loadingEl.innerHTML = `<div class="chat-bubble ia">⏳ Generando ${count} preguntas de ${difficulty === 'adaptativa' ? 'nivel adaptativo' : difficulty}… esto tarda unos segundos.</div>`;
+      messages.appendChild(loadingEl);
+      messages.scrollTop = messages.scrollHeight;
+
+      // Usar el tema de la conversación si existe
+      const topic = _chatState.firstUserTopic || _chatState.metadata.subject;
+      const config = { count, difficulty, focus };
+
+      let questions = [];
+      try {
+        questions = await Quiz.generateAdvanced(_chatState.metadata, topic, config);
+      } catch (_) {}
+      loadingEl.remove();
+
+      if (!questions || !questions.length) {
+        UI.flash?.('No se pudo generar el quiz ahora. Inténtalo de nuevo.', 'error');
+        return;
+      }
+
+      Quiz.presentInChat(messages, questions, _chatState.metadata, (result) => {
+        if (!result) return; // cerrado sin completar
+
+        // Guardar resultado del quiz para el Índice de Aprendizaje
+        if (_chatState) {
+          _chatState.quizResult = result;
+          const li = _estimateLiveLI();
+          if (li != null) _updateLiChip(li);
+        }
+
+        // Actualizar Memoria Académica con resultados del quiz
+        if (typeof AcademicMemory !== 'undefined' && _chatState && result.pct != null) {
+          const uid = Storage.get().currentUserId;
+          AcademicMemory.update(uid, _chatState.metadata.subject, {
+            topic,
+            learningIndex: result.pct,
+            quizScore: result.score,
+            quizTotal: result.total
+          });
+        }
+
+        // Opción de hacer otro quiz
+        if (result.retake) {
+          setTimeout(() => _launchOptionalQuiz(), 400);
+        }
+      });
+    });
   }
 
   function _appendBubble(role, text, streaming) {
@@ -694,7 +1022,7 @@ const UIStudent = (() => {
     document.getElementById('chatTyping')?.remove();
   }
 
-  // Contingencia del tutor (Fase B): si Gemini cae, no rompemos la sesión.
+  // Contingencia del tutor (Fase B): si TrackFocus Intelligence cae, no rompemos la sesión.
   // Mostramos una tarjeta amable y ofrecemos seguir con el Pomodoro o reintentar.
   function _showTutorContingency() {
     const messages = document.getElementById('chatMessages');
@@ -767,7 +1095,7 @@ const UIStudent = (() => {
     } catch (err) {
       _removeTyping();
       if (bubble) bubble.remove();
-      window.Monitor?.log?.('gemini', 'Tutor: fallo al iniciar respuesta', err?.message);
+      window.Monitor?.log?.('tf-intelligence', 'Tutor: fallo al iniciar respuesta', err?.message);
       _showTutorContingency();
     } finally {
       if (sendBtn)  sendBtn.disabled = false;
@@ -778,6 +1106,11 @@ const UIStudent = (() => {
   async function _handleUserMessage(text, files = []) {
     if (!_chatState) return;
     const ts = Date.now();
+
+    // Memoria Académica (Fase 7): el primer mensaje real del alumno define el tema.
+    if (!_chatState.firstUserTopic && text && text.trim()) {
+      _chatState.firstUserTopic = text.trim();
+    }
 
     // Mostrar burbuja del usuario (con nombres de archivos si los hay)
     const displayText = text + (files.length > 0 ? '\n' + files.map(f => '📎 ' + f.fileName).join('\n') : '');
@@ -811,10 +1144,39 @@ const UIStudent = (() => {
         files  // archivos adjuntos multimodal
       );
       _chatState.history.push({ role: 'model', content: fullText, timestamp: Date.now() });
+
+      // Rotar nivel DECO cada 3 mensajes del alumno
+      _chatState.messageCount = (_chatState.messageCount || 0) + 1;
+      _chatState.decoLevelIndex = Math.floor(_chatState.messageCount / 3) % _DECO_LEVELS.length;
+      _chatState.metadata.decoLevel = _DECO_LEVELS[_chatState.decoLevelIndex];
+
+      // Actualizar indicador de Índice de Aprendizaje en tiempo real
+      const liveLI = _estimateLiveLI();
+      if (liveLI != null) _updateLiChip(liveLI);
+
+      // Auto-trigger evaluación DECO completa al 6° mensaje del alumno (mitad de sesión)
+      const userMsgCount = _chatState.history.filter(m => m.role === 'user').length;
+      if (userMsgCount === 6 && !_chatState.midDecoTriggered) {
+        _chatState.midDecoTriggered = true;
+        setTimeout(() => {
+          const msgs = document.getElementById('chatMessages');
+          if (msgs) {
+            const notice = document.createElement('div');
+            notice.className = 'chat-bubble-wrap ia';
+            notice.innerHTML = `<div class="chat-bubble ia" style="border:1px solid var(--accent);background:var(--accent-bg,#f5f0ff);padding:12px 14px;">
+              <strong>📊 Evaluación DECO automática</strong><br>
+              <span style="font-size:13px;">Llevas 6 intercambios — es el momento perfecto para medir tu comprensión real en los 4 niveles cognitivos.</span>
+            </div>`;
+            msgs.appendChild(notice);
+            msgs.scrollTop = msgs.scrollHeight;
+          }
+          _launchDeco(null);
+        }, 1500);
+      }
     } catch (err) {
       if (bubble) bubble.remove();
       _chatState.history.pop();
-      window.Monitor?.log?.('gemini', 'Tutor: fallo al responder', err?.message);
+      window.Monitor?.log?.('tf-intelligence', 'Tutor: fallo al responder', err?.message);
       _showTutorContingency();
     } finally {
       if (sendBtn)  sendBtn.disabled = false;
@@ -845,10 +1207,21 @@ const UIStudent = (() => {
       </div>`;
 
     try {
-      const { concentration, metrics } = await AiChatProxy.finalizeSession(
+      const { concentration, metrics, recommendations } = await AiChatProxy.finalizeSession(
         _chatState.metadata,
         _chatState.history
       );
+
+      // Índice de Aprendizaje (Fase 5): combina métricas de la sesión + DECO.
+      // Se calcula ANTES de guardar para persistirlo en el comment de la sesión
+      // (así la pantalla de Estadísticas puede mostrar la evolución histórica local).
+      const decoResult = _chatState.decoResult || null;
+      const learningIndex = (typeof Deco !== 'undefined')
+        ? Deco.learningIndex(metrics, decoResult)
+        : null;
+      const commentMetrics = { ...metrics };
+      if (learningIndex != null) commentMetrics.learning_index = learningIndex;
+      if (decoResult) commentMetrics.deco = { score: decoResult.decoScore, total: decoResult.total, byLevel: decoResult.byLevel };
 
       const s    = Storage.get();
       const user = s.users[s.currentUserId];
@@ -860,31 +1233,65 @@ const UIStudent = (() => {
         concentration:    concentration,
         durationMin:      _chatState.metadata.durationMin,
         previousActivity: _chatState.metadata.previousActivity,
-        comment:          JSON.stringify(metrics)
+        comment:          JSON.stringify(commentMetrics)
       });
 
-      // Quiz final (Fase C): mismas preguntas que el inicial → mide aprendizaje real.
-      let postQuizScore = null;
-      if (_chatState.quizQuestions && _chatState.quizQuestions.length) {
-        postQuizScore = await Quiz.present(
-          _chatState.quizQuestions, '✅ Quiz final — ' + _chatState.metadata.subject
-        );
-      }
+      // Persistir la última materia utilizada para pre-selección futura
+      Subjects.saveLastSubject(user.id, _chatState.metadata.subject);
+
+      // Quiz final automático eliminado — el quiz es opcional (botón "📝 Quiz" en el chat).
       const timeSpentSeconds = (Date.now() - (_chatState.startedAt || Date.now())) / 1000;
-      const preQuizScore = _chatState.preQuizScore;
+      const quizResult = _chatState.quizResult || null;
+
+      // Memoria Académica (Fase 7): actualiza lo que el tutor recuerda de esta materia.
+      if (typeof AcademicMemory !== 'undefined') {
+        AcademicMemory.update(user.id, _chatState.metadata.subject, {
+          topic: _chatState.firstUserTopic || _chatState.metadata.subject,
+          learningIndex,
+          decoByLevel: decoResult ? decoResult.byLevel : null
+        });
+      }
 
       _chatState = null;
 
       // Registro anónimo del piloto (Fase C). Gateado por consentimiento en Fase E.
       // Fire-and-forget: tiene su propia cola offline (Pilot.flushOutbox).
-      _recordPilot({ sessionId: record.id, focusScore: concentration, timeSpentSeconds, preQuizScore, postQuizScore });
+      _recordPilot({
+        sessionId: record.id, focusScore: concentration, timeSpentSeconds,
+        preQuizScore: null, postQuizScore: quizResult ? quizResult.score : null,
+        decoScore: decoResult ? decoResult.decoScore : null,
+        learningIndex,
+        decoByLevel: decoResult ? decoResult.byLevel : null
+      });
 
-      App.go('dashboard');
-      const mejora = (preQuizScore != null && postQuizScore != null)
-        ? ` · Quiz: ${preQuizScore}→${postQuizScore}`
-        : '';
-      UI.flash(`Sesión guardada · Concentración deducida: ${concentration}/5 🎯${mejora}`, 'success');
-      showXpToast(gamResult.xpEarned, gamResult.newBadges);
+      // Recomendaciones inteligentes (Fase 10): combina IA + análisis local,
+      // se guardan para la pantalla "Recomendaciones" y se muestran ahora.
+      const recs = (typeof Recommend !== 'undefined')
+        ? Recommend.fromSession(recommendations, metrics, decoResult)
+        : [];
+      try { sessionStorage.setItem('tf-last-recommendations', JSON.stringify({ at: Date.now(), subject: record.subject, recs })); } catch (_) {}
+
+      const idxTxt = (learningIndex != null) ? ` · Índice ${learningIndex}/100 📊` : '';
+      const goPanel = () => {
+        App.go('dashboard');
+        UI.flash(`Sesión guardada · Concentración deducida: ${concentration}/5 🎯${idxTxt}`, 'success');
+        showXpToast(gamResult.xpEarned, gamResult.newBadges);
+      };
+
+      // Tarjeta de recomendaciones antes de volver al panel.
+      const inputArea2 = document.querySelector('.chat-input-area');
+      if (inputArea2 && recs.length) {
+        inputArea2.innerHTML = `
+          <div class="session-recs">
+            <h3 style="margin:0 0 4px;">✅ ¡Sesión completada!</h3>
+            <p class="muted" style="margin:0 0 12px;font-size:13px;">TrackFocus Intelligence te sugiere para continuar:</p>
+            ${recs.map(r => `<div class="rec-item"><span class="rec-icon">${r.icon}</span><div><strong>${esc(r.label)}:</strong> ${esc(r.text)}</div></div>`).join('')}
+            <button class="primary" id="recContinueBtn" style="margin-top:12px;width:100%;">Ver mi panel →</button>
+          </div>`;
+        document.getElementById('recContinueBtn')?.addEventListener('click', goPanel);
+      } else {
+        goPanel();
+      }
     } catch (err) {
       UI.flash('Error al guardar la sesión: ' + err.message, 'error');
       if (finalBtn)  finalBtn.disabled = false;
@@ -931,6 +1338,20 @@ const UIStudent = (() => {
   }
 
   // ---- Pantalla: Historial ----
+  // Presenta el comentario de una sesión: si es JSON de métricas (sesión IA),
+  // muestra un resumen amable en vez del JSON crudo.
+  function _formatComment(comment) {
+    if (!comment) return '';
+    const m = (typeof Stats !== 'undefined' && Stats.parseMetrics) ? Stats.parseMetrics({ comment }) : {};
+    if (m && (m.learning_index != null || m.learning_score != null || m.deco)) {
+      const parts = ['🤖 Sesión IA'];
+      if (m.learning_index != null) parts.push('Índice ' + m.learning_index + '/100');
+      else if (m.deco && m.deco.total) parts.push('DECO ' + m.deco.score + '/' + m.deco.total);
+      return parts.join(' · ');
+    }
+    return esc(comment);
+  }
+
   function screenHistory(filters = {}) {
     const s = Storage.get();
     const user = s.users[s.currentUserId];
@@ -966,7 +1387,7 @@ const UIStudent = (() => {
                 <td><strong>${x.concentration}</strong>/5</td>
                 <td>${x.durationMin}</td>
                 <td>${esc(x.previousActivity)}${x.previousActivityOther ? ' — '+esc(x.previousActivityOther) : ''}</td>
-                <td>${esc(x.comment)}</td>
+                <td>${_formatComment(x.comment)}</td>
                 <td><button class="danger" data-rm="${x.id}">Eliminar</button></td>
               </tr>`).join('')}
           </tbody>
@@ -1028,6 +1449,30 @@ const UIStudent = (() => {
       </div>`;
     }).join('');
 
+    // Índice de Aprendizaje (Fase 5): última medición + evolución reciente.
+    const liSeries = Stats.learningIndexSeries(sessions);
+    const liLatest = liSeries.length ? liSeries[liSeries.length - 1].value : null;
+    const liRecent = liSeries.slice(-8);
+    const liCard = liLatest != null ? `
+      <div class="card" style="margin-top:18px;">
+        <h3 style="margin:0 0 4px;">📊 Índice de Aprendizaje</h3>
+        <p class="muted" style="margin:0 0 14px;font-size:13px;">Combina precisión, coherencia, participación, rapidez y razonamiento (0–100).</p>
+        <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+          <div class="learning-index-badge" style="--li:${liLatest};">
+            <span class="li-val">${liLatest}</span>
+            <span class="li-lbl">de 100</span>
+          </div>
+          <div style="flex:1;min-width:200px;">
+            <div style="display:flex;align-items:flex-end;gap:6px;height:80px;">
+              ${liRecent.map(p => `<div title="${esc(new Date(p.datetime).toLocaleDateString('es-PE'))}: ${p.value}" style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;">
+                <div style="height:${Math.max(4, p.value)}%;background:linear-gradient(180deg,var(--accent),var(--primary));border-radius:4px 4px 0 0;"></div>
+              </div>`).join('')}
+            </div>
+            <p class="muted" style="font-size:12px;margin:8px 0 0;">Últimas ${liRecent.length} sesiones con Estudio IA.</p>
+          </div>
+        </div>
+      </div>` : '';
+
     return `
       <h1>Estadísticas</h1>
       <div class="grid cols-4">
@@ -1036,6 +1481,8 @@ const UIStudent = (() => {
         <div class="kpi"><div class="v">${sum.totalMin}</div><div class="l">Min totales</div></div>
         <div class="kpi"><div class="v">${sum.avgDur}</div><div class="l">Min prom./sesión</div></div>
       </div>
+
+      ${liCard}
 
       <div class="card" style="margin-top:18px;">
         <h3>Actividad semanal (últimas 52 semanas)</h3>
@@ -1047,12 +1494,14 @@ const UIStudent = (() => {
         <div class="card">
           <h2>Concentración por materia</h2>
           <div class="chart-container">
+            <div class="chart-skeleton skeleton"></div>
             <canvas id="chartSubject"></canvas>
           </div>
         </div>
         <div class="card">
           <h2>Distribución Likert</h2>
           <div class="chart-container">
+            <div class="chart-skeleton skeleton"></div>
             <canvas id="chartLikert"></canvas>
           </div>
         </div>
@@ -1097,19 +1546,66 @@ const UIStudent = (() => {
     const sessions = Sessions.listFor(s.currentUserId);
     const allTips = Analytics.buildRecommendations(sessions);
 
+    // Recomendaciones de la última sesión IA (Fase 10), si existen (sessionStorage).
+    let lastRecHtml = '';
+    try {
+      const stored = JSON.parse(sessionStorage.getItem('tf-last-recommendations') || 'null');
+      if (stored && Array.isArray(stored.recs) && stored.recs.length) {
+        lastRecHtml = `
+          <div class="card" style="margin-bottom:18px;">
+            <h3 style="margin:0 0 4px;">🧠 Basado en tu última sesión${stored.subject ? ' de ' + esc(stored.subject) : ''}</h3>
+            <p class="muted" style="margin:0 0 12px;font-size:13px;">Sugerencias de TrackFocus Intelligence.</p>
+            ${stored.recs.map(r => `<div class="rec-item"><span class="rec-icon">${r.icon || '•'}</span><div><strong>${esc(r.label || '')}:</strong> ${esc(r.text || '')}</div></div>`).join('')}
+          </div>`;
+      }
+    } catch (_) {}
+
     return `
       <h1>¿Qué deberías cambiar para aprender mejor?</h1>
       <p class="muted">Basado en tus ${sessions.length} sesión${sessions.length === 1 ? '' : 'es'} registrada${sessions.length === 1 ? '' : 's'}.</p>
+      ${lastRecHtml}
       <div style="margin-top:14px;">
         ${allTips.map(t => `<div class="alert ${t.type}">${esc(t.text || t.msg || '')}</div>`).join('')}
       </div>`;
   }
 
   // ---- Pantalla: Logros ----
+  // Certificados disponibles (Fase 12): se calculan desde los datos del alumno.
+  function _availableCertificates(user, sessions) {
+    const gam = user.gamification || {};
+    const total = sessions.length;
+    const avgConc = total ? sessions.reduce((a, b) => a + (b.concentration || 0), 0) / total : 0;
+    const indices = (typeof Stats !== 'undefined' && Stats.learningIndexSeries)
+      ? Stats.learningIndexSeries(sessions).map(p => p.value) : [];
+    const avgIndex = indices.length ? indices.reduce((a, b) => a + b, 0) / indices.length : 0;
+
+    const certs = [
+      { id: 'constancia', icon: '🔥', title: 'Certificado de Constancia',
+        subtitle: 'Por mantener una racha de estudio sostenida',
+        detail: `Por demostrar disciplina y constancia con una racha de ${gam.streak || 0} días consecutivos de estudio en TrackFocus.`,
+        eligible: (gam.streak || 0) >= 7 },
+      { id: 'disciplina', icon: '📚', title: 'Certificado de Disciplina',
+        subtitle: 'Por dedicación al estudio',
+        detail: `Por completar ${total} sesiones de estudio, demostrando un compromiso ejemplar con su aprendizaje.`,
+        eligible: total >= 10 },
+      { id: 'concentracion', icon: '🎯', title: 'Certificado de Concentración',
+        subtitle: 'Por excelencia en el enfoque',
+        detail: `Por alcanzar una concentración promedio de ${avgConc.toFixed(1)}/5, un nivel de enfoque sobresaliente.`,
+        eligible: total >= 5 && avgConc >= 4 },
+      { id: 'excelencia', icon: '🏅', title: 'Certificado de Excelencia Académica',
+        subtitle: 'Por un alto Índice de Aprendizaje',
+        detail: `Por alcanzar un Índice de Aprendizaje promedio de ${Math.round(avgIndex)}/100, reflejando comprensión y razonamiento destacados.`,
+        eligible: indices.length >= 1 && avgIndex >= 70 }
+    ];
+    return certs;
+  }
+
   function screenAchievements() {
     const s = Storage.get();
     const user = s.users[s.currentUserId];
     const earned = new Set((user.gamification?.badges) || []);
+    const sessions = Sessions.listFor(user.id);
+    const certs = _availableCertificates(user, sessions);
 
     return `
       <h1>Logros e Insignias</h1>
@@ -1132,6 +1628,22 @@ const UIStudent = (() => {
 
       <div style="margin:4px 0 18px;">
         <button class="primary" id="btnProgressReport">📄 Mi reporte de progreso (PDF)</button>
+      </div>
+
+      <div class="card" style="margin:18px 0;">
+        <h2 style="margin:0 0 4px;">📜 Certificados</h2>
+        <p class="muted" style="margin:0 0 14px;font-size:13px;">Descarga tus certificados (PDF) cuando cumplas los requisitos.</p>
+        <div class="cert-grid">
+          ${certs.map(c => `
+            <div class="cert-card ${c.eligible ? '' : 'cert-locked'}">
+              <span class="cert-icon">${c.icon}</span>
+              <div class="cert-title">${esc(c.title)}</div>
+              <div class="cert-sub">${esc(c.subtitle)}</div>
+              ${c.eligible
+                ? `<button class="primary cert-dl" data-cert="${c.id}" style="margin-top:10px;">⬇️ Descargar</button>`
+                : `<div class="cert-req">🔒 Aún no disponible</div>`}
+            </div>`).join('')}
+        </div>
       </div>
 
       <div class="badges-grid">
@@ -1197,9 +1709,26 @@ const UIStudent = (() => {
     const s = Storage.get();
     const user = s.users[s.currentUserId];
     const sessions = Sessions.listFor(user.id);
+    const certs = _availableCertificates(user, sessions);
+    const school = user.schoolId ? s.schools[user.schoolId] : null;
+
     root().querySelector('#btnProgressReport')?.addEventListener('click', () => {
       if (!sessions.length) { UI.flash('Registra al menos una sesión para generar tu reporte.', 'info'); return; }
       _studentProgressReport(user, sessions);
+    });
+
+    root().querySelectorAll('.cert-dl').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const cert = certs.find(c => c.id === btn.dataset.cert);
+        if (!cert || !cert.eligible) return;
+        Exporter.printCertificate({
+          studentName: user.name,
+          title: cert.title,
+          subtitle: cert.subtitle,
+          detail: cert.detail,
+          school: school ? school.name : 'TrackFocus'
+        });
+      });
     });
   }
 
@@ -1284,6 +1813,7 @@ const UIStudent = (() => {
     const s = Storage.get();
     const user = s.users[s.currentUserId];
     const subjects = Subjects.listSubjects(user.institutionType || 'colegio', user.id);
+    const lastSubject = Subjects.getLastSubject(user.id);
     const pState = Pomodoro.getState();
     const remaining = pState.remaining || Pomodoro.DEFAULTS.focus * 60;
 
@@ -1299,8 +1829,12 @@ const UIStudent = (() => {
         <div class="field" style="margin-top:20px;max-width:300px;margin-left:auto;margin-right:auto;">
           <label>Materia a estudiar</label>
           <select id="pomSubject">
-            ${subjects.map(x => `<option>${esc(x)}</option>`).join('')}
+            ${Subjects.renderOptions(subjects, lastSubject)}
           </select>
+          <div id="customSubjectWrapPom" style="display:none;margin-top:8px;">
+            <input type="text" id="customSubjectInputPom" placeholder="¿Qué materia deseas estudiar?"
+              style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;font-family:inherit;box-sizing:border-box;min-height:44px;" />
+          </div>
         </div>
 
         <div class="timer-controls">
@@ -1352,6 +1886,8 @@ const UIStudent = (() => {
     const s = Storage.get();
     const userId = s.currentUserId;
 
+    _wireSubjectOtro('pomSubject', 'customSubjectWrapPom', 'customSubjectInputPom');
+
     // El timer y sus callbacks los gestiona la barra global (#pomBar en app.js).
     // Aquí solo renderizamos el estado inicial y cableamos los botones de la página.
     const modeLabels = { focus: 'Enfocado 🧠', break: 'Descanso ☕', paused: 'Pausado ⏸', idle: 'Listo para enfocar' };
@@ -1366,7 +1902,7 @@ const UIStudent = (() => {
       const breakInput = document.getElementById('breakDur');
       Pomodoro.DEFAULTS.focus = Number(focusInput?.value || 25);
       Pomodoro.DEFAULTS.shortBreak = Number(breakInput?.value || 5);
-      const subject = document.getElementById('pomSubject')?.value || 'Sin materia';
+      const subject = _resolveSubject('pomSubject', 'customSubjectInputPom', userId) || 'Sin materia';
       Pomodoro.reset();
       Pomodoro.start(subject, userId);
     });
@@ -1681,6 +2217,13 @@ const UIStudent = (() => {
             <input type="checkbox" class="pp-toggle" id="ppToggleSounds"${prefs.sounds!==false?' checked':''} />
           </div>
         </div>
+        <div class="pp-prefs-section">
+          <div class="pp-prefs-section-title">Diagnóstico</div>
+          <div class="pp-prefs-row">
+            <div><div class="pp-prefs-label">Registro de errores</div><div class="pp-prefs-sub">Para soporte técnico</div></div>
+            <button class="ghost" id="ppDiagBtn" style="font-size:12px;padding:6px 12px;">🩺 Exportar</button>
+          </div>
+        </div>
       </div>`;
 
     // ── Panel: Institución (vinculación mediante código) ──
@@ -1949,25 +2492,13 @@ const UIStudent = (() => {
               <button class="ghost" type="submit" style="flex-shrink:0;">Enviar solicitud</button>
             </form>
           </div>` : ''}
-      </div>`;
-
-    // ── Panel: Cuenta (institucional) ──
-    const panelAccount = `
-      <div class="ps-panel" data-panel="account">
-        <h2 class="pp-section-title">🔐 Mi Cuenta</h2>
-        <div class="pp-account-card">
-          <div class="pp-account-name">${esc(user.name)}</div>
-          <div class="pp-account-email">${esc(user.email || '—')}</div>
-          <div class="pp-account-role">Modo: ${_roleLabel(user)}</div>
+        <div class="pp-prefs-section">
+          <div class="pp-prefs-section-title">Diagnóstico</div>
+          <div class="pp-prefs-row">
+            <div><div class="pp-prefs-label">Registro de errores</div><div class="pp-prefs-sub">Para soporte técnico</div></div>
+            <button class="ghost" id="ppDiagBtn" style="font-size:12px;padding:6px 12px;">🩺 Exportar</button>
+          </div>
         </div>
-        <div class="pp-account-actions">
-          <button class="ghost pp-account-btn" id="ppExportBtn">📥 Exportar mis datos</button>
-          <input type="file" id="ppRestoreInput" accept=".json" style="display:none;" />
-          <button class="ghost pp-account-btn" id="ppRestoreBtn">📤 Restaurar respaldo</button>
-          <button class="ghost pp-account-btn" id="ppDiagBtn">🩺 Exportar registro de errores</button>
-          <button class="primary pp-account-btn" id="ppLogoutBtn">Cerrar sesión</button>
-        </div>
-        <div class="pp-version-info">TrackFocus · Todos los datos guardados localmente</div>
       </div>`;
 
     // ── Panel: Institución (estado y gestión de vinculación) ──
@@ -2017,6 +2548,26 @@ const UIStudent = (() => {
         </div>
       </div>`;
 
+    // panelAccount debe definirse aquí porque _profileStudent y _profilePersonal
+    // son funciones separadas — la declaración en _profilePersonal no es visible aquí.
+    const panelAccount = `
+      <div class="ps-panel" data-panel="account">
+        <h2 class="pp-section-title">🔐 Mi Cuenta</h2>
+        <div class="pp-account-card">
+          <div class="pp-account-name">${esc(user.name)}</div>
+          <div class="pp-account-email">${esc(user.email || '—')}</div>
+          <div class="pp-account-role">Rol: ${user.role === 'teacher' ? 'Docente' : 'Estudiante'} institucional</div>
+        </div>
+        <div class="pp-account-actions">
+          <button class="ghost pp-account-btn" id="ppExportBtn">📥 Exportar mis datos</button>
+          <input type="file" id="ppRestoreInput" accept=".json" style="display:none;" />
+          <button class="ghost pp-account-btn" id="ppRestoreBtn">📤 Restaurar respaldo</button>
+          <button class="ghost pp-account-btn" id="ppDiagBtn">🩺 Exportar registro de errores</button>
+          <button class="primary pp-account-btn" id="ppLogoutBtn">Cerrar sesión</button>
+        </div>
+        <div class="pp-version-info">TrackFocus · Datos sincronizados en la nube</div>
+      </div>`;
+
     return `
       <div class="ps-layout">
         <aside class="ps-sidebar">
@@ -2052,7 +2603,6 @@ const UIStudent = (() => {
     const navSel = isPersonal ? '.pp-nav-item' : '.ps-nav-item';
     const panelSel = isPersonal ? '.pp-panel' : '.ps-panel';
 
-    // Wire all data-go buttons at once (across all panels)
     root().querySelectorAll('[data-go]').forEach(b =>
       b.addEventListener('click', () => App.go(b.dataset.go)));
 
@@ -2068,7 +2618,6 @@ const UIStudent = (() => {
     root().querySelectorAll(navSel).forEach(btn =>
       btn.addEventListener('click', () => _activatePanel(btn.dataset.panel)));
 
-    // Deeplink via sessionStorage (from dashboard CTA or after save)
     const pending = sessionStorage.getItem('tf-profile-panel');
     if (pending) { sessionStorage.removeItem('tf-profile-panel'); _activatePanel(pending); }
 
@@ -2103,7 +2652,6 @@ const UIStudent = (() => {
   function _wireProfilePersonal(user) {
     const r = () => root();
 
-    // Avatar color picker
     r().querySelectorAll('.pp-color-dot').forEach(dot => {
       dot.addEventListener('click', () => {
         const color = dot.dataset.color;
@@ -2115,7 +2663,6 @@ const UIStudent = (() => {
       });
     });
 
-    // Message edit (two-state toggle)
     r().querySelector('#ppMsgEditBtn')?.addEventListener('click', () => {
       const input = r().querySelector('#ppMsgInput');
       if (input) input.value = r().querySelector('#ppMsgText')?.textContent || '';
@@ -2134,7 +2681,6 @@ const UIStudent = (() => {
       r().querySelector('#ppMsgEdit').style.display = 'none';
     });
 
-    // CTA go to Meta
     r().querySelector('#ppGoToMeta')?.addEventListener('click', () => {
       sessionStorage.setItem('tf-profile-panel', 'university');
       App.go('profile');
@@ -2144,7 +2690,6 @@ const UIStudent = (() => {
       App.go('profile');
     });
 
-    // Change meta buttons
     r().querySelector('#ppChangeMeta')?.addEventListener('click', () => _clearMeta());
     r().querySelector('#ppChangeMeta2')?.addEventListener('click', () => _clearMeta());
     function _clearMeta() {
@@ -2155,7 +2700,6 @@ const UIStudent = (() => {
       App.go('profile');
     }
 
-    // University form
     r().querySelector('#pp-uni-select')?.addEventListener('change', function() {
       const customInput = r().querySelector('#pp-custom-uni');
       if (customInput) customInput.style.display = this.value === 'otro' ? 'block' : 'none';
@@ -2181,12 +2725,10 @@ const UIStudent = (() => {
       App.go('profile');
     });
 
-    // Calendar: toggle form
     r().querySelector('#ppShowDateForm')?.addEventListener('click', () => {
       const form = r().querySelector('#ppDateForm');
       if (form) form.style.display = form.style.display === 'none' ? 'flex' : 'none';
     });
-    // Calendar: save
     r().querySelector('#ppSaveDate')?.addEventListener('click', () => {
       const label = r().querySelector('#ppDateLabel')?.value.trim();
       const date  = r().querySelector('#ppDateDate')?.value;
@@ -2199,7 +2741,6 @@ const UIStudent = (() => {
       sessionStorage.setItem('tf-profile-panel', 'calendar');
       App.go('profile');
     });
-    // Calendar: delete
     r().querySelectorAll('.pp-dates-list .pp-date-del').forEach(btn => {
       btn.addEventListener('click', () => {
         const idx = parseInt(btn.dataset.idx, 10);
@@ -2213,14 +2754,12 @@ const UIStudent = (() => {
       });
     });
 
-    // Schedule: toggle day form
     r().querySelectorAll('.pp-day-add-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const form = r().querySelector(`#ppDayForm-${btn.dataset.day}`);
         if (form) form.classList.toggle('open');
       });
     });
-    // Schedule: save block
     r().querySelectorAll('.pp-sched-save-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const form = btn.closest('.pp-day-form');
@@ -2237,7 +2776,6 @@ const UIStudent = (() => {
         App.go('profile');
       });
     });
-    // Schedule: delete block
     r().querySelectorAll('.pp-sched-del').forEach(btn => {
       btn.addEventListener('click', () => {
         const sched = JSON.parse(localStorage.getItem('tf-weekly-schedule') || '{}');
@@ -2287,12 +2825,10 @@ const UIStudent = (() => {
   function _wireProfileStudent(user) {
     const r = () => root();
 
-    // Evaluaciones: toggle form
     r().querySelector('#psShowEvalForm')?.addEventListener('click', () => {
       const form = r().querySelector('#psEvalForm');
       if (form) form.style.display = form.style.display === 'none' ? 'flex' : 'none';
     });
-    // Evaluaciones: save
     r().querySelector('#psSaveEval')?.addEventListener('click', () => {
       const subject = r().querySelector('#psEvalSubject')?.value.trim();
       const date    = r().querySelector('#psEvalDate')?.value;
@@ -2305,7 +2841,6 @@ const UIStudent = (() => {
       sessionStorage.setItem('tf-profile-panel', 'evals');
       App.go('profile');
     });
-    // Evaluaciones: delete
     r().querySelectorAll('.pp-dates-list .pp-date-del').forEach(btn => {
       btn.addEventListener('click', () => {
         const idx = parseInt(btn.dataset.idx, 10);
@@ -2354,6 +2889,9 @@ const UIStudent = (() => {
         if (u.classroomId && st.classrooms[u.classroomId]) {
           st.classrooms[u.classroomId].studentIds = (st.classrooms[u.classroomId].studentIds || []).filter(x => x !== user.id);
         }
+        if (u.schoolId && st.schools[u.schoolId]) {
+          st.schools[u.schoolId].adminIds = (st.schools[u.schoolId].adminIds || []).filter(x => x !== user.id);
+        }
         u.schoolId = null;
         u.classroomId = null;
         u.institutionType = 'personal';
@@ -2396,7 +2934,6 @@ const UIStudent = (() => {
 
   function _wirePreferences() {
     const r = () => root();
-    // Theme buttons
     r().querySelectorAll('.pp-theme-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const theme = btn.dataset.theme;
@@ -2410,7 +2947,6 @@ const UIStudent = (() => {
           b.classList.toggle('active', b.dataset.theme === theme));
       });
     });
-    // Tracky toggle
     r().querySelector('#ppToggleTracky')?.addEventListener('change', function() {
       const el = document.getElementById('tracky-root');
       if (el) el.style.display = this.checked ? '' : 'none';
@@ -2418,13 +2954,11 @@ const UIStudent = (() => {
       p.tracky = this.checked;
       localStorage.setItem('tf-prefs', JSON.stringify(p));
     });
-    // Sounds toggle
     r().querySelector('#ppToggleSounds')?.addEventListener('change', function() {
       const p = JSON.parse(localStorage.getItem('tf-prefs') || '{}');
       p.sounds = this.checked;
       localStorage.setItem('tf-prefs', JSON.stringify(p));
     });
-    // Reduce motion toggle
     r().querySelector('#ppToggleMotion')?.addEventListener('change', function() {
       document.documentElement.classList.toggle('reduce-motion', this.checked);
       const p = JSON.parse(localStorage.getItem('tf-prefs') || '{}');
@@ -2438,11 +2972,8 @@ const UIStudent = (() => {
     const s = Storage.get();
     const user = s.users[s.currentUserId];
     const subjects = Subjects.listSubjects(user.institutionType || 'colegio', user.id);
+    const lastSubject = Subjects.getLastSubject(user.id);
     const sessions = Sessions.listFor(user.id);
-    const recentFiles = Object.values(s.uploadedFiles || {})
-      .filter(f => f.userId === user.id)
-      .sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt))
-      .slice(0, 5);
 
     const grades = [
       { id: '1ro', label: '1° de Secundaria' },
@@ -2454,8 +2985,6 @@ const UIStudent = (() => {
 
     const now = new Date();
     const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-    const pState = Pomodoro.getState();
-    const remaining = pState.remaining || Pomodoro.DEFAULTS.focus * 60;
 
     const gam = user.gamification || {};
     const levelInfo = Gamification.getLevelInfo(gam.xp || 0);
@@ -2463,7 +2992,6 @@ const UIStudent = (() => {
     const totalMins = sessions.reduce((sum, s) => sum + (s.durationMin || 0), 0);
     const hoursRound = Math.round(totalMins / 60 * 10) / 10;
 
-    const today = new Date().toDateString();
     const weekSessions = sessions.filter(s => {
       const sDate = new Date(s.datetime);
       const daysAgo = Math.floor((new Date() - sDate) / (1000 * 60 * 60 * 24));
@@ -2475,34 +3003,27 @@ const UIStudent = (() => {
       : 0;
 
     return `
-      <!-- Contenedor principal — Pomodoro ahora es la barra global #pomBar -->
+      <!-- Panel IA Unificado (Fase 3): una sola experiencia de conversación.
+           El chat del tutor reemplaza este cuerpo al iniciar la sesión. -->
       <div class="ai-unified-wrap">
+        <div id="aiPanelBody">
 
-        <!-- Sub-tabs -->
-        <div class="study-tabs">
-          <button class="study-tab active" data-tab="Tutor">🤖 Tutor IA</button>
-          <button class="study-tab" data-tab="Files">📁 Material de Estudio</button>
-        </div>
+          <div class="ai-intro">
+            <h1>🧠 Estudio con TrackFocus Intelligence</h1>
+            <p class="muted">Conversa, adjunta archivos (PDF, imágenes) o habla por voz. TrackFocus Intelligence te guía mientras estudias.</p>
+          </div>
 
-        <!-- Tab: Tutor IA -->
-        <div class="study-tab-panel" id="tabTutor">
-          <form id="sessionSetupForm" class="card">
-            <div class="row">
-              <div class="field">
-                <label>Fecha y hora</label>
-                <input type="datetime-local" name="datetime" value="${local}" required />
-              </div>
-              <div class="field">
-                <label>Duración (minutos)</label>
-                <input type="number" name="durationMin" min="5" max="240" value="30" required />
-              </div>
-            </div>
+          <form id="sessionSetupForm" class="card ai-config-card">
             <div class="row">
               <div class="field">
                 <label>Materia</label>
-                <select name="subject" required>
-                  ${subjects.map(x => `<option>${esc(x)}</option>`).join('')}
+                <select name="subject" id="subjectSelectAI" required>
+                  ${Subjects.renderOptions(subjects, lastSubject)}
                 </select>
+                <div id="customSubjectWrapAI" style="display:none;margin-top:8px;">
+                  <input type="text" id="customSubjectInputAI" placeholder="¿Qué materia deseas estudiar?"
+                    style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;font-family:inherit;box-sizing:border-box;min-height:44px;" />
+                </div>
               </div>
               <div class="field">
                 <label>Grado escolar</label>
@@ -2511,332 +3032,145 @@ const UIStudent = (() => {
                 </select>
               </div>
             </div>
-            <div class="field">
-              <label>Actividad previa</label>
-              <select name="previousActivity" required>
-                ${Sessions.PREVIOUS_ACTIVITIES.map(a => `<option value="${a.id}">${esc(a.label)}</option>`).join('')}
-              </select>
+            <div class="row">
+              <div class="field">
+                <label>Duración (minutos)</label>
+                <input type="number" name="durationMin" min="5" max="240" value="30" required />
+              </div>
+              <div class="field">
+                <label>Actividad previa</label>
+                <select name="previousActivity" required>
+                  ${Sessions.PREVIOUS_ACTIVITIES.map(a => `<option value="${a.id}">${esc(a.label)}</option>`).join('')}
+                </select>
+              </div>
             </div>
+            <div class="row">
+              <div class="field" style="flex:1;">
+                <label>Modo de estudio</label>
+                <select name="studyMode" id="studyModeSelectAI">
+                  <option value="tutor">🦉 Aprendizaje guiado (Minerva + DECO)</option>
+                  <option value="exam-prep">📝 Prepararme para un examen</option>
+                  <option value="topic-mastery">🎯 Mejorar en un tema específico</option>
+                </select>
+              </div>
+            </div>
+            <div class="row" id="examPrepFieldsAI" style="display:none;">
+              <div class="field" style="flex:1;">
+                <label>Fecha del examen (aproximada)</label>
+                <input type="date" name="examDate" />
+              </div>
+            </div>
+            <div class="row" id="topicMasteryFieldsAI" style="display:none;">
+              <div class="field" style="flex:1;">
+                <label>Tema específico que quieres dominar</label>
+                <input type="text" name="topicGoal" placeholder="Ej. Ecuaciones cuadráticas, Revolución Francesa, Fotosíntesis…" />
+              </div>
+            </div>
+            <input type="hidden" name="datetime" value="${local}" />
             <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
-              <button type="button" class="ghost" id="cancelSessionBtn">Cancelar</button>
-              <button class="primary" type="submit">Comenzar sesión con IA ✨</button>
+              <button class="primary" type="submit">Comenzar sesión ✨</button>
             </div>
           </form>
           <p class="muted" style="font-size:12px;margin-top:12px;text-align:center;">
-            La IA evaluará tu concentración y aprendizaje de forma invisible mientras estudias.
+            🦉 Método Minerva + 🎯 Sistema DECO activos en toda sesión. TrackFocus Intelligence te guía mientras aprendes.
           </p>
-        </div>
 
-        <!-- Tab: Material de Estudio -->
-        <div class="study-tab-panel hidden" id="tabFiles">
-          <div class="ai-study-grid">
-            <div style="display:flex;flex-direction:column;gap:16px;">
-              ${UIComponentsMultimedia.FileUploader('aiStudyUpload', null)}
-
-              ${recentFiles.length > 0 ? `
-              <div style="background:var(--bg-2);border-radius:var(--radius,12px);padding:16px;border:1px solid var(--border);">
-                <h3 style="margin:0 0 12px;">Archivos recientes</h3>
-                <div id="recentFilesList" style="display:flex;flex-direction:column;gap:8px;">
-                  ${recentFiles.map(f => UIComponentsMultimedia.FilePreviewCard(f)).join('')}
-                </div>
-              </div>` : `<div style="background:var(--bg-2);border-radius:var(--radius,12px);padding:16px;border:1px solid var(--border);color:var(--muted);text-align:center;">Aún no hay archivos cargados</div>`}
+          <!-- Sección Progreso -->
+          <div class="study-progress-grid">
+            <div class="progress-card">
+              <span class="prog-icon">🔥</span>
+              <span class="prog-val" data-count="${streak}">${streak}</span>
+              <span class="prog-label">Racha actual</span>
             </div>
-
-            <div id="chatContainer" class="hidden" style="display:flex;flex-direction:column;">
-              ${UIComponentsMultimedia.AIStudyChat('aiStudyChat')}
+            <div class="progress-card">
+              <span class="prog-icon">⏱</span>
+              <span class="prog-val" data-count="${hoursRound}" data-suffix="h">${hoursRound}h</span>
+              <span class="prog-label">Horas estudiadas</span>
+            </div>
+            <div class="progress-card">
+              <span class="prog-icon">⭐</span>
+              <span class="prog-val">Nv. ${levelInfo.current.level}</span>
+              <span class="prog-label">${esc(levelInfo.current.title)}</span>
+              <div class="prog-bar"><div style="width:${levelInfo.progress}%"></div></div>
+            </div>
+            <div class="progress-card">
+              <span class="prog-icon">🎯</span>
+              <span class="prog-val">${weekSessions}/5</span>
+              <span class="prog-label">Meta semanal</span>
+            </div>
+            <div class="progress-card">
+              <span class="prog-icon">📈</span>
+              <span class="prog-val" data-count="${avgConc}" data-suffix="/5">${avgConc}/5</span>
+              <span class="prog-label">Concentración</span>
+            </div>
+            <div class="progress-card">
+              <span class="prog-icon">🏛</span>
+              <span class="prog-val">${levelInfo.progress}%</span>
+              <span class="prog-label">Progreso nivel</span>
             </div>
           </div>
 
-          <div id="aiStudyActions" class="hidden ai-action-btns" style="margin-top:16px;">
-            <button class="ghost" data-action="summary">📋 Resumen</button>
-            <button class="ghost" data-action="questions">❓ Preguntas</button>
-            <button class="ghost" data-action="exercises">✏️ Ejercicios</button>
-            <button class="ghost" data-action="chat">💬 Conversar</button>
-          </div>
         </div>
-
-        <!-- Sección Progreso -->
-        <div class="study-progress-grid">
-          <div class="progress-card">
-            <span class="prog-icon">🔥</span>
-            <span class="prog-val" data-count="${streak}">${streak}</span>
-            <span class="prog-label">Racha actual</span>
-          </div>
-          <div class="progress-card">
-            <span class="prog-icon">⏱</span>
-            <span class="prog-val" data-count="${hoursRound}" data-suffix="h">${hoursRound}h</span>
-            <span class="prog-label">Horas estudiadas</span>
-          </div>
-          <div class="progress-card">
-            <span class="prog-icon">⭐</span>
-            <span class="prog-val">Nv. ${levelInfo.current.level}</span>
-            <span class="prog-label">${esc(levelInfo.current.title)}</span>
-            <div class="prog-bar"><div style="width:${levelInfo.progress}%"></div></div>
-          </div>
-          <div class="progress-card">
-            <span class="prog-icon">🎯</span>
-            <span class="prog-val">${weekSessions}/5</span>
-            <span class="prog-label">Meta semanal</span>
-          </div>
-          <div class="progress-card">
-            <span class="prog-icon">📈</span>
-            <span class="prog-val" data-count="${avgConc}" data-suffix="/5">${avgConc}/5</span>
-            <span class="prog-label">Concentración</span>
-          </div>
-          <div class="progress-card">
-            <span class="prog-icon">🏛</span>
-            <span class="prog-val">${levelInfo.progress}%</span>
-            <span class="prog-label">Progreso nivel</span>
-          </div>
-        </div>
-
       </div>`;
   }
 
   function wireAIStudy() {
-    const s = Storage.get();
-    const user = s.users[s.currentUserId];
-    const chatContainer = document.getElementById('chatContainer');
-    const aiStudyActions = document.getElementById('aiStudyActions');
-    let currentFileId = null;
-
-    // === Sub-tabs navigation ===
-    root().querySelectorAll('.study-tab').forEach(btn => {
-      btn.addEventListener('click', () => {
-        root().querySelectorAll('.study-tab').forEach(b => b.classList.remove('active'));
-        root().querySelectorAll('.study-tab-panel').forEach(p => p.classList.add('hidden'));
-        btn.classList.add('active');
-        const tabName = btn.dataset.tab;
-        const tabEl = document.getElementById('tab' + tabName);
-        if (tabEl) tabEl.classList.remove('hidden');
-      });
-    });
-
-    // === Tutor IA tab: session form ===
+    // Panel IA Unificado (Fase 3): el formulario de configuración inicia el chat
+    // del tutor, que ya integra archivos (multimodal) y voz en una sola conversación.
     const setupForm = document.getElementById('sessionSetupForm');
     if (setupForm) {
+      _wireSubjectOtro('subjectSelectAI', 'customSubjectWrapAI', 'customSubjectInputAI');
+
+      // Mostrar/ocultar campos extra según el modo de estudio seleccionado
+      const modeSelAI     = document.getElementById('studyModeSelectAI');
+      const examFieldsAI  = document.getElementById('examPrepFieldsAI');
+      const topicFieldsAI = document.getElementById('topicMasteryFieldsAI');
+      function _updateModeFields() {
+        const val = modeSelAI?.value;
+        if (examFieldsAI)  examFieldsAI.style.display  = val === 'exam-prep'      ? '' : 'none';
+        if (topicFieldsAI) topicFieldsAI.style.display = val === 'topic-mastery'  ? '' : 'none';
+      }
+      modeSelAI?.addEventListener('change', _updateModeFields);
+      _updateModeFields(); // estado inicial
+
+      // Demo guiada: pre-llenar el formulario y auto-submitear
+      if (window.__TF_DEMO_GUIDED_META) {
+        const meta = window.__TF_DEMO_GUIDED_META;
+        const sel = document.getElementById('subjectSelectAI');
+        if (sel) sel.value = meta.subject;
+        setupForm.querySelector('[name="grade"]').value = meta.grade;
+        setupForm.querySelector('[name="durationMin"]').value = meta.durationMin;
+        setupForm.querySelector('[name="previousActivity"]').value = meta.previousActivity;
+
+        // Auto-submitear después de un pequeño delay visual
+        setTimeout(() => setupForm.dispatchEvent(new Event('submit')), 800);
+      }
+
       setupForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
+        const userId = Storage.get().currentUserId;
+        const subject = _resolveSubject('subjectSelectAI', 'customSubjectInputAI', userId);
+        if (!subject) return;
+        const studyMode = fd.get('studyMode') || 'tutor';
         const metadata = {
           datetime:         new Date(fd.get('datetime')).toISOString(),
           durationMin:      Number(fd.get('durationMin')),
-          subject:          fd.get('subject'),
+          subject,
           grade:            fd.get('grade'),
-          previousActivity: fd.get('previousActivity')
+          previousActivity: fd.get('previousActivity'),
+          studyMode,
+          examDate:         studyMode === 'exam-prep'      ? (fd.get('examDate') || null)    : null,
+          topicGoal:        studyMode === 'topic-mastery'  ? (fd.get('topicGoal') || null)   : null
         };
         _startAiChat(metadata);
       });
     }
 
-    const cancelBtn = document.getElementById('cancelSessionBtn');
-    if (cancelBtn) {
-      cancelBtn.addEventListener('click', () => {
-        setupForm?.reset();
-      });
-    }
-
-    // Pomodoro ahora es la barra global #pomBar (ver wirePomodoroBar en app.js)
-    // Mostrar la barra global al entrar a Estudio IA
+    // Mostrar la barra Pomodoro global al entrar a Estudio IA.
     window._showPomBar?.();
 
-    // === Material de Estudio: file upload & analysis ===
-    UIComponentsMultimedia.wireFileUploader('aiStudyUpload', async (fileRecord) => {
-      try {
-        currentFileId = fileRecord.id;
-        chatContainer.style.display = 'flex';
-        aiStudyActions.classList.remove('hidden');
-
-        UIComponentsMultimedia.clearChatMessages('aiStudyChat');
-        UIComponentsMultimedia.wireChatMessage('aiStudyChat',
-          `Archivo cargado: ${esc(fileRecord.fileName)}. Analizando contenido...`,
-          false);
-        UIComponentsMultimedia.showChatLoading('aiStudyChat');
-
-        const analysis = await GeminiProxy.analyzeFile(fileRecord, {
-          subject: 'Educación',
-          language: 'es'
-        });
-
-        UIComponentsMultimedia.removeChatLoading('aiStudyChat');
-
-        // Encabezado del archivo analizado
-        UIComponentsMultimedia.wireChatMessageRich('aiStudyChat',
-          `<div class="analysis-head">📎 <strong>${esc(fileRecord.fileName)}</strong></div>`);
-
-        const nl2br = (t) => esc(t).replace(/\n/g, '<br>');
-
-        if (analysis.summary) {
-          UIComponentsMultimedia.wireChatMessageRich('aiStudyChat',
-            `<div class="analysis-block"><h4>📋 Resumen</h4><p>${nl2br(analysis.summary)}</p></div>`);
-        }
-        if (analysis.keyConcepts) {
-          UIComponentsMultimedia.wireChatMessageRich('aiStudyChat',
-            `<div class="analysis-block"><h4>💡 Conceptos clave</h4><p>${nl2br(analysis.keyConcepts)}</p></div>`);
-        }
-        if (analysis.questions && analysis.questions.length > 0) {
-          const qHtml = analysis.questions.map(q =>
-            `<div class="question-item"><strong>P:</strong> ${esc(q.text)}<br><strong>R:</strong> ${esc(q.answer || '')}</div>`
-          ).join('');
-          UIComponentsMultimedia.wireChatMessageRich('aiStudyChat',
-            `<div class="analysis-block"><h4>❓ Preguntas de práctica</h4>${qHtml}</div>`);
-        }
-        if (analysis.exercises && analysis.exercises.length > 0) {
-          const eHtml = analysis.exercises.map(e =>
-            `<div class="exercise-item"><strong>${esc(e.title)}:</strong> ${esc(e.prompt)}</div>`
-          ).join('');
-          UIComponentsMultimedia.wireChatMessageRich('aiStudyChat',
-            `<div class="analysis-block"><h4>✏️ Ejercicios</h4>${eHtml}</div>`);
-        }
-        if (analysis.feedback) {
-          UIComponentsMultimedia.wireChatMessageRich('aiStudyChat',
-            `<div class="analysis-block"><h4>🔄 Retroalimentación</h4><p>${nl2br(analysis.feedback)}</p></div>`);
-        }
-
-        UI.flash?.('Análisis completado. Haz preguntas en el chat.', 'success');
-      } catch (err) {
-        UIComponentsMultimedia.removeChatLoading('aiStudyChat');
-        UI.flash?.(err.message, 'error');
-      }
-    });
-
-    // === Action buttons (summary, questions, exercises, chat) ===
-    root().querySelectorAll('[data-action]').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        if (!currentFileId) {
-          UI.flash?.('Por favor carga un archivo primero.', 'warning');
-          return;
-        }
-        const action = btn.dataset.action;
-        let prompt = '';
-        switch (action) {
-          case 'summary': prompt = 'Dame un resumen detallado de este material'; break;
-          case 'questions': prompt = 'Genera 5 preguntas de práctica sobre este material'; break;
-          case 'exercises': prompt = 'Crea ejercicios guiados paso a paso sobre este material'; break;
-          case 'chat':
-            document.getElementById('aiStudyChat-textarea')?.focus();
-            return;
-        }
-        if (prompt) {
-          UIComponentsMultimedia.wireChatMessage('aiStudyChat', prompt, true);
-          UIComponentsMultimedia.clearChatInput('aiStudyChat');
-          UIComponentsMultimedia.showChatLoading('aiStudyChat');
-          try {
-            const answer = await GeminiProxy.answerQuestion(
-              currentFileId,
-              prompt,
-              Storage.get().uploadedFiles[currentFileId]?.metadata?.analysis
-            );
-            UIComponentsMultimedia.removeChatLoading('aiStudyChat');
-            UIComponentsMultimedia.wireChatMessage('aiStudyChat', esc(answer), false);
-          } catch (err) {
-            UIComponentsMultimedia.removeChatLoading('aiStudyChat');
-            UI.flash?.(err.message, 'error');
-          }
-        }
-      });
-    });
-
-    // Delete files handler — registrar UNA sola vez (evita listeners duplicados)
-    if (!_aiDeleteBound) {
-      _aiDeleteBound = true;
-      document.addEventListener('click', (e) => {
-        const btn = e.target.closest('[data-delete]');
-        if (btn) {
-          const fileId = btn.dataset.delete;
-          if (confirm('¿Eliminar este archivo?')) {
-            Files.delete(fileId);
-            App.go('ai-study');
-          }
-        }
-      });
-    }
-
-    // Chat send button
-    const sendBtn = document.getElementById('aiStudyChat-send');
-    const textarea = document.getElementById('aiStudyChat-textarea');
-
-    if (sendBtn && textarea) {
-      sendBtn.addEventListener('click', async () => {
-        const message = UIComponentsMultimedia.getChatInput('aiStudyChat').trim();
-        if (!message || !currentFileId) return;
-
-        UIComponentsMultimedia.wireChatMessage('aiStudyChat', message, true);
-        UIComponentsMultimedia.clearChatInput('aiStudyChat');
-        UIComponentsMultimedia.showChatLoading('aiStudyChat');
-
-        try {
-          const answer = await GeminiProxy.answerQuestion(
-            currentFileId,
-            message,
-            Storage.get().uploadedFiles[currentFileId]?.metadata?.analysis
-          );
-          UIComponentsMultimedia.removeChatLoading('aiStudyChat');
-          UIComponentsMultimedia.wireChatMessage('aiStudyChat', esc(answer), false);
-        } catch (err) {
-          UIComponentsMultimedia.removeChatLoading('aiStudyChat');
-          UI.flash?.(err.message, 'error');
-        }
-      });
-
-      textarea.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault();
-          sendBtn.click();
-        }
-      });
-    }
-
-    // Micrófono — dictado nativo (Nivel 1) con fallback a grabación + Gemini (Nivel 2)
-    const micBtn = document.getElementById('aiStudyChat-mic');
-    if (micBtn) {
-      let micActive = false;
-      const micIdle = () => { micActive = false; micBtn.textContent = '🎤'; micBtn.style.background = ''; };
-      const fillAndSend = (text) => {
-        if (!text) { UI.flash?.('No se detectó voz. Intenta de nuevo.', 'error'); return; }
-        const ta = document.getElementById('aiStudyChat-textarea');
-        if (ta) ta.value = text;
-        document.getElementById('aiStudyChat-send')?.click();
-      };
-      micBtn.addEventListener('click', async () => {
-        if (AudioTranscriber.isDictationSupported()) {
-          if (!micActive) {
-            micActive = true;
-            micBtn.textContent = '⏹';
-            micBtn.style.background = 'rgba(239,68,68,0.1)';
-            AudioTranscriber.startDictation(
-              (text) => { micIdle(); fillAndSend(text); },
-              (errMsg) => { micIdle(); UI.flash?.(errMsg, 'error'); }
-            );
-          } else { AudioTranscriber.stopDictation(); micIdle(); }
-          return;
-        }
-        // Fallback: grabación + transcripción Gemini
-        try {
-          if (!micActive) {
-            micActive = true;
-            micBtn.textContent = '⏹ Detener';
-            micBtn.style.background = 'rgba(239, 68, 68, 0.1)';
-            await AudioTranscriber.startRecording(() => {});
-          } else {
-            micActive = false;
-            micBtn.textContent = '🎤';
-            micBtn.style.background = '';
-            const audioBlob = await AudioTranscriber.stopRecording();
-            UIComponentsMultimedia.showChatLoading('aiStudyChat');
-            const { text } = await AudioTranscriber.transcribe(audioBlob, 'es-ES');
-            UIComponentsMultimedia.removeChatLoading('aiStudyChat');
-            fillAndSend(text);
-          }
-        } catch (err) {
-          micIdle();
-          UIComponentsMultimedia.removeChatLoading('aiStudyChat');
-          UI.flash?.(err.message, 'error');
-        }
-      });
-    }
-
-    // === Progress counters animation ===
+    // === Animación de contadores de progreso ===
     _wireProgressCounters();
   }
 
