@@ -182,6 +182,7 @@ const UIAdmin = (() => {
 
 /* Change classroom section in detail panel */
 .um-change-cr-btn  { background:rgba(59,130,246,.12); border:1px solid rgba(59,130,246,.3); color:#3b82f6; }
+.um-act-tutor { background:rgba(200,155,109,.12); border:1px solid rgba(200,155,109,.3); color:var(--primary); }
 .um-change-cr-section { background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px; margin-top:4px; }
 .um-change-cr-section label { font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); font-weight:600; }
 
@@ -514,9 +515,9 @@ const UIAdmin = (() => {
             ? (function(){
               var tutorCr = Schools.getTutorClassroom(u.id);
               var schoolCrs = u.schoolId ? Schools.listClassrooms(u.schoolId) : [];
-              return `<button class="um-act-btn" id="umBtnTutorMgmt" style="border-color:rgba(200,155,109,.3);color:var(--primary);">
+              return `<button class="um-act-btn um-act-tutor" id="umBtnTutorMgmt">
                 ${tutorCr ? 'Tutor de: ' + esc(tutorCr.name) : 'Asignar como tutor de aula'}
-                <span class="um-act-btn-desc" style="color:var(--muted);">${tutorCr ? 'Cambiar o quitar la asignación de tutoría.' : 'Asignar este docente como tutor responsable de un aula.'}</span>
+                <span class="um-act-btn-desc">${tutorCr ? 'Cambiar o quitar la asignación de tutoría.' : 'Asignar este docente como tutor responsable de un aula.'}</span>
               </button>
               <div id="umTutorSection" style="display:none;background:rgba(200,155,109,.06);border:1px solid rgba(200,155,109,.2);border-radius:10px;padding:12px;margin-top:4px;">
                 <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--primary);margin-bottom:8px;">${tutorCr ? 'Cambiar aula de tutoría' : 'Seleccionar aula'}</div>
@@ -1377,16 +1378,25 @@ const UIAdmin = (() => {
   .cp-tutor-email { font-size:10px; color:var(--muted); display:block; margin-top:1px; }
   .cp-tutor-badge { display:inline-block; background:rgba(200,155,109,.15); color:var(--primary); border:1px solid rgba(200,155,109,.3); border-radius:6px; padding:2px 8px; font-size:10px; font-weight:700; margin-bottom:4px; }
   .cp-no-tutor { font-size:11px; color:var(--muted); font-style:italic; }
-  .cp-tutor-form { background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-top:6px; display:flex; flex-direction:column; gap:7px; }
-  .cp-tutor-form label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--primary); }
-  .cp-tutor-select { background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:7px; color:var(--text); padding:7px 10px; font-size:13px; width:100%; }
-  .cp-tutor-search { background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:7px; color:var(--text); padding:7px 10px; font-size:12px; width:100%; box-sizing:border-box; }
-  .cp-tutor-search:focus,.cp-tutor-select:focus { outline:none; border-color:rgba(200,155,109,.5); }
-  .cp-tutor-save  { background:rgba(200,155,109,.15); border:1px solid rgba(200,155,109,.3); color:var(--primary); border-radius:6px; padding:6px 12px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; transition:all .15s; }
-  .cp-tutor-save:hover { background:rgba(200,155,109,.25); }
-  .cp-tutor-remove { background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.2); color:#ef4444; border-radius:6px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer; white-space:nowrap; transition:all .15s; }
+  .cp-tutor-form { background:rgba(10,12,18,.6); border:1px solid rgba(200,155,109,.2); border-radius:10px; padding:12px 14px; margin-top:6px; display:flex; flex-direction:column; gap:8px; }
+  .cp-tutor-form-title { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--primary); }
+  .cp-tutor-search { background:rgba(255,255,255,.06); border:1px solid var(--border); border-radius:7px; color:var(--text); padding:7px 10px; font-size:12px; width:100%; box-sizing:border-box; }
+  .cp-tutor-search:focus { outline:none; border-color:rgba(200,155,109,.5); }
+  .cp-tutor-search::placeholder { color:var(--muted); }
+  .cp-tutor-list { max-height:150px; overflow-y:auto; display:flex; flex-direction:column; gap:3px; border:1px solid var(--border); border-radius:8px; padding:4px; background:rgba(0,0,0,.25); }
+  .cp-tutor-item { display:flex; align-items:center; gap:9px; padding:7px 10px; border-radius:7px; cursor:pointer; border:1px solid transparent; transition:all .15s; user-select:none; }
+  .cp-tutor-item:hover { background:rgba(200,155,109,.07); border-color:rgba(200,155,109,.15); }
+  .cp-tutor-item.cp-ti-sel { background:rgba(200,155,109,.14); border-color:rgba(200,155,109,.4); }
+  .cp-tutor-item-av { width:28px; height:28px; border-radius:50%; background:rgba(200,155,109,.2); color:var(--primary); font-size:10px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .cp-tutor-item-name { font-size:12px; font-weight:600; color:var(--text); }
+  .cp-tutor-item-sub { font-size:10px; color:var(--muted); margin-top:1px; }
+  .cp-tutor-item-warn { font-size:10px; color:#f59e0b; }
+  .cp-tutor-list-empty { font-size:12px; color:var(--muted); text-align:center; padding:12px; }
+  .cp-tutor-save  { background:var(--primary); border:none; color:#0a0c12; border-radius:7px; padding:7px 14px; font-size:12px; font-weight:800; cursor:pointer; white-space:nowrap; transition:opacity .15s; }
+  .cp-tutor-save:hover { opacity:.88; }
+  .cp-tutor-remove { background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.2); color:#ef4444; border-radius:7px; padding:6px 12px; font-size:11px; font-weight:700; cursor:pointer; white-space:nowrap; transition:all .15s; }
   .cp-tutor-remove:hover { background:rgba(239,68,68,.18); }
-  .cp-tutor-toggle { background:rgba(255,255,255,.05); border:1px solid var(--border); color:var(--muted); border-radius:6px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer; white-space:nowrap; transition:all .15s; }
+  .cp-tutor-toggle { background:transparent; border:1px solid var(--border); color:var(--muted); border-radius:7px; padding:6px 12px; font-size:11px; font-weight:600; cursor:pointer; white-space:nowrap; transition:all .15s; }
   .cp-tutor-toggle:hover { border-color:rgba(200,155,109,.4); color:var(--primary); }
   .cp-tutor-form-wrap { display:none; }
 </style>`;
@@ -1478,6 +1488,7 @@ const UIAdmin = (() => {
     const dirs = (editSchool.adminIds||[]).map(function(id) { return s.users[id]; }).filter(Boolean);
     // Teachers in this school (for tutor selector)
     const schoolTeachers = Object.values(s.users).filter(function(u) { return u.role === 'teacher' && u.schoolId === editId; });
+    function _ini(n){ var p=(n||'?').trim().split(/\s+/).filter(Boolean); return p.length>=2?(p[0][0]+p[1][0]).toUpperCase():(p[0]||'?')[0].toUpperCase(); }
 
     const sortBar = `
       <div class="cp-sort-bar">
@@ -1495,20 +1506,26 @@ const UIAdmin = (() => {
           var tutorCell = tutor
             ? `<div class="cp-tutor-cell"><span class="cp-tutor-badge">Tutor</span><span class="cp-tutor-name">${esc(tutor.name)}</span><span class="cp-tutor-email">${esc(tutor.email)}</span></div>`
             : `<span class="cp-no-tutor">Sin tutor asignado</span>`;
+          var tutorItems = schoolTeachers.length === 0
+            ? '<div class="cp-tutor-list-empty">No hay docentes en este colegio.</div>'
+            : schoolTeachers.map(function(t){
+                var isCurrent = t.id === cr.tutorId;
+                var alreadyTutor = Schools.getTutorClassroom(t.id);
+                var warnText = alreadyTutor && alreadyTutor.id !== cr.id ? 'Ya tutor de ' + esc(alreadyTutor.name) : '';
+                return '<label class="cp-tutor-item'+(isCurrent?' cp-ti-sel':'')+'" data-teacher-name="'+esc(t.name).toLowerCase()+'" title="'+esc(t.email)+'">'
+                  + '<input type="radio" name="tutorRad-'+esc(cr.id)+'" value="'+esc(t.id)+'"'+(isCurrent?' checked':'')+' style="display:none;"/>'
+                  + '<div class="cp-tutor-item-av">'+_ini(t.name)+'</div>'
+                  + '<div><div class="cp-tutor-item-name">'+esc(t.name)+'</div>'
+                  + (warnText ? '<div class="cp-tutor-item-warn">⚠ '+warnText+'</div>' : '<div class="cp-tutor-item-sub">'+esc(t.email)+'</div>')
+                  + '</div></label>';
+              }).join('');
           var tutorFormHtml = `<div class="cp-tutor-form-wrap" id="tutorForm-${esc(cr.id)}">
             <div class="cp-tutor-form">
-              <label>${tutor ? 'Cambiar tutor' : 'Asignar tutor'}</label>
-              <input type="text" class="cp-tutor-search" id="tutorSearch-${esc(cr.id)}" placeholder="Buscar docente..." />
-              <select class="cp-tutor-select" id="tutorSel-${esc(cr.id)}">
-                <option value="">Seleccionar docente...</option>
-                ${schoolTeachers.map(function(t){
-                  var alreadyTutor = Schools.getTutorClassroom(t.id);
-                  var label = esc(t.name) + (alreadyTutor && alreadyTutor.id !== cr.id ? ' (ya tutor de '+esc(alreadyTutor.name)+')' : '');
-                  return '<option value="'+esc(t.id)+'"'+(t.id===cr.tutorId?' selected':'')+(alreadyTutor&&alreadyTutor.id!==cr.id?' class="cp-warn"':'')+'>'+label+'</option>';
-                }).join('')}
-              </select>
-              <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                <button class="cp-tutor-save" data-save-tutor="${esc(cr.id)}">Guardar tutor</button>
+              <div class="cp-tutor-form-title">${tutor ? 'Cambiar tutor del aula' : 'Asignar tutor al aula'}</div>
+              <input type="text" class="cp-tutor-search" id="tutorSearch-${esc(cr.id)}" placeholder="Filtrar por nombre…" />
+              <div class="cp-tutor-list" id="tutorList-${esc(cr.id)}">${tutorItems}</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;">
+                <button class="cp-tutor-save" data-save-tutor="${esc(cr.id)}">Guardar</button>
                 ${tutor ? `<button class="cp-tutor-remove" data-remove-tutor="${esc(cr.id)}" data-tutor-name="${esc(tutor.name)}">Quitar tutor</button>` : ''}
                 <button class="cp-tutor-toggle" data-toggle-tutor="${esc(cr.id)}">Cancelar</button>
               </div>
@@ -1718,16 +1735,29 @@ const UIAdmin = (() => {
       });
     });
 
-    // ── Tutor: búsqueda en select ──
+    // ── Tutor: búsqueda — filtra radio-cards ──
     root().querySelectorAll('.cp-tutor-search').forEach(function(inp){
       var crId = inp.id.replace('tutorSearch-','');
-      var sel  = document.getElementById('tutorSel-'+crId);
-      if (!sel) return;
-      var allOpts = Array.from(sel.options);
+      var list = document.getElementById('tutorList-'+crId);
+      if (!list) return;
       inp.addEventListener('input',function(){
-        var q = inp.value.toLowerCase();
-        allOpts.forEach(function(opt){
-          opt.style.display = !q || opt.text.toLowerCase().includes(q) ? '' : 'none';
+        var q = inp.value.toLowerCase().trim();
+        list.querySelectorAll('.cp-tutor-item').forEach(function(item){
+          var name = (item.dataset.teacherName || '');
+          item.style.display = (!q || name.includes(q)) ? '' : 'none';
+        });
+      });
+    });
+
+    // ── Tutor: click en card → seleccionar radio ──
+    root().querySelectorAll('.cp-tutor-list').forEach(function(list){
+      list.querySelectorAll('.cp-tutor-item').forEach(function(item){
+        item.addEventListener('click',function(){
+          var radio = item.querySelector('input[type="radio"]');
+          if (!radio) return;
+          list.querySelectorAll('.cp-tutor-item').forEach(function(i){ i.classList.remove('cp-ti-sel'); });
+          radio.checked = true;
+          item.classList.add('cp-ti-sel');
         });
       });
     });
@@ -1735,10 +1765,10 @@ const UIAdmin = (() => {
     // ── Tutor: guardar ──
     root().querySelectorAll('[data-save-tutor]').forEach(function(btn){
       btn.addEventListener('click',function(){
-        var crId = btn.dataset.saveTutor;
-        var sel  = document.getElementById('tutorSel-'+crId);
-        var tid  = sel && sel.value;
-        if (!tid){ UI.flash('Selecciona un docente.','error'); return; }
+        var crId   = btn.dataset.saveTutor;
+        var radio  = root().querySelector('input[name="tutorRad-'+crId+'"]:checked');
+        var tid    = radio && radio.value;
+        if (!tid){ UI.flash('Selecciona un docente de la lista.','error'); return; }
         try {
           Schools.setClassroomTutor(crId, tid);
           try{Storage.flush&&Storage.flush();}catch(_){}
