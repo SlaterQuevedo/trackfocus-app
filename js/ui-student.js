@@ -276,6 +276,7 @@ const UIStudent = (() => {
     const alerts = Analytics.generateAlerts(user.id);
     const school = user.schoolId ? s.schools[user.schoolId] : null;
     const classroom = user.classroomId ? s.classrooms[user.classroomId] : null;
+    const tutorUser = classroom?.tutorId ? s.users[classroom.tutorId] : null;
     const sorted = [...sessions].sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
     const schoolProfile = JSON.parse(localStorage.getItem('tf-school-profile-v1') || '{}');
     const nowMs = Date.now();
@@ -290,6 +291,7 @@ const UIStudent = (() => {
         <div class="ds-hero-meta">
           ${classroom ? `<span class="ds-hero-pill">${esc(classroom.name)}</span>` : ''}
           ${school ? `<span class="ds-hero-pill">🏫 ${esc(school.name)}</span>` : ''}
+          ${tutorUser ? `<span class="ds-hero-pill">👤 Prof. ${esc(tutorUser.name)}</span>` : ''}
         </div>
         <div class="ds-hero-date">${todayStr}</div>
       </div>`;
