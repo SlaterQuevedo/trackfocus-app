@@ -497,6 +497,194 @@ const App = (() => {
 
   // ---- Pantalla de bienvenida rediseñada (institucional) ----
   function screenWelcome() {
+    // --- Tarjeta preview del hero (siempre anónima — esta es una página pública) ---
+    // IMPORTANTE: nunca leer localStorage aquí. Cualquier visitante vería los datos
+    // del propietario del dispositivo. Siempre mostrar contenido genérico/aspiracional.
+    const _previewHtml = (() => {
+      const DAY = new Date().getDay();
+      const DAYS_ES = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+      const dayName = DAYS_ES[DAY].charAt(0).toUpperCase() + DAYS_ES[DAY].slice(1);
+
+      // No leer Storage ni Sessions en la landing page pública.
+      const user = null, sessions = [];
+
+      // --- ESTADO: usuario con sesiones guardadas ---
+      if (user && sessions.length > 0) {
+        const firstName = (user.name || user.firstName || 'tú').split(' ')[0];
+        const apro = user.academicProfile || {};
+        const uni    = apro.targetUniversity || apro.university || user.university || '';
+        const career = apro.targetCareer || apro.career || user.career || '';
+        const goal   = (uni || career)
+          ? '🎓 ' + [uni, career].filter(Boolean).join(' · ')
+          : '🎓 Tu meta universitaria';
+
+        const totalMins = sessions.reduce(function(a, s){ return a + (Number(s.duration)||0); }, 0);
+        const totalConc = sessions.reduce(function(a, s){ return a + (Number(s.concentration)||0); }, 0);
+        const avgConc   = (totalConc / sessions.length).toFixed(1);
+        const hours     = (totalMins / 60).toFixed(1);
+
+        // Racha de días consecutivos
+        const daySet = new Set(sessions.map(function(s){
+          return new Date(s.date || s.startTime || 0).toDateString();
+        }));
+        let streak = 0, d = new Date(); d.setHours(0,0,0,0);
+        while (daySet.has(d.toDateString())) { streak++; d = new Date(d.getTime() - 86400000); }
+
+        // Materia sugerida: la más frecuente esta semana
+        const weekAgo = Date.now() - 7 * 86400000;
+        const recentSubs = sessions
+          .filter(function(s){ return new Date(s.date||s.startTime||0).getTime() > weekAgo; })
+          .map(function(s){ return s.subject; })
+          .filter(Boolean);
+        const subCount = recentSubs.reduce(function(acc,sub){ acc[sub]=(acc[sub]||0)+1; return acc; }, {});
+        const topEntry = Object.entries(subCount).sort(function(a,b){ return b[1]-a[1]; })[0];
+        const mission  = (topEntry && topEntry[0]) || (sessions[sessions.length-1]||{}).subject || 'Tu materia principal';
+
+        const pct = Math.min(94, streak * 6 + Math.min(40, sessions.length * 2));
+
+        const AI_TIPS = [
+          'La constancia es tu mayor ventaja. Sigue apareciendo.',
+          'Cada sesión registrada te acerca más a tu meta.',
+          'Tu patrón de estudio mejora semana a semana.',
+          'La comprensión profunda llega con la práctica constante.',
+          'Un día difícil no borra una semana de progreso.',
+          'Ariven detecta tus mejores horas. Confía en el proceso.',
+          'Tu futuro se construye con cada sesión de hoy.'
+        ];
+
+        return '<div class="lp-preview">'
+          + '<div class="lp-prev-topbar">'
+          + '<span class="lp-prev-dot lp-prev-dot--r"></span>'
+          + '<span class="lp-prev-dot lp-prev-dot--y"></span>'
+          + '<span class="lp-prev-dot lp-prev-dot--g"></span>'
+          + '<span class="lp-prev-label">Ariven · Panel Personal</span>'
+          + '</div>'
+          + '<div class="lp-prev-body">'
+          + '<div class="lp-prev-hero-row">'
+          + '<div>'
+          + '<div class="lp-prev-greeting">Hola, ' + firstName + ' 👋</div>'
+          + '<div class="lp-prev-goal">' + goal + '</div>'
+          + '</div>'
+          + '<div class="lp-prev-pct">' + pct + '%</div>'
+          + '</div>'
+          + '<div class="lp-prev-bar-wrap"><div class="lp-prev-bar" style="width:' + pct + '%"></div></div>'
+          + '<div class="lp-prev-mission">'
+          + '<div class="lp-prev-mission-label">MISIÓN DEL DÍA</div>'
+          + '<div class="lp-prev-mission-sub">' + mission + '</div>'
+          + '<div class="lp-prev-mission-reason">Concentración promedio: ' + avgConc + '/5</div>'
+          + '<div class="lp-prev-mission-btn">Comenzar a estudiar →</div>'
+          + '</div>'
+          + '<div class="lp-prev-chips">'
+          + '<span class="lp-prev-chip lp-prev-chip--fire">🔥 ' + streak + ' día' + (streak !== 1 ? 's' : '') + '</span>'
+          + '<span class="lp-prev-chip lp-prev-chip--time">⏱ ' + hours + 'h</span>'
+          + '<span class="lp-prev-chip lp-prev-chip--conc">🧠 ' + avgConc + '/5</span>'
+          + '</div>'
+          + '<div class="lp-prev-ai">'
+          + '<span class="lp-prev-ai-badge">✶ Ariven Intelligence</span>'
+          + '<p class="lp-prev-ai-text">' + AI_TIPS[DAY] + '</p>'
+          + '</div>'
+          + '</div></div>';
+      }
+
+      // --- ESTADO: usuario registrado pero sin sesiones aún ---
+      if (user) {
+        const firstName = (user.name || user.firstName || 'estudiante').split(' ')[0];
+        const NEW_TIPS = [
+          'La primera sesión es la más importante. Empieza hoy.',
+          'Define tu meta y Ariven hará el resto.',
+          'El primer paso siempre es el más difícil. Tú ya lo diste.',
+          'Una sesión registrada ya te pone por delante de ayer.',
+          'Tu concentración mejora cada vez que la practicas.',
+          'Los grandes estudiantes empezaron donde tú estás ahora.',
+          'El hábito se construye con una sesión a la vez.'
+        ];
+        return '<div class="lp-preview">'
+          + '<div class="lp-prev-topbar">'
+          + '<span class="lp-prev-dot lp-prev-dot--r"></span>'
+          + '<span class="lp-prev-dot lp-prev-dot--y"></span>'
+          + '<span class="lp-prev-dot lp-prev-dot--g"></span>'
+          + '<span class="lp-prev-label">Ariven · ' + firstName + '\'s Panel</span>'
+          + '</div>'
+          + '<div class="lp-prev-body">'
+          + '<div class="lp-prev-hero-row">'
+          + '<div>'
+          + '<div class="lp-prev-greeting">Hola, ' + firstName + ' 👋</div>'
+          + '<div class="lp-prev-goal">📍 Listo para empezar</div>'
+          + '</div>'
+          + '<div class="lp-prev-pct" style="font-size:15px;color:var(--muted)">Día 1</div>'
+          + '</div>'
+          + '<div class="lp-prev-bar-wrap"><div class="lp-prev-bar" style="width:3%"></div></div>'
+          + '<div class="lp-prev-mission">'
+          + '<div class="lp-prev-mission-label">PRIMER PASO</div>'
+          + '<div class="lp-prev-mission-sub">Tu primera sesión</div>'
+          + '<div class="lp-prev-mission-reason">Registra hoy y Ariven empieza a aprender contigo.</div>'
+          + '<div class="lp-prev-mission-btn">Iniciar primera sesión →</div>'
+          + '</div>'
+          + '<div class="lp-prev-chips">'
+          + '<span class="lp-prev-chip lp-prev-chip--fire">🔥 Empieza hoy</span>'
+          + '<span class="lp-prev-chip lp-prev-chip--time">⏱ 0h</span>'
+          + '<span class="lp-prev-chip lp-prev-chip--conc">🧠 Sin límites</span>'
+          + '</div>'
+          + '<div class="lp-prev-ai">'
+          + '<span class="lp-prev-ai-badge">✶ Ariven Intelligence</span>'
+          + '<p class="lp-prev-ai-text">' + NEW_TIPS[DAY] + '</p>'
+          + '</div>'
+          + '</div></div>';
+      }
+
+      // --- ESTADO: visitante nuevo (sin cuenta) ---
+      const TIPS = [
+        'La concentración no se improvisa. Se entrena sesión a sesión.',
+        'Estudiar 30 min con foco vale más que 3 horas con distracción.',
+        'Tu mejor hora para estudiar es la que descubrirás con Ariven.',
+        'Cada sesión registrada es evidencia real de que estás avanzando.',
+        'La constancia supera al talento. Empieza hoy.',
+        'Un objetivo claro convierte el esfuerzo en progreso medible.',
+        'El aprendizaje profundo no es acumulación. Es comprensión.'
+      ];
+      const AI_INTROS = [
+        'Cuando crees tu cuenta, esto se llenará con tus datos reales.',
+        'Cada número aquí vendrá de tus propias sesiones de estudio.',
+        'Así de claro verás tu progreso desde el primer día.',
+        'Tu futuro estudiante tiene métricas reales, no estimaciones.',
+        'Personalizado para ti — no hay dos paneles iguales en Ariven.',
+        'Esto es lo que verás cuando llegues a tu primera semana.',
+        'El progreso real se ve así. Tú lo construyes sesión a sesión.'
+      ];
+      return '<div class="lp-preview lp-preview--guest">'
+        + '<div class="lp-prev-topbar">'
+        + '<span class="lp-prev-dot lp-prev-dot--r"></span>'
+        + '<span class="lp-prev-dot lp-prev-dot--y"></span>'
+        + '<span class="lp-prev-dot lp-prev-dot--g"></span>'
+        + '<span class="lp-prev-label">Ariven · Vista previa</span>'
+        + '</div>'
+        + '<div class="lp-prev-body">'
+        + '<div class="lp-prev-hero-row">'
+        + '<div>'
+        + '<div class="lp-prev-greeting">Hola, futuro estudiante 👋</div>'
+        + '<div class="lp-prev-goal">🎓 Tu universidad · Tu carrera</div>'
+        + '</div>'
+        + '<div class="lp-prev-pct lp-prev-pct--ghost">—%</div>'
+        + '</div>'
+        + '<div class="lp-prev-bar-wrap lp-prev-bar-wrap--ghost">'
+        + '<div class="lp-prev-bar lp-prev-bar--ghost" style="width:0%"></div>'
+        + '</div>'
+        + '<div class="lp-prev-mission">'
+        + '<div class="lp-prev-mission-label">CONSEJO DEL ' + dayName.toUpperCase() + '</div>'
+        + '<div class="lp-prev-tip-text">' + TIPS[DAY] + '</div>'
+        + '</div>'
+        + '<div class="lp-prev-chips">'
+        + '<span class="lp-prev-chip lp-prev-chip--fire lp-prev-chip--ghost">🔥 Tu racha</span>'
+        + '<span class="lp-prev-chip lp-prev-chip--time lp-prev-chip--ghost">⏱ Tu tiempo</span>'
+        + '<span class="lp-prev-chip lp-prev-chip--conc lp-prev-chip--ghost">🧠 Tu foco</span>'
+        + '</div>'
+        + '<div class="lp-prev-ai">'
+        + '<span class="lp-prev-ai-badge">✶ Ariven Intelligence</span>'
+        + '<p class="lp-prev-ai-text">' + AI_INTROS[DAY] + '</p>'
+        + '</div>'
+        + '</div></div>';
+    })();
+
     return `
     <div class="lp">
       <div class="lp-glow lp-glow-1"></div>
@@ -536,39 +724,7 @@ const App = (() => {
           <p class="lp-hero-microcopy">Sin tarjeta de crédito · Gratis para empezar</p>
         </div>
         <div class="lp-hero-right" aria-hidden="true">
-          <div class="lp-preview">
-            <div class="lp-prev-topbar">
-              <span class="lp-prev-dot lp-prev-dot--r"></span>
-              <span class="lp-prev-dot lp-prev-dot--y"></span>
-              <span class="lp-prev-dot lp-prev-dot--g"></span>
-              <span class="lp-prev-label">Ariven · Panel Personal</span>
-            </div>
-            <div class="lp-prev-body">
-              <div class="lp-prev-hero-row">
-                <div>
-                  <div class="lp-prev-greeting">Hola, Slater 👋</div>
-                  <div class="lp-prev-goal">🎓 UNMSM · Ingeniería de Sistemas</div>
-                </div>
-                <div class="lp-prev-pct">74%</div>
-              </div>
-              <div class="lp-prev-bar-wrap"><div class="lp-prev-bar" style="width:74%"></div></div>
-              <div class="lp-prev-mission">
-                <div class="lp-prev-mission-label">MISIÓN DEL DÍA</div>
-                <div class="lp-prev-mission-sub">Matemática</div>
-                <div class="lp-prev-mission-reason">Tu concentración puede mejorar esta semana.</div>
-                <div class="lp-prev-mission-btn">Comenzar a estudiar →</div>
-              </div>
-              <div class="lp-prev-chips">
-                <span class="lp-prev-chip lp-prev-chip--fire">🔥 7 días</span>
-                <span class="lp-prev-chip lp-prev-chip--time">⏱ 4.5h</span>
-                <span class="lp-prev-chip lp-prev-chip--conc">🧠 4.1/5</span>
-              </div>
-              <div class="lp-prev-ai">
-                <span class="lp-prev-ai-badge">✦ Ariven Intelligence</span>
-                <p class="lp-prev-ai-text">Tu constancia esta semana dice más que cualquier nota. Un paso más hoy.</p>
-              </div>
-            </div>
-          </div>
+          ${_previewHtml}
         </div>
       </section>
 
