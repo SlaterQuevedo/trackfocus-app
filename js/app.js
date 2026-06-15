@@ -497,205 +497,236 @@ const App = (() => {
 
   // ---- Pantalla de bienvenida rediseñada (institucional) ----
   function screenWelcome() {
-    const svgStudent = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`;
-    const svgTeacher = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>`;
-    const svgAdmin   = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
-    const svgArrow   = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
-
     return `
     <div class="lp">
       <div class="lp-glow lp-glow-1"></div>
       <div class="lp-glow lp-glow-2"></div>
       <div class="lp-glow lp-glow-3"></div>
 
+      <!-- ── HEADER ── -->
       <header class="lp-header">
         <div class="lp-brand">
           <img src="assets/logo.svg" class="lp-brand-img" alt="Ariven">
           <span>Ariven</span>
         </div>
+        <nav class="lp-nav" aria-label="Navegación principal">
+          <a class="lp-nav-link" href="#lpSolutions">Soluciones</a>
+          <a class="lp-nav-link" href="#lpHow">Cómo funciona</a>
+          <a class="lp-nav-link" href="#lpEcosystem">Instituciones</a>
+        </nav>
+        <div class="lp-header-actions">
+          <button class="lp-header-btn" id="lpScrollCards">Iniciar sesión</button>
+          <button class="lp-header-btn lp-header-btn--primary" id="lpScrollCards2">Probar Ariven</button>
+        </div>
       </header>
 
-      <div class="lp-hero">
-
-        <!-- HERO -->
-        <div class="lp-pill">
-          <span class="lp-pill-dot"></span>
-          Tu sistema para aprender mejor
+      <!-- ── HERO ── -->
+      <section class="lp-hero-split">
+        <div class="lp-hero-left">
+          <div class="lp-pill">
+            <span class="lp-pill-dot"></span>
+            Plataforma educativa con IA · Perú
+          </div>
+          <h1 class="lp-hero-title">No estudies más.<br><span class="lp-hero-title-accent">Estudia mejor.</span></h1>
+          <p class="lp-hero-sub">Ariven convierte cada hora de estudio en evidencia real de aprendizaje mediante inteligencia artificial, ayudándote a demostrar que realmente estás avanzando.</p>
+          <div class="lp-hero-actions">
+            <button class="lp-btn-main" id="lpHeroCta">Probar Ariven gratis</button>
+            <button class="lp-btn-ghost-main" id="lpHeroHow">Ver cómo funciona</button>
+          </div>
+          <p class="lp-hero-microcopy">Sin tarjeta de crédito · Gratis para empezar</p>
         </div>
-        <h1 class="lp-title">Mide lo que aprendes<br>No lo que estudias</h1>
-        <p class="lp-subtitle">Convierte cada sesión de estudio en progreso real con métricas de concentración y orientación personalizada.</p>
-
-        <div class="lp-hero-cta">
-          <button class="lp-btn-hero-primary" id="lpScrollCards2">Comenzar</button>
-          <a href="?demo=1" class="lp-btn-hero-ghost">🎯 Ver demostración</a>
+        <div class="lp-hero-right" aria-hidden="true">
+          <div class="lp-preview">
+            <div class="lp-prev-topbar">
+              <span class="lp-prev-dot lp-prev-dot--r"></span>
+              <span class="lp-prev-dot lp-prev-dot--y"></span>
+              <span class="lp-prev-dot lp-prev-dot--g"></span>
+              <span class="lp-prev-label">Ariven · Panel Personal</span>
+            </div>
+            <div class="lp-prev-body">
+              <div class="lp-prev-hero-row">
+                <div>
+                  <div class="lp-prev-greeting">Hola, Slater 👋</div>
+                  <div class="lp-prev-goal">🎓 UNMSM · Ingeniería de Sistemas</div>
+                </div>
+                <div class="lp-prev-pct">74%</div>
+              </div>
+              <div class="lp-prev-bar-wrap"><div class="lp-prev-bar" style="width:74%"></div></div>
+              <div class="lp-prev-mission">
+                <div class="lp-prev-mission-label">MISIÓN DEL DÍA</div>
+                <div class="lp-prev-mission-sub">Matemática</div>
+                <div class="lp-prev-mission-reason">Tu concentración puede mejorar esta semana.</div>
+                <div class="lp-prev-mission-btn">Comenzar a estudiar →</div>
+              </div>
+              <div class="lp-prev-chips">
+                <span class="lp-prev-chip lp-prev-chip--fire">🔥 7 días</span>
+                <span class="lp-prev-chip lp-prev-chip--time">⏱ 4.5h</span>
+                <span class="lp-prev-chip lp-prev-chip--conc">🧠 4.1/5</span>
+              </div>
+              <div class="lp-prev-ai">
+                <span class="lp-prev-ai-badge">✦ Ariven Intelligence</span>
+                <p class="lp-prev-ai-text">Tu constancia esta semana dice más que cualquier nota. Un paso más hoy.</p>
+              </div>
+            </div>
+          </div>
         </div>
-        <p class="lp-cta-subtext">Elige cómo usar Ariven en menos de un minuto.</p>
+      </section>
 
-        <!-- PROBLEMA -->
-        <section class="lp-section lp-problem">
-          <div class="lp-section-label">El problema</div>
-          <h2 class="lp-section-title">La mayoría de estudiantes estudia sin saber si realmente está aprendiendo</h2>
-          <div class="lp-problem-grid">
-            <div class="lp-problem-card">
-              <span class="lp-problem-icon">😵</span>
-              <h4>Distracción constante</h4>
-              <p>El celular, las redes y el entorno interrumpen tu concentración antes de que empiece.</p>
-            </div>
-            <div class="lp-problem-card">
-              <span class="lp-problem-icon">🧭</span>
-              <h4>Sin orientación clara</h4>
-              <p>Estudias horas pero no sabes si realmente estás aprendiendo o solo leyendo.</p>
-            </div>
-            <div class="lp-problem-card">
-              <span class="lp-problem-icon">📉</span>
-              <h4>Esfuerzo sin resultados</h4>
-              <p>Te esfuerzas mucho pero los exámenes no reflejan lo que sientes que sabes.</p>
-            </div>
+      <!-- ── PROBLEMA ── -->
+      <section class="lp-section lp-prob-section" id="lpSolutions">
+        <div class="lp-section-label">El problema</div>
+        <h2 class="lp-section-title">Estudiar duro no siempre significa aprender.</h2>
+        <p class="lp-section-sub">Cada perfil enfrenta su propio obstáculo. Ariven los resuelve a todos.</p>
+        <div class="lp-prob-grid">
+          <div class="lp-prob-card">
+            <div class="lp-prob-tag lp-prob-tag--gold">Uso Personal</div>
+            <div class="lp-prob-icon">🎯</div>
+            <h4>Sin ruta hacia la universidad</h4>
+            <p>Estudias solo y no sabes si lo que haces te acerca realmente a la carrera que quieres.</p>
           </div>
-        </section>
-
-        <!-- SOLUCIÓN -->
-        <section class="lp-section lp-solution">
-          <div class="lp-section-label">La solución</div>
-          <h2 class="lp-section-title">Tres pilares que transforman cómo estudias</h2>
-          <div class="lp-solution-grid">
-            <div class="lp-solution-card lp-solution-card--gold">
-              <div class="lp-solution-icon">🍅</div>
-              <h4>Concentración</h4>
-              <p>Sesiones Pomodoro con métricas reales de enfoque. Descubre cuándo y cómo estudias mejor.</p>
-            </div>
-            <div class="lp-solution-card lp-solution-card--purple">
-              <div class="lp-solution-icon">🧠</div>
-              <h4>Comprensión</h4>
-              <p>Ariven Intelligence evalúa qué tan profundo aprendes mediante preguntas y evaluaciones DECO.</p>
-            </div>
-            <div class="lp-solution-card lp-solution-card--blue">
-              <div class="lp-solution-icon">🏆</div>
-              <h4>Constancia</h4>
-              <p>Rachas, XP y logros que convierten el estudio en hábito. Tu progreso siempre visible.</p>
-            </div>
+          <div class="lp-prob-card">
+            <div class="lp-prob-tag lp-prob-tag--blue">Estudiante</div>
+            <div class="lp-prob-icon">📚</div>
+            <h4>Horas de estudio sin evidencia</h4>
+            <p>Estudias durante horas pero no puedes demostrar cuánto avanzas ni en qué fallaste.</p>
           </div>
-        </section>
-
-        <!-- CÓMO FUNCIONA -->
-        <section class="lp-section lp-how">
-          <div class="lp-section-label">Cómo funciona</div>
-          <h2 class="lp-section-title">Cuatro pasos hacia el aprendizaje real</h2>
-          <div class="lp-steps">
-            <div class="lp-step">
-              <div class="lp-step-num">1</div>
-              <div class="lp-step-icon">📝</div>
-              <h4>Registra tu sesión</h4>
-              <p>Elige materia, duración y lo que vas a estudiar.</p>
-            </div>
-            <div class="lp-step-connector"></div>
-            <div class="lp-step">
-              <div class="lp-step-num">2</div>
-              <div class="lp-step-icon">🍅</div>
-              <h4>Estudia con enfoque</h4>
-              <p>El Pomodoro mide tu concentración en tiempo real.</p>
-            </div>
-            <div class="lp-step-connector"></div>
-            <div class="lp-step">
-              <div class="lp-step-num">3</div>
-              <div class="lp-step-icon">🧠</div>
-              <h4>Comprende más profundo</h4>
-              <p>La IA analiza tu nivel y genera preguntas personalizadas.</p>
-            </div>
-            <div class="lp-step-connector"></div>
-            <div class="lp-step">
-              <div class="lp-step-num">4</div>
-              <div class="lp-step-icon">📊</div>
-              <h4>Ve tu progreso</h4>
-              <p>Métricas, logros y racha diaria que te motivan a volver.</p>
-            </div>
+          <div class="lp-prob-card">
+            <div class="lp-prob-tag lp-prob-tag--purple">Docente</div>
+            <div class="lp-prob-icon">👥</div>
+            <h4>Imposible acompañar a todos</h4>
+            <p>Con 30 estudiantes en el aula, detectar quién necesita ayuda antes del examen es muy difícil.</p>
           </div>
-        </section>
-
-        <!-- WIZARD DE ACCESO — Se rellena dinámicamente por wireWelcome() -->
-        <section class="lp-section lp-roles-section" id="lpRolesSection">
-          <div id="lpAccessWizard"></div>
-          <div id="authForm" class="lp-form-wrap hidden"></div>
-        </section>
-
-        <!-- DEMO IA -->
-        <div class="lp-ai-demo reveal">
-          <div class="lp-ai-demo__header">
-            <div class="lp-ai-badge"><span>🧠</span> Ariven Intelligence</div>
-            <h2 class="lp-ai-demo__title">Así estudias con Ariven</h2>
-            <p class="lp-ai-demo__subtitle">Aprende paso a paso con ayuda inteligente. La IA te guía, te hace preguntas y te ayuda a comprender mejor los temas que estudias.</p>
+          <div class="lp-prob-card">
+            <div class="lp-prob-tag lp-prob-tag--green">Director</div>
+            <div class="lp-prob-icon">📊</div>
+            <h4>Cero evidencia de impacto</h4>
+            <p>Los informes llegan tarde y no reflejan lo que realmente pasa en el aprendizaje diario.</p>
           </div>
-
-          <div class="lp-ai-demo__content">
-            <div class="lp-ai-chat">
-              <div class="lp-ai-chat__bar">
-                <span class="lp-ai-dot lp-ai-dot--red"></span>
-                <span class="lp-ai-dot lp-ai-dot--yellow"></span>
-                <span class="lp-ai-dot lp-ai-dot--green"></span>
-                <span class="lp-ai-chat__label">Ariven Intelligence · Demo</span>
-              </div>
-              <div class="lp-ai-chat__body">
-                <div class="lp-ai-msg lp-ai-msg--user">
-                  <div class="lp-ai-bubble">¿Cómo resuelvo una ecuación cuadrática?</div>
-                </div>
-                <div class="lp-ai-msg lp-ai-msg--ai">
-                  <div class="lp-ai-avatar">🧠</div>
-                  <div class="lp-ai-msg__col">
-                    <div class="lp-ai-bubble lp-ai-bubble--ai">Primero identifica los coeficientes a, b y c.</div>
-                    <div class="lp-ai-bubble lp-ai-bubble--ai">Observa este ejemplo:</div>
-                    <div class="lp-ai-code">x² + 5x + 6 = 0</div>
-                    <div class="lp-ai-bubble lp-ai-bubble--ai">Ahora intenta resolverlo tú.</div>
-                    <div class="lp-ai-bubble lp-ai-bubble--ai lp-ai-bubble--accent">¿Qué dos números multiplicados dan 6 y sumados dan 5?</div>
-                  </div>
-                </div>
-              </div>
-              <div class="lp-ai-checks">
-                <span class="lp-ai-check">✅ No te da la respuesta completa</span>
-                <span class="lp-ai-check">✅ Te guía paso a paso</span>
-                <span class="lp-ai-check">✅ Genera ejercicios según tu grado</span>
-                <span class="lp-ai-check">✅ Analiza tu progreso y concentración</span>
-              </div>
-            </div>
-
-            <div class="lp-ai-files">
-              <div class="lp-ai-files__title">Sube tus materiales de estudio</div>
-              <div class="lp-ai-flow">
-                <div class="lp-ai-flow__row">
-                  <span class="lp-ai-flow__item">📄 PDF</span>
-                  <span class="lp-ai-flow__item">🖼 Imagen</span>
-                  <span class="lp-ai-flow__item">🎤 Audio</span>
-                  <span class="lp-ai-flow__item">📊 PPT</span>
-                  <span class="lp-ai-flow__item">📝 Documento</span>
-                </div>
-                <div class="lp-ai-flow__arrow">↓</div>
-                <div class="lp-ai-flow__brain">🧠 IA de Ariven</div>
-                <div class="lp-ai-flow__arrow">↓</div>
-                <div class="lp-ai-flow__row lp-ai-flow__row--out">
-                  <span class="lp-ai-flow__item lp-ai-flow__item--out">📚 Resúmenes</span>
-                  <span class="lp-ai-flow__item lp-ai-flow__item--out">❓ Preguntas</span>
-                  <span class="lp-ai-flow__item lp-ai-flow__item--out">✏️ Ejercicios</span>
-                  <span class="lp-ai-flow__item lp-ai-flow__item--out">📈 Retroalimentación</span>
-                </div>
-              </div>
-              <p class="lp-ai-files__desc">Sube tus materiales de estudio y recibe ayuda personalizada para comprender mejor los temas que estás aprendiendo.</p>
-            </div>
-          </div>
-
         </div>
+      </section>
 
-        <section class="lp-section lp-cta-final">
-          <p class="lp-cta-final-lead">El progreso no ocurre por accidente.</p>
-          <h2 class="lp-cta-final-title">Empieza con una sesión<br>Construye un hábito<br>Cambia tu futuro</h2>
-          <button class="lp-btn-final" id="lpCtaFinal">Empieza tu camino con Ariven</button>
-          <p class="lp-cta-final-sub">Estudiantes, docentes e instituciones comienzan aquí.</p>
-        </section>
+      <!-- ── SOLUCIÓN EN 3 PASOS ── -->
+      <section class="lp-section lp-steps-section" id="lpHow">
+        <div class="lp-section-label">La solución</div>
+        <h2 class="lp-section-title">Ariven transforma cómo aprendes en 3 pasos simples.</h2>
+        <div class="lp-steps-v2">
+          <div class="lp-step-v2">
+            <div class="lp-step-v2-num">1</div>
+            <div class="lp-step-v2-icon">🎯</div>
+            <h4>Define tu meta</h4>
+            <p>Universidad, curso o objetivo institucional. Ariven construye tu ruta desde el primer día.</p>
+            <div class="lp-step-v2-chips">
+              <span>🎓 Universidad</span><span>📐 Carrera</span><span>🏫 Institución</span>
+            </div>
+          </div>
+          <div class="lp-step-v2-arrow">→</div>
+          <div class="lp-step-v2">
+            <div class="lp-step-v2-num">2</div>
+            <div class="lp-step-v2-icon">🧠</div>
+            <h4>Estudia con acompañamiento inteligente</h4>
+            <p>La IA analiza tu sesión en tiempo real, genera preguntas personalizadas y detecta tus hábitos.</p>
+            <div class="lp-step-v2-chips">
+              <span>🤖 IA Mentor</span><span>⏱ Pomodoro</span><span>📈 Hábitos</span>
+            </div>
+          </div>
+          <div class="lp-step-v2-arrow">→</div>
+          <div class="lp-step-v2">
+            <div class="lp-step-v2-num">3</div>
+            <div class="lp-step-v2-icon">🏆</div>
+            <h4>Demuestra tu progreso</h4>
+            <p>Genera reportes con evidencia real: sesiones, concentración, comprensión y constancia.</p>
+            <div class="lp-step-v2-chips">
+              <span>📄 PDF</span><span>🔥 Rachas</span><span>💎 XP</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
-        <footer class="lp-footer">
-          <span>© 2026 Ariven</span>
-          <span class="lp-footer-sep">·</span>
-          <span>Datos sincronizados de forma segura en la nube</span>
-        </footer>
-      </div>
+      <!-- ── ECOSISTEMA ── -->
+      <section class="lp-section lp-ecosystem" id="lpEcosystem">
+        <div class="lp-section-label">Un solo ecosistema</div>
+        <h2 class="lp-section-title">Ariven acompaña a todos en el proceso educativo.</h2>
+        <p class="lp-section-sub">No es una app para un perfil. Es una plataforma para todo el ecosistema.</p>
+        <div class="lp-eco-grid">
+          <div class="lp-eco-card lp-eco-card--gold">
+            <div class="lp-eco-icon">🎯</div>
+            <div class="lp-eco-label">Uso Personal</div>
+            <p>Prepárate para la universidad a tu ritmo, con IA como mentor.</p>
+          </div>
+          <div class="lp-eco-card lp-eco-card--blue">
+            <div class="lp-eco-icon">🎓</div>
+            <div class="lp-eco-label">Estudiante</div>
+            <p>Estudia con enfoque, mide tu comprensión y demuestra tu avance.</p>
+          </div>
+          <div class="lp-eco-card lp-eco-card--purple">
+            <div class="lp-eco-icon">👩‍🏫</div>
+            <div class="lp-eco-label">Docente</div>
+            <p>Monitorea tu aula, detecta riesgos y acompaña individualmente.</p>
+          </div>
+          <div class="lp-eco-card lp-eco-card--green">
+            <div class="lp-eco-icon">🏫</div>
+            <div class="lp-eco-label">Director</div>
+            <p>Evidencia del impacto educativo en tiempo real, sin esperar informes.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── DIFERENCIADOR ── -->
+      <section class="lp-section lp-differ">
+        <div class="lp-section-label">La diferencia</div>
+        <h2 class="lp-section-title">Lo que no se mide, no se puede mejorar.</h2>
+        <p class="lp-section-sub">Ariven no mide solo cuánto tiempo estudias. Mide evidencia real de aprendizaje.</p>
+        <div class="lp-differ-grid">
+          <div class="lp-differ-item">
+            <div class="lp-differ-icon">⏱</div>
+            <div class="lp-differ-name">Hábitos</div>
+            <div class="lp-differ-desc">Rachas, frecuencia y horario óptimo detectado por la IA.</div>
+          </div>
+          <div class="lp-differ-item">
+            <div class="lp-differ-icon">🧠</div>
+            <div class="lp-differ-name">Comprensión</div>
+            <div class="lp-differ-desc">Evaluaciones DECO que miden profundidad real, no memorización.</div>
+          </div>
+          <div class="lp-differ-item">
+            <div class="lp-differ-icon">🎯</div>
+            <div class="lp-differ-name">Concentración</div>
+            <div class="lp-differ-desc">Métrica por sesión para saber cuándo y cómo estudias mejor.</div>
+          </div>
+          <div class="lp-differ-item">
+            <div class="lp-differ-icon">📈</div>
+            <div class="lp-differ-name">Constancia</div>
+            <div class="lp-differ-desc">Progreso semanal visible que construye motivación real.</div>
+          </div>
+          <div class="lp-differ-item">
+            <div class="lp-differ-icon">🏆</div>
+            <div class="lp-differ-name">Preparación</div>
+            <div class="lp-differ-desc">Porcentaje de avance hacia tu meta universitaria o académica.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── WIZARD DE ACCESO (inalterado — wireWelcome() lo llena) ── -->
+      <section class="lp-section lp-roles-section" id="lpRolesSection">
+        <div id="lpAccessWizard"></div>
+        <div id="authForm" class="lp-form-wrap hidden"></div>
+      </section>
+
+      <!-- ── CTA FINAL ── -->
+      <section class="lp-section lp-cta-v2">
+        <div class="lp-cta-v2-inner">
+          <p class="lp-cta-v2-lead">Tu futuro no se construye en un solo día.</p>
+          <h2 class="lp-cta-v2-title">Se construye <span class="lp-cta-v2-accent">hoy.</span></h2>
+          <p class="lp-cta-v2-sub">Empieza a demostrar tu progreso desde tu próxima sesión de estudio.</p>
+          <button class="lp-btn-main lp-btn-main--lg" id="lpCtaFinal">Comenzar gratis</button>
+          <p class="lp-hero-microcopy" style="margin-top:14px;">Sin tarjeta de crédito · Estudiantes, docentes e instituciones</p>
+        </div>
+      </section>
+
+      <footer class="lp-footer">
+        <span>© 2026 Ariven</span>
+        <span class="lp-footer-sep">·</span>
+        <span>Datos sincronizados de forma segura en la nube</span>
+      </footer>
     </div>`;
   }
 
@@ -824,7 +855,7 @@ const App = (() => {
     renderStep(_wizardStep0());
 
     // Botones del hero que scrollean a la sección de acceso
-    ['lpScrollCards', 'lpScrollCards2', 'lpCtaFinal'].forEach(id => {
+    ['lpScrollCards', 'lpScrollCards2', 'lpHeroCta', 'lpHeroHow', 'lpCtaFinal'].forEach(id => {
       document.getElementById(id)?.addEventListener('click', () => {
         root().querySelector('#lpRolesSection')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       });
