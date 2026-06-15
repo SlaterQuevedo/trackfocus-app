@@ -45,7 +45,7 @@ const Quiz = (() => {
       const json = await res.json();
       return _validateQuestions(json.questions, config.count || 15);
     } catch (e) {
-      window.Monitor?.log?.('tf-intelligence', 'quiz generateAdvanced falló', e?.message);
+      window.Monitor?.log?.('arv-intelligence', 'quiz generateAdvanced falló', e?.message);
       return [];
     }
   }

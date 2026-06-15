@@ -2,7 +2,7 @@
 const Pomodoro = (() => {
 
   const DEFAULTS = { focus: 25, shortBreak: 5, longBreak: 15 };
-  const LS_KEY = 'tf-pomodoro';
+  const LS_KEY = 'arv-pomodoro';
 
   let state = {
     mode: 'idle',       // 'idle' | 'focus' | 'break' | 'paused'

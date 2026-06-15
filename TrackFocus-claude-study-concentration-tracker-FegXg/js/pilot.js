@@ -5,7 +5,7 @@
 // connectivity.js lo reintenta (upsert idempotente por id → sin duplicados).
 const Pilot = (() => {
 
-  const LS_OUTBOX = 'tf-pilot-outbox';
+  const LS_OUTBOX = 'arv-pilot-outbox';
 
   // Hash irreversible del identificador (email) → anonimato en la base de datos.
   async function hash(text) {

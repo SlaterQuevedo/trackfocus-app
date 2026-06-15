@@ -50,7 +50,26 @@ const Storage = (() => {
   let pendingSync = Promise.resolve();
 
   // Tolerancia a fallos (Fase B): cache local + bandera de "pendiente de sync".
-  const LS_CACHE = 'tf-state-cache';
+  const LS_CACHE = 'arv-state-cache';
+
+  // Migración única tf- → arv- para usuarios existentes
+  (function _migrateLegacyKeys() {
+    if (localStorage.getItem('arv-migrated-v1')) return;
+    const TF_KEYS = [
+      'tf-state-cache','tf-academic-profile-v3','tf-school-profile-v1',
+      'tf-weekly-schedule','tf-prefs','tf-theme','tf-pomodoro',
+      'tf-pilot-outbox','tf-tracky-hidden','tf-fp-pos','tf-error-log'
+    ];
+    TF_KEYS.forEach(k => {
+      const v = localStorage.getItem(k);
+      if (v !== null) { localStorage.setItem(k.replace('tf-', 'arv-'), v); localStorage.removeItem(k); }
+    });
+    ['tf-last-recommendations','tf-profile-panel'].forEach(k => {
+      const v = sessionStorage.getItem(k);
+      if (v !== null) { sessionStorage.setItem(k.replace('tf-', 'arv-'), v); sessionStorage.removeItem(k); }
+    });
+    localStorage.setItem('arv-migrated-v1', '1');
+  })();
   let _syncDirty = false;
 
   // ¿Estamos en modo demostración aislado? (Fase G). Nunca sincroniza ni cachea datos reales.

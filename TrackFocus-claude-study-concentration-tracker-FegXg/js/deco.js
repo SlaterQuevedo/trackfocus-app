@@ -50,7 +50,7 @@ const Deco = (() => {
       const total = LEVELS.reduce((n, l) => n + blocks[l.key].length, 0);
       return total > 0 ? blocks : null;
     } catch (e) {
-      window.Monitor?.log?.('tf-intelligence', 'DECO generate falló', e?.message);
+      window.Monitor?.log?.('arv-intelligence', 'DECO generate falló', e?.message);
       return null;
     }
   }

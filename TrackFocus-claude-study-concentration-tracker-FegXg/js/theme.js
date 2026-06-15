@@ -1,5 +1,5 @@
 const Theme = (() => {
-  const KEY = 'tf-theme';
+  const KEY = 'arv-theme';
   const root = document.documentElement;
 
   function apply(theme) {

@@ -3,7 +3,7 @@
 // el tick del Pomodoro (que en app.js hace bar.classList.remove('hidden') cada segundo).
 const FocusPlayer = (() => {
 
-  const LS_POS = 'tf-fp-pos';
+  const LS_POS = 'arv-fp-pos';
 
   // ── Posicionamiento y drag ─────────────────────────────────────────────────
 

@@ -5,7 +5,7 @@
 // Acceso para depurar: Monitor.list(), Monitor.toText(), Monitor.exportLog().
 const Monitor = (() => {
 
-  const LS_KEY = 'tf-error-log';
+  const LS_KEY = 'arv-error-log';
   const MAX = 50;
 
   function _read() {
@@ -20,7 +20,7 @@ const Monitor = (() => {
     catch (_) { return String(ctx); }
   }
 
-  // type: 'tf-intelligence' | 'supabase' | 'sync' | 'critical' | 'info'
+  // type: 'arv-intelligence' | 'supabase' | 'sync' | 'critical' | 'info'
   function log(type, message, context) {
     const entry = {
       ts: new Date().toISOString(),

@@ -4,7 +4,7 @@
 // se puede ocultar (preferencia persistida) y recuerda no ser molesta.
 const Tracky = (() => {
 
-  const LS_HIDDEN = 'tf-tracky-hidden';
+  const LS_HIDDEN = 'arv-tracky-hidden';
   const IDLE_MS = 25 * 60 * 1000;       // 25 min sin interacción → sugerir descanso
   const BUBBLE_MS = 8000;               // el globo se autooculta tras 8s
   const NO_TRACKY_ROUTES = ['welcome', 'consent', 'student-onboarding',
@@ -117,7 +117,7 @@ const Tracky = (() => {
     if (route === 'dashboard') {
       const isPersonal = !user?.schoolId;
       if (isPersonal) {
-        const profile = JSON.parse(localStorage.getItem('tf-academic-profile-v3') || '{}');
+        const profile = JSON.parse(localStorage.getItem('arv-academic-profile-v3') || '{}');
         if (profile.university) {
           const nearest = (profile.examDates || [])
             .map(e => ({ ...e, days: Math.ceil((new Date(e.date) - Date.now()) / 86400000) }))
@@ -126,7 +126,7 @@ const Tracky = (() => {
           return `¿Ya configuraste tu meta universitaria? Te ayudo a prepararte.`;
         }
       } else {
-        const profile2 = JSON.parse(localStorage.getItem('tf-school-profile-v1') || '{}');
+        const profile2 = JSON.parse(localStorage.getItem('arv-school-profile-v1') || '{}');
         const nearest = (profile2.exams || [])
           .map(e => ({ ...e, days: Math.ceil((new Date(e.date) - Date.now()) / 86400000) }))
           .filter(e => e.days > 0).sort((a, b) => a.days - b.days)[0];

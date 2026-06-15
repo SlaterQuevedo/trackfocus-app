@@ -183,7 +183,7 @@ const UIStudent = (() => {
     const sum = Stats.summary(sessions);
     const goalsCard = _renderGoalsCard(user, sessions, gam);
     const sorted = [...sessions].sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
-    const profile = JSON.parse(localStorage.getItem('tf-academic-profile-v3') || '{}');
+    const profile = JSON.parse(localStorage.getItem('arv-academic-profile-v3') || '{}');
     const prepPct = _calcPrep(user, sessions, profile);
     const todaySubject = _pickSubjectToday(sessions, profile);
     const lastSession = sorted[0] || null;
@@ -278,7 +278,7 @@ const UIStudent = (() => {
     const classroom = user.classroomId ? s.classrooms[user.classroomId] : null;
     const tutorUser = classroom?.tutorId ? s.users[classroom.tutorId] : null;
     const sorted = [...sessions].sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
-    const schoolProfile = JSON.parse(localStorage.getItem('tf-school-profile-v1') || '{}');
+    const schoolProfile = JSON.parse(localStorage.getItem('arv-school-profile-v1') || '{}');
     const nowMs = Date.now();
     const exams = (schoolProfile.exams || [])
       .map(e => ({ ...e, days: Math.ceil((new Date(e.date) - nowMs) / 86400000) }))
@@ -1097,7 +1097,7 @@ const UIStudent = (() => {
     } catch (err) {
       _removeTyping();
       if (bubble) bubble.remove();
-      window.Monitor?.log?.('tf-intelligence', 'Tutor: fallo al iniciar respuesta', err?.message);
+      window.Monitor?.log?.('arv-intelligence', 'Tutor: fallo al iniciar respuesta', err?.message);
       _showTutorContingency();
     } finally {
       if (sendBtn)  sendBtn.disabled = false;
@@ -1178,7 +1178,7 @@ const UIStudent = (() => {
     } catch (err) {
       if (bubble) bubble.remove();
       _chatState.history.pop();
-      window.Monitor?.log?.('tf-intelligence', 'Tutor: fallo al responder', err?.message);
+      window.Monitor?.log?.('arv-intelligence', 'Tutor: fallo al responder', err?.message);
       _showTutorContingency();
     } finally {
       if (sendBtn)  sendBtn.disabled = false;
@@ -1271,7 +1271,7 @@ const UIStudent = (() => {
       const recs = (typeof Recommend !== 'undefined')
         ? Recommend.fromSession(recommendations, metrics, decoResult)
         : [];
-      try { sessionStorage.setItem('tf-last-recommendations', JSON.stringify({ at: Date.now(), subject: record.subject, recs })); } catch (_) {}
+      try { sessionStorage.setItem('arv-last-recommendations', JSON.stringify({ at: Date.now(), subject: record.subject, recs })); } catch (_) {}
 
       const idxTxt = (learningIndex != null) ? ` · Índice ${learningIndex}/100 📊` : '';
       const goPanel = () => {
@@ -1551,7 +1551,7 @@ const UIStudent = (() => {
     // Recomendaciones de la última sesión IA (Fase 10), si existen (sessionStorage).
     let lastRecHtml = '';
     try {
-      const stored = JSON.parse(sessionStorage.getItem('tf-last-recommendations') || 'null');
+      const stored = JSON.parse(sessionStorage.getItem('arv-last-recommendations') || 'null');
       if (stored && Array.isArray(stored.recs) && stored.recs.length) {
         lastRecHtml = `
           <div class="card" style="margin-bottom:18px;">
@@ -1938,9 +1938,9 @@ const UIStudent = (() => {
     const gam = user.gamification || {};
     const levelInfo = Gamification.getLevelInfo(gam.xp || 0);
     const sum = Stats.summary(sessions);
-    const acadProfile = JSON.parse(localStorage.getItem('tf-academic-profile-v3') || '{}');
-    const schedule = JSON.parse(localStorage.getItem('tf-weekly-schedule') || '{}');
-    const prefs = JSON.parse(localStorage.getItem('tf-prefs') || '{}');
+    const acadProfile = JSON.parse(localStorage.getItem('arv-academic-profile-v3') || '{}');
+    const schedule = JSON.parse(localStorage.getItem('arv-weekly-schedule') || '{}');
+    const prefs = JSON.parse(localStorage.getItem('arv-prefs') || '{}');
     const initials = user.name.split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase();
     const avatarColor = acadProfile.avatarColor || '#C89B6D';
     const message = acadProfile.message || 'Cada sesión te acerca a tu objetivo.';
@@ -2190,7 +2190,7 @@ const UIStudent = (() => {
       </div>`;
 
     // ── Panel: Preferencias ──
-    const currentTheme = localStorage.getItem('tf-theme') || 'light';
+    const currentTheme = localStorage.getItem('arv-theme') || 'light';
     const panelPrefs = `
       <div class="pp-panel" data-panel="prefs">
         <h2 class="pp-section-title">Preferencias</h2>
@@ -2294,8 +2294,8 @@ const UIStudent = (() => {
     const levelInfo = Gamification.getLevelInfo(gam.xp || 0);
     const school = user.schoolId ? s.schools[user.schoolId] : null;
     const classroom = user.classroomId ? s.classrooms[user.classroomId] : null;
-    const schoolProfile = JSON.parse(localStorage.getItem('tf-school-profile-v1') || '{}');
-    const prefs = JSON.parse(localStorage.getItem('tf-prefs') || '{}');
+    const schoolProfile = JSON.parse(localStorage.getItem('arv-school-profile-v1') || '{}');
+    const prefs = JSON.parse(localStorage.getItem('arv-prefs') || '{}');
     const initials = user.name.split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase();
     const nowMs = Date.now();
     const exams = (schoolProfile.exams || [])
@@ -2443,7 +2443,7 @@ const UIStudent = (() => {
       </div>`;
 
     // ── Panel: Preferencias ──
-    const currentTheme = localStorage.getItem('tf-theme') || 'light';
+    const currentTheme = localStorage.getItem('arv-theme') || 'light';
     const panelPrefs = `
       <div class="ps-panel" data-panel="prefs">
         <h2 class="pp-section-title">Preferencias</h2>
@@ -2620,8 +2620,8 @@ const UIStudent = (() => {
     root().querySelectorAll(navSel).forEach(btn =>
       btn.addEventListener('click', () => _activatePanel(btn.dataset.panel)));
 
-    const pending = sessionStorage.getItem('tf-profile-panel');
-    if (pending) { sessionStorage.removeItem('tf-profile-panel'); _activatePanel(pending); }
+    const pending = sessionStorage.getItem('arv-profile-panel');
+    if (pending) { sessionStorage.removeItem('arv-profile-panel'); _activatePanel(pending); }
 
     _wireClassroomForms(user);
     if (isPersonal) _wireProfilePersonal(user); else _wireProfileStudent(user);
@@ -2636,7 +2636,7 @@ const UIStudent = (() => {
       if (cr.id === user.classroomId) return UI.flash('Ya perteneces a esa aula.', 'error');
       Schools.createChangeRequest(user.id, cr.id);
       UI.flash('Solicitud enviada. Tu docente recibirá la notificación.', 'success');
-      sessionStorage.setItem('tf-profile-panel', 'progress');
+      sessionStorage.setItem('arv-profile-panel', 'progress');
       App.go('profile');
     });
     document.getElementById('joinClassroomForm')?.addEventListener('submit', (e) => {
@@ -2657,9 +2657,9 @@ const UIStudent = (() => {
     r().querySelectorAll('.pp-color-dot').forEach(dot => {
       dot.addEventListener('click', () => {
         const color = dot.dataset.color;
-        const profile = JSON.parse(localStorage.getItem('tf-academic-profile-v3') || '{}');
+        const profile = JSON.parse(localStorage.getItem('arv-academic-profile-v3') || '{}');
         profile.avatarColor = color;
-        localStorage.setItem('tf-academic-profile-v3', JSON.stringify(profile));
+        localStorage.setItem('arv-academic-profile-v3', JSON.stringify(profile));
         r().querySelectorAll('.pp-avatar-big').forEach(el => el.style.background = color);
         r().querySelectorAll('.pp-color-dot').forEach(d => d.classList.toggle('active', d.dataset.color === color));
       });
@@ -2674,9 +2674,9 @@ const UIStudent = (() => {
     });
     r().querySelector('#ppMsgSaveBtn')?.addEventListener('click', () => {
       const val = r().querySelector('#ppMsgInput')?.value.trim() || '';
-      const profile = JSON.parse(localStorage.getItem('tf-academic-profile-v3') || '{}');
+      const profile = JSON.parse(localStorage.getItem('arv-academic-profile-v3') || '{}');
       profile.message = val;
-      localStorage.setItem('tf-academic-profile-v3', JSON.stringify(profile));
+      localStorage.setItem('arv-academic-profile-v3', JSON.stringify(profile));
       const textEl = r().querySelector('#ppMsgText');
       if (textEl) textEl.textContent = val;
       r().querySelector('#ppMsgDisplay').style.display = '';
@@ -2684,21 +2684,21 @@ const UIStudent = (() => {
     });
 
     r().querySelector('#ppGoToMeta')?.addEventListener('click', () => {
-      sessionStorage.setItem('tf-profile-panel', 'university');
+      sessionStorage.setItem('arv-profile-panel', 'university');
       App.go('profile');
     });
     r().querySelector('#ppGoToMetaRoute')?.addEventListener('click', () => {
-      sessionStorage.setItem('tf-profile-panel', 'university');
+      sessionStorage.setItem('arv-profile-panel', 'university');
       App.go('profile');
     });
 
     r().querySelector('#ppChangeMeta')?.addEventListener('click', () => _clearMeta());
     r().querySelector('#ppChangeMeta2')?.addEventListener('click', () => _clearMeta());
     function _clearMeta() {
-      const p = JSON.parse(localStorage.getItem('tf-academic-profile-v3') || '{}');
+      const p = JSON.parse(localStorage.getItem('arv-academic-profile-v3') || '{}');
       delete p.university; delete p.career; delete p.enabledSubjects;
-      localStorage.setItem('tf-academic-profile-v3', JSON.stringify(p));
-      sessionStorage.setItem('tf-profile-panel', 'university');
+      localStorage.setItem('arv-academic-profile-v3', JSON.stringify(p));
+      sessionStorage.setItem('arv-profile-panel', 'university');
       App.go('profile');
     }
 
@@ -2714,8 +2714,8 @@ const UIStudent = (() => {
       const university = uniVal === 'otro' ? customUni?.value.trim() : uniVal;
       const career = careerInput?.value.trim();
       if (!university || !career) return UI.flash('Completa universidad y carrera.', 'error');
-      const existing = JSON.parse(localStorage.getItem('tf-academic-profile-v3') || '{}');
-      localStorage.setItem('tf-academic-profile-v3', JSON.stringify({
+      const existing = JSON.parse(localStorage.getItem('arv-academic-profile-v3') || '{}');
+      localStorage.setItem('arv-academic-profile-v3', JSON.stringify({
         ...existing,
         university: uniVal === 'otro' ? 'otro' : university,
         customUniversity: uniVal === 'otro' ? university : undefined,
@@ -2723,7 +2723,7 @@ const UIStudent = (() => {
         enabledSubjects: _MALLAS[university] || []
       }));
       UI.flash('¡Meta guardada! Tu ruta está lista.', 'success');
-      sessionStorage.setItem('tf-profile-panel', 'route');
+      sessionStorage.setItem('arv-profile-panel', 'route');
       App.go('profile');
     });
 
@@ -2735,23 +2735,23 @@ const UIStudent = (() => {
       const label = r().querySelector('#ppDateLabel')?.value.trim();
       const date  = r().querySelector('#ppDateDate')?.value;
       if (!label || !date) return UI.flash('Completa el nombre y la fecha.', 'error');
-      const profile = JSON.parse(localStorage.getItem('tf-academic-profile-v3') || '{}');
+      const profile = JSON.parse(localStorage.getItem('arv-academic-profile-v3') || '{}');
       profile.examDates = profile.examDates || [];
       profile.examDates.push({ label, type: 'examen', date });
       profile.examDates.sort((a, b) => new Date(a.date) - new Date(b.date));
-      localStorage.setItem('tf-academic-profile-v3', JSON.stringify(profile));
-      sessionStorage.setItem('tf-profile-panel', 'calendar');
+      localStorage.setItem('arv-academic-profile-v3', JSON.stringify(profile));
+      sessionStorage.setItem('arv-profile-panel', 'calendar');
       App.go('profile');
     });
     r().querySelectorAll('.pp-dates-list .pp-date-del').forEach(btn => {
       btn.addEventListener('click', () => {
         const idx = parseInt(btn.dataset.idx, 10);
-        const profile = JSON.parse(localStorage.getItem('tf-academic-profile-v3') || '{}');
+        const profile = JSON.parse(localStorage.getItem('arv-academic-profile-v3') || '{}');
         if (Array.isArray(profile.examDates)) {
           profile.examDates = profile.examDates.filter((_, i) => i !== idx);
-          localStorage.setItem('tf-academic-profile-v3', JSON.stringify(profile));
+          localStorage.setItem('arv-academic-profile-v3', JSON.stringify(profile));
         }
-        sessionStorage.setItem('tf-profile-panel', 'calendar');
+        sessionStorage.setItem('arv-profile-panel', 'calendar');
         App.go('profile');
       });
     });
@@ -2769,25 +2769,25 @@ const UIStudent = (() => {
         const time     = form?.querySelector('.pp-sched-time-inp')?.value;
         const priority = form?.querySelector('.pp-sched-priority-sel')?.value || 'media';
         if (!subject || !time) return;
-        const sched = JSON.parse(localStorage.getItem('tf-weekly-schedule') || '{}');
+        const sched = JSON.parse(localStorage.getItem('arv-weekly-schedule') || '{}');
         if (!sched[btn.dataset.day]) sched[btn.dataset.day] = [];
         sched[btn.dataset.day].push({ subject, time, priority });
         sched[btn.dataset.day].sort((a, b) => a.time.localeCompare(b.time));
-        localStorage.setItem('tf-weekly-schedule', JSON.stringify(sched));
-        sessionStorage.setItem('tf-profile-panel', 'schedule');
+        localStorage.setItem('arv-weekly-schedule', JSON.stringify(sched));
+        sessionStorage.setItem('arv-profile-panel', 'schedule');
         App.go('profile');
       });
     });
     r().querySelectorAll('.pp-sched-del').forEach(btn => {
       btn.addEventListener('click', () => {
-        const sched = JSON.parse(localStorage.getItem('tf-weekly-schedule') || '{}');
+        const sched = JSON.parse(localStorage.getItem('arv-weekly-schedule') || '{}');
         const day = btn.dataset.day;
         const idx = parseInt(btn.dataset.idx, 10);
         if (Array.isArray(sched[day])) {
           sched[day].splice(idx, 1);
-          localStorage.setItem('tf-weekly-schedule', JSON.stringify(sched));
+          localStorage.setItem('arv-weekly-schedule', JSON.stringify(sched));
         }
-        sessionStorage.setItem('tf-profile-panel', 'schedule');
+        sessionStorage.setItem('arv-profile-panel', 'schedule');
         App.go('profile');
       });
     });
@@ -2835,23 +2835,23 @@ const UIStudent = (() => {
       const subject = r().querySelector('#psEvalSubject')?.value.trim();
       const date    = r().querySelector('#psEvalDate')?.value;
       if (!subject || !date) return UI.flash('Completa la materia y la fecha.', 'error');
-      const profile = JSON.parse(localStorage.getItem('tf-school-profile-v1') || '{}');
+      const profile = JSON.parse(localStorage.getItem('arv-school-profile-v1') || '{}');
       profile.exams = profile.exams || [];
       profile.exams.push({ subject, label: subject, date });
       profile.exams.sort((a, b) => new Date(a.date) - new Date(b.date));
-      localStorage.setItem('tf-school-profile-v1', JSON.stringify(profile));
-      sessionStorage.setItem('tf-profile-panel', 'evals');
+      localStorage.setItem('arv-school-profile-v1', JSON.stringify(profile));
+      sessionStorage.setItem('arv-profile-panel', 'evals');
       App.go('profile');
     });
     r().querySelectorAll('.pp-dates-list .pp-date-del').forEach(btn => {
       btn.addEventListener('click', () => {
         const idx = parseInt(btn.dataset.idx, 10);
-        const profile = JSON.parse(localStorage.getItem('tf-school-profile-v1') || '{}');
+        const profile = JSON.parse(localStorage.getItem('arv-school-profile-v1') || '{}');
         if (Array.isArray(profile.exams)) {
           profile.exams = profile.exams.filter((_, i) => i !== idx);
-          localStorage.setItem('tf-school-profile-v1', JSON.stringify(profile));
+          localStorage.setItem('arv-school-profile-v1', JSON.stringify(profile));
         }
-        sessionStorage.setItem('tf-profile-panel', 'evals');
+        sessionStorage.setItem('arv-profile-panel', 'evals');
         App.go('profile');
       });
     });
@@ -2879,7 +2879,7 @@ const UIStudent = (() => {
       if (cr.id === user.classroomId) return UI.flash('Ya perteneces a esa aula.', 'error');
       Schools.createChangeRequest(user.id, cr.id);
       UI.flash('Solicitud enviada. Tu docente recibirá la notificación.', 'success');
-      sessionStorage.setItem('tf-profile-panel', 'institution');
+      sessionStorage.setItem('arv-profile-panel', 'institution');
       App.go('profile');
     });
     // Institución: desvincular del colegio
@@ -2940,7 +2940,7 @@ const UIStudent = (() => {
       btn.addEventListener('click', () => {
         const theme = btn.dataset.theme;
         document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('tf-theme', theme);
+        localStorage.setItem('arv-theme', theme);
         document.querySelectorAll('.theme-toggle').forEach(b => {
           b.textContent = theme === 'dark' ? '☀️' : '🌙';
           b.title = theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro';
@@ -2952,20 +2952,20 @@ const UIStudent = (() => {
     r().querySelector('#ppToggleTracky')?.addEventListener('change', function() {
       const el = document.getElementById('tracky-root');
       if (el) el.style.display = this.checked ? '' : 'none';
-      const p = JSON.parse(localStorage.getItem('tf-prefs') || '{}');
+      const p = JSON.parse(localStorage.getItem('arv-prefs') || '{}');
       p.tracky = this.checked;
-      localStorage.setItem('tf-prefs', JSON.stringify(p));
+      localStorage.setItem('arv-prefs', JSON.stringify(p));
     });
     r().querySelector('#ppToggleSounds')?.addEventListener('change', function() {
-      const p = JSON.parse(localStorage.getItem('tf-prefs') || '{}');
+      const p = JSON.parse(localStorage.getItem('arv-prefs') || '{}');
       p.sounds = this.checked;
-      localStorage.setItem('tf-prefs', JSON.stringify(p));
+      localStorage.setItem('arv-prefs', JSON.stringify(p));
     });
     r().querySelector('#ppToggleMotion')?.addEventListener('change', function() {
       document.documentElement.classList.toggle('reduce-motion', this.checked);
-      const p = JSON.parse(localStorage.getItem('tf-prefs') || '{}');
+      const p = JSON.parse(localStorage.getItem('arv-prefs') || '{}');
       p.reduceMotion = this.checked;
-      localStorage.setItem('tf-prefs', JSON.stringify(p));
+      localStorage.setItem('arv-prefs', JSON.stringify(p));
     });
   }
 
