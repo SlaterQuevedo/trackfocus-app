@@ -1,4 +1,4 @@
-import { GEMINI_MODEL, GEMINI_BASE, geminiHeaders, applyCors } from './_lib.js';
+﻿import { GEMINI_MODEL, GEMINI_BASE, geminiHeaders, applyCors } from './_lib.js';
 
 export default async (req, res) => {
   if (applyCors(req, res)) return;
@@ -169,7 +169,7 @@ REGLAS:
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-// TrackFocus Intelligence: Método Minerva + Sistema DECO (siempre integrados).
+// Ariven Intelligence: Método Minerva + Sistema DECO (siempre integrados).
 // Minerva = CÓMO enseña la IA (socrático estricto).
 // DECO    = CÓMO evalúa y entrena la comprensión (4 niveles cognitivos).
 // Ambos están activos en TODA conversación — no son opcionales.
@@ -202,7 +202,7 @@ El alumno quiere dominar: "${topicGoal || subject}".
 Además del Método Minerva, debes: (1) diagnosticar conocimientos previos con preguntas directas al inicio, (2) construir el aprendizaje paso a paso desde lo básico hacia lo complejo, (3) medir el progreso explícitamente cada ciertos turnos, (4) celebrar avances específicos en comprensión.\n`;
   }
 
-  return `Eres TrackTutor, el tutor de IA de TrackFocus para estudiantes de secundaria peruanos.
+  return `Eres Ariven Intelligence, el tutor de IA de Ariven para estudiantes de secundaria peruanos.
 
 ${memoryBlock}CONTEXTO DE LA SESIÓN:
 - Grado: ${grade}
@@ -526,3 +526,4 @@ async function handleFinalize(req, res) {
     recommendations
   });
 }
+

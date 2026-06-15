@@ -1,5 +1,5 @@
-/* ================================================
-   TrackFocus — Core Design System
+﻿/* ================================================
+   Ariven — Core Design System
    Premium dark SaaS · Gold + Purple palette
    ================================================ */
 
@@ -3310,3 +3310,4 @@ html[data-theme="light"] .pp-toggle:checked { background: var(--primary); }
 @media (max-width: 380px) {
   .pp-kpi-grid { grid-template-columns: 1fr 1fr; }
 }
+

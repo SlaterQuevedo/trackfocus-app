@@ -1,4 +1,4 @@
-// Exportación CSV. Usa BOM UTF-8 para compatibilidad directa con Excel.
+﻿// Exportación CSV. Usa BOM UTF-8 para compatibilidad directa con Excel.
 const Exporter = (() => {
 
   const COLUMNS = [
@@ -36,7 +36,7 @@ const Exporter = (() => {
   }
 
   function exportSessions(sessions, filename) {
-    download(filename || `trackfocus-sesiones-${new Date().toISOString().slice(0,10)}.csv`, toCsv(sessions));
+    download(filename || `Ariven-sesiones-${new Date().toISOString().slice(0,10)}.csv`, toCsv(sessions));
   }
 
   // ── Reportes imprimibles (Fase D) — para docentes, padres y directivos ──────
@@ -67,7 +67,7 @@ const Exporter = (() => {
         @media print { .noprint{display:none;} body{margin:12px;} }
       </style></head><body>
       ${bodyHtml}
-      <div class="foot">Generado por TrackFocus · ${new Date().toLocaleString('es-PE')}</div>
+      <div class="foot">Generado por Ariven · ${new Date().toLocaleString('es-PE')}</div>
       <button class="noprint" onclick="window.print()" style="margin-top:16px;padding:10px 18px;border:0;border-radius:8px;background:#c89b6d;color:#fff;font-size:14px;cursor:pointer;">🖨️ Imprimir / Guardar PDF</button>
       </body></html>`);
     w.document.close();
@@ -86,7 +86,7 @@ const Exporter = (() => {
     const date = data.date || new Date().toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });
     w.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Certificado · TrackFocus</title>
+      <title>Certificado · Ariven</title>
       <style>
         *{box-sizing:border-box;margin:0;padding:0;}
         body{font-family:Inter,Georgia,serif;background:#f4f1ea;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:24px;}
@@ -103,14 +103,14 @@ const Exporter = (() => {
         @media print { body{background:#fff;padding:0;} .noprint{display:none;} .cert{box-shadow:none;border-color:#c89b6d;} }
       </style></head><body>
       <div class="cert">
-        <div class="brand">TrackFocus Intelligence</div>
+        <div class="brand">Ariven Intelligence</div>
         <div class="ttl">${esc(data.title || 'Certificado de Logro')}</div>
         <div class="sub">${esc(data.subtitle || '')}</div>
         <div class="otorga">Otorgado a</div>
         <div class="name">${esc(data.studentName || 'Estudiante')}</div>
         <div class="detail">${esc(data.detail || '')}</div>
         <div class="foot">
-          <div style="text-align:left;">${esc(data.school || 'TrackFocus')}<br><span style="color:#999;">${esc(date)}</span></div>
+          <div style="text-align:left;">${esc(data.school || 'Ariven')}<br><span style="color:#999;">${esc(date)}</span></div>
           <div class="seal">🏆</div>
         </div>
       </div>
@@ -125,11 +125,11 @@ const Exporter = (() => {
   function backupJSON(filename) {
     const state = (typeof Storage !== 'undefined') ? Storage.get() : {};
     const payload = {
-      _meta: { app: 'TrackFocus', kind: 'backup', exportedAt: new Date().toISOString(), version: 2 },
+      _meta: { app: 'Ariven', kind: 'backup', exportedAt: new Date().toISOString(), version: 2 },
       state
     };
     download(
-      filename || `trackfocus-backup-${new Date().toISOString().slice(0, 10)}.json`,
+      filename || `Ariven-backup-${new Date().toISOString().slice(0, 10)}.json`,
       JSON.stringify(payload, null, 2),
       'application/json'
     );
@@ -148,7 +148,7 @@ const Exporter = (() => {
           }
           resolve(state);
         } catch (_) {
-          reject(new Error('El archivo no es un respaldo válido de TrackFocus.'));
+          reject(new Error('El archivo no es un respaldo válido de Ariven.'));
         }
       };
       r.onerror = () => reject(new Error('No se pudo leer el archivo.'));
@@ -158,3 +158,4 @@ const Exporter = (() => {
 
   return { exportSessions, toCsv, download, printHTML, printCertificate, backupJSON, readBackupFile };
 })();
+

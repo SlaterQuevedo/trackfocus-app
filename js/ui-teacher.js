@@ -1,4 +1,4 @@
-// Pantallas del rol Docente.
+﻿// Pantallas del rol Docente.
 const UITeacher = (() => {
 
   const root = () => document.getElementById('app');
@@ -259,7 +259,7 @@ const UITeacher = (() => {
     const sum  = (typeof Pilot !== 'undefined') ? Pilot.summarize(rows) : {};
     const classrooms = school ? Schools.listClassrooms(school.id) : [];
 
-    let body = `<h1>Reporte semanal · TrackFocus</h1>
+    let body = `<h1>Reporte semanal · Ariven</h1>
       <p class="sub">${school ? esc(school.name) + ' · ' : ''}Docente: ${esc(user.name)} · Semana al ${new Date().toLocaleDateString('es-PE')}</p>
       <h2>Resumen del piloto (últimos 7 días)</h2>
       <div class="kpis">
@@ -286,7 +286,7 @@ const UITeacher = (() => {
       ? `En promedio los estudiantes mejoraron <strong>${sum.avgImprovement} puntos</strong> entre el quiz inicial y el final, lo que sugiere un efecto positivo del acompañamiento del tutor IA. El ${sum.improvedPct}% de los participantes mejoró su puntaje.`
       : `Aún no hay suficiente mejora medible. Se recomienda ampliar la muestra y la duración del piloto para obtener resultados concluyentes.`}</p>`;
 
-    Exporter.printHTML('Reporte semanal TrackFocus', body);
+    Exporter.printHTML('Reporte semanal Ariven', body);
   }
 
   // Exporta las filas del piloto (anónimas) a CSV.
@@ -298,7 +298,7 @@ const UITeacher = (() => {
     const head = cols.join(';');
     const esc2 = v => (v == null ? '' : (/[",;\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v)));
     const lines = rows.map(r => cols.map(c => esc2(r[c])).join(';'));
-    Exporter.download(`trackfocus-piloto-${new Date().toISOString().slice(0, 10)}.csv`, '﻿' + [head, ...lines].join('\n'));
+    Exporter.download(`Ariven-piloto-${new Date().toISOString().slice(0, 10)}.csv`, '﻿' + [head, ...lines].join('\n'));
   }
 
   // ---- Pantalla: Gestión de Aula ----
@@ -810,3 +810,4 @@ const UITeacher = (() => {
     })
   };
 })();
+

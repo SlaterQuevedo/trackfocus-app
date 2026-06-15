@@ -1,4 +1,4 @@
-// Router role-aware + bootstrap.
+﻿// Router role-aware + bootstrap.
 const App = (() => {
 
   const ROUTE_ROLES = {
@@ -510,8 +510,8 @@ const App = (() => {
 
       <header class="lp-header">
         <div class="lp-brand">
-          <img src="assets/logo.svg" class="lp-brand-img" alt="TrackFocus">
-          <span>TrackFocus</span>
+          <img src="assets/logo.svg" class="lp-brand-img" alt="Ariven">
+          <span>Ariven</span>
         </div>
       </header>
 
@@ -529,7 +529,7 @@ const App = (() => {
           <button class="lp-btn-hero-primary" id="lpScrollCards2">Comenzar</button>
           <a href="?demo=1" class="lp-btn-hero-ghost">🎯 Ver demostración</a>
         </div>
-        <p class="lp-cta-subtext">Elige cómo usar TrackFocus en menos de un minuto.</p>
+        <p class="lp-cta-subtext">Elige cómo usar Ariven en menos de un minuto.</p>
 
         <!-- PROBLEMA -->
         <section class="lp-section lp-problem">
@@ -567,7 +567,7 @@ const App = (() => {
             <div class="lp-solution-card lp-solution-card--purple">
               <div class="lp-solution-icon">🧠</div>
               <h4>Comprensión</h4>
-              <p>TrackFocus Intelligence evalúa qué tan profundo aprendes mediante preguntas y evaluaciones DECO.</p>
+              <p>Ariven Intelligence evalúa qué tan profundo aprendes mediante preguntas y evaluaciones DECO.</p>
             </div>
             <div class="lp-solution-card lp-solution-card--blue">
               <div class="lp-solution-icon">🏆</div>
@@ -621,8 +621,8 @@ const App = (() => {
         <!-- DEMO IA -->
         <div class="lp-ai-demo reveal">
           <div class="lp-ai-demo__header">
-            <div class="lp-ai-badge"><span>🧠</span> TrackFocus Intelligence</div>
-            <h2 class="lp-ai-demo__title">Así estudias con TrackFocus</h2>
+            <div class="lp-ai-badge"><span>🧠</span> Ariven Intelligence</div>
+            <h2 class="lp-ai-demo__title">Así estudias con Ariven</h2>
             <p class="lp-ai-demo__subtitle">Aprende paso a paso con ayuda inteligente. La IA te guía, te hace preguntas y te ayuda a comprender mejor los temas que estudias.</p>
           </div>
 
@@ -632,7 +632,7 @@ const App = (() => {
                 <span class="lp-ai-dot lp-ai-dot--red"></span>
                 <span class="lp-ai-dot lp-ai-dot--yellow"></span>
                 <span class="lp-ai-dot lp-ai-dot--green"></span>
-                <span class="lp-ai-chat__label">TrackFocus Intelligence · Demo</span>
+                <span class="lp-ai-chat__label">Ariven Intelligence · Demo</span>
               </div>
               <div class="lp-ai-chat__body">
                 <div class="lp-ai-msg lp-ai-msg--user">
@@ -668,7 +668,7 @@ const App = (() => {
                   <span class="lp-ai-flow__item">📝 Documento</span>
                 </div>
                 <div class="lp-ai-flow__arrow">↓</div>
-                <div class="lp-ai-flow__brain">🧠 IA de TrackFocus</div>
+                <div class="lp-ai-flow__brain">🧠 IA de Ariven</div>
                 <div class="lp-ai-flow__arrow">↓</div>
                 <div class="lp-ai-flow__row lp-ai-flow__row--out">
                   <span class="lp-ai-flow__item lp-ai-flow__item--out">📚 Resúmenes</span>
@@ -686,12 +686,12 @@ const App = (() => {
         <section class="lp-section lp-cta-final">
           <p class="lp-cta-final-lead">El progreso no ocurre por accidente.</p>
           <h2 class="lp-cta-final-title">Empieza con una sesión<br>Construye un hábito<br>Cambia tu futuro</h2>
-          <button class="lp-btn-final" id="lpCtaFinal">Empieza tu camino con TrackFocus</button>
+          <button class="lp-btn-final" id="lpCtaFinal">Empieza tu camino con Ariven</button>
           <p class="lp-cta-final-sub">Estudiantes, docentes e instituciones comienzan aquí.</p>
         </section>
 
         <footer class="lp-footer">
-          <span>© 2026 TrackFocus</span>
+          <span>© 2026 Ariven</span>
           <span class="lp-footer-sep">·</span>
           <span>Datos sincronizados de forma segura en la nube</span>
         </footer>
@@ -709,7 +709,7 @@ const App = (() => {
     const svgArrow    = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
     return `
       <div class="lp-section-label">Elige tu acceso</div>
-      <h2 class="lp-section-title">¿Cómo utilizarás TrackFocus?</h2>
+      <h2 class="lp-section-title">¿Cómo utilizarás Ariven?</h2>
       <p class="lp-wizard-sub">Elige la experiencia que mejor se adapte a tu forma de aprender o gestionar el aprendizaje.</p>
       <div class="lp-cards lp-cards--2col">
         <div class="lp-card lp-card--gold" data-access="personal">
@@ -890,7 +890,7 @@ const App = (() => {
         <h3 style="margin:0 0 8px;font-size:18px;">Ya tienes una cuenta</h3>
         <p style="margin:0 0 20px;color:var(--muted-2,#71717a);font-size:14px;line-height:1.5;">
           El correo <strong>${email}</strong> ya está registrado con Google.<br>
-          ¿Cómo quieres que te llamemos en TrackFocus?
+          ¿Cómo quieres que te llamemos en Ariven?
         </p>
 
         <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
@@ -1125,7 +1125,7 @@ const App = (() => {
         <h2 style="margin:0 0 8px;">Consentimiento de privacidad</h2>
         <p class="muted" style="margin:0 0 16px;">Hola${nombre ? ', ' + nombre : ''}. Antes de empezar necesitamos la autorización de tu padre, madre o tutor, como exige la Ley de Protección de Datos Personales del Perú para personas menores de edad.</p>
         <div class="consent-box">
-          <p><strong>¿Qué datos registra TrackFocus?</strong></p>
+          <p><strong>¿Qué datos registra Ariven?</strong></p>
           <ul>
             <li>Tus sesiones de estudio (materia, duración y nivel de concentración).</li>
             <li>Tu progreso de aprendizaje (logros, XP y rachas).</li>
@@ -1141,7 +1141,7 @@ const App = (() => {
         <form id="consentForm" style="margin-top:18px;">
           <label class="consent-check">
             <input type="checkbox" id="consentCheck" required>
-            <span>Confirmo que mi padre, madre o tutor leyó esta información y <strong>autoriza</strong> mi uso de TrackFocus y el registro de estos datos.</span>
+            <span>Confirmo que mi padre, madre o tutor leyó esta información y <strong>autoriza</strong> mi uso de Ariven y el registro de estos datos.</span>
           </label>
           <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">
             <button class="primary" type="submit">Acepto y continúo</button>
@@ -1231,7 +1231,7 @@ const App = (() => {
     return `
       <div class="card" style="max-width:520px;margin:48px auto;">
         <h2 style="margin:0 0 8px;">Verificación de director</h2>
-        <p class="muted" style="margin:0 0 22px;">Ingresa el código de tu colegio para acceder como director. Si no lo tienes, contáctate con el administrador de TrackFocus.</p>
+        <p class="muted" style="margin:0 0 22px;">Ingresa el código de tu colegio para acceder como director. Si no lo tienes, contáctate con el administrador de Ariven.</p>
         <form id="adminPromoteForm">
           <label>Código del colegio</label>
           <input name="schoolCode" maxlength="6" required placeholder="6 caracteres" style="text-transform:uppercase;" />
@@ -1312,3 +1312,4 @@ const App = (() => {
 })();
 
 window.addEventListener('DOMContentLoaded', App.start);
+

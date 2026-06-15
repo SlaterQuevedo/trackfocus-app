@@ -1,5 +1,5 @@
-/* ================================================
-   TrackFocus — Landing Page Premium SaaS Design
+﻿/* ================================================
+   Ariven — Landing Page Premium SaaS Design
    ================================================ */
 
 /* Eliminar constraints del container en la pantalla de bienvenida */
@@ -1675,3 +1675,4 @@ html[data-theme="light"] .lp-btn-final:hover {
 html[data-theme="light"] .lp-cta-final-sub {
   color: rgba(0,0,0,0.35);
 }
+

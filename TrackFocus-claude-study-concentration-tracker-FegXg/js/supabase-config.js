@@ -1,8 +1,8 @@
-// ============================================================
+﻿// ============================================================
 // CONFIGURACIÓN DE SUPABASE — Pega aquí los valores de TU proyecto.
 //
 //   1. Entra a https://supabase.com/dashboard
-//   2. Selecciona tu proyecto TrackFocus
+//   2. Selecciona tu proyecto Ariven
 //   3. Menú lateral → Settings → API
 //   4. Copia "Project URL" y "anon public" key
 //   5. Pégalos abajo y guarda
@@ -38,7 +38,7 @@ window.SB_READY = _ready;
 
 if (!_ready) {
   console.warn(
-    '[TrackFocus] Supabase NO está configurado.\n' +
+    '[Ariven] Supabase NO está configurado.\n' +
     '  Edita js/supabase-config.js con tu URL y anon key.\n' +
     '  Sigue las instrucciones de SETUP.md.'
   );
@@ -55,8 +55,9 @@ if (!_ready) {
 // poner tu clave SOLO en tu navegador, sin subirla al repo, ejecutando
 // una vez en la consola (F12):
 //     localStorage.setItem('tf_gemini_dev_key', 'TU_CLAVE_AQUI')
-// El cliente la usará como respaldo directo solo si el proxy de TrackFocus Intelligence no responde.
+// El cliente la usará como respaldo directo solo si el proxy de Ariven Intelligence no responde.
 // ============================================================
 
 window.GEMINI_API_KEY = (typeof localStorage !== 'undefined' && localStorage.getItem('tf_gemini_dev_key')) || '';
 window.GEMINI_MODEL   = 'gemini-3.1-flash-lite';
+

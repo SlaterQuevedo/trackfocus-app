@@ -1,4 +1,4 @@
-// Pantallas del rol Estudiante.
+﻿// Pantallas del rol Estudiante.
 const UIStudent = (() => {
 
   const root = () => document.getElementById('app');
@@ -591,7 +591,7 @@ const UIStudent = (() => {
   const _DECO_LEVELS = ['comprehension', 'application', 'reasoning', 'analysis'];
 
   async function _startAiChat(metadata) {
-    // Método Minerva + Sistema DECO — siempre activos en TrackFocus Intelligence.
+    // Método Minerva + Sistema DECO — siempre activos en Ariven Intelligence.
     // No son opcionales: ambos viajan en metadata al system prompt del servidor.
     metadata.mode = 'minerva';
     metadata.decoLevel = _DECO_LEVELS[0]; // inicia en Comprensión, rota cada 3 mensajes
@@ -761,7 +761,7 @@ const UIStudent = (() => {
         }
         return;
       }
-      // Fallback (sin Web Speech API): grabar + transcribir con TrackFocus Intelligence
+      // Fallback (sin Web Speech API): grabar + transcribir con Ariven Intelligence
       if (!_micActive) {
         _micActive = true;
         micBtn.textContent = '⏹';
@@ -1024,7 +1024,7 @@ const UIStudent = (() => {
     document.getElementById('chatTyping')?.remove();
   }
 
-  // Contingencia del tutor (Fase B): si TrackFocus Intelligence cae, no rompemos la sesión.
+  // Contingencia del tutor (Fase B): si Ariven Intelligence cae, no rompemos la sesión.
   // Mostramos una tarjeta amable y ofrecemos seguir con el Pomodoro o reintentar.
   function _showTutorContingency() {
     const messages = document.getElementById('chatMessages');
@@ -1286,7 +1286,7 @@ const UIStudent = (() => {
         inputArea2.innerHTML = `
           <div class="session-recs">
             <h3 style="margin:0 0 4px;">✅ ¡Sesión completada!</h3>
-            <p class="muted" style="margin:0 0 12px;font-size:13px;">TrackFocus Intelligence te sugiere para continuar:</p>
+            <p class="muted" style="margin:0 0 12px;font-size:13px;">Ariven Intelligence te sugiere para continuar:</p>
             ${recs.map(r => `<div class="rec-item"><span class="rec-icon">${r.icon}</span><div><strong>${esc(r.label)}:</strong> ${esc(r.text)}</div></div>`).join('')}
             <button class="primary" id="recContinueBtn" style="margin-top:12px;width:100%;">Ver mi panel →</button>
           </div>`;
@@ -1556,7 +1556,7 @@ const UIStudent = (() => {
         lastRecHtml = `
           <div class="card" style="margin-bottom:18px;">
             <h3 style="margin:0 0 4px;">🧠 Basado en tu última sesión${stored.subject ? ' de ' + esc(stored.subject) : ''}</h3>
-            <p class="muted" style="margin:0 0 12px;font-size:13px;">Sugerencias de TrackFocus Intelligence.</p>
+            <p class="muted" style="margin:0 0 12px;font-size:13px;">Sugerencias de Ariven Intelligence.</p>
             ${stored.recs.map(r => `<div class="rec-item"><span class="rec-icon">${r.icon || '•'}</span><div><strong>${esc(r.label || '')}:</strong> ${esc(r.text || '')}</div></div>`).join('')}
           </div>`;
       }
@@ -1584,7 +1584,7 @@ const UIStudent = (() => {
     const certs = [
       { id: 'constancia', icon: '🔥', title: 'Certificado de Constancia',
         subtitle: 'Por mantener una racha de estudio sostenida',
-        detail: `Por demostrar disciplina y constancia con una racha de ${gam.streak || 0} días consecutivos de estudio en TrackFocus.`,
+        detail: `Por demostrar disciplina y constancia con una racha de ${gam.streak || 0} días consecutivos de estudio en Ariven.`,
         eligible: (gam.streak || 0) >= 7 },
       { id: 'disciplina', icon: '📚', title: 'Certificado de Disciplina',
         subtitle: 'Por dedicación al estudio',
@@ -1689,7 +1689,7 @@ const UIStudent = (() => {
       `<tr><td>${esc(w.label)}</td><td>${w.count}</td><td>${w.min} min</td><td>${w.conc || '—'}/5</td></tr>`).join('');
 
     const body = `
-      <h1>Mi reporte de progreso — TrackFocus</h1>
+      <h1>Mi reporte de progreso — Ariven</h1>
       <p class="sub">${esc(user.name)} · generado el ${new Date().toLocaleDateString('es-PE')}</p>
       <h2>Resumen</h2>
       <div class="kpis">
@@ -1704,7 +1704,7 @@ const UIStudent = (() => {
         sorted.length >= 4 ? ` (${delta >= 0 ? '+' : ''}${delta.toFixed(1)}).` : '.'}</p>
       <h2>Evolución semanal</h2>
       <table><thead><tr><th>Semana</th><th>Sesiones</th><th>Tiempo</th><th>Concentración</th></tr></thead><tbody>${weeklyRows}</tbody></table>`;
-    Exporter.printHTML('Mi reporte de progreso — TrackFocus', body);
+    Exporter.printHTML('Mi reporte de progreso — Ariven', body);
   }
 
   function wireAchievements() {
@@ -1728,7 +1728,7 @@ const UIStudent = (() => {
           title: cert.title,
           subtitle: cert.subtitle,
           detail: cert.detail,
-          school: school ? school.name : 'TrackFocus'
+          school: school ? school.name : 'Ariven'
         });
       });
     });
@@ -2186,7 +2186,7 @@ const UIStudent = (() => {
           <button class="ghost pp-account-btn" id="ppDiagBtn">🩺 Exportar registro de errores</button>
           <button class="primary pp-account-btn" id="ppLogoutBtn">Cerrar sesión</button>
         </div>
-        <div class="pp-version-info">TrackFocus · Todos los datos guardados localmente</div>
+        <div class="pp-version-info">Ariven · Todos los datos guardados localmente</div>
       </div>`;
 
     // ── Panel: Preferencias ──
@@ -2567,7 +2567,7 @@ const UIStudent = (() => {
           <button class="ghost pp-account-btn" id="ppDiagBtn">🩺 Exportar registro de errores</button>
           <button class="primary pp-account-btn" id="ppLogoutBtn">Cerrar sesión</button>
         </div>
-        <div class="pp-version-info">TrackFocus · Datos sincronizados en la nube</div>
+        <div class="pp-version-info">Ariven · Datos sincronizados en la nube</div>
       </div>`;
 
     return `
@@ -2912,7 +2912,7 @@ const UIStudent = (() => {
     });
     r().querySelector('#ppExportBtn')?.addEventListener('click', () => {
       try {
-        Exporter.backupJSON('trackfocus-backup-' + new Date().toISOString().slice(0, 10) + '.json');
+        Exporter.backupJSON('ariven-backup-' + new Date().toISOString().slice(0, 10) + '.json');
         UI.flash('Backup exportado correctamente.', 'success');
       } catch (_) { UI.flash('Error al exportar. Intenta de nuevo.', 'error'); }
     });
@@ -3011,8 +3011,8 @@ const UIStudent = (() => {
         <div id="aiPanelBody">
 
           <div class="ai-intro">
-            <h1>🧠 Estudio con TrackFocus Intelligence</h1>
-            <p class="muted">Conversa, adjunta archivos (PDF, imágenes) o habla por voz. TrackFocus Intelligence te guía mientras estudias.</p>
+            <h1>🧠 Estudio con Ariven Intelligence</h1>
+            <p class="muted">Conversa, adjunta archivos (PDF, imágenes) o habla por voz. Ariven Intelligence te guía mientras estudias.</p>
           </div>
 
           <form id="sessionSetupForm" class="card ai-config-card">
@@ -3074,7 +3074,7 @@ const UIStudent = (() => {
             </div>
           </form>
           <p class="muted" style="font-size:12px;margin-top:12px;text-align:center;">
-            🦉 Método Minerva + 🎯 Sistema DECO activos en toda sesión. TrackFocus Intelligence te guía mientras aprendes.
+            🦉 Método Minerva + 🎯 Sistema DECO activos en toda sesión. Ariven Intelligence te guía mientras aprendes.
           </p>
 
           <!-- Sección Progreso -->
@@ -3218,3 +3218,5 @@ const UIStudent = (() => {
     })
   };
 })();
+
+

@@ -1,4 +1,4 @@
-// Monitoreo ligero de errores (Fase I). Registra fallos de Gemini, Supabase,
+﻿// Monitoreo ligero de errores (Fase I). Registra fallos de Gemini, Supabase,
 // sincronización y errores críticos en un buffer circular (localStorage, últimos 50)
 // y en consola. Sin servicios externos. Se expone como window.Monitor para que
 // los ganchos window.Monitor?.log?.(...) de toda la app lo usen.
@@ -48,7 +48,7 @@ const Monitor = (() => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `trackfocus-monitor-${new Date().toISOString().slice(0, 10)}.txt`;
+    a.download = `ariven-monitor-${new Date().toISOString().slice(0, 10)}.txt`;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1500);
   }
@@ -98,3 +98,4 @@ const Monitor = (() => {
 
   return api;
 })();
+

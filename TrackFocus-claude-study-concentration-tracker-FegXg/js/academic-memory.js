@@ -1,4 +1,4 @@
-// Memoria Académica (Fase 7 V2): TrackFocus Intelligence recuerda, por materia,
+﻿// Memoria Académica (Fase 7 V2): Ariven Intelligence recuerda, por materia,
 // los temas trabajados, las fortalezas y las debilidades del alumno, y adapta las
 // sesiones futuras. Persiste en localStorage (sin nueva tabla en Supabase) y es
 // privada del dispositivo del alumno. El contexto se inyecta en el system prompt.
@@ -89,3 +89,4 @@ const AcademicMemory = (() => {
 
   return { get, update, getContext, listSubjects, clear };
 })();
+

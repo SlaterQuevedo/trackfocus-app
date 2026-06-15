@@ -1,4 +1,4 @@
-// Proxy para Gemini API — análisis de archivos educativos
+﻿// Proxy para Gemini API — análisis de archivos educativos
 // Llama directamente a la API REST de Gemini con contenido base64
 const GeminiProxy = (() => {
 
@@ -197,13 +197,14 @@ REGLAS:
 
   function _mockAnalysis(fileName) {
     return {
-      summary:     `Vista previa de "${fileName}". TrackFocus Intelligence no está disponible en modo local.`,
-      keyConcepts: 'Activa TrackFocus Intelligence para ver los conceptos clave.',
-      questions:   [{ text: '¿Cuál es el tema principal del material?', answer: 'Analiza el material con TrackFocus Intelligence.' }],
+      summary:     `Vista previa de "${fileName}". Ariven Intelligence no está disponible en modo local.`,
+      keyConcepts: 'Activa Ariven Intelligence para ver los conceptos clave.',
+      questions:   [{ text: '¿Cuál es el tema principal del material?', answer: 'Analiza el material con Ariven Intelligence.' }],
       exercises:   [{ title: 'Ejercicio 1', prompt: 'Lee el material y resume los puntos principales.' }],
-      feedback:    'Conecta TrackFocus Intelligence desde Vercel para obtener análisis completo.'
+      feedback:    'Conecta Ariven Intelligence desde Vercel para obtener análisis completo.'
     };
   }
 
   return { analyzeFile, answerQuestion };
 })();
+

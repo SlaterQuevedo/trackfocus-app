@@ -1,5 +1,5 @@
-/* ============================
-   TrackFocus — Charts & Heatmap
+﻿/* ============================
+   Ariven — Charts & Heatmap
    ============================ */
 
 /* Contenedores Chart.js */
@@ -70,3 +70,4 @@
 @media (max-width: 760px) {
   .hm-cell { min-width: 5px; }
 }
+

@@ -1,4 +1,4 @@
-// Cliente del Tutor IA.
+﻿// Cliente del Tutor IA.
 // PRODUCCIÓN: llama al proxy seguro /api/ai-chat (la clave vive en Vercel).
 // DEV LOCAL: si el proxy no responde y hay clave en localStorage, llama a
 // Gemini directamente como respaldo (no se usa clave en producción).
@@ -12,11 +12,51 @@ const AiChatProxy = (() => {
 
   // ── API pública ───────────────────────────────────────────────────
 
+  // Respuestas pre-escritas para ?demo=guided — sin API, 100% offline
+  const _DEMO_SCRIPT = [
+    `¡Hola, Lucía! Estoy listo para esta sesión de **Matemática** sobre ecuaciones cuadráticas. 🧠
+
+Antes de comenzar, dime: cuando ves una ecuación como **ax² + bx + c = 0**, ¿qué es lo primero que piensas?
+
+📝 Pregunta: ¿Recuerdas qué significa cada letra (a, b, c) en esa expresión?`,
+
+    `Bien, a, b y c son los coeficientes — ¡correcto! Ahora veamos si puedes aplicarlo.
+
+Tenemos la ecuación: **2x² + 5x − 3 = 0**
+
+Antes de resolverla, ¿puedes identificar cuánto vale *a*, cuánto vale *b* y cuánto vale *c* en esta ecuación?
+
+📝 Pregunta: ¿Qué pasa si *a* = 0? ¿Sigue siendo cuadrática?`,
+
+    `Exacto, si *a* = 0 deja de ser cuadrática porque desaparece el término x².
+
+Ahora, ¿conoces la **fórmula general** para resolver ecuaciones cuadráticas? Te doy una pista: tiene una raíz cuadrada de algo que se llama *discriminante*.
+
+📝 Pregunta: ¿Qué crees que nos indica el discriminante sobre las soluciones de la ecuación?`,
+
+    `¡Excelente razonamiento! El discriminante **b² − 4ac** nos dice:
+- Si es **positivo** → dos soluciones reales distintas
+- Si es **cero** → una sola solución (raíz doble)
+- Si es **negativo** → sin soluciones reales
+
+Calculemos el discriminante para nuestra ecuación **2x² + 5x − 3 = 0**.
+
+📝 Pregunta: Con a=2, b=5, c=−3, ¿cuánto da b² − 4ac? Intenta calcularlo tú primero.`
+  ];
+
   async function sendMessage(metadata, history, userMessage, onChunk, files = []) {
     const recentHistory = (history || []).slice(-12);
     const fileParts = (files || [])
       .filter(f => f.base64 && f.mimeType)
       .map(f => ({ base64: f.base64, mimeType: f.mimeType }));
+
+    // Demo guiada: respuestas pre-escritas sin API
+    if (window.__TF_DEMO_GUIDED_META) {
+      const turnIndex = (recentHistory || []).filter(m => m.role === 'model').length;
+      const scriptReply = _DEMO_SCRIPT[Math.min(turnIndex, _DEMO_SCRIPT.length - 1)];
+      for (const char of scriptReply) { onChunk(char); await _sleep(8); }
+      return scriptReply;
+    }
 
     // 1) Intentar el proxy seguro
     try {
@@ -54,7 +94,7 @@ const AiChatProxy = (() => {
       try {
         return await _directSend(metadata, recentHistory, userMessage, onChunk, fileParts, key);
       } catch (e) {
-        window.Monitor?.log?.('gemini', 'Direct API fallida (clave dev no usable en navegador?), usando simulación', e?.message);
+        window.Monitor?.log?.('tf-intelligence', 'Direct API fallida (clave dev no usable en navegador?), usando simulación', e?.message);
       }
     }
     const fallback = _buildFallback(userMessage, metadata);
@@ -196,10 +236,16 @@ ${transcript}`;
   }
 
   function _buildSystemPrompt(metadata) {
-    const { subject, grade, durationMin, previousActivity } = metadata;
-    return `Eres TrackTutor, tutor de IA para estudiantes de secundaria de TrackFocus.
-CONTEXTO: Grado ${grade}, Materia ${subject}, Duración ${durationMin} min, Actividad previa: ${previousActivity}.
+    const { subject, grade, durationMin, previousActivity, mode, memoryContext } = metadata;
+    const mem = memoryContext ? `MEMORIA DEL ALUMNO: ${memoryContext}\n` : '';
+    const base = `Eres Ariven Intelligence, tutor de IA para estudiantes de secundaria de Ariven.
+${mem}CONTEXTO: Grado ${grade}, Materia ${subject}, Duración ${durationMin} min, Actividad previa: ${previousActivity}.
 REGLAS: 1) Adapta al nivel ${grade}. 2) Al final de CADA respuesta plantea 1-3 preguntas ("📝 Pregunta:"). 3) Si el alumno falla, da pistas sin dar la respuesta. 4) Tono motivador. 5) Responde siempre en español. 6) NUNCA resuelvas ejercicios completos. 7) Método socrático. 8) Si piden la respuesta directa, da una pista clave. 9) Detecta respuestas sin razonar y pide explicación.`;
+    if (mode === 'minerva') {
+      return `${base}
+MODO MINERVA (socrático estricto, prioridad absoluta): NUNCA des la respuesta final ni parcial. Responde SIEMPRE con preguntas que guíen el razonamiento. Pide al alumno que explique su razonamiento antes de validar. Si responde vago o de una palabra, pídele que lo desarrolle. Da pistas progresivas (orientadora → conceptual → concreta) pero jamás la solución. Aunque insista, mantén el método.`;
+    }
+    return base;
   }
 
   function _buildFallback(userMessage, metadata) {
@@ -220,3 +266,4 @@ REGLAS: 1) Adapta al nivel ${grade}. 2) Al final de CADA respuesta plantea 1-3 p
 
   return { sendMessage, finalizeSession };
 })();
+

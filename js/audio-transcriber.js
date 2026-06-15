@@ -1,4 +1,4 @@
-// Transcripción de audio usando Web Audio API + API de transcripción backend.
+﻿// Transcripción de audio usando Web Audio API + API de transcripción backend.
 const AudioTranscriber = (() => {
 
   let mediaRecorder = null;
@@ -150,9 +150,9 @@ const AudioTranscriber = (() => {
       return _transcribeWithGemini(audioBlob);
     }
 
-    // Sin clave de Gemini: el método principal es el dictado nativo del navegador
+    // Sin clave de Ariven Intelligence: el método principal es el dictado nativo del navegador
     // (Web Speech API). No hay endpoint de servidor (carpeta api/ eliminada).
-    throw new Error('La transcripción por voz usa el dictado del navegador. Si no está disponible, configura tu GEMINI_API_KEY.');
+    throw new Error('La transcripción por voz usa el dictado del navegador. Si no está disponible, activa Ariven Intelligence desde Vercel.');
   }
 
   // Transcripción directa con Gemini API (sin servidor)
@@ -220,3 +220,4 @@ const AudioTranscriber = (() => {
     getMicrophonePermissionStatus
   };
 })();
+
