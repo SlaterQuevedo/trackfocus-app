@@ -643,13 +643,13 @@ const App = (() => {
         'El aprendizaje profundo no es acumulación. Es comprensión.'
       ];
       const AI_INTROS = [
-        'Cuando crees tu cuenta, esto se llenará con tus datos reales.',
-        'Cada número aquí vendrá de tus propias sesiones de estudio.',
-        'Así de claro verás tu progreso desde el primer día.',
-        'Tu futuro estudiante tiene métricas reales, no estimaciones.',
-        'Personalizado para ti — no hay dos paneles iguales en Ariven.',
-        'Esto es lo que verás cuando llegues a tu primera semana.',
-        'El progreso real se ve así. Tú lo construyes sesión a sesión.'
+        'La constancia supera al talento. Una sesión a la vez.',
+        'Cada sesión registrada es evidencia real de que estás avanzando.',
+        'El aprendizaje profundo no es acumulación. Es comprensión.',
+        'Tu mejor hora para estudiar es la que descubrirás con Ariven.',
+        'No hay dos estudiantes iguales. Ariven se adapta a ti.',
+        'El progreso se construye en silencio, sesión a sesión.',
+        'El foco no se improvisa. Se entrena.'
       ];
       return '<div class="lp-preview lp-preview--guest">'
         + '<div class="lp-prev-topbar">'
