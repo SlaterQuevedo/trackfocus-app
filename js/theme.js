@@ -13,8 +13,7 @@ const Theme = (() => {
 
   function init() {
     const saved = localStorage.getItem(KEY);
-    // Default to light mode if not saved in localStorage
-    apply(saved || 'light');
+    apply(saved || 'dark');
   }
 
   function toggle() {

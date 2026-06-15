@@ -32,7 +32,7 @@
   <!-- Tema aplicado de inmediato para evitar flash de color incorrecto -->
   <script>
     (function () {
-      var t = localStorage.getItem('tf-theme') || 'light';
+      var t = localStorage.getItem('arv-theme') || localStorage.getItem('tf-theme') || 'dark';
       document.documentElement.setAttribute('data-theme', t);
     })();
   </script>

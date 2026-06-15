@@ -2190,7 +2190,7 @@ const UIStudent = (() => {
       </div>`;
 
     // ── Panel: Preferencias ──
-    const currentTheme = localStorage.getItem('arv-theme') || 'light';
+    const currentTheme = localStorage.getItem('arv-theme') || 'dark';
     const panelPrefs = `
       <div class="pp-panel" data-panel="prefs">
         <h2 class="pp-section-title">Preferencias</h2>
@@ -2443,7 +2443,7 @@ const UIStudent = (() => {
       </div>`;
 
     // ── Panel: Preferencias ──
-    const currentTheme = localStorage.getItem('arv-theme') || 'light';
+    const currentTheme = localStorage.getItem('arv-theme') || 'dark';
     const panelPrefs = `
       <div class="ps-panel" data-panel="prefs">
         <h2 class="pp-section-title">Preferencias</h2>
