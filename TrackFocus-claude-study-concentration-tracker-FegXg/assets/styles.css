@@ -3008,6 +3008,95 @@ html[data-theme="light"] .dash-hero-institutional { background: linear-gradient(
 .dp-date-item.dp-date-soon .dp-date-badge { background: rgba(245,158,11,0.15); color: #F59E0B; }
 
 /* ═══════════════════════════════════════════════════════════════
+   DASHBOARD PERSONAL v2 (dpv-*) — Aspirational, mentor-driven
+═══════════════════════════════════════════════════════════════ */
+.dpv-wrap { max-width: 740px; margin: 0 auto; padding-bottom: 40px; display: flex; flex-direction: column; gap: 10px; }
+
+/* Hero */
+.dpv-hero { background: linear-gradient(135deg, rgba(200,155,109,0.13) 0%, rgba(139,92,246,0.11) 60%, rgba(79,140,255,0.05) 100%); border: 1px solid rgba(200,155,109,0.2); border-radius: var(--radius); padding: 26px 24px 20px; }
+.dpv-hero-top { margin-bottom: 14px; }
+.dpv-hero-greeting { font-size: 28px; font-weight: 800; color: var(--text); line-height: 1.15; }
+.dpv-hero-tagline { font-size: 14px; color: var(--primary); font-weight: 500; margin-top: 3px; }
+.dpv-hero-goal-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.dpv-goal-pill { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; background: rgba(200,155,109,0.1); border: 1px solid rgba(200,155,109,0.22); color: var(--primary); }
+.dpv-goal-pill-career { background: rgba(139,92,246,0.1); border-color: rgba(139,92,246,0.22); color: var(--accent-2); }
+.dpv-prep-row { margin-bottom: 14px; }
+.dpv-prep-bar-wrap { height: 5px; background: rgba(255,255,255,0.07); border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
+.dpv-prep-bar { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%); transition: width 0.8s cubic-bezier(0.4,0,0.2,1); }
+.dpv-prep-meta { display: flex; justify-content: space-between; font-size: 12px; }
+.dpv-prep-pct { color: var(--primary-2); font-weight: 700; }
+.dpv-prep-exam { color: var(--muted); }
+.dpv-hero-no-goal { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+.dpv-mentor-phrase { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--muted-2); font-style: italic; padding-top: 2px; }
+.dpv-mentor-star { color: var(--accent-2); font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+
+/* Misión del Día */
+.dpv-mission { background: linear-gradient(135deg, rgba(139,92,246,0.13) 0%, rgba(79,140,255,0.07) 100%); border: 1px solid rgba(139,92,246,0.22); border-left: 4px solid var(--accent); border-radius: var(--radius-sm); padding: 20px 20px 18px; }
+.dpv-mission-empty { background: var(--panel); border-left-color: var(--muted-3); border-color: var(--border); }
+.dpv-mission-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent-2); margin-bottom: 6px; }
+.dpv-mission-empty .dpv-mission-label { color: var(--muted); }
+.dpv-mission-subject { font-size: 23px; font-weight: 800; color: var(--text); margin-bottom: 4px; line-height: 1.2; }
+.dpv-mission-reason { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+.dpv-mission-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.dpv-mission-cta { flex: 1; min-width: 160px; padding: 13px 20px; background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%); border: none; border-radius: var(--radius-sm); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 0.01em; transition: opacity 0.15s ease, transform 0.12s ease; }
+.dpv-mission-cta:hover { opacity: 0.88; transform: translateY(-1px); }
+.dpv-mission-ai { flex-shrink: 0; font-size: 13px; padding: 10px 16px; }
+
+/* Continúa */
+.dpv-resume { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; }
+.dpv-resume-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 8px; }
+.dpv-resume-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.dpv-resume-info { flex: 1; min-width: 0; }
+.dpv-resume-subject { font-size: 15px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dpv-resume-time { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.dpv-resume-btn { flex-shrink: 0; font-size: 13px; padding: 7px 16px; }
+
+/* Hábitos */
+.dpv-habits-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.dpv-habit-chip { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 10px; text-align: center; }
+.dpv-habit-val { font-size: 22px; font-weight: 800; color: var(--text); line-height: 1.1; }
+.dpv-habit-label { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.dpv-habit-fire { border-color: rgba(245,158,11,0.2); }
+.dpv-habit-fire .dpv-habit-val { color: #F59E0B; }
+.dpv-habit-time { border-color: rgba(200,155,109,0.2); }
+.dpv-habit-time .dpv-habit-val { color: var(--primary); }
+.dpv-habit-conc { border-color: rgba(34,197,94,0.2); }
+.dpv-habit-conc .dpv-habit-val { color: #22C55E; }
+
+/* Mi Camino */
+.dpv-path-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; }
+.dpv-section-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 12px; }
+.dpv-section-sub { font-size: 11px; color: var(--muted); font-weight: 400; margin-left: 6px; }
+.dpv-path-list { display: flex; flex-direction: column; gap: 9px; }
+.dpv-path-item { display: flex; align-items: center; gap: 10px; }
+.dpv-path-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dpv-dot-hot { background: #22C55E; box-shadow: 0 0 5px rgba(34,197,94,0.5); }
+.dpv-dot-warm { background: #F59E0B; }
+.dpv-dot-cool { background: var(--primary); }
+.dpv-dot-cold { background: var(--muted-3); }
+.dpv-path-info { width: 140px; flex-shrink: 0; }
+.dpv-path-name { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dpv-path-meta { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.dpv-path-bar-wrap { flex: 1; height: 4px; background: rgba(255,255,255,0.07); border-radius: 2px; overflow: hidden; }
+.dpv-path-bar { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--primary), var(--accent)); transition: width 0.8s ease; }
+
+/* Mentor card */
+.dpv-mentor-card { background: linear-gradient(135deg, rgba(139,92,246,0.07) 0%, rgba(200,155,109,0.05) 100%); border: 1px solid rgba(139,92,246,0.18); border-radius: var(--radius-sm); padding: 16px 18px; }
+.dpv-mentor-header { margin-bottom: 7px; }
+.dpv-mentor-badge { font-size: 10px; font-weight: 700; color: var(--accent-2); text-transform: uppercase; letter-spacing: 0.1em; }
+.dpv-mentor-text { font-size: 13px; color: var(--muted-2); line-height: 1.55; }
+
+.dpv-goals-wrap { margin-top: 4px; }
+
+@media (max-width: 480px) {
+  .dpv-hero-greeting { font-size: 23px; }
+  .dpv-mission-subject { font-size: 19px; }
+  .dpv-mission-cta { font-size: 14px; }
+  .dpv-path-info { width: 100px; }
+  .dpv-habit-val { font-size: 18px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
    DASHBOARD ESTUDIANTE INSTITUCIONAL (ds-*) — Blue, academic, ordered
 ═══════════════════════════════════════════════════════════════ */
 .ds-wrap { max-width: 720px; margin: 0 auto; padding-bottom: 32px; }

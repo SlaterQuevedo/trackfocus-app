@@ -179,7 +179,6 @@ const UIStudent = (() => {
 
   function _dashPersonal(user, sessions, s) {
     const gam = user.gamification || {};
-    const levelInfo = Gamification.getLevelInfo(gam.xp || 0);
     const sum = Stats.summary(sessions);
     const goalsCard = _renderGoalsCard(user, sessions, gam);
     const sorted = [...sessions].sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
@@ -189,86 +188,159 @@ const UIStudent = (() => {
     const lastSession = sorted[0] || null;
     const studySubject = todaySubject || lastSession?.subject || null;
     const nowMs = Date.now();
+    const streak = gam.streak || 0;
+
     const nearestExam = (profile.examDates || [])
       .map(e => ({ ...e, days: Math.ceil((new Date(e.date) - nowMs) / 86400000) }))
       .filter(e => e.days > 0).sort((a, b) => a.days - b.days)[0] || null;
 
-    const heroHtml = `
-      <div class="dp-hero">
-        <div class="dp-hero-name">👋 Hola, ${esc(user.name.split(' ')[0])}</div>
-        ${profile.university ? `
-          <div class="dp-hero-goal">${esc(profile.career || 'Tu carrera')} · ${esc(profile.university)}</div>
-          <div class="dp-prep-wrap">
-            <div class="dp-prep-bar-wrap"><div class="dp-prep-bar" style="width:${prepPct}%;"></div></div>
-            <div class="dp-prep-label">${prepPct}% preparación${nearestExam ? ` · 📅 ${nearestExam.days} días para ${esc(nearestExam.label)}` : ''}</div>
-          </div>` : `
-          <div class="dp-hero-goal">Configura tu meta universitaria en <strong>Mi Perfil → Meta</strong></div>`}
-      </div>`;
+    const weekSessions = sessions.filter(se => new Date(se.datetime) > nowMs - 7 * 86400000);
+    const weekHours = Math.round(weekSessions.reduce((a, b) => a + (b.durationMin || 0), 0) / 60 * 10) / 10;
 
-    const studyNowHtml = studySubject ? `
-      <div class="dp-study-now">
-        <div class="dp-study-header">🎯 Estudia esto hoy</div>
-        <div class="dp-study-subject">${esc(studySubject)}</div>
-        <div class="dp-study-reason">${todaySubject ? 'Concentración más baja esta semana' : `Continúa donde te quedaste · ${_relTime(lastSession.datetime)}`}</div>
-        <div class="dp-study-actions">
-          <button class="primary dp-study-btn" data-go="ai-study">▶ Estudiar con Minerva</button>
-          <button class="ghost dp-study-btn" data-go="new-session">⚡ Nueva sesión</button>
-        </div>
-      </div>` : `
-      <div class="dp-study-now dp-study-empty">
-        <div class="dp-study-header">🎯 ¿Qué estudias hoy?</div>
-        <div class="dp-study-reason">Registra tu primera sesión para comenzar.</div>
-        <div class="dp-study-actions">
-          <button class="primary dp-study-btn" data-go="new-session">+ Comenzar sesión</button>
-        </div>
-      </div>`;
+    // Hero mentor phrase
+    let mentorMsg = 'Transforma tu tiempo de estudio en evidencia de aprendizaje.';
+    if (streak >= 7) mentorMsg = 'Tu constancia esta semana dice más que cualquier nota. Sigue así.';
+    else if (prepPct >= 70) mentorMsg = 'Estás más cerca de tu meta de lo que crees. Un paso más hoy.';
+    else if (nearestExam && nearestExam.days <= 30) mentorMsg = 'Quedan ' + nearestExam.days + ' días. Cada sesión cuenta.';
+    else if (lastSession && weekSessions.length === 0) mentorMsg = 'Retoma tu ritmo hoy. El primer paso siempre es el más difícil.';
 
-    return `
-      <div class="dp-wrap">
-        ${heroHtml}
-        ${studyNowHtml}
-        <div class="dp-chips-row">
-          <div class="dp-chip dp-chip-fire">🔥 ${gam.streak || 0} días</div>
-          <div class="dp-chip dp-chip-xp">💎 ${gam.xp || 0} XP</div>
-          <div class="dp-chip dp-chip-conc">🧠 ${sum.avgConc || '—'} conc.</div>
-          <div class="dp-chip dp-chip-session">📚 ${sum.total} sesiones</div>
-        </div>
-        <div class="dp-nav-grid">
-          <div class="dp-nav-card" data-go="achievements">
-            <div class="dp-nav-icon">🏆</div>
-            <div class="dp-nav-body">
-              <div class="dp-nav-title">Logros</div>
-              <div class="dp-nav-sub">Nivel ${levelInfo.current.level} — ${esc(levelInfo.current.title)}</div>
-            </div>
-            <div class="dp-nav-arrow">→</div>
-          </div>
-          <div class="dp-nav-card" data-go="stats">
-            <div class="dp-nav-icon">📊</div>
-            <div class="dp-nav-body">
-              <div class="dp-nav-title">Estadísticas</div>
-              <div class="dp-nav-sub">${sum.total} ses. · ${Math.round(((sum.totalMin||0)/60)*10)/10}h totales</div>
-            </div>
-            <div class="dp-nav-arrow">→</div>
-          </div>
-          <div class="dp-nav-card" data-go="profile">
-            <div class="dp-nav-icon">👤</div>
-            <div class="dp-nav-body">
-              <div class="dp-nav-title">Mi Perfil</div>
-              <div class="dp-nav-sub">Meta · Ruta · Calendario</div>
-            </div>
-            <div class="dp-nav-arrow">→</div>
-          </div>
-          <div class="dp-nav-card" data-go="ai-study">
-            <div class="dp-nav-icon">🤖</div>
-            <div class="dp-nav-body">
-              <div class="dp-nav-title">Estudio IA</div>
-              <div class="dp-nav-sub">Minerva + DECO</div>
-            </div>
-            <div class="dp-nav-arrow">→</div>
-          </div>
-        </div>
-        ${goalsCard ? `<div style="margin-top:12px;">${goalsCard}</div>` : ''}
-      </div>`;
+    // Study reason
+    let studyReason = 'Comienza tu primera sesión y construye tu camino.';
+    if (studySubject) {
+      studyReason = todaySubject
+        ? 'Tu concentración en esta materia puede mejorar esta semana.'
+        : 'Continúa donde te quedaste · ' + _relTime(lastSession.datetime);
+    }
+
+    // Per-subject health for Mi Camino
+    const subjectItems = [];
+    if (profile.enabledSubjects && profile.enabledSubjects.length) {
+      const nowDate = new Date();
+      profile.enabledSubjects.forEach(function(subj) {
+        const subjSess = sessions.filter(function(se) { return se.subject === subj; });
+        if (!subjSess.length) {
+          subjectItems.push({ name: subj, health: 'cold', lastLabel: 'Sin sesiones', pct: 0, avgConc: '' });
+          return;
+        }
+        const lastDt = new Date(Math.max.apply(null, subjSess.map(function(se) { return new Date(se.datetime).getTime(); })));
+        const daysSince = Math.floor((nowDate - lastDt) / 86400000);
+        const avgConc = (subjSess.reduce(function(a, b) { return a + (b.concentration || 0); }, 0) / subjSess.length).toFixed(1);
+        const health = daysSince <= 3 ? 'hot' : daysSince <= 6 ? 'warm' : daysSince <= 14 ? 'cool' : 'cold';
+        const lastLabel = daysSince === 0 ? 'Hoy' : daysSince === 1 ? 'Ayer' : 'Hace ' + daysSince + ' días';
+        const pct = Math.min(100, Math.round((subjSess.length / Math.max(sessions.length, 1)) * 300));
+        subjectItems.push({ name: subj, health: health, lastLabel: lastLabel, pct: pct, avgConc: avgConc });
+      });
+    }
+
+    // Mentor tip from analytics
+    let mentorTip = '';
+    const dpAlerts = Analytics.generateAlerts(user.id);
+    const successAlert = dpAlerts.find(function(a) { return a.type === 'success'; });
+    const infoAlert = dpAlerts.find(function(a) { return a.type === 'info'; });
+    if (successAlert) mentorTip = successAlert.msg;
+    else if (infoAlert) mentorTip = infoAlert.msg;
+
+    // Last session not today (resume card)
+    const todayStr = new Date().toDateString();
+    const lastNotToday = lastSession && new Date(lastSession.datetime).toDateString() !== todayStr ? lastSession : null;
+
+    // ── HERO ──
+    const heroGoalHtml = profile.university
+      ? '<div class="dpv-hero-goal-row">'
+        + '<span class="dpv-goal-pill">🎓 ' + esc(profile.university) + '</span>'
+        + (profile.career ? '<span class="dpv-goal-pill dpv-goal-pill-career">📐 ' + esc(profile.career) + '</span>' : '')
+        + '</div>'
+        + '<div class="dpv-prep-row">'
+        + '<div class="dpv-prep-bar-wrap"><div class="dpv-prep-bar" style="width:' + prepPct + '%"></div></div>'
+        + '<div class="dpv-prep-meta">'
+        + '<span class="dpv-prep-pct">' + prepPct + '% preparado</span>'
+        + (nearestExam ? '<span class="dpv-prep-exam">📅 ' + nearestExam.days + ' días para ' + esc(nearestExam.label) + '</span>' : '')
+        + '</div></div>'
+      : '<div class="dpv-hero-no-goal">Define tu meta en <strong>Mi Perfil → Meta</strong> para ver tu progreso.</div>';
+
+    const heroHtml = '<div class="dpv-hero">'
+      + '<div class="dpv-hero-top">'
+      + '<div class="dpv-hero-greeting">Hola, ' + esc(user.name.split(' ')[0]) + '</div>'
+      + '<div class="dpv-hero-tagline">Tu futuro te espera.</div>'
+      + '</div>'
+      + heroGoalHtml
+      + '<div class="dpv-mentor-phrase"><span class="dpv-mentor-star">✦</span><span>' + esc(mentorMsg) + '</span></div>'
+      + '</div>';
+
+    // ── MISIÓN DEL DÍA ──
+    const missionHtml = studySubject
+      ? '<div class="dpv-mission">'
+        + '<div class="dpv-mission-label">MISIÓN DEL DÍA</div>'
+        + '<div class="dpv-mission-subject">' + esc(studySubject) + '</div>'
+        + '<div class="dpv-mission-reason">' + esc(studyReason) + '</div>'
+        + '<div class="dpv-mission-actions">'
+        + '<button class="dpv-mission-cta" data-go="new-session">Comenzar a estudiar →</button>'
+        + '<button class="dpv-mission-ai ghost" data-go="ai-study">Estudiar con IA</button>'
+        + '</div></div>'
+      : '<div class="dpv-mission dpv-mission-empty">'
+        + '<div class="dpv-mission-label">MISIÓN DEL DÍA</div>'
+        + '<div class="dpv-mission-subject">¿Por dónde comienzas hoy?</div>'
+        + '<div class="dpv-mission-reason">Registra tu primera sesión y Ariven aprende contigo.</div>'
+        + '<div class="dpv-mission-actions">'
+        + '<button class="dpv-mission-cta" data-go="new-session">Comenzar ahora →</button>'
+        + '</div></div>';
+
+    // ── CONTINÚA ──
+    const resumeHtml = lastNotToday
+      ? '<div class="dpv-resume">'
+        + '<div class="dpv-resume-label">▶ CONTINÚA DONDE TE QUEDASTE</div>'
+        + '<div class="dpv-resume-row">'
+        + '<div class="dpv-resume-info">'
+        + '<div class="dpv-resume-subject">' + esc(lastSession.subject) + '</div>'
+        + '<div class="dpv-resume-time">' + _relTime(lastSession.datetime) + ' · ' + (lastSession.durationMin || '—') + ' min</div>'
+        + '</div>'
+        + '<button class="dpv-resume-btn ghost" data-go="new-session">Continuar →</button>'
+        + '</div></div>'
+      : '';
+
+    // ── HÁBITOS ──
+    const habitsHtml = '<div class="dpv-habits-row">'
+      + '<div class="dpv-habit-chip dpv-habit-fire"><div class="dpv-habit-val">' + streak + '</div><div class="dpv-habit-label">🔥 días seguidos</div></div>'
+      + '<div class="dpv-habit-chip dpv-habit-time"><div class="dpv-habit-val">' + weekHours + 'h</div><div class="dpv-habit-label">⏱ esta semana</div></div>'
+      + '<div class="dpv-habit-chip dpv-habit-conc"><div class="dpv-habit-val">' + (sum.avgConc || '—') + '</div><div class="dpv-habit-label">🧠 concentración</div></div>'
+      + '</div>';
+
+    // ── MI CAMINO ──
+    let pathHtml = '';
+    if (subjectItems.length) {
+      const rows = subjectItems.map(function(it) {
+        return '<div class="dpv-path-item">'
+          + '<div class="dpv-path-dot dpv-dot-' + it.health + '"></div>'
+          + '<div class="dpv-path-info">'
+          + '<div class="dpv-path-name">' + esc(it.name) + '</div>'
+          + '<div class="dpv-path-meta">' + it.lastLabel + (it.avgConc ? ' · ' + it.avgConc + '/5' : '') + '</div>'
+          + '</div>'
+          + '<div class="dpv-path-bar-wrap"><div class="dpv-path-bar" style="width:' + it.pct + '%"></div></div>'
+          + '</div>';
+      }).join('');
+      pathHtml = '<div class="dpv-path-card">'
+        + '<div class="dpv-section-title">Mi Camino <span class="dpv-section-sub">Materias activas</span></div>'
+        + '<div class="dpv-path-list">' + rows + '</div>'
+        + '</div>';
+    }
+
+    // ── MENTOR CARD ──
+    const mentorCardHtml = mentorTip
+      ? '<div class="dpv-mentor-card">'
+        + '<div class="dpv-mentor-header"><span class="dpv-mentor-badge">✦ Ariven Intelligence</span></div>'
+        + '<div class="dpv-mentor-text">' + esc(mentorTip) + '</div>'
+        + '</div>'
+      : '';
+
+    return '<div class="dpv-wrap">'
+      + heroHtml
+      + missionHtml
+      + resumeHtml
+      + habitsHtml
+      + pathHtml
+      + mentorCardHtml
+      + (goalsCard ? '<div class="dpv-goals-wrap">' + goalsCard + '</div>' : '')
+      + '</div>';
   }
 
   function _dashStudent(user, sessions, s) {
