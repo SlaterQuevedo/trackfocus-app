@@ -718,7 +718,7 @@ const App = (() => {
           <h1 class="lp-hero-title">No estudies más.<br><span class="lp-hero-title-accent">Estudia mejor.</span></h1>
           <p class="lp-hero-sub">Ariven convierte cada hora de estudio en evidencia real de aprendizaje mediante inteligencia artificial, ayudándote a demostrar que realmente estás avanzando.</p>
           <div class="lp-hero-actions">
-            <button class="lp-btn-main" id="lpHeroCta">Probar Ariven gratis</button>
+            <button class="lp-btn-main" id="lpHeroCta">Probar Ariven</button>
             <a href="?demo=1" class="lp-btn-ghost-main">🎯 Ver demostración</a>
           </div>
         </div>
@@ -872,7 +872,7 @@ const App = (() => {
           <p class="lp-cta-v2-lead">Tu futuro no se construye en un solo día.</p>
           <h2 class="lp-cta-v2-title">Se construye <span class="lp-cta-v2-accent">hoy.</span></h2>
           <p class="lp-cta-v2-sub">Empieza a demostrar tu progreso desde tu próxima sesión de estudio.</p>
-          <button class="lp-btn-main lp-btn-main--lg" id="lpCtaFinal">Comenzar gratis</button>
+          <button class="lp-btn-main lp-btn-main--lg" id="lpCtaFinal">Comenzar</button>
         </div>
       </section>
 
