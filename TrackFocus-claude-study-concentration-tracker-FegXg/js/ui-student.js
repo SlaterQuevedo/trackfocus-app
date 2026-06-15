@@ -5,6 +5,14 @@ const UIStudent = (() => {
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c =>
     ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 
+  // Detecta si el usuario activo está en modo personal.
+  // Prioridad: institutionType guardado → sin schoolId → accessType de esta sesión.
+  function _isPersonal(user) {
+    if (user.institutionType === 'personal') return true;
+    if (!user.schoolId) return true;
+    return false;
+  }
+
   function formatGrade(g) {
     if (!g) return '';
     const n = parseInt(g, 10);
@@ -134,10 +142,7 @@ const UIStudent = (() => {
     const s = Storage.get();
     const user = s.users[s.currentUserId];
     const sessions = Sessions.listFor(user.id);
-    const isPersonal = user.institutionType === 'personal'
-      || sessionStorage.getItem('tf.accessType') === 'personal'
-      || !user.schoolId;
-    return isPersonal ? _dashPersonal(user, sessions, s) : _dashStudent(user, sessions, s);
+    return _isPersonal(user) ? _dashPersonal(user, sessions, s) : _dashStudent(user, sessions, s);
   }
 
   function _relTime(dateStr) {
@@ -2003,9 +2008,9 @@ const UIStudent = (() => {
     const s = Storage.get();
     const user = s.users[s.currentUserId];
     const sessions = Sessions.listFor(user.id);
-    return user.schoolId
-      ? _profileStudent(user, sessions, s)
-      : _profilePersonal(user, sessions, s);
+    return _isPersonal(user)
+      ? _profilePersonal(user, sessions, s)
+      : _profileStudent(user, sessions, s);
   }
 
   function _profilePersonal(user, sessions, s) {
@@ -2675,9 +2680,7 @@ const UIStudent = (() => {
   function wireProfile() {
     const s = Storage.get();
     const user = s.users[s.currentUserId];
-    const isPersonal = user.institutionType === 'personal'
-      || sessionStorage.getItem('tf.accessType') === 'personal'
-      || !user.schoolId;
+    const isPersonal = _isPersonal(user);
     const navSel = isPersonal ? '.pp-nav-item' : '.ps-nav-item';
     const panelSel = isPersonal ? '.pp-panel' : '.ps-panel';
 
