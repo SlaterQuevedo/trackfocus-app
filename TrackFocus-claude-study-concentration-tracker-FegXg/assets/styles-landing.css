@@ -1321,6 +1321,7 @@ a.lp-btn-hero-ghost {
   max-width: 960px;
   padding: 72px 24px;
   text-align: center;
+  margin: 0 auto;
 }
 
 .lp-section-label {

@@ -531,7 +531,7 @@ const App = (() => {
           <p class="lp-hero-sub">Ariven convierte cada hora de estudio en evidencia real de aprendizaje mediante inteligencia artificial, ayudándote a demostrar que realmente estás avanzando.</p>
           <div class="lp-hero-actions">
             <button class="lp-btn-main" id="lpHeroCta">Probar Ariven gratis</button>
-            <button class="lp-btn-ghost-main" id="lpHeroHow">Ver cómo funciona</button>
+            <a href="?demo=1" class="lp-btn-ghost-main">🎯 Ver demostración</a>
           </div>
           <p class="lp-hero-microcopy">Sin tarjeta de crédito · Gratis para empezar</p>
         </div>
