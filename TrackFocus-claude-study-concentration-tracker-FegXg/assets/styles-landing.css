@@ -1833,6 +1833,7 @@ html[data-theme="light"] .lp-cta-final-sub {
   font-weight: 500;
   font-family: inherit;
   cursor: pointer;
+  text-decoration: none;
   transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
 }
 

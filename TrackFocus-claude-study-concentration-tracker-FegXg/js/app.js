@@ -721,7 +721,6 @@ const App = (() => {
             <button class="lp-btn-main" id="lpHeroCta">Probar Ariven gratis</button>
             <a href="?demo=1" class="lp-btn-ghost-main">🎯 Ver demostración</a>
           </div>
-          <p class="lp-hero-microcopy">Sin tarjeta de crédito · Gratis para empezar</p>
         </div>
         <div class="lp-hero-right" aria-hidden="true">
           ${_previewHtml}
@@ -874,7 +873,6 @@ const App = (() => {
           <h2 class="lp-cta-v2-title">Se construye <span class="lp-cta-v2-accent">hoy.</span></h2>
           <p class="lp-cta-v2-sub">Empieza a demostrar tu progreso desde tu próxima sesión de estudio.</p>
           <button class="lp-btn-main lp-btn-main--lg" id="lpCtaFinal">Comenzar gratis</button>
-          <p class="lp-hero-microcopy" style="margin-top:14px;">Sin tarjeta de crédito · Estudiantes, docentes e instituciones</p>
         </div>
       </section>
 
