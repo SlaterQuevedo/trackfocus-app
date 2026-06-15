@@ -6,10 +6,12 @@ const UIStudent = (() => {
     ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 
   // Detecta si el usuario activo está en modo personal.
-  // Prioridad: institutionType guardado → sin schoolId → accessType de esta sesión.
+  // Prioridad: institutionType guardado → sin schoolId → elección de esta sesión.
+  // Usada en screenDashboard, screenProfile Y wireProfile para que siempre coincidan.
   function _isPersonal(user) {
     if (user.institutionType === 'personal') return true;
     if (!user.schoolId) return true;
+    if (sessionStorage.getItem('tf.accessType') === 'personal') return true;
     return false;
   }
 
