@@ -134,7 +134,9 @@ const UIStudent = (() => {
     const s = Storage.get();
     const user = s.users[s.currentUserId];
     const sessions = Sessions.listFor(user.id);
-    const isPersonal = !user.schoolId;
+    const isPersonal = user.institutionType === 'personal'
+      || sessionStorage.getItem('tf.accessType') === 'personal'
+      || !user.schoolId;
     return isPersonal ? _dashPersonal(user, sessions, s) : _dashStudent(user, sessions, s);
   }
 
@@ -2673,7 +2675,9 @@ const UIStudent = (() => {
   function wireProfile() {
     const s = Storage.get();
     const user = s.users[s.currentUserId];
-    const isPersonal = !user.schoolId;
+    const isPersonal = user.institutionType === 'personal'
+      || sessionStorage.getItem('tf.accessType') === 'personal'
+      || !user.schoolId;
     const navSel = isPersonal ? '.pp-nav-item' : '.ps-nav-item';
     const panelSel = isPersonal ? '.pp-panel' : '.ps-panel';
 
