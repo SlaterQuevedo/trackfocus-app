@@ -9,6 +9,7 @@ const App = (() => {
     'admin-promote':      null,
     'consent':            ['student'],
     'privacy-policy':     null,  // Accesible por todos los roles autenticados
+    'legal':              null,  // Hub de información legal (PP + T&C)
 
     // Estudiante
     'pending-approval':   ['student'],
@@ -54,7 +55,8 @@ const App = (() => {
     }
 
     // Gate de Política de Privacidad: redirige a todos los usuarios que no la hayan aceptado
-    if (user && route !== 'privacy-policy' && route !== 'welcome' && !user.privacyPolicyAcceptedAt) {
+    // 'legal' se excluye para que el usuario pueda leer T&C antes de aceptar la PP
+    if (user && route !== 'privacy-policy' && route !== 'welcome' && route !== 'legal' && !user.privacyPolicyAcceptedAt) {
       return go('privacy-policy');
     }
 
@@ -76,6 +78,7 @@ const App = (() => {
       'admin-promote':      { render: screenAdminPromote,      wire: wireAdminPromote },
       consent:              { render: screenConsent,           wire: wireConsent },
       'privacy-policy':     { render: screenPrivacyPolicy,     wire: wirePrivacyPolicy },
+      'legal':              { render: screenLegal,             wire: wireLegal },
       ...UIStudent.screens,
       ...UITeacher.screens,
       ...UIAdmin.screens,
@@ -133,6 +136,23 @@ const App = (() => {
       bottomnav?.classList.add('hidden');
       userbox.classList.remove('hidden');
       if (user) document.getElementById('userLabel').textContent = user.name;
+      return;
+    }
+
+    // Hub legal: pantalla browsable (no gate), muestra nav completa
+    if (_current === 'legal') {
+      if (topbar) topbar.style.display = '';
+      if (footer) footer.style.display = 'none';
+      if (user) {
+        nav.classList.remove('hidden');
+        bottomnav?.classList.remove('hidden');
+        userbox.classList.remove('hidden');
+        document.getElementById('userLabel').textContent = user.name;
+      } else {
+        nav.classList.add('hidden');
+        bottomnav?.classList.add('hidden');
+        userbox.classList.remove('hidden');
+      }
       return;
     }
 
@@ -221,6 +241,7 @@ const App = (() => {
       sessionStorage.removeItem('tf.loginInProgress');
       go('welcome');
     });
+    document.getElementById('legalNavBtn')?.addEventListener('click', () => go('legal'));
     document.getElementById('changeAccountBtn')?.addEventListener('click', async () => {
       await Auth.logout();
       sessionStorage.clear(); // limpia preferencias de sesión para no auto-loguear
@@ -452,7 +473,7 @@ const App = (() => {
     Storage.bindRealtime(() => {
       // Repintar la pantalla actual cuando llegan cambios, EXCEPTO si interrumpiría
       // al usuario (rendimiento + UX): chat IA en curso o un modal/quiz abierto.
-      if (!_current || _current === 'welcome' || _current === 'consent' || _current === 'privacy-policy') return;
+      if (!_current || _current === 'welcome' || _current === 'consent' || _current === 'privacy-policy' || _current === 'legal') return;
       if (_current === 'ai-study') return;
       if (document.querySelector('.quiz-modal') || document.querySelector('.pom-modal:not(.hidden)')) return;
       go(_current);
@@ -1461,6 +1482,66 @@ const App = (() => {
         await Auth.logout();
         go('welcome');
       }
+    });
+  }
+
+  // ---- Pantalla: Hub Legal (Política de Privacidad + Términos y Condiciones) ----
+  function screenLegal() {
+    const u = Roles.current();
+    const nombre = u?.name ? u.name.split(' ')[0] : '';
+    return `
+      <div style="max-width:680px;margin:32px auto;padding:0 16px;">
+        <div style="margin-bottom:24px;">
+          <h2 style="margin:0 0 6px;">Información legal</h2>
+          <p class="muted" style="margin:0;">${nombre ? 'Hola, ' + nombre + '. Aquí' : 'Aquí'} encontrarás los documentos legales de Ariven.</p>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+          <div class="card" style="padding:24px;cursor:pointer;transition:transform .15s,box-shadow .15s;" id="legalCardPP"
+               onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.18)'"
+               onmouseleave="this.style.transform='';this.style.boxShadow=''">
+            <div style="font-size:36px;margin-bottom:12px;">🔒</div>
+            <h3 style="margin:0 0 8px;font-size:16px;">Política de Privacidad</h3>
+            <p class="muted" style="font-size:13px;margin:0 0 16px;line-height:1.5;">Cómo recopilamos, usamos y protegemos tus datos personales. Incluye tus derechos ARCO y el uso de IA.</p>
+            <span style="font-size:13px;font-weight:600;color:var(--accent,#6c63ff);">Ver política →</span>
+          </div>
+
+          <div class="card" style="padding:24px;cursor:pointer;transition:transform .15s,box-shadow .15s;" id="legalCardTC"
+               onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.18)'"
+               onmouseleave="this.style.transform='';this.style.boxShadow=''">
+            <div style="font-size:36px;margin-bottom:12px;">📋</div>
+            <h3 style="margin:0 0 8px;font-size:16px;">Términos y Condiciones</h3>
+            <p class="muted" style="font-size:13px;margin:0 0 16px;line-height:1.5;">Reglas de uso, limitaciones de responsabilidad, propiedad intelectual y futuras funciones de pago.</p>
+            <span style="font-size:13px;font-weight:600;color:var(--accent,#6c63ff);">Ver términos →</span>
+          </div>
+
+        </div>
+        <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);font-size:12px;" class="muted">
+          Vigencia: 24/06/2026 &nbsp;·&nbsp; Responsable: Slater Quevedo &nbsp;·&nbsp; Contacto: trackfocus.support@gmail.com
+        </div>
+        <button class="ghost" id="legalBackBtn" style="margin-top:16px;">← Volver</button>
+      </div>
+      <style>
+        @media (max-width: 520px) {
+          #legalCardPP, #legalCardTC { grid-column: 1 / -1; }
+          #legalCardPP + #legalCardTC { margin-top: 0; }
+        }
+      </style>`;
+  }
+
+  function wireLegal() {
+    document.getElementById('legalCardPP')?.addEventListener('click', () => {
+      window.open('privacy.html', '_blank');
+    });
+    document.getElementById('legalCardTC')?.addEventListener('click', () => {
+      window.open('terms.html', '_blank');
+    });
+    document.getElementById('legalBackBtn')?.addEventListener('click', () => {
+      const u = Roles.current();
+      if (!u) return go('welcome');
+      if (u.role === 'super_admin') return go('admin-dashboard');
+      if (u.role === 'teacher')     return go('teacher-dashboard');
+      return go('profile');
     });
   }
 

@@ -2261,6 +2261,7 @@ const UIStudent = (() => {
           <div class="pp-account-role">Modo: ${_roleLabel(user)}</div>
         </div>
         <div class="pp-account-actions">
+          <button class="ghost pp-account-btn" id="ppLegalBtn">⚖️ Información legal</button>
           <button class="ghost pp-account-btn" id="ppExportBtn">📥 Exportar mis datos</button>
           <input type="file" id="ppRestoreInput" accept=".json" style="display:none;" />
           <button class="ghost pp-account-btn" id="ppRestoreBtn">📤 Restaurar respaldo</button>
@@ -2642,6 +2643,7 @@ const UIStudent = (() => {
           <div class="pp-account-role">Rol: ${user.role === 'teacher' ? 'Docente' : 'Estudiante'} institucional</div>
         </div>
         <div class="pp-account-actions">
+          <button class="ghost pp-account-btn" id="ppLegalBtn">⚖️ Información legal</button>
           <button class="ghost pp-account-btn" id="ppExportBtn">📥 Exportar mis datos</button>
           <input type="file" id="ppRestoreInput" accept=".json" style="display:none;" />
           <button class="ghost pp-account-btn" id="ppRestoreBtn">📤 Restaurar respaldo</button>
@@ -2988,6 +2990,7 @@ const UIStudent = (() => {
 
   function _wireAccountPanel(user) {
     const r = () => root();
+    r().querySelector('#ppLegalBtn')?.addEventListener('click', () => App.go('legal'));
     r().querySelector('#ppLogoutBtn')?.addEventListener('click', () => {
       document.getElementById('logoutBtn')?.click();
     });
