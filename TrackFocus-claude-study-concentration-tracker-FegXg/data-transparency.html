@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cumplimiento y Transparencia de Datos — Ariven</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Helvetica Neue", sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            min-height: 100vh;
+        }
+        h1 {
+            color: #1a1a2e;
+            margin: 30px 0 10px 0;
+            font-size: 28px;
+        }
+        h2 {
+            color: #1a1a2e;
+            margin: 25px 0 15px 0;
+            font-size: 22px;
+        }
+        h3 {
+            color: #2a2a4e;
+            margin: 20px 0 10px 0;
+            font-size: 16px;
+        }
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        table th {
+            background: #f0f0f0;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+        table tr:nth-child(even) {
+            background: #fafafa;
+        }
+        ul, ol {
+            margin: 15px 0 15px 30px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        .meta {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .highlight {
+            background: #fffbea;
+            padding: 15px;
+            border-left: 4px solid #ff9500;
+            margin: 20px 0;
+            border-radius: 3px;
+        }
+        .info-box {
+            background: #f0f4ff;
+            padding: 15px;
+            border-left: 4px solid #4361ee;
+            margin: 20px 0;
+            border-radius: 3px;
+        }
+        .warning-box {
+            background: #fff3f3;
+            padding: 15px;
+            border-left: 4px solid #d93025;
+            margin: 20px 0;
+            border-radius: 3px;
+        }
+        .success-box {
+            background: #f0fff4;
+            padding: 15px;
+            border-left: 4px solid #1a8a4a;
+            margin: 20px 0;
+            border-radius: 3px;
+        }
+        .button {
+            display: inline-block;
+            background: #1a1a2e;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+        }
+        .button:hover {
+            background: #2a2a4e;
+        }
+        .button-secondary {
+            display: inline-block;
+            background: transparent;
+            color: #1a1a2e;
+            padding: 10px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-weight: 600;
+            border: 2px solid #1a1a2e;
+            cursor: pointer;
+            margin-left: 12px;
+        }
+        .button-secondary:hover {
+            background: #f0f0f0;
+        }
+        code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .code-block {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin: 16px 0;
+            text-align: center;
+            color: #333;
+        }
+        .badge {
+            display: inline-block;
+            background: #1a1a2e;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 2px;
+        }
+        .badge-green  { background: #1a8a4a; }
+        .badge-red    { background: #d93025; }
+        .badge-blue   { background: #4361ee; }
+        .badge-orange { background: #e07b00; }
+        .section-toc {
+            background: #f9f9ff;
+            border: 1px solid #e0e0f0;
+            border-radius: 6px;
+            padding: 20px 24px;
+            margin: 20px 0 30px 0;
+            font-size: 14px;
+        }
+        .section-toc h3 {
+            margin-top: 0;
+            margin-bottom: 12px;
+        }
+        .section-toc ol {
+            margin: 0;
+            columns: 2;
+            column-gap: 24px;
+        }
+        .section-toc li {
+            margin-bottom: 4px;
+        }
+        footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+        }
+        .doc-links {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .doc-card {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 18px;
+            text-decoration: none;
+            color: #333;
+            display: block;
+            transition: border-color .15s, background .15s;
+        }
+        .doc-card:hover {
+            border-color: #1a1a2e;
+            background: #f9f9ff;
+        }
+        .doc-card .doc-icon { font-size: 24px; margin-bottom: 8px; }
+        .doc-card .doc-title { font-weight: 600; color: #1a1a2e; margin-bottom: 4px; }
+        .doc-card .doc-desc { font-size: 13px; color: #666; }
+        @media (max-width: 768px) {
+            .container { padding: 20px; }
+            h1 { font-size: 24px; }
+            h2 { font-size: 18px; }
+            table { font-size: 12px; }
+            table th, table td { padding: 8px; }
+            .section-toc ol { columns: 1; }
+            .button-secondary { margin-left: 0; margin-top: 10px; display: block; text-align: center; }
+            .doc-links { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Cumplimiento y Transparencia de Datos — Ariven</h1>
+        <div class="meta">
+            <p><strong>Fecha de actualización:</strong> 24/06/2026 &nbsp;·&nbsp; <strong>Versión:</strong> 1.0</p>
+            <p><strong>Responsable:</strong> Slater Quevedo &nbsp;·&nbsp; <strong>Contacto:</strong> trackfocus.support@gmail.com &nbsp;·&nbsp; <strong>País:</strong> Perú</p>
+        </div>
+
+        <div class="info-box">
+            <strong>📌 ¿Para quién es este documento?</strong>
+            <p style="margin:6px 0 0;">Para estudiantes, padres, docentes e instituciones que quieran entender, de forma simple y directa, cómo Ariven maneja sus datos. Sin legalés innecesarios.</p>
+        </div>
+
+        <div class="section-toc">
+            <h3>Contenido</h3>
+            <ol>
+                <li>¿Qué es este documento?</li>
+                <li>¿Qué datos recopilamos?</li>
+                <li>¿Para qué usamos tus datos?</li>
+                <li>Qué NO recopilamos</li>
+                <li>¿Cuánto tiempo conservamos los datos?</li>
+                <li>Cómo protegemos los datos</li>
+                <li>Uso de Inteligencia Artificial</li>
+                <li>Datos de menores de edad</li>
+                <li>Servicios externos y transferencias</li>
+                <li>Tus derechos</li>
+                <li>Documentos relacionados</li>
+            </ol>
+        </div>
+
+        <h2>1. ¿Qué es este documento?</h2>
+        <p>Este documento explica de forma clara y visual cómo Ariven recopila, usa y protege los datos de sus usuarios. Es un complemento a nuestra Política de Privacidad y Términos y Condiciones, redactado en lenguaje accesible para cualquier persona.</p>
+
+        <h2>2. ¿Qué datos recopilamos?</h2>
+        <table>
+            <tr>
+                <th>✅ Dato</th>
+                <th>Descripción</th>
+                <th>¿Por qué?</th>
+            </tr>
+            <tr>
+                <td><strong>Correo electrónico</strong></td>
+                <td>Tu email de Google</td>
+                <td>Identificador único en el sistema</td>
+            </tr>
+            <tr>
+                <td><strong>Nombre completo</strong></td>
+                <td>De tu perfil de Google</td>
+                <td>Personalizar la interfaz</td>
+            </tr>
+            <tr>
+                <td><strong>Foto de perfil</strong></td>
+                <td>URL de imagen de Google</td>
+                <td>Mostrarla en la app</td>
+            </tr>
+            <tr>
+                <td><strong>Sesiones de estudio</strong></td>
+                <td>Materia, duración, concentración (1-5), actividad previa, fecha y hora</td>
+                <td>Mostrar tu progreso y estadísticas</td>
+            </tr>
+            <tr>
+                <td><strong>Gamificación</strong></td>
+                <td>XP, nivel, racha diaria, insignias obtenidas</td>
+                <td>Logros y motivación</td>
+            </tr>
+            <tr>
+                <td><strong>Metadatos de archivos</strong></td>
+                <td>Nombre, tipo y tamaño del archivo</td>
+                <td>Identificar materiales cargados</td>
+            </tr>
+            <tr>
+                <td><strong>Solicitudes de aula</strong></td>
+                <td>Nombre, email, colegio, estado</td>
+                <td>Gestionar acceso institucional</td>
+            </tr>
+            <tr>
+                <td><strong>Piloto educativo (anónimo)</strong></td>
+                <td>Hash SHA-256 del email, puntajes pre/post, métricas de concentración</td>
+                <td>Investigación educativa anónima</td>
+            </tr>
+            <tr>
+                <td><strong>Aceptación legal</strong></td>
+                <td>Fechas de aceptación de PP y T&C</td>
+                <td>Cumplimiento normativo</td>
+            </tr>
+        </table>
+        <div class="highlight">
+            <strong>💡 Importante sobre los archivos:</strong> El contenido de los archivos que cargas (PDFs, imágenes, etc.) <strong>no se almacena permanentemente</strong>. Solo existe en la memoria de tu navegador durante la sesión activa.
+        </div>
+
+        <h2>3. ¿Para qué usamos tus datos?</h2>
+        <table>
+            <tr>
+                <th>Finalidad</th>
+                <th>Datos utilizados</th>
+            </tr>
+            <tr>
+                <td>🔐 Autenticarte en la plataforma</td>
+                <td>Email</td>
+            </tr>
+            <tr>
+                <td>📊 Mostrarte tu progreso y estadísticas</td>
+                <td>Sesiones de estudio, gamificación</td>
+            </tr>
+            <tr>
+                <td>🧠 Personalizar el tutor de IA</td>
+                <td>Materia, grado, historial de conversación (en RAM)</td>
+            </tr>
+            <tr>
+                <td>👨‍🏫 Seguimiento docente (si eres parte de una institución)</td>
+                <td>Sesiones, progreso del aula</td>
+            </tr>
+            <tr>
+                <td>🏆 Gestionar logros y rankings</td>
+                <td>XP, insignias, racha</td>
+            </tr>
+            <tr>
+                <td>🔬 Investigación educativa del piloto</td>
+                <td>Datos 100% anonimizados (SHA-256)</td>
+            </tr>
+            <tr>
+                <td>⚖️ Cumplimiento legal</td>
+                <td>Fechas de aceptación de documentos legales</td>
+            </tr>
+        </table>
+
+        <h2>4. ❌ Qué NO recopilamos</h2>
+        <p>Esta sección es igual de importante. Ariven <strong>no recopila, no almacena ni comparte</strong>:</p>
+        <table>
+            <tr>
+                <th>❌ Dato</th>
+                <th>Explicación</th>
+            </tr>
+            <tr>
+                <td><strong>Contraseñas</strong></td>
+                <td>Usamos Google OAuth. Nunca almacenamos contraseñas propias.</td>
+            </tr>
+            <tr>
+                <td><strong>Ubicación geográfica (GPS)</strong></td>
+                <td>No solicitamos ni registramos tu localización.</td>
+            </tr>
+            <tr>
+                <td><strong>Historial de navegación</strong></td>
+                <td>No rastreamos qué otros sitios visitas.</td>
+            </tr>
+            <tr>
+                <td><strong>Número de teléfono</strong></td>
+                <td>No pedimos ni almacenamos tu teléfono.</td>
+            </tr>
+            <tr>
+                <td><strong>Documentos de identidad</strong></td>
+                <td>No recopilamos DNI, pasaporte ni documentos similares.</td>
+            </tr>
+            <tr>
+                <td><strong>Información financiera / bancaria</strong></td>
+                <td>No hay pagos activos. Ningún dato de tarjeta o cuenta bancaria.</td>
+            </tr>
+            <tr>
+                <td><strong>Conversaciones con la IA</strong></td>
+                <td>El historial del chat no se guarda en servidores. Existe solo en la RAM del navegador.</td>
+            </tr>
+            <tr>
+                <td><strong>Contenido de archivos cargados</strong></td>
+                <td>Solo guardamos nombre, tipo y tamaño. El contenido del archivo se descarta.</td>
+            </tr>
+            <tr>
+                <td><strong>Cookies de rastreo o publicidad</strong></td>
+                <td>Solo existe la cookie técnica de sesión de Supabase (necesaria para el login).</td>
+            </tr>
+            <tr>
+                <td><strong>Google Analytics / GA4 / Hotjar / Facebook Pixel</strong></td>
+                <td>No usamos herramientas de analítica de comportamiento de terceros.</td>
+            </tr>
+            <tr>
+                <td><strong>Sentry / Datadog / LogRocket</strong></td>
+                <td>No usamos herramientas de monitoreo externo. Los logs son solo locales.</td>
+            </tr>
+            <tr>
+                <td><strong>Datos de menores sin consentimiento</strong></td>
+                <td>Los menores no pueden acceder al panel sin autorización parental explícita.</td>
+            </tr>
+        </table>
+
+        <h2>5. ⏱️ ¿Cuánto tiempo conservamos los datos?</h2>
+        <table>
+            <tr>
+                <th>Tipo de dato</th>
+                <th>Período de conservación</th>
+            </tr>
+            <tr>
+                <td>Datos de identidad y perfil</td>
+                <td>Hasta que el usuario elimine su cuenta</td>
+            </tr>
+            <tr>
+                <td>Sesiones de estudio</td>
+                <td>Hasta que el usuario elimine su cuenta</td>
+            </tr>
+            <tr>
+                <td>Gamificación (XP, insignias)</td>
+                <td>Hasta que el usuario elimine su cuenta</td>
+            </tr>
+            <tr>
+                <td>Piloto educativo (anonimizado)</td>
+                <td>Indefinido (sin datos personales reversibles)</td>
+            </tr>
+            <tr>
+                <td>Caché local (localStorage)</td>
+                <td>Se elimina automáticamente al cerrar sesión</td>
+            </tr>
+            <tr>
+                <td>Historial de conversación con IA</td>
+                <td>Solo durante la sesión activa (se pierde al recargar)</td>
+            </tr>
+            <tr>
+                <td>Contenido de archivos cargados</td>
+                <td>Solo durante la sesión activa (no persiste en servidores)</td>
+            </tr>
+        </table>
+        <div class="info-box">
+            <strong>📥 ¿Quieres exportar tus datos?</strong>
+            <p style="margin:6px 0 0;">Puedes descargar un respaldo completo de tus datos desde <strong>Perfil → Mi Cuenta → Exportar mis datos</strong>.</p>
+        </div>
+
+        <h2>6. 🔐 Cómo protegemos los datos</h2>
+        <table>
+            <tr>
+                <th>Medida de seguridad</th>
+                <th>Descripción</th>
+            </tr>
+            <tr>
+                <td>🔒 <strong>HTTPS / TLS</strong></td>
+                <td>Toda comunicación entre tu navegador y los servidores viaja cifrada.</td>
+            </tr>
+            <tr>
+                <td>🔑 <strong>Google OAuth</strong></td>
+                <td>No almacenamos contraseñas. Google gestiona la autenticación de forma segura.</td>
+            </tr>
+            <tr>
+                <td>🛡️ <strong>Row-Level Security (RLS)</strong></td>
+                <td>Cada usuario solo puede leer y modificar sus propios datos en la base de datos.</td>
+            </tr>
+            <tr>
+                <td>🔢 <strong>SHA-256 irreversible</strong></td>
+                <td>Los datos del piloto se asocian a un hash criptográfico que no puede descodificarse.</td>
+            </tr>
+            <tr>
+                <td>🏭 <strong>Proxy seguro para IA</strong></td>
+                <td>La clave de la API de Gemini solo existe en los servidores de Vercel. Nunca en el navegador.</td>
+            </tr>
+            <tr>
+                <td>🧹 <strong>Limpieza al logout</strong></td>
+                <td>Al cerrar sesión, el caché local (localStorage) se elimina completamente de tu dispositivo.</td>
+            </tr>
+            <tr>
+                <td>🎭 <strong>Modo demo aislado</strong></td>
+                <td>El modo demostración (<code>?demo=1</code>) nunca escribe datos reales en la base de datos.</td>
+            </tr>
+        </table>
+
+        <h2>7. 🧠 Uso de Inteligencia Artificial</h2>
+        <p>Ariven integra <strong>Google Gemini</strong> como tutor de IA. Aquí está todo lo que necesitas saber:</p>
+
+        <h3>¿Qué datos llegan a Google Gemini?</h3>
+        <table>
+            <tr>
+                <th>Dato</th>
+                <th>¿Se envía?</th>
+                <th>Detalle</th>
+            </tr>
+            <tr>
+                <td>Correo electrónico</td>
+                <td>❌ <strong>No</strong></td>
+                <td>Nunca se transmite a la IA</td>
+            </tr>
+            <tr>
+                <td>Nombre del usuario</td>
+                <td>❌ No</td>
+                <td>No se incluye en las solicitudes</td>
+            </tr>
+            <tr>
+                <td>Historial de la conversación</td>
+                <td>✅ Sí</td>
+                <td>Hasta los últimos 12 mensajes del chat activo</td>
+            </tr>
+            <tr>
+                <td>Materia y grado</td>
+                <td>✅ Sí</td>
+                <td>Para contextualizar la respuesta del tutor</td>
+            </tr>
+            <tr>
+                <td>Archivos cargados</td>
+                <td>✅ Solo si los cargas</td>
+                <td>Se envían como base64 para análisis, luego se descartan</td>
+            </tr>
+        </table>
+
+        <h3>¿Cómo funciona el proxy?</h3>
+        <div class="code-block">Tu navegador → Servidor de Ariven (Vercel) → Google Gemini API</div>
+        <p>Tu consulta pasa por un servidor intermediario operado por Ariven antes de llegar a Google. Esto garantiza que la clave de API nunca quede expuesta en el navegador.</p>
+
+        <h3>¿Se guardan las conversaciones?</h3>
+        <div class="success-box">
+            <strong>✅ No.</strong> El historial del chat existe únicamente en la memoria del navegador durante la sesión activa. Al cerrar o recargar la aplicación, se descarta completamente.
+        </div>
+
+        <div class="warning-box">
+            <strong>⚠️ Recuerda:</strong> La IA puede cometer errores. El tutor está diseñado para guiar mediante preguntas, no para dar respuestas definitivas. Siempre verifica la información con tu docente o fuentes confiables.
+        </div>
+
+        <h2>8. 👶 Datos de menores de edad</h2>
+
+        <h3>Consentimiento parental obligatorio</h3>
+        <p>Antes de acceder al panel principal, el menor (o su tutor legal) debe aceptar explícitamente los documentos legales a través de una pantalla obligatoria dentro de la aplicación. <strong>Sin este paso, el acceso queda bloqueado técnicamente.</strong></p>
+
+        <h3>Piloto educativo anónimo</h3>
+        <p>Los datos del piloto se almacenan aplicando SHA-256 al correo electrónico, generando un identificador anónimo e irreversible:</p>
+        <ul>
+            <li>✅ Los datos son útiles para investigación educativa.</li>
+            <li>✅ No existe ningún vínculo recuperable entre esos datos y la identidad real del menor.</li>
+            <li>❌ Ni siquiera Ariven puede revertir el hash para identificar a un estudiante concreto.</li>
+        </ul>
+
+        <h3>Derechos del tutor legal</h3>
+        <table>
+            <tr>
+                <th>Derecho</th>
+                <th>Cómo ejercerlo</th>
+            </tr>
+            <tr>
+                <td>Conocer qué datos tiene Ariven sobre el menor</td>
+                <td>Escribir a trackfocus.support@gmail.com</td>
+            </tr>
+            <tr>
+                <td>Solicitar corrección de datos</td>
+                <td>Escribir a trackfocus.support@gmail.com</td>
+            </tr>
+            <tr>
+                <td>Solicitar eliminación de la cuenta</td>
+                <td>Escribir a trackfocus.support@gmail.com</td>
+            </tr>
+            <tr>
+                <td>Revocar el consentimiento parental</td>
+                <td>Escribir a trackfocus.support@gmail.com</td>
+            </tr>
+        </table>
+        <p><strong>Plazo de respuesta: máximo 30 días hábiles.</strong></p>
+
+        <h2>9. 🌍 Servicios externos y transferencias internacionales</h2>
+        <p>Para funcionar, Ariven utiliza los siguientes proveedores externos. Cada uno recibe solo los datos estrictamente necesarios para su función:</p>
+        <table>
+            <tr>
+                <th>Servicio</th>
+                <th>Proveedor</th>
+                <th>¿Qué datos recibe?</th>
+                <th>País</th>
+            </tr>
+            <tr>
+                <td><strong>Google OAuth</strong></td>
+                <td>Google LLC</td>
+                <td>Email, nombre, avatar (para login)</td>
+                <td>🇺🇸 EE. UU.</td>
+            </tr>
+            <tr>
+                <td><strong>Google Gemini API</strong></td>
+                <td>Google LLC</td>
+                <td>Historial del chat, materia, archivos (sin email)</td>
+                <td>🇺🇸 EE. UU.</td>
+            </tr>
+            <tr>
+                <td><strong>Supabase</strong></td>
+                <td>Supabase Inc.</td>
+                <td>Todos los datos de la base de datos</td>
+                <td>🇺🇸 EE. UU. (us-west-1)</td>
+            </tr>
+            <tr>
+                <td><strong>Vercel</strong></td>
+                <td>Vercel Inc.</td>
+                <td>Logs de acceso, IP, User-Agent</td>
+                <td>🇺🇸 EE. UU.</td>
+            </tr>
+            <tr>
+                <td><strong>Google Fonts</strong></td>
+                <td>Google LLC</td>
+                <td>IP, User-Agent (carga de tipografía)</td>
+                <td>🇺🇸 EE. UU.</td>
+            </tr>
+            <tr>
+                <td><strong>jsDelivr CDN</strong></td>
+                <td>ProspectOne Sp. z o.o.</td>
+                <td>IP, User-Agent (carga de Chart.js)</td>
+                <td>🌍 Global</td>
+            </tr>
+        </table>
+        <div class="highlight">
+            <strong>📋 Importante:</strong> Ariven no vende, arrienda ni cede datos a terceros con fines comerciales o publicitarios. Los proveedores listados solo reciben los datos necesarios para prestar su servicio y tienen sus propias políticas de privacidad.
+        </div>
+
+        <h2>10. ⚖️ Tus derechos</h2>
+        <p>Conforme a la <strong>Ley N.° 29733 de Protección de Datos Personales del Perú</strong>, tienes los siguientes derechos:</p>
+        <table>
+            <tr>
+                <th>Derecho</th>
+                <th>¿Qué significa?</th>
+                <th>Cómo ejercerlo</th>
+            </tr>
+            <tr>
+                <td><strong>Acceso</strong></td>
+                <td>Saber qué datos tiene Ariven sobre ti</td>
+                <td>Revisa tu perfil o escribe al correo</td>
+            </tr>
+            <tr>
+                <td><strong>Rectificación</strong></td>
+                <td>Corregir datos incorrectos o desactualizados</td>
+                <td>Desde tu perfil o por correo</td>
+            </tr>
+            <tr>
+                <td><strong>Cancelación</strong></td>
+                <td>Solicitar que se eliminen tus datos</td>
+                <td>Por correo (plazo 30 días hábiles)</td>
+            </tr>
+            <tr>
+                <td><strong>Oposición</strong></td>
+                <td>Oponerte a un uso específico de tus datos</td>
+                <td>Por correo indicando la finalidad a objetar</td>
+            </tr>
+        </table>
+        <p><strong>Contacto:</strong> trackfocus.support@gmail.com &nbsp;·&nbsp; <strong>Plazo de respuesta:</strong> máximo 30 días hábiles.</p>
+        <p>Si consideras que tus derechos no fueron respetados, puedes presentar una reclamación ante la <strong>Autoridad Nacional de Protección de Datos Personales (ANPD)</strong> del Ministerio de Justicia y Derechos Humanos del Perú.</p>
+
+        <h2>11. 📄 Documentos relacionados</h2>
+        <div class="doc-links">
+            <a href="privacy.html" class="doc-card">
+                <div class="doc-icon">🔒</div>
+                <div class="doc-title">Política de Privacidad</div>
+                <div class="doc-desc">Documento legal completo sobre el tratamiento de datos personales, derechos ARCO y bases legales.</div>
+            </a>
+            <a href="terms.html" class="doc-card">
+                <div class="doc-icon">📋</div>
+                <div class="doc-title">Términos y Condiciones</div>
+                <div class="doc-desc">Reglas de uso, limitaciones de responsabilidad, propiedad intelectual y condiciones de la plataforma.</div>
+            </a>
+        </div>
+
+        <p style="margin-top: 40px;">
+            <button class="button" onclick="window.history.back()">← Volver</button>
+            <a href="privacy.html" class="button-secondary">Política de Privacidad →</a>
+            <a href="terms.html" class="button-secondary">Términos y Condiciones →</a>
+        </p>
+
+        <footer>
+            <p>Cumplimiento y Transparencia de Datos — Ariven · Versión 1.0 · Fecha de vigencia: 24/06/2026</p>
+            <p style="margin-top:6px;">Responsable: Slater Quevedo · trackfocus.support@gmail.com · Perú</p>
+        </footer>
+    </div>
+</body>
+</html>

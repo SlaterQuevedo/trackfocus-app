@@ -1495,7 +1495,7 @@ const App = (() => {
           <h2 style="margin:0 0 6px;">Información legal</h2>
           <p class="muted" style="margin:0;">${nombre ? 'Hola, ' + nombre + '. Aquí' : 'Aquí'} encontrarás los documentos legales de Ariven.</p>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;">
 
           <div class="card" style="padding:24px;cursor:pointer;transition:transform .15s,box-shadow .15s;" id="legalCardPP"
                onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.18)'"
@@ -1515,6 +1515,15 @@ const App = (() => {
             <span style="font-size:13px;font-weight:600;color:var(--accent,#6c63ff);">Ver términos →</span>
           </div>
 
+          <div class="card" style="padding:24px;cursor:pointer;transition:transform .15s,box-shadow .15s;" id="legalCardDT"
+               onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.18)'"
+               onmouseleave="this.style.transform='';this.style.boxShadow=''">
+            <div style="font-size:36px;margin-bottom:12px;">📊</div>
+            <h3 style="margin:0 0 8px;font-size:16px;">Cumplimiento y Transparencia</h3>
+            <p class="muted" style="font-size:13px;margin:0 0 16px;line-height:1.5;">Qué datos recopilamos, qué no recopilamos, cómo los protegemos y cómo funciona la IA con tus datos.</p>
+            <span style="font-size:13px;font-weight:600;color:var(--accent,#6c63ff);">Ver transparencia →</span>
+          </div>
+
         </div>
         <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);font-size:12px;" class="muted">
           Vigencia: 24/06/2026 &nbsp;·&nbsp; Responsable: Slater Quevedo &nbsp;·&nbsp; Contacto: trackfocus.support@gmail.com
@@ -1523,8 +1532,7 @@ const App = (() => {
       </div>
       <style>
         @media (max-width: 520px) {
-          #legalCardPP, #legalCardTC { grid-column: 1 / -1; }
-          #legalCardPP + #legalCardTC { margin-top: 0; }
+          #legalCardPP, #legalCardTC, #legalCardDT { grid-column: 1 / -1; }
         }
       </style>`;
   }
@@ -1535,6 +1543,9 @@ const App = (() => {
     });
     document.getElementById('legalCardTC')?.addEventListener('click', () => {
       window.open('terms.html', '_blank');
+    });
+    document.getElementById('legalCardDT')?.addEventListener('click', () => {
+      window.open('data-transparency.html', '_blank');
     });
     document.getElementById('legalBackBtn')?.addEventListener('click', () => {
       const u = Roles.current();
