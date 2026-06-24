@@ -56,7 +56,7 @@ const App = (() => {
 
     // Gate legal: redirige si el usuario no ha aceptado la PP o los T&C
     // 'legal' se excluye para permitir navegación libre al hub antes de aceptar
-    if (user && route !== 'privacy-policy' && route !== 'welcome' && route !== 'legal' && (!user.privacyPolicyAcceptedAt || !user.termsAcceptedAt)) {
+    if (user && route !== 'privacy-policy' && route !== 'welcome' && route !== 'legal' && (!user.privacyPolicyAcceptedAt || !user.termsAcceptedAt || !user.transparencyAcceptedAt)) {
       return go('privacy-policy');
     }
 
@@ -1406,6 +1406,7 @@ const App = (() => {
     const nombre = u?.name ? u.name.split(' ')[0] : '';
     const ppOk  = !!u?.privacyPolicyAcceptedAt;
     const tcOk  = !!u?.termsAcceptedAt;
+    const dtOk  = !!u?.transparencyAcceptedAt;
     return `
       <div class="card" style="max-width:700px;margin:20px auto;padding:0;">
         <div style="padding:20px;border-bottom:1px solid rgba(255,255,255,0.1);position:sticky;top:0;background:var(--card-bg,#1a1a2e);z-index:1;">
@@ -1432,6 +1433,15 @@ const App = (() => {
             <a href="terms.html" target="_blank" style="font-size:13px;font-weight:600;color:var(--accent,#6c63ff);text-decoration:none;">Leer términos completos →</a>
           </div>
 
+          <div style="border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:16px;margin-bottom:16px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+              <span style="font-size:22px;">📊</span>
+              <strong style="font-size:15px;">Cumplimiento y Transparencia de Datos</strong>
+            </div>
+            <p style="margin:0 0 10px;color:var(--muted);">Qué datos recopilamos, qué NO recopilamos, cómo los protegemos, cómo funciona la IA con tus datos y cuáles son tus derechos. Explicado en lenguaje simple.</p>
+            <a href="data-transparency.html" target="_blank" style="font-size:13px;font-weight:600;color:var(--accent,#6c63ff);text-decoration:none;">Leer documento completo →</a>
+          </div>
+
         </div>
         <div style="padding:20px;border-top:1px solid rgba(255,255,255,0.1);">
           <form id="legalAcceptForm">
@@ -1439,9 +1449,13 @@ const App = (() => {
               <input type="checkbox" id="checkPP" ${ppOk ? 'checked' : ''} style="margin-top:3px;flex-shrink:0;">
               <span>He leído y acepto la <strong>Política de Privacidad</strong> de Ariven</span>
             </label>
-            <label class="consent-check" style="margin-bottom:20px;display:flex;align-items:flex-start;gap:10px;">
+            <label class="consent-check" style="margin-bottom:14px;display:flex;align-items:flex-start;gap:10px;">
               <input type="checkbox" id="checkTC" ${tcOk ? 'checked' : ''} style="margin-top:3px;flex-shrink:0;">
               <span>He leído y acepto los <strong>Términos y Condiciones</strong> de Ariven</span>
+            </label>
+            <label class="consent-check" style="margin-bottom:20px;display:flex;align-items:flex-start;gap:10px;">
+              <input type="checkbox" id="checkDT" ${dtOk ? 'checked' : ''} style="margin-top:3px;flex-shrink:0;">
+              <span>He leído y acepto el documento de <strong>Cumplimiento y Transparencia de Datos</strong> de Ariven</span>
             </label>
             <div style="display:flex;gap:10px;flex-wrap:wrap;">
               <button class="primary" type="submit">Aceptar y continuar</button>
@@ -1457,8 +1471,9 @@ const App = (() => {
       e.preventDefault();
       const ppChecked = document.getElementById('checkPP')?.checked;
       const tcChecked = document.getElementById('checkTC')?.checked;
-      if (!ppChecked || !tcChecked) {
-        UI.flash('Debes aceptar ambos documentos para continuar.', 'error');
+      const dtChecked = document.getElementById('checkDT')?.checked;
+      if (!ppChecked || !tcChecked || !dtChecked) {
+        UI.flash('Debes aceptar los tres documentos para continuar.', 'error');
         return;
       }
       const u = Roles.current();
@@ -1468,6 +1483,7 @@ const App = (() => {
         if (st.users[u.id]) {
           st.users[u.id].privacyPolicyAcceptedAt = st.users[u.id].privacyPolicyAcceptedAt || now;
           st.users[u.id].termsAcceptedAt         = st.users[u.id].termsAcceptedAt         || now;
+          st.users[u.id].transparencyAcceptedAt  = st.users[u.id].transparencyAcceptedAt  || now;
         }
       });
       try { await Storage.flush(); } catch (_) {}
