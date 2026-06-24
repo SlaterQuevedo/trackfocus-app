@@ -8,7 +8,7 @@ const App = (() => {
     'teacher-promote':    null,
     'admin-promote':      null,
     'consent':            ['student'],
-    'privacy-policy':     ['authenticated'],  // Todas las cuentas autenticadas
+    'privacy-policy':     null,  // Accesible por cualquier usuario autenticado (todos los roles)
 
     // Estudiante
     'pending-approval':   ['student'],
@@ -116,6 +116,17 @@ const App = (() => {
     // Gate de consentimiento (Fase E): sin menús de navegación (no se puede
     // saltar al panel), pero se mantiene "Salir".
     if (_current === 'consent') {
+      if (topbar) topbar.style.display = '';
+      if (footer) footer.style.display = 'none';
+      nav.classList.add('hidden');
+      bottomnav?.classList.add('hidden');
+      userbox.classList.remove('hidden');
+      if (user) document.getElementById('userLabel').textContent = user.name;
+      return;
+    }
+
+    // Gate de Política de Privacidad: igual que consent, sin menús laterales
+    if (_current === 'privacy-policy') {
       if (topbar) topbar.style.display = '';
       if (footer) footer.style.display = 'none';
       nav.classList.add('hidden');
