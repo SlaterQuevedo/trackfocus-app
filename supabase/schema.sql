@@ -567,3 +567,8 @@ create policy "pilot_delete" on public.pilot_analytics for delete to authenticat
 -- ===========================================================
 alter table public.users add column if not exists parental_consent boolean not null default false;
 alter table public.users add column if not exists consent_at        timestamptz;
+
+-- ===
+-- ACEPTACIÓN DE POLÍTICA DE PRIVACIDAD (obligatoria para todos los usuarios)
+-- ===
+alter table public.users add column if not exists privacy_policy_accepted_at timestamptz;

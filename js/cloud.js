@@ -27,6 +27,7 @@ const Cloud = (() => {
       classroom_ids:      u.classroomIds || [],
       parental_consent:   !!u.parentalConsent,
       consent_at:         u.consentAt || null,
+      privacy_policy_accepted_at: u.privacyPolicyAcceptedAt || null,
       updated_at:         new Date().toISOString()
     }),
     school: s => ({
@@ -95,6 +96,7 @@ const Cloud = (() => {
       classroomIds: r.classroom_ids || [],
       parentalConsent: !!r.parental_consent,
       consentAt: r.consent_at || null,
+      privacyPolicyAcceptedAt: r.privacy_policy_accepted_at || null,
       createdAt: r.created_at,
       gamification: {
         xp: r.xp || 0,

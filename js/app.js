@@ -8,6 +8,7 @@ const App = (() => {
     'teacher-promote':    null,
     'admin-promote':      null,
     'consent':            ['student'],
+    'privacy-policy':     ['authenticated'],  // Todas las cuentas autenticadas
 
     // Estudiante
     'pending-approval':   ['student'],
@@ -52,6 +53,11 @@ const App = (() => {
       return;
     }
 
+    // Gate de Política de Privacidad: si está autenticado pero no aceptó la PP, redirigir
+    if (user && route !== 'privacy-policy' && route !== 'welcome' && !user.privacyPolicyAcceptedAt) {
+      return go('privacy-policy');
+    }
+
     if (allowed !== null && (!user || !allowed.includes(user.role))) {
       if (!user) return go('welcome');
       if (user.role === 'super_admin') return go('admin-dashboard');
@@ -69,6 +75,7 @@ const App = (() => {
       'teacher-promote':    { render: screenTeacherPromote,    wire: wireTeacherPromote },
       'admin-promote':      { render: screenAdminPromote,      wire: wireAdminPromote },
       consent:              { render: screenConsent,           wire: wireConsent },
+      'privacy-policy':     { render: screenPrivacyPolicy,     wire: wirePrivacyPolicy },
       ...UIStudent.screens,
       ...UITeacher.screens,
       ...UIAdmin.screens,
@@ -880,6 +887,8 @@ const App = (() => {
         <span>© 2026 Ariven</span>
         <span class="lp-footer-sep">·</span>
         <span>Datos sincronizados de forma segura en la nube</span>
+        <span class="lp-footer-sep">·</span>
+        <a href="privacy.html" target="_blank" style="color:inherit;text-decoration:underline;cursor:pointer;">Privacidad</a>
       </footer>
     </div>`;
   }
@@ -1358,6 +1367,90 @@ const App = (() => {
     document.getElementById('consentDecline')?.addEventListener('click', async () => {
       await Auth.logout();
       go('welcome');
+    });
+  }
+
+  // ---- Pantalla: Aceptación de Política de Privacidad (obligatoria para todos) ----
+  function screenPrivacyPolicy() {
+    const u = Roles.current();
+    const nombre = u?.name ? u.name.split(' ')[0] : '';
+    return `
+      <div class="card" style="max-width:700px;margin:20px auto;padding:0;">
+        <div style="padding:20px;border-bottom:1px solid #ddd;position:sticky;top:0;background:#fff;">
+          <h2 style="margin:0;">Política de Privacidad — Ariven</h2>
+          <p class="muted" style="margin:8px 0 0;">Por favor, léela y confirma tu aceptación para continuar.</p>
+        </div>
+        <div id="policyContent" style="max-height:400px;overflow-y:auto;padding:20px;font-size:14px;line-height:1.6;">
+          <p><strong>Última actualización:</strong> 24/06/2026</p>
+
+          <h3>¿Qué datos recopilamos?</h3>
+          <p>Recopilamos tu correo electrónico, nombre y datos de tus sesiones de estudio (materia, duración, concentración). Si eres menor de edad, también tus métricas de aprendizaje en formato anonimizado.</p>
+
+          <h3>¿Por qué los recopilamos?</h3>
+          <p>Para que puedas usar Ariven: registrar tus sesiones, ver tu progreso, interactuar con el tutor de inteligencia artificial y permitir que tus docentes acompañen tu aprendizaje.</p>
+
+          <h3>¿Con quién se comparten?</h3>
+          <p>Tus datos se almacenan en Supabase (base de datos en la nube, ubicada en Estados Unidos). Cuando usas el tutor de IA, tu conversación viaja a Google Gemini a través de un servidor intermediario seguro. Utilizamos Google para que puedas iniciar sesión.</p>
+
+          <h3>Seguridad</h3>
+          <p>Utilizamos cifrado HTTPS/TLS para toda comunicación. Tu contraseña no se almacena en Ariven (Google OAuth la maneja). Los datos del piloto científico se guardan anonimizados mediante SHA-256, un proceso irreversible.</p>
+
+          <h3>Tus derechos</h3>
+          <p>Puedes solicitar acceso a tus datos, corregirlos, o pedir su eliminación en cualquier momento escribiendo a <strong>trackfocus.support@gmail.com</strong>.</p>
+
+          <h3>Cambios futuros</h3>
+          <p>Si realizamos cambios sustanciales en esta política, te lo notificaremos.</p>
+
+          <p style="margin-top:30px;padding-top:20px;border-top:1px solid #ddd;color:#666;font-size:13px;">
+            Para leer la política completa, visita: <code>POLITICA_DE_PRIVACIDAD.md</code>
+          </p>
+        </div>
+        <div style="padding:20px;border-top:1px solid #ddd;background:#f9f9f9;">
+          <form id="privacyPolicyForm">
+            <label class="consent-check" style="margin-bottom:15px;">
+              <input type="checkbox" id="policyCheck" required>
+              <span>He leído y acepto la Política de Privacidad de Ariven</span>
+            </label>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <button class="primary" type="submit">Aceptar y continuar</button>
+              <button class="ghost" type="button" id="policyDecline">Rechazar</button>
+            </div>
+          </form>
+        </div>
+      </div>`;
+  }
+
+  function wirePrivacyPolicy() {
+    document.getElementById('privacyPolicyForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!document.getElementById('policyCheck')?.checked) {
+        UI.flash('Debes aceptar la política para continuar.', 'error');
+        return;
+      }
+      const u = Roles.current();
+      if (!u) return go('welcome');
+
+      Storage.set(st => {
+        if (st.users[u.id]) {
+          st.users[u.id].privacyPolicyAcceptedAt = new Date().toISOString();
+        }
+      });
+      try { await Storage.flush(); } catch (_) {}
+      UI.flash('¡Gracias! Política aceptada.', 'success');
+
+      // Redirigir según rol después de aceptar
+      if (u.role === 'student') return go('dashboard');
+      if (u.role === 'teacher') return go('teacher-dashboard');
+      if (u.role === 'super_admin') return go('admin-dashboard');
+      go('welcome');
+    });
+
+    document.getElementById('policyDecline')?.addEventListener('click', async () => {
+      const confirm = window.confirm('Si rechazas la política, no podrás usar Ariven. ¿Deseas salir?');
+      if (confirm) {
+        await Auth.logout();
+        go('welcome');
+      }
     });
   }
 
