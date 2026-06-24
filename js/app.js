@@ -452,7 +452,7 @@ const App = (() => {
     Storage.bindRealtime(() => {
       // Repintar la pantalla actual cuando llegan cambios, EXCEPTO si interrumpiría
       // al usuario (rendimiento + UX): chat IA en curso o un modal/quiz abierto.
-      if (!_current || _current === 'welcome' || _current === 'consent') return;
+      if (!_current || _current === 'welcome' || _current === 'consent' || _current === 'privacy-policy') return;
       if (_current === 'ai-study') return;
       if (document.querySelector('.quiz-modal') || document.querySelector('.pom-modal:not(.hidden)')) return;
       go(_current);
