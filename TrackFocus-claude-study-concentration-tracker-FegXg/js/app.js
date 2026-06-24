@@ -8,6 +8,7 @@ const App = (() => {
     'teacher-promote':    null,
     'admin-promote':      null,
     'consent':            ['student'],
+    'privacy-policy':     null,  // Accesible por todos los roles autenticados
 
     // Estudiante
     'pending-approval':   ['student'],
@@ -52,6 +53,11 @@ const App = (() => {
       return;
     }
 
+    // Gate de Política de Privacidad: redirige a todos los usuarios que no la hayan aceptado
+    if (user && route !== 'privacy-policy' && route !== 'welcome' && !user.privacyPolicyAcceptedAt) {
+      return go('privacy-policy');
+    }
+
     if (allowed !== null && (!user || !allowed.includes(user.role))) {
       if (!user) return go('welcome');
       if (user.role === 'super_admin') return go('admin-dashboard');
@@ -69,6 +75,7 @@ const App = (() => {
       'teacher-promote':    { render: screenTeacherPromote,    wire: wireTeacherPromote },
       'admin-promote':      { render: screenAdminPromote,      wire: wireAdminPromote },
       consent:              { render: screenConsent,           wire: wireConsent },
+      'privacy-policy':     { render: screenPrivacyPolicy,     wire: wirePrivacyPolicy },
       ...UIStudent.screens,
       ...UITeacher.screens,
       ...UIAdmin.screens,
@@ -109,6 +116,17 @@ const App = (() => {
     // Gate de consentimiento (Fase E): sin menús de navegación (no se puede
     // saltar al panel), pero se mantiene "Salir".
     if (_current === 'consent') {
+      if (topbar) topbar.style.display = '';
+      if (footer) footer.style.display = 'none';
+      nav.classList.add('hidden');
+      bottomnav?.classList.add('hidden');
+      userbox.classList.remove('hidden');
+      if (user) document.getElementById('userLabel').textContent = user.name;
+      return;
+    }
+
+    // Gate de Política de Privacidad: igual que consent, sin menús laterales
+    if (_current === 'privacy-policy') {
       if (topbar) topbar.style.display = '';
       if (footer) footer.style.display = 'none';
       nav.classList.add('hidden');
@@ -434,7 +452,7 @@ const App = (() => {
     Storage.bindRealtime(() => {
       // Repintar la pantalla actual cuando llegan cambios, EXCEPTO si interrumpiría
       // al usuario (rendimiento + UX): chat IA en curso o un modal/quiz abierto.
-      if (!_current || _current === 'welcome' || _current === 'consent') return;
+      if (!_current || _current === 'welcome' || _current === 'consent' || _current === 'privacy-policy') return;
       if (_current === 'ai-study') return;
       if (document.querySelector('.quiz-modal') || document.querySelector('.pom-modal:not(.hidden)')) return;
       go(_current);
@@ -1358,6 +1376,91 @@ const App = (() => {
     document.getElementById('consentDecline')?.addEventListener('click', async () => {
       await Auth.logout();
       go('welcome');
+    });
+  }
+
+  // ---- Pantalla: Aceptación de Política de Privacidad (obligatoria para todos los roles) ----
+  function screenPrivacyPolicy() {
+    const u = Roles.current();
+    const nombre = u?.name ? u.name.split(' ')[0] : '';
+    return `
+      <div class="card" style="max-width:700px;margin:20px auto;padding:0;">
+        <div style="padding:20px;border-bottom:1px solid rgba(255,255,255,0.1);position:sticky;top:0;background:var(--card-bg,#1a1a2e);z-index:1;">
+          <h2 style="margin:0;">Política de Privacidad — Ariven</h2>
+          <p class="muted" style="margin:8px 0 0;">Hola${nombre ? ', ' + nombre : ''}. Lee la política y confirma tu aceptación para continuar.</p>
+        </div>
+        <div id="policyContent" style="max-height:420px;overflow-y:auto;padding:20px;font-size:14px;line-height:1.7;">
+          <p><strong>Última actualización:</strong> 24/06/2026 &nbsp;·&nbsp; <strong>Responsable:</strong> Slater Quevedo &nbsp;·&nbsp; <strong>Contacto:</strong> trackfocus.support@gmail.com</p>
+
+          <h3 style="margin-top:16px;">¿Qué datos recopilamos?</h3>
+          <p>Tu correo electrónico, nombre y foto de perfil (obtenidos al iniciar sesión con Google). Tus sesiones de estudio: materia, duración, concentración autorreportada y actividad previa. Datos de gamificación: XP, nivel, racha e insignias. Si participas en el piloto educativo, tus métricas de progreso se guardan de forma <strong>anonimizada</strong> (mediante un hash SHA-256 irreversible, sin exponer tu correo).</p>
+
+          <h3 style="margin-top:16px;">¿Por qué los recopilamos?</h3>
+          <p>Para que puedas usar Ariven: registrar sesiones, ver tu progreso, interactuar con el tutor de IA, y permitir que tus docentes acompañen tu aprendizaje si formas parte de una institución.</p>
+
+          <h3 style="margin-top:16px;">¿Con quién se comparten?</h3>
+          <ul style="margin:8px 0 8px 20px;">
+            <li><strong>Supabase</strong> (base de datos, servidores en EE. UU. — us-west-1)</li>
+            <li><strong>Google Gemini</strong> (tutor de IA): recibe el historial de la conversación y archivos adjuntos, <em>no</em> tu correo ni nombre</li>
+            <li><strong>Google</strong> (autenticación OAuth)</li>
+            <li><strong>Vercel</strong> (alojamiento y métricas de rendimiento)</li>
+          </ul>
+          <p>No vendemos ni cedemos tus datos a terceros con fines comerciales.</p>
+
+          <h3 style="margin-top:16px;">Seguridad</h3>
+          <p>Cifrado HTTPS/TLS en todo momento. No almacenamos contraseñas (Google OAuth). Reglas de acceso estrictas en la base de datos (RLS). Clave de IA protegida en el servidor, nunca en el navegador.</p>
+
+          <h3 style="margin-top:16px;">Tus derechos (Ley N.° 29733 — Perú)</h3>
+          <p>Puedes acceder, rectificar, cancelar u oponerte al uso de tus datos. Escribe a <strong>trackfocus.support@gmail.com</strong>. Plazo de respuesta: 30 días hábiles.</p>
+
+          <h3 style="margin-top:16px;">Menores de edad</h3>
+          <p>Se requiere autorización de padre, madre o tutor legal. Los datos del piloto se almacenan de forma anónima e irreversible.</p>
+
+          <p style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.1);font-size:12px;color:var(--muted);">
+            Para leer la política completa visita <a href="privacy.html" target="_blank" style="color:inherit;">privacy.html</a>
+          </p>
+        </div>
+        <div style="padding:20px;border-top:1px solid rgba(255,255,255,0.1);">
+          <form id="privacyPolicyForm">
+            <label class="consent-check" style="margin-bottom:16px;display:flex;align-items:flex-start;gap:10px;">
+              <input type="checkbox" id="policyCheck" required style="margin-top:3px;flex-shrink:0;">
+              <span>He leído y acepto la <strong>Política de Privacidad</strong> de Ariven</span>
+            </label>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <button class="primary" type="submit">Aceptar y continuar</button>
+              <button class="ghost" type="button" id="policyDecline">Rechazar y salir</button>
+            </div>
+          </form>
+        </div>
+      </div>`;
+  }
+
+  function wirePrivacyPolicy() {
+    document.getElementById('privacyPolicyForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!document.getElementById('policyCheck')?.checked) {
+        UI.flash('Debes aceptar la política para continuar.', 'error');
+        return;
+      }
+      const u = Roles.current();
+      if (!u) return go('welcome');
+      Storage.set(st => {
+        if (st.users[u.id]) {
+          st.users[u.id].privacyPolicyAcceptedAt = new Date().toISOString();
+        }
+      });
+      try { await Storage.flush(); } catch (_) {}
+      UI.flash('¡Gracias! Política aceptada.', 'success');
+      if (u.role === 'super_admin') return go('admin-dashboard');
+      if (u.role === 'teacher')     return go('teacher-dashboard');
+      return go('dashboard');
+    });
+
+    document.getElementById('policyDecline')?.addEventListener('click', async () => {
+      if (window.confirm('Si rechazas la política, no podrás usar Ariven. ¿Deseas salir?')) {
+        await Auth.logout();
+        go('welcome');
+      }
     });
   }
 
