@@ -54,9 +54,9 @@ const App = (() => {
       return;
     }
 
-    // Gate de Política de Privacidad: redirige a todos los usuarios que no la hayan aceptado
-    // 'legal' se excluye para que el usuario pueda leer T&C antes de aceptar la PP
-    if (user && route !== 'privacy-policy' && route !== 'welcome' && route !== 'legal' && !user.privacyPolicyAcceptedAt) {
+    // Gate legal: redirige si el usuario no ha aceptado la PP o los T&C
+    // 'legal' se excluye para permitir navegación libre al hub antes de aceptar
+    if (user && route !== 'privacy-policy' && route !== 'welcome' && route !== 'legal' && (!user.privacyPolicyAcceptedAt || !user.termsAcceptedAt)) {
       return go('privacy-policy');
     }
 
@@ -1400,56 +1400,52 @@ const App = (() => {
     });
   }
 
-  // ---- Pantalla: Aceptación de Política de Privacidad (obligatoria para todos los roles) ----
+  // ---- Pantalla: Aceptación obligatoria de documentos legales (PP + T&C) ----
   function screenPrivacyPolicy() {
     const u = Roles.current();
     const nombre = u?.name ? u.name.split(' ')[0] : '';
+    const ppOk  = !!u?.privacyPolicyAcceptedAt;
+    const tcOk  = !!u?.termsAcceptedAt;
     return `
       <div class="card" style="max-width:700px;margin:20px auto;padding:0;">
         <div style="padding:20px;border-bottom:1px solid rgba(255,255,255,0.1);position:sticky;top:0;background:var(--card-bg,#1a1a2e);z-index:1;">
-          <h2 style="margin:0;">Política de Privacidad — Ariven</h2>
-          <p class="muted" style="margin:8px 0 0;">Hola${nombre ? ', ' + nombre : ''}. Lee la política y confirma tu aceptación para continuar.</p>
+          <h2 style="margin:0;">Documentos legales — Ariven</h2>
+          <p class="muted" style="margin:8px 0 0;">Hola${nombre ? ', ' + nombre : ''}. Antes de continuar debes leer y aceptar los siguientes documentos.</p>
         </div>
-        <div id="policyContent" style="max-height:420px;overflow-y:auto;padding:20px;font-size:14px;line-height:1.7;">
-          <p><strong>Última actualización:</strong> 24/06/2026 &nbsp;·&nbsp; <strong>Responsable:</strong> Slater Quevedo &nbsp;·&nbsp; <strong>Contacto:</strong> trackfocus.support@gmail.com</p>
+        <div id="legalAcceptContent" style="max-height:420px;overflow-y:auto;padding:20px;font-size:14px;line-height:1.7;">
 
-          <h3 style="margin-top:16px;">¿Qué datos recopilamos?</h3>
-          <p>Tu correo electrónico, nombre y foto de perfil (obtenidos al iniciar sesión con Google). Tus sesiones de estudio: materia, duración, concentración autorreportada y actividad previa. Datos de gamificación: XP, nivel, racha e insignias. Si participas en el piloto educativo, tus métricas de progreso se guardan de forma <strong>anonimizada</strong> (mediante un hash SHA-256 irreversible, sin exponer tu correo).</p>
+          <div style="border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:16px;margin-bottom:16px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+              <span style="font-size:22px;">🔒</span>
+              <strong style="font-size:15px;">Política de Privacidad</strong>
+            </div>
+            <p style="margin:0 0 10px;color:var(--muted);">Cómo recopilamos, usamos y protegemos tus datos personales (correo, sesiones de estudio, gamificación). Incluye el uso de Google Gemini como tutor de IA y tus derechos ARCO conforme a la Ley N.° 29733 del Perú.</p>
+            <a href="privacy.html" target="_blank" style="font-size:13px;font-weight:600;color:var(--accent,#6c63ff);text-decoration:none;">Leer política completa →</a>
+          </div>
 
-          <h3 style="margin-top:16px;">¿Por qué los recopilamos?</h3>
-          <p>Para que puedas usar Ariven: registrar sesiones, ver tu progreso, interactuar con el tutor de IA, y permitir que tus docentes acompañen tu aprendizaje si formas parte de una institución.</p>
+          <div style="border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:16px;margin-bottom:16px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+              <span style="font-size:22px;">📋</span>
+              <strong style="font-size:15px;">Términos y Condiciones</strong>
+            </div>
+            <p style="margin:0 0 10px;color:var(--muted);">Reglas de uso, limitaciones de responsabilidad académica (Ariven no garantiza calificaciones, admisiones ni becas), uso adecuado de la IA, propiedad intelectual y condiciones de la plataforma. Actualmente gratuita; sin pagos activos.</p>
+            <a href="terms.html" target="_blank" style="font-size:13px;font-weight:600;color:var(--accent,#6c63ff);text-decoration:none;">Leer términos completos →</a>
+          </div>
 
-          <h3 style="margin-top:16px;">¿Con quién se comparten?</h3>
-          <ul style="margin:8px 0 8px 20px;">
-            <li><strong>Supabase</strong> (base de datos, servidores en EE. UU. — us-west-1)</li>
-            <li><strong>Google Gemini</strong> (tutor de IA): recibe el historial de la conversación y archivos adjuntos, <em>no</em> tu correo ni nombre</li>
-            <li><strong>Google</strong> (autenticación OAuth)</li>
-            <li><strong>Vercel</strong> (alojamiento y métricas de rendimiento)</li>
-          </ul>
-          <p>No vendemos ni cedemos tus datos a terceros con fines comerciales.</p>
-
-          <h3 style="margin-top:16px;">Seguridad</h3>
-          <p>Cifrado HTTPS/TLS en todo momento. No almacenamos contraseñas (Google OAuth). Reglas de acceso estrictas en la base de datos (RLS). Clave de IA protegida en el servidor, nunca en el navegador.</p>
-
-          <h3 style="margin-top:16px;">Tus derechos (Ley N.° 29733 — Perú)</h3>
-          <p>Puedes acceder, rectificar, cancelar u oponerte al uso de tus datos. Escribe a <strong>trackfocus.support@gmail.com</strong>. Plazo de respuesta: 30 días hábiles.</p>
-
-          <h3 style="margin-top:16px;">Menores de edad</h3>
-          <p>Se requiere autorización de padre, madre o tutor legal. Los datos del piloto se almacenan de forma anónima e irreversible.</p>
-
-          <p style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.1);font-size:12px;color:var(--muted);">
-            Para leer la política completa visita <a href="privacy.html" target="_blank" style="color:inherit;">privacy.html</a>
-          </p>
         </div>
         <div style="padding:20px;border-top:1px solid rgba(255,255,255,0.1);">
-          <form id="privacyPolicyForm">
-            <label class="consent-check" style="margin-bottom:16px;display:flex;align-items:flex-start;gap:10px;">
-              <input type="checkbox" id="policyCheck" required style="margin-top:3px;flex-shrink:0;">
+          <form id="legalAcceptForm">
+            <label class="consent-check" style="margin-bottom:14px;display:flex;align-items:flex-start;gap:10px;">
+              <input type="checkbox" id="checkPP" ${ppOk ? 'checked' : ''} style="margin-top:3px;flex-shrink:0;">
               <span>He leído y acepto la <strong>Política de Privacidad</strong> de Ariven</span>
+            </label>
+            <label class="consent-check" style="margin-bottom:20px;display:flex;align-items:flex-start;gap:10px;">
+              <input type="checkbox" id="checkTC" ${tcOk ? 'checked' : ''} style="margin-top:3px;flex-shrink:0;">
+              <span>He leído y acepto los <strong>Términos y Condiciones</strong> de Ariven</span>
             </label>
             <div style="display:flex;gap:10px;flex-wrap:wrap;">
               <button class="primary" type="submit">Aceptar y continuar</button>
-              <button class="ghost" type="button" id="policyDecline">Rechazar y salir</button>
+              <button class="ghost" type="button" id="legalDeclineBtn">Rechazar y salir</button>
             </div>
           </form>
         </div>
@@ -1457,28 +1453,32 @@ const App = (() => {
   }
 
   function wirePrivacyPolicy() {
-    document.getElementById('privacyPolicyForm')?.addEventListener('submit', async (e) => {
+    document.getElementById('legalAcceptForm')?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (!document.getElementById('policyCheck')?.checked) {
-        UI.flash('Debes aceptar la política para continuar.', 'error');
+      const ppChecked = document.getElementById('checkPP')?.checked;
+      const tcChecked = document.getElementById('checkTC')?.checked;
+      if (!ppChecked || !tcChecked) {
+        UI.flash('Debes aceptar ambos documentos para continuar.', 'error');
         return;
       }
       const u = Roles.current();
       if (!u) return go('welcome');
+      const now = new Date().toISOString();
       Storage.set(st => {
         if (st.users[u.id]) {
-          st.users[u.id].privacyPolicyAcceptedAt = new Date().toISOString();
+          st.users[u.id].privacyPolicyAcceptedAt = st.users[u.id].privacyPolicyAcceptedAt || now;
+          st.users[u.id].termsAcceptedAt         = st.users[u.id].termsAcceptedAt         || now;
         }
       });
       try { await Storage.flush(); } catch (_) {}
-      UI.flash('¡Gracias! Política aceptada.', 'success');
+      UI.flash('¡Gracias! Documentos aceptados.', 'success');
       if (u.role === 'super_admin') return go('admin-dashboard');
       if (u.role === 'teacher')     return go('teacher-dashboard');
       return go('dashboard');
     });
 
-    document.getElementById('policyDecline')?.addEventListener('click', async () => {
-      if (window.confirm('Si rechazas la política, no podrás usar Ariven. ¿Deseas salir?')) {
+    document.getElementById('legalDeclineBtn')?.addEventListener('click', async () => {
+      if (window.confirm('Si rechazas los documentos legales, no podrás usar Ariven. ¿Deseas salir?')) {
         await Auth.logout();
         go('welcome');
       }
