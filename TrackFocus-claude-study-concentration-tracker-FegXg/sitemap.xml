@@ -3,36 +3,36 @@
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
 
   <url>
-    <loc>https://ariven.vercel.app/</loc>
+    <loc>https://trackfocus.vercel.app/</loc>
     <lastmod>2026-06-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-    <xhtml:link rel="alternate" hreflang="es-PE" href="https://ariven.vercel.app/" />
+    <xhtml:link rel="alternate" hreflang="es-PE" href="https://trackfocus.vercel.app/" />
   </url>
 
   <url>
-    <loc>https://ariven.vercel.app/privacy.html</loc>
+    <loc>https://trackfocus.vercel.app/privacy.html</loc>
     <lastmod>2026-06-24</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
 
   <url>
-    <loc>https://ariven.vercel.app/terms.html</loc>
+    <loc>https://trackfocus.vercel.app/terms.html</loc>
     <lastmod>2026-06-24</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
 
   <url>
-    <loc>https://ariven.vercel.app/data-transparency.html</loc>
+    <loc>https://trackfocus.vercel.app/data-transparency.html</loc>
     <lastmod>2026-06-24</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
 
   <url>
-    <loc>https://ariven.vercel.app/about-ariven.html</loc>
+    <loc>https://trackfocus.vercel.app/about-ariven.html</loc>
     <lastmod>2026-06-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>

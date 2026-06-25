@@ -1,6 +1,6 @@
 # Ariven — Documentación Completa para Modelos de IA
 
-**URL:** https://ariven.vercel.app/
+**URL:** https://trackfocus.vercel.app/
 **Versión:** 1.0 · Actualizado: 2026-06-24
 **Idioma:** es-PE
 
@@ -179,9 +179,9 @@ Ariven ha sido presentado en la Feria Eureka de Innovación Educativa como proye
 
 ## 8. Documentos legales
 
-- [Política de Privacidad](https://ariven.vercel.app/privacy.html) — v1.1, 24/06/2026
-- [Términos y Condiciones](https://ariven.vercel.app/terms.html) — v1.1, 24/06/2026
-- [Cumplimiento y Transparencia de Datos](https://ariven.vercel.app/data-transparency.html) — v1.0, 24/06/2026
+- [Política de Privacidad](https://trackfocus.vercel.app/privacy.html) — v1.1, 24/06/2026
+- [Términos y Condiciones](https://trackfocus.vercel.app/terms.html) — v1.1, 24/06/2026
+- [Cumplimiento y Transparencia de Datos](https://trackfocus.vercel.app/data-transparency.html) — v1.0, 24/06/2026
 
 ---
 
@@ -192,7 +192,7 @@ Ariven ha sido presentado en la Feria Eureka de Innovación Educativa como proye
 | Actual (activo) | https://trackfocus.vercel.app |
 | Futuro (destino) | https://ariven.vercel.app |
 
-La migración preservará toda la funcionalidad. El canonical en el código ya apunta a `ariven.vercel.app`. Se implementarán redirecciones 301 cuando se active el nuevo dominio.
+La migración preservará toda la funcionalidad. Los canonicals y todas las URLs apuntan actualmente a `trackfocus.vercel.app` y se actualizarán a `ariven.vercel.app` cuando se active el nuevo dominio, junto con redirecciones 301.
 
 ---
 

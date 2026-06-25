@@ -1,5 +1,5 @@
 # robots.txt — Ariven
-# https://ariven.vercel.app/
+# https://trackfocus.vercel.app/
 
 User-agent: *
 Allow: /
@@ -39,4 +39,4 @@ Allow: /
 User-agent: OAI-SearchBot
 Allow: /
 
-Sitemap: https://ariven.vercel.app/sitemap.xml
+Sitemap: https://trackfocus.vercel.app/sitemap.xml
