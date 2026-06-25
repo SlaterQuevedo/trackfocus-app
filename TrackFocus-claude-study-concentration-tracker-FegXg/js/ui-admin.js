@@ -1861,6 +1861,7 @@ const UIAdmin = (() => {
       <button class="primary" data-go="manage-schools">🏫 Colegios</button>
       <button class="ghost"   data-go="manage-users">👥 Usuarios</button>
       <button class="ghost" id="btnDiagLog">🩺 Diagnóstico</button>
+      <button class="ghost" id="adminLegalBtn">⚖️ Legal</button>
     </div>
   </div>
   <div class="ops-strip">
@@ -1907,6 +1908,8 @@ const UIAdmin = (() => {
     });
     var d=document.getElementById('btnDiagLog');
     d&&d.addEventListener('click',function(){try{window.Monitor&&window.Monitor.exportLog&&window.Monitor.exportLog();UI.flash('Registro exportado.','success');}catch(_){UI.flash('No disponible.','error');}});
+    var al=document.getElementById('adminLegalBtn');
+    al&&al.addEventListener('click',function(){App.go('legal');});
   }
 
   const _wrap = (typeof window !== 'undefined' && window.__tfSafeScreens) || function(n, s) { return s; };

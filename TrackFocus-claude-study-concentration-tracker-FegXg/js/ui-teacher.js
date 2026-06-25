@@ -159,7 +159,12 @@ const UITeacher = (() => {
 
       ${classroomCards.length > 0
         ? `<div class="grid cols-2">${classroomCards.join('')}</div>`
-        : '<div class="card empty">No tienes aulas creadas. Crea tu primera aula para empezar.</div>'}`;
+        : '<div class="card empty">No tienes aulas creadas. Crea tu primera aula para empezar.</div>'}
+
+      <div style="margin-top:20px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <button class="ghost" id="teacherLegalBtn" style="font-size:13px;padding:6px 14px;">⚖️ Centro Legal</button>
+        <span class="muted" style="font-size:12px;">Política de Privacidad · Términos · Transparencia de Datos</span>
+      </div>`;
   }
 
   function _wireApprovalButtons(teacherId) {
@@ -205,6 +210,9 @@ const UITeacher = (() => {
       try { window.Monitor?.exportLog?.(); UI.flash('Registro de errores exportado.', 'success'); }
       catch (_) { UI.flash('No se pudo exportar el registro.', 'error'); }
     });
+
+    // Acceso al Centro Legal desde el dashboard del docente.
+    document.getElementById('teacherLegalBtn')?.addEventListener('click', () => App.go('legal'));
 
     // Backups y recuperación (Fase J).
     document.getElementById('btnBackup')?.addEventListener('click', () => Exporter.backupJSON());

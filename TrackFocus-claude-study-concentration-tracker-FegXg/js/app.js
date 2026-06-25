@@ -1501,21 +1501,22 @@ const App = (() => {
     });
   }
 
-  // ---- Pantalla: Hub Legal (Política de Privacidad + Términos y Condiciones) ----
+  // ---- Pantalla: Centro Legal (Política de Privacidad + T&C + Cumplimiento) ----
   function screenLegal() {
     const u = Roles.current();
     const nombre = u?.name ? u.name.split(' ')[0] : '';
     return `
       <div style="max-width:680px;margin:32px auto;padding:0 16px;">
         <div style="margin-bottom:24px;">
-          <h2 style="margin:0 0 6px;">Información legal</h2>
+          <h2 style="margin:0 0 6px;">Centro Legal</h2>
           <p class="muted" style="margin:0;">${nombre ? 'Hola, ' + nombre + '. Aquí' : 'Aquí'} encontrarás los documentos legales de Ariven.</p>
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;">
 
           <div class="card" style="padding:24px;cursor:pointer;transition:transform .15s,box-shadow .15s;" id="legalCardPP"
                onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.18)'"
-               onmouseleave="this.style.transform='';this.style.boxShadow=''">
+               onmouseleave="this.style.transform='';this.style.boxShadow=''"
+               role="button" tabindex="0" aria-label="Ver Política de Privacidad">
             <div style="font-size:36px;margin-bottom:12px;">🔒</div>
             <h3 style="margin:0 0 8px;font-size:16px;">Política de Privacidad</h3>
             <p class="muted" style="font-size:13px;margin:0 0 16px;line-height:1.5;">Cómo recopilamos, usamos y protegemos tus datos personales. Incluye tus derechos ARCO y el uso de IA.</p>
@@ -1524,7 +1525,8 @@ const App = (() => {
 
           <div class="card" style="padding:24px;cursor:pointer;transition:transform .15s,box-shadow .15s;" id="legalCardTC"
                onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.18)'"
-               onmouseleave="this.style.transform='';this.style.boxShadow=''">
+               onmouseleave="this.style.transform='';this.style.boxShadow=''"
+               role="button" tabindex="0" aria-label="Ver Términos y Condiciones">
             <div style="font-size:36px;margin-bottom:12px;">📋</div>
             <h3 style="margin:0 0 8px;font-size:16px;">Términos y Condiciones</h3>
             <p class="muted" style="font-size:13px;margin:0 0 16px;line-height:1.5;">Reglas de uso, limitaciones de responsabilidad, propiedad intelectual y futuras funciones de pago.</p>
@@ -1533,9 +1535,10 @@ const App = (() => {
 
           <div class="card" style="padding:24px;cursor:pointer;transition:transform .15s,box-shadow .15s;" id="legalCardDT"
                onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.18)'"
-               onmouseleave="this.style.transform='';this.style.boxShadow=''">
-            <div style="font-size:36px;margin-bottom:12px;">📊</div>
-            <h3 style="margin:0 0 8px;font-size:16px;">Cumplimiento y Transparencia</h3>
+               onmouseleave="this.style.transform='';this.style.boxShadow=''"
+               role="button" tabindex="0" aria-label="Ver Cumplimiento y Transparencia de Datos">
+            <div style="font-size:36px;margin-bottom:12px;">🛡️</div>
+            <h3 style="margin:0 0 8px;font-size:16px;">Cumplimiento y Transparencia de Datos</h3>
             <p class="muted" style="font-size:13px;margin:0 0 16px;line-height:1.5;">Qué datos recopilamos, qué no recopilamos, cómo los protegemos y cómo funciona la IA con tus datos.</p>
             <span style="font-size:13px;font-weight:600;color:var(--accent,#6c63ff);">Ver transparencia →</span>
           </div>
@@ -1554,15 +1557,23 @@ const App = (() => {
   }
 
   function wireLegal() {
-    document.getElementById('legalCardPP')?.addEventListener('click', () => {
-      window.open('privacy.html', '_blank');
-    });
-    document.getElementById('legalCardTC')?.addEventListener('click', () => {
-      window.open('terms.html', '_blank');
-    });
-    document.getElementById('legalCardDT')?.addEventListener('click', () => {
-      window.open('data-transparency.html', '_blank');
-    });
+    const _open = (url) => window.open(url, '_blank');
+    const _kbOpen = (el, url) => {
+      el?.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); _open(url); } });
+    };
+
+    const pp = document.getElementById('legalCardPP');
+    const tc = document.getElementById('legalCardTC');
+    const dt = document.getElementById('legalCardDT');
+
+    pp?.addEventListener('click', () => _open('privacy.html'));
+    tc?.addEventListener('click', () => _open('terms.html'));
+    dt?.addEventListener('click', () => _open('data-transparency.html'));
+
+    _kbOpen(pp, 'privacy.html');
+    _kbOpen(tc, 'terms.html');
+    _kbOpen(dt, 'data-transparency.html');
+
     document.getElementById('legalBackBtn')?.addEventListener('click', () => {
       const u = Roles.current();
       if (!u) return go('welcome');
