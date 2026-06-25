@@ -1,7 +1,7 @@
 # Política de Privacidad — Ariven
 
 **Última actualización:** 24/06/2026
-**Versión:** 1.0
+**Versión:** 1.1
 **Responsable del tratamiento:** Slater Quevedo
 
 ---
@@ -163,6 +163,8 @@ Ariven integra el modelo de inteligencia artificial **Google Gemini** como tutor
 
 Cuando el estudiante interactúa con el tutor de IA, la solicitud **no va directamente desde el navegador a Google**. En cambio, pasa por un servidor intermediario seguro operado por Ariven en Vercel, donde se añade la clave de acceso a la API. Esto significa que la clave de la API de Gemini **nunca es visible en el navegador del usuario**.
 
+Este diseño es parte de la arquitectura de seguridad de credenciales descrita en la sección 14 de esta política. En ningún punto del flujo el usuario recibe, transmite ni almacena la clave de acceso a Gemini; la comunicación entre el servidor de Ariven y Google Gemini es siempre servidor a servidor (server-to-server).
+
 ### Datos que se envían a Google Gemini
 
 | Dato | ¿Se envía? | Notas |
@@ -192,9 +194,11 @@ Ariven utiliza los siguientes servicios de terceros. Cada uno recibe únicamente
 | Google OAuth | Google LLC (USA) | Autenticación de usuarios | Correo electrónico, nombre, URL de avatar | [policies.google.com/privacy](https://policies.google.com/privacy) |
 | Google Gemini API | Google LLC (USA) | Tutor de inteligencia artificial | Historial de conversación, metadata de sesión, archivos adjuntos (sin email) | [policies.google.com/privacy](https://policies.google.com/privacy) |
 | Supabase | Supabase Inc. (AWS) | Base de datos y autenticación | Todos los datos listados en la sección 2 | [supabase.com/privacy](https://supabase.com/privacy) |
-| Vercel | Vercel Inc. (USA) | Alojamiento de la plataforma y servidor proxy | Logs de servidor, IP, User-Agent, métricas de rendimiento | [vercel.com/legal/privacy](https://vercel.com/legal/privacy) |
+| Vercel | Vercel Inc. (USA) | Alojamiento de la plataforma y servidor proxy seguro de API | Logs de servidor, IP, User-Agent, métricas de rendimiento | [vercel.com/legal/privacy](https://vercel.com/legal/privacy) |
 | Google Fonts CDN | Google LLC (USA) | Tipografía de la interfaz (fuente Inter) | Dirección IP, User-Agent, referrer | [policies.google.com/privacy](https://policies.google.com/privacy) |
 | jsDelivr CDN | ProspectOne (Global) | Librería de gráficos (Chart.js) — carga diferida | Dirección IP, User-Agent | [jsdelivr.com/about](https://www.jsdelivr.com/about) |
+
+> **Nota sobre el flujo de datos hacia servicios de IA:** Las solicitudes a Google Gemini API no son iniciadas por el navegador del usuario sino por el servidor de Ariven (Vercel). El usuario no interviene como intermediario de la credencial y no puede observar, interceptar ni reutilizar la clave de acceso. Véase la sección 14 para el detalle técnico de esta arquitectura.
 
 ---
 
@@ -304,7 +308,8 @@ Ariven implementa las siguientes medidas técnicas y organizativas para proteger
 | **Cifrado en tránsito (HTTPS/TLS)** | Toda comunicación entre el navegador del usuario y los servidores de Ariven, Supabase y Vercel ocurre mediante protocolos cifrados. |
 | **Autenticación delegada (Google OAuth)** | Ariven no almacena contraseñas. La autenticación es gestionada íntegramente por Google. |
 | **Row-Level Security (RLS)** | Las reglas de acceso a la base de datos en Supabase garantizan que cada usuario solo pueda leer y modificar sus propios datos. |
-| **Proxy serverless para IA** | La clave de acceso a la API de Google Gemini se almacena en variables de entorno del servidor (Vercel). Nunca es visible en el navegador del usuario. |
+| **Proxy serverless para servicios externos** | Las claves de acceso a APIs externas (Google Gemini y otros servicios que requieran autenticación) se almacenan como variables de entorno del servidor en Vercel. Nunca se incluyen en el código JavaScript enviado al navegador, ni son accesibles mediante herramientas de desarrollo (DevTools), localStorage, sessionStorage u otro mecanismo del cliente. El navegador solo interactúa con rutas internas de Ariven (`/api/*`), nunca directamente con servicios externos. |
+| **Control de origen (CORS)** | Los endpoints del servidor de Ariven validan la cabecera `Origin` de cada solicitud entrante. Las peticiones provenientes de dominios no autorizados son rechazadas con HTTP 403 antes de ser procesadas. |
 | **Anonimización criptográfica** | Los datos del piloto científico se asocian a un hash SHA-256 del correo electrónico, proceso matemáticamente irreversible. |
 | **Eliminación de caché al cerrar sesión** | Al finalizar la sesión, la copia local del estado (localStorage) se elimina del dispositivo automáticamente. |
 | **Modo de demostración aislado** | El modo de demostración (`?demo=1`) opera con datos ficticios precargados y nunca lee, escribe ni modifica datos reales. |
@@ -313,23 +318,84 @@ A pesar de estas medidas, ningún sistema de transmisión o almacenamiento de da
 
 ---
 
-## 14. Transferencias internacionales de datos
+## 14. Protección de Credenciales y Arquitectura Segura
+
+### 14.1 Principio de credenciales exclusivamente en servidor
+
+Todas las claves de acceso a servicios externos —incluidas la API de Google Gemini y cualquier otro servicio que requiera autenticación— se almacenan como **variables de entorno del servidor** en la infraestructura de Vercel. Estas credenciales:
+
+- **Nunca se incluyen** en el código JavaScript enviado al navegador del usuario.
+- **Nunca aparecen** en el DOM, en herramientas de desarrollo del navegador (DevTools), en `localStorage`, en `sessionStorage` ni en ningún recurso descargable por el cliente.
+- **Nunca se transmiten** al dispositivo del usuario en ninguna etapa del flujo de la aplicación.
+- **No pueden ser observadas, interceptadas ni reutilizadas** por el usuario ni por terceros que inspeccionen el tráfico del navegador.
+
+### 14.2 Arquitectura Backend Proxy
+
+Ariven emplea una arquitectura de proxy de servidor que interpone una capa de seguridad controlada entre el navegador del usuario y los servicios externos:
+
+```
+Navegador del usuario
+        │  (HTTPS — sin credenciales privadas)
+        ▼
+API interna Ariven  [Vercel Serverless /api/*]
+        │  (HTTPS — credencial inyectada desde variable de entorno del servidor)
+        ▼
+Servicio externo  (Google Gemini API, etc.)
+```
+
+Bajo este diseño:
+
+1. **El navegador** realiza solicitudes únicamente a rutas internas de Ariven (p. ej. `/api/ai-chat`, `/api/gemini`, `/api/audio-transcribe`). Estas rutas no exigen ni aceptan credenciales por parte del cliente.
+2. **El servidor de Ariven** recibe la solicitud, la valida mediante verificación de origen (CORS), incorpora la credencial privada almacenada en el entorno del servidor y reenvía la petición al servicio externo.
+3. **El servicio externo** (p. ej. Google Gemini) devuelve la respuesta al servidor de Ariven.
+4. **El servidor** retransmite la respuesta al navegador del usuario sin incluir ninguna credencial ni metadato interno del servidor.
+
+### 14.3 Eliminación de mecanismos de acceso directo previos
+
+Con anterioridad a junio de 2026 existían mecanismos de desarrollo que permitían, de forma opcional y en entornos de prueba, realizar llamadas directas desde el navegador a la API de Google Gemini. Dichos mecanismos han sido **completamente eliminados** en la versión actual de la plataforma:
+
+| Mecanismo eliminado | Descripción | Estado |
+|---|---|---|
+| Variable global `window.GEMINI_API_KEY` | Exponía la clave en el objeto `window`, accesible desde la consola del navegador. | **Eliminado** |
+| Clave `tf_gemini_dev_key` en `localStorage` | Permitía inyectar una clave de API mediante el almacenamiento local del navegador. | **Eliminado** |
+| Funciones de llamada directa en el frontend | Funciones JavaScript que contactaban directamente a `generativelanguage.googleapis.com` como alternativa al proxy. | **Eliminadas** |
+
+Desde la versión 1.1, el frontend de Ariven **no contiene ni puede contener** ninguna ruta de acceso directo a servicios externos que requieran credenciales privadas.
+
+### 14.4 Protección CORS (Control de Origen)
+
+Los endpoints del servidor de Ariven implementan una lista de orígenes autorizados explícitamente (`Access-Control-Allow-Origin`). Cualquier solicitud HTTP que incluya una cabecera `Origin` correspondiente a un dominio no autorizado es rechazada con un error HTTP 403 (Forbidden) antes de ser procesada. Esta medida impide que sitios web de terceros realicen solicitudes en nombre del usuario hacia la API interna de Ariven.
+
+### 14.5 Garantía al usuario
+
+Como resultado de esta arquitectura, el usuario de Ariven:
+
+- **Nunca recibe** ninguna credencial privada de los servicios externos utilizados por la plataforma.
+- **No puede acceder** a la clave de API de Google Gemini, ni a ningún otro secreto de servidor, mediante ninguna herramienta del navegador.
+- **Interactúa** con los servicios de inteligencia artificial y almacenamiento únicamente a través de interfaces validadas y controladas por el servidor de Ariven.
+
+---
+
+## 15. Transferencias internacionales de datos
 
 Al utilizar Ariven, tus datos personales pueden ser transferidos y procesados fuera del Perú por los siguientes proveedores:
 
 | Proveedor | País | Datos transferidos | Base legal de la transferencia |
 |---|---|---|---|
-| Google LLC (OAuth + Gemini) | Estados Unidos | Datos de autenticación; historial de conversación con IA | Consentimiento del usuario; cláusulas contractuales estándar de Google. |
+| Google LLC (OAuth) | Estados Unidos | Datos de autenticación (correo electrónico, nombre, avatar) | Consentimiento del usuario; cláusulas contractuales estándar de Google. |
+| Google LLC (Gemini API) | Estados Unidos | Historial de conversación con IA, metadata de sesión, archivos adjuntos — **transferencia iniciada desde el servidor de Ariven, no desde el navegador del usuario** | Consentimiento del usuario; cláusulas contractuales estándar de Google. |
 | Supabase Inc. | Estados Unidos (us-west-1, North California) | Todos los datos de la base de datos | Acuerdo de procesamiento de datos (DPA) con Supabase. |
-| Vercel Inc. | Estados Unidos | Logs de servidor, IP, User-Agent, métricas | Interés legítimo; política de privacidad de Vercel. |
+| Vercel Inc. | Estados Unidos | Logs de servidor, IP, User-Agent, métricas; actúa como intermediario proxy para llamadas a servicios externos | Interés legítimo; política de privacidad de Vercel. |
 | Google LLC (Fonts CDN) | Estados Unidos | Dirección IP, User-Agent | Interés legítimo en la carga de recursos técnicos. |
 | ProspectOne (jsDelivr) | Global (CDN distribuida) | Dirección IP, User-Agent | Interés legítimo en la carga de recursos técnicos. |
+
+> **Nota sobre la transferencia a Google Gemini:** A diferencia de otros servicios en los que el navegador del usuario contacta directamente al proveedor externo, los datos enviados a Google Gemini son transferidos por el servidor de Ariven (Vercel) de forma directa y sin que el dispositivo del usuario actúe como intermediario. El usuario no inicia ni controla esta transmisión de forma técnica; únicamente proporciona el contenido de la consulta a través de la interfaz de Ariven.
 
 Ariven adoptará las salvaguardas razonables para garantizar que las transferencias internacionales cumplan con los principios de la Ley N.° 29733 (art. 15: flujo transfronterizo de datos personales).
 
 ---
 
-## 15. Eliminación de cuenta
+## 16. Eliminación de cuenta
 
 El usuario puede solicitar la eliminación de su cuenta y de sus datos personales en cualquier momento.
 
@@ -350,7 +416,7 @@ El usuario puede solicitar la eliminación de su cuenta y de sus datos personale
 
 ---
 
-## 16. Solicitudes de eliminación de datos
+## 17. Solicitudes de eliminación de datos
 
 Si deseas solicitar la eliminación de tus datos sin eliminar tu cuenta, o si eres tutor legal de un menor y deseas ejercer este derecho en su nombre, puedes hacerlo mediante los siguientes pasos:
 
@@ -368,7 +434,7 @@ Ariven puede negar la eliminación de datos que sean necesarios para cumplir obl
 
 ---
 
-## 17. Cookies
+## 18. Cookies
 
 Ariven utiliza un número mínimo de cookies estrictamente necesarias para el funcionamiento del servicio.
 
@@ -387,7 +453,7 @@ La cookie de sesión se elimina automáticamente cuando el usuario cierra sesió
 
 ---
 
-## 18. Contacto
+## 19. Contacto
 
 Para consultas, solicitudes de derechos ARCO (Acceso, Rectificación, Cancelación, Oposición) o cualquier asunto relacionado con el tratamiento de tus datos personales, puedes comunicarte con el responsable del tratamiento a través de los siguientes medios:
 
@@ -403,7 +469,7 @@ Si consideras que el tratamiento de tus datos no es conforme a la normativa apli
 
 ---
 
-## 19. Cambios futuros
+## 20. Cambios futuros
 
 Ariven puede actualizar esta Política de Privacidad periódicamente para reflejar cambios en el servicio, en la legislación aplicable o en las prácticas de tratamiento de datos.
 
@@ -418,4 +484,4 @@ La versión vigente siempre estará disponible en la plataforma.
 
 ---
 
-*Política de Privacidad — Ariven · Versión 1.0 · Fecha de vigencia: 24/06/2026*
+*Política de Privacidad — Ariven · Versión 1.1 · Fecha de vigencia: 24/06/2026*
