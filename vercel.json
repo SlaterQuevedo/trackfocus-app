@@ -2,6 +2,7 @@
   "version": 2,
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/sitemap.xml", "dest": "/api/sitemap-xml" },
     { "src": "/(.*)", "dest": "/TrackFocus-claude-study-concentration-tracker-FegXg/$1" }
   ]
 }
