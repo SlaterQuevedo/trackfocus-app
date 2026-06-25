@@ -1,7 +1,7 @@
 # Términos y Condiciones de Uso — Ariven
 
 **Fecha de entrada en vigor:** 24/06/2026
-**Versión:** 1.0
+**Versión:** 1.1
 **Responsable:** Slater Quevedo
 **Correo de contacto:** trackfocus.support@gmail.com
 **País de domicilio del responsable:** Perú
@@ -190,8 +190,8 @@ Las instituciones que utilicen Ariven para gestionar aulas y estudiantes asumen 
 ### 10.1 Descripción del sistema
 Ariven integra el modelo de inteligencia artificial **Google Gemini** (versión `gemini-3.1-flash-lite`) como tutor digital. Este sistema responde siguiendo el método socrático: guía al estudiante mediante preguntas en lugar de proporcionar respuestas directas.
 
-### 10.2 Arquitectura segura
-Las consultas a Gemini no viajan directamente desde el navegador del usuario. Pasan por un servidor intermediario operado por Ariven en Vercel, donde se añade la clave de API. El correo electrónico del usuario **nunca** es enviado a Google Gemini.
+### 10.2 Arquitectura segura de la API
+Las consultas a Gemini no viajan directamente desde el navegador del usuario. Pasan por un servidor intermediario (proxy) operado por Ariven en Vercel, donde la clave de acceso a la API se inyecta desde variables de entorno del servidor. El correo electrónico del usuario **nunca** es enviado a Google Gemini. La clave de acceso a la API **nunca** es accesible desde el navegador, DevTools ni ningún mecanismo del lado del cliente. Para el detalle completo de la arquitectura de seguridad de credenciales, véase la sección 16.
 
 ### 10.3 Almacenamiento del historial
 Las conversaciones con el tutor de IA existen únicamente en la memoria del navegador durante la sesión activa. No se almacenan de forma permanente en los servidores de Ariven. Al cerrar o recargar la aplicación, el historial se descarta completamente.
@@ -275,6 +275,8 @@ El Servicio depende de terceros cuya disponibilidad Ariven no controla, incluyen
 
 **Ariven no asume responsabilidad por interrupciones del Servicio causadas por fallos, mantenimientos o modificaciones en los servicios de terceros mencionados.**
 
+Ante la no disponibilidad del servicio de IA (Google Gemini), la plataforma activará automáticamente respuestas de reserva (*fallback*) para mantener una experiencia mínima de uso. Estas respuestas son generadas localmente y no equivalen en calidad ni en profundidad a las respuestas del tutor con IA activa. Véase la sección 16.4 para el detalle de las limitaciones frente a interrupciones de terceros.
+
 ---
 
 ## 15. Errores técnicos y fallos
@@ -297,7 +299,72 @@ Ariven está optimizado para navegadores web modernos. No garantizamos compatibi
 
 ---
 
-## 16. Limitación de responsabilidad
+## 16. Seguridad de la Infraestructura y Protección de Credenciales
+
+### 16.1 Arquitectura de proxy seguro
+
+Ariven implementa una arquitectura de proxy de servidor que garantiza que ninguna credencial privada sea accesible desde el navegador del usuario. Toda comunicación con servicios externos que requiera autenticación se realiza servidor a servidor, a través de funciones serverless alojadas en Vercel, sin que el dispositivo del usuario intervenga como intermediario de ninguna clave de acceso.
+
+El flujo de una solicitud al tutor de IA es el siguiente:
+
+```
+Navegador del usuario
+        │  (HTTPS — sin credenciales privadas)
+        ▼
+Servidor de Ariven  [Vercel Serverless /api/*]
+        │  (HTTPS — credencial inyectada desde variable de entorno del servidor)
+        ▼
+Servicio externo  (p. ej. Google Gemini API)
+```
+
+El usuario interactúa exclusivamente con las rutas internas de Ariven (`/api/*`). El servidor de Ariven es el único emisor de solicitudes autenticadas hacia los servicios externos.
+
+### 16.2 Protección de credenciales
+
+Las claves de acceso a los servicios externos utilizadas por Ariven:
+
+- Se almacenan exclusivamente como **variables de entorno del servidor** en la infraestructura de Vercel.
+- **Nunca se incluyen** en el código JavaScript enviado al navegador del usuario ni en ningún recurso descargable por el cliente.
+- **Nunca son accesibles** mediante herramientas de inspección del navegador (DevTools), `localStorage`, `sessionStorage` ni ningún otro mecanismo del lado del cliente.
+- **No pueden ser observadas, extraídas ni reutilizadas** por el usuario ni por terceros que analicen el tráfico de red del navegador.
+
+Este diseño elimina una clase completa de vulnerabilidades de seguridad relacionadas con la exposición de credenciales en el cliente. Ariven no garantiza seguridad absoluta, pero sí que las credenciales de los servicios externos no se transmiten ni almacenan en el dispositivo del usuario.
+
+### 16.3 Control de origen (CORS)
+
+Los endpoints del servidor de Ariven implementan verificación de origen mediante cabeceras HTTP (`Access-Control-Allow-Origin`). Las solicitudes provenientes de dominios no incluidos en la lista de orígenes autorizados son rechazadas con un error HTTP 403 antes de ser procesadas.
+
+Esta medida cumple la función de impedir que sitios web de terceros realicen solicitudes en nombre del usuario hacia la API interna de Ariven sin su conocimiento.
+
+### 16.4 Limitaciones frente a interrupciones de servicios externos
+
+El funcionamiento del tutor de IA y otras funciones que dependan de servicios externos (Google Gemini API, Supabase, Vercel) puede verse afectado por interrupciones, degradaciones, cambios de versión de API o modificaciones unilaterales en dichos servicios, ninguno de los cuales está bajo el control de Ariven.
+
+Ante estas situaciones:
+
+- El servidor de Ariven no podrá completar las solicitudes que requieran el servicio afectado.
+- La plataforma activará automáticamente respuestas de reserva (*fallback*) cuando sea técnicamente posible, para mantener una experiencia mínima de uso sin recurrir al servicio externo no disponible.
+- Ariven no podrá garantizar la restauración del servicio en ningún plazo determinado, al depender de la resolución unilateral del proveedor externo.
+- La indisponibilidad de un servicio externo no constituye incumplimiento contractual por parte de Ariven.
+
+**Ariven no asume responsabilidad alguna por interrupciones, errores, cambios de interfaz de programación (API), modificaciones de condiciones de uso o discontinuación de los servicios de terceros de los que depende la plataforma.**
+
+### 16.5 Protección contra acceso no autorizado
+
+Ariven implementa las siguientes medidas técnicas y organizativas para proteger los datos de los usuarios frente a accesos no autorizados:
+
+| Medida | Descripción |
+|---|---|
+| **Row-Level Security (RLS)** | Las reglas de acceso a la base de datos en Supabase garantizan que cada usuario pueda leer y modificar exclusivamente sus propios datos. No es posible acceder a datos de otros usuarios mediante solicitudes directas a la base de datos. |
+| **Autenticación vía Google OAuth** | Ariven no almacena contraseñas. La autenticación es gestionada íntegramente por Google, eliminando el riesgo asociado a contraseñas débiles o expuestas en la propia plataforma. |
+| **HTTPS/TLS en todo el tráfico** | Toda comunicación entre el navegador del usuario y los servidores de Ariven, Supabase y Vercel ocurre mediante protocolos de cifrado en tránsito. |
+| **Sesión con expiración automática** | Las sesiones de usuario expiran automáticamente. Al cerrar sesión, la información de sesión y la caché local del estado se eliminan del dispositivo. |
+
+A pesar de estas medidas, ningún sistema puede garantizar seguridad absoluta frente a todas las amenazas posibles. Ariven adoptará las medidas razonables disponibles para proteger los datos, pero no puede garantizar la invulnerabilidad total ante ataques externos, vulnerabilidades no conocidas en los servicios de terceros ni errores derivados del acceso del usuario a su propia cuenta de Google.
+
+---
+
+## 17. Limitación de responsabilidad
 
 **EN LA MÁXIMA MEDIDA PERMITIDA POR LA LEGISLACIÓN PERUANA APLICABLE:**
 
@@ -330,7 +397,7 @@ En ningún caso Ariven será responsable por daños indirectos, incidentales, es
 
 ---
 
-## 17. Suspensión o cancelación de cuentas
+## 18. Suspensión o cancelación de cuentas
 
 ### 17.1 Suspensión por Ariven
 Ariven se reserva el derecho de suspender o cancelar temporal o permanentemente una cuenta, sin previo aviso, en los siguientes casos:
@@ -353,7 +420,7 @@ Si el usuario considera que la suspensión fue injustificada, puede escribir a *
 
 ---
 
-## 18. Servicios de terceros
+## 19. Servicios de terceros
 
 ### 18.1 Servicios integrados
 Ariven integra los siguientes servicios de terceros:
@@ -375,7 +442,7 @@ Si un proveedor externo modifica sus condiciones de forma que afecte materialmen
 
 ---
 
-## 19. Futuras funciones de pago
+## 20. Futuras funciones de pago
 
 ### 19.1 Estado actual
 **A la fecha de entrada en vigor de estos Términos (24/06/2026), Ariven es completamente gratuito. No existe ningún sistema de pago activo en la plataforma.** No hay planes de suscripción, licencias de pago ni funciones premium implementadas.
@@ -399,7 +466,7 @@ Ariven no realizará ningún cargo a los usuarios sin una aceptación explícita
 
 ---
 
-## 20. Modificaciones del Servicio
+## 21. Modificaciones del Servicio
 
 Ariven se reserva el derecho de modificar, suspender, descontinuar o actualizar cualquier aspecto del Servicio en cualquier momento, incluyendo:
 
@@ -413,7 +480,7 @@ Ariven procurará notificar los cambios significativos dentro de la aplicación.
 
 ---
 
-## 21. Modificaciones de los términos
+## 22. Modificaciones de los términos
 
 Ariven se reserva el derecho de actualizar estos Términos cuando sea necesario. Los cambios se publicarán en la plataforma con la fecha de la nueva versión.
 
@@ -429,7 +496,7 @@ El uso continuado del Servicio después de la publicación de los nuevos Términ
 
 ---
 
-## 22. Legislación aplicable y jurisdicción
+## 23. Legislación aplicable y jurisdicción
 
 Estos Términos se rigen por las leyes de la **República del Perú**. En particular, son de aplicación:
 
@@ -441,7 +508,7 @@ Cualquier controversia derivada del uso del Servicio que no pueda resolverse ami
 
 ---
 
-## 23. Contacto
+## 24. Contacto
 
 Para consultas, reclamos, ejercicio de derechos ARCO (Acceso, Rectificación, Cancelación, Oposición), solicitudes de eliminación de cuenta o cualquier asunto relacionado con estos Términos:
 
@@ -456,5 +523,5 @@ Si consideras que el tratamiento de tus datos no cumple con la normativa vigente
 
 ---
 
-*Términos y Condiciones — Ariven · Versión 1.0 · Fecha de vigencia: 24/06/2026*
+*Términos y Condiciones — Ariven · Versión 1.1 · Fecha de vigencia: 24/06/2026*
 *Responsable: Slater Quevedo · trackfocus.support@gmail.com · Perú*
