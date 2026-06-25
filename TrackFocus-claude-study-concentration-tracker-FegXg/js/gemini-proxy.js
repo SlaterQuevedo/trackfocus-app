@@ -1,36 +1,12 @@
-﻿// Proxy para Gemini API — análisis de archivos educativos
-// Llama directamente a la API REST de Gemini con contenido base64
+// Proxy para Gemini API — análisis de archivos educativos.
+// Llama exclusivamente al proxy seguro /api/gemini. La clave vive en el servidor.
 const GeminiProxy = (() => {
-
-  const BASE  = 'https://generativelanguage.googleapis.com/v1beta/models';
-
-  function getKey() {
-    return window.GEMINI_API_KEY || '';
-  }
-
-  const ANALYZE_PROMPT = `Eres un tutor educativo para estudiantes de secundaria. Analiza el siguiente material de estudio y proporciona un análisis completo en español con este formato exacto:
-
-## 📋 RESUMEN
-Escribe un resumen completo y detallado del contenido del material.
-
-## 💡 CONCEPTOS CLAVE
-Lista los 5-7 conceptos más importantes con una explicación breve de cada uno.
-
-## ❓ PREGUNTAS DE PRÁCTICA
-Genera 5 preguntas numeradas. Después de cada pregunta agrega la respuesta en una nueva línea que empiece con "R:".
-
-## ✏️ EJERCICIOS
-Proporciona 3 ejercicios prácticos numerados con instrucciones claras y el objetivo de aprendizaje.
-
-## 🔄 RETROALIMENTACIÓN
-Sugiere estrategias de estudio específicas para este material y menciona las áreas que requieren más atención.`;
 
   // Analiza un archivo y devuelve resumen, conceptos, preguntas, ejercicios y retroalimentación
   async function analyzeFile(fileRecord, context = {}) {
     const cached = Files.getBase64(fileRecord.id);
     if (!cached) return _mockAnalysis(fileRecord.fileName);
 
-    // 1) Proxy seguro
     try {
       const res = await fetch('/api/gemini/analyze', {
         method: 'POST',
@@ -46,13 +22,9 @@ Sugiere estrategias de estudio específicas para este material y menciona las á
         const json = await res.json();
         return _parseAnalysis(json.text || '', fileRecord.fileName);
       }
-      if (res.status !== 404) return _mockAnalysis(fileRecord.fileName);
-    } catch (e) { /* sin proxy → fallback */ }
+    } catch (_) {}
 
-    // 2) Fallback directo (dev local con clave)
-    const key = getKey();
-    if (!key) return _mockAnalysis(fileRecord.fileName);
-    return _directAnalyze(cached, fileRecord.fileName, key);
+    return _mockAnalysis(fileRecord.fileName);
   }
 
   // Responde una pregunta del estudiante sobre un archivo (modo socrático)
@@ -60,7 +32,6 @@ Sugiere estrategias de estudio específicas para este material y menciona las á
     const cached = Files.getBase64(fileId);
     if (!cached) return 'No encuentro el archivo. Vuelve a subirlo para que pueda ayudarte.';
 
-    // 1) Proxy seguro
     try {
       const res = await fetch('/api/gemini/answer-question', {
         method: 'POST',
@@ -76,63 +47,9 @@ Sugiere estrategias de estudio específicas para este material y menciona las á
         const json = await res.json();
         return json.answer || 'Sin respuesta de la IA.';
       }
-      if (res.status !== 404) return 'Error al contactar la IA. Intenta de nuevo.';
-    } catch (e) { /* sin proxy → fallback */ }
+    } catch (_) {}
 
-    // 2) Fallback directo (dev local con clave)
-    const key = getKey();
-    if (!key) return 'El tutor no está disponible sin conexión al servidor.';
-    return _directAnswer(cached, question, key);
-  }
-
-  // ── Respaldo directo (dev local con clave en localStorage) ─────────
-  async function _directAnalyze(cached, fileName, key) {
-    try {
-      const res = await fetch(`${BASE}/${window.GEMINI_MODEL}:generateContent`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts: [
-            { text: ANALYZE_PROMPT },
-            { inlineData: { mimeType: cached.mimeType, data: cached.base64 } }
-          ] }],
-          generationConfig: { temperature: 0.4, maxOutputTokens: 2048, thinkingConfig: { thinkingBudget: 0 } }
-        })
-      });
-      if (!res.ok) return _mockAnalysis(fileName);
-      const json = await res.json();
-      return _parseAnalysis(json.candidates?.[0]?.content?.parts?.[0]?.text || '', fileName);
-    } catch (e) { return _mockAnalysis(fileName); }
-  }
-
-  async function _directAnswer(cached, question, key) {
-    const instructionText = `Actúa como tutor educativo socrático para estudiantes de secundaria.
-El estudiante pregunta: "${question}"
-
-REGLAS:
-- NUNCA des la respuesta completa directamente.
-- Guía con preguntas y pistas progresivas.
-- Si el estudiante pide la respuesta directa, responde con una pista clave.
-- Verifica comprensión con preguntas de seguimiento.
-- Adapta el lenguaje al nivel de secundaria.
-- Responde siempre en español.
-- Al final plantea al menos una pregunta de seguimiento.`;
-    try {
-      const res = await fetch(`${BASE}/${window.GEMINI_MODEL}:generateContent`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts: [
-            { text: instructionText },
-            { inlineData: { mimeType: cached.mimeType, data: cached.base64 } }
-          ] }],
-          generationConfig: { temperature: 0.6, maxOutputTokens: 1024, thinkingConfig: { thinkingBudget: 0 } }
-        })
-      });
-      if (!res.ok) return 'Error al contactar la IA. Intenta de nuevo.';
-      const json = await res.json();
-      return json.candidates?.[0]?.content?.parts?.[0]?.text || 'Sin respuesta de la IA.';
-    } catch (e) { return 'Error al contactar la IA. Verifica tu conexión.'; }
+    return 'El tutor no está disponible en este momento. Intenta de nuevo.';
   }
 
   // ── Helpers privados ────────────────────────────────────────────
@@ -197,14 +114,13 @@ REGLAS:
 
   function _mockAnalysis(fileName) {
     return {
-      summary:     `Vista previa de "${fileName}". Ariven Intelligence no está disponible en modo local.`,
-      keyConcepts: 'Activa Ariven Intelligence para ver los conceptos clave.',
+      summary:     `Vista previa de "${fileName}". Ariven Intelligence no está disponible en este momento.`,
+      keyConcepts: 'Ariven Intelligence no está disponible. Intenta de nuevo más tarde.',
       questions:   [{ text: '¿Cuál es el tema principal del material?', answer: 'Analiza el material con Ariven Intelligence.' }],
       exercises:   [{ title: 'Ejercicio 1', prompt: 'Lee el material y resume los puntos principales.' }],
-      feedback:    'Conecta Ariven Intelligence desde Vercel para obtener análisis completo.'
+      feedback:    'Ariven Intelligence no está disponible en este momento.'
     };
   }
 
   return { analyzeFile, answerQuestion };
 })();
-

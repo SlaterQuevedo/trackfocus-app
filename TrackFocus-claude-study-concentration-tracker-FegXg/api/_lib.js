@@ -15,13 +15,14 @@ export function geminiHeaders(apiKey) {
 // Dev local: localhost:3000 y :5173 (Vite/live-server), equivalente con 127.0.0.1
 const _ALLOWED_ORIGINS = new Set([
   'https://trackfocus.vercel.app',
+  'https://ariven.vercel.app',
   'http://localhost:3000',
   'http://localhost:5173',
   'http://127.0.0.1:3000',
   'http://127.0.0.1:5173',
 ]);
-// Patrón para previews de Vercel del proyecto (pendiente migrar a ariven.vercel.app)
-const _PREVIEW_RE = /^https:\/\/trackfocus[-a-z0-9]*\.vercel\.app$/;
+// Patrón para previews de Vercel (trackfocus-* y ariven-*)
+const _PREVIEW_RE = /^https:\/\/(trackfocus|ariven)[-a-z0-9]*\.vercel\.app$/;
 
 /**
  * Aplica headers CORS al response según el origin de la petición.

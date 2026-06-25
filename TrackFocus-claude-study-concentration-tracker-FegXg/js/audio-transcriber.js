@@ -139,26 +139,13 @@ const AudioTranscriber = (() => {
     });
   }
 
-  // Transcribir audio blob a texto (usa Gemini si hay clave disponible)
+  // Transcribir audio blob a texto vía proxy seguro /api/audio-transcribe
   async function transcribe(audioBlob, language = 'es-ES') {
     if (!audioBlob || audioBlob.size === 0) {
       throw new Error('Archivo de audio vacío');
     }
 
-    const key = window.GEMINI_API_KEY || '';
-    if (key) {
-      return _transcribeWithGemini(audioBlob);
-    }
-
-    // Sin clave de Ariven Intelligence: el método principal es el dictado nativo del navegador
-    // (Web Speech API). No hay endpoint de servidor (carpeta api/ eliminada).
-    throw new Error('La transcripción por voz usa el dictado del navegador. Si no está disponible, activa Ariven Intelligence desde Vercel.');
-  }
-
-  // Transcripción directa con Gemini API (sin servidor)
-  async function _transcribeWithGemini(audioBlob) {
-    const key = window.GEMINI_API_KEY;
-
+    const mimeType = audioBlob.type || 'audio/webm';
     const base64 = await new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload  = e => resolve(e.target.result.split(',')[1]);
@@ -166,34 +153,20 @@ const AudioTranscriber = (() => {
       reader.readAsDataURL(audioBlob);
     });
 
-    const mimeType = audioBlob.type || 'audio/webm';
-
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${window.GEMINI_MODEL}:generateContent`,
-      {
+    try {
+      const res = await fetch('/api/audio-transcribe', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-        body: JSON.stringify({
-          contents: [{
-            role: 'user',
-            parts: [
-              { text: 'Transcribe exactamente lo que se dice en este audio. Devuelve únicamente la transcripción del texto hablado, sin explicaciones, sin comillas, sin formato adicional.' },
-              { inlineData: { mimeType, data: base64 } }
-            ]
-          }],
-          generationConfig: { temperature: 0.1, maxOutputTokens: 512, thinkingConfig: { thinkingBudget: 0 } }
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ audio: base64, mimeType })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const text = (json.text || '').trim();
+        return { text, confidence: 0.95, language: 'es-ES', duration_ms: 0 };
       }
-    );
+    } catch (_) {}
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `Error transcribiendo: ${res.status}`);
-    }
-
-    const json = await res.json();
-    const text = json.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
-    return { text, confidence: 0.95, language: 'es-ES', duration_ms: 0 };
+    throw new Error('Transcripción no disponible. Usa el dictado del navegador.');
   }
 
   function isRecordingNow() {

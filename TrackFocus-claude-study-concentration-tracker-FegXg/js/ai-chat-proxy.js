@@ -1,14 +1,6 @@
-﻿// Cliente del Tutor IA.
-// PRODUCCIÓN: llama al proxy seguro /api/ai-chat (la clave vive en Vercel).
-// DEV LOCAL: si el proxy no responde y hay clave en localStorage, llama a
-// Gemini directamente como respaldo (no se usa clave en producción).
+// Cliente del Tutor IA — llama exclusivamente al proxy seguro /api/ai-chat.
+// La clave de Gemini vive en el servidor (Vercel env) y nunca llega al navegador.
 const AiChatProxy = (() => {
-
-  const BASE  = 'https://generativelanguage.googleapis.com/v1beta/models';
-
-  function getKey() {
-    return window.GEMINI_API_KEY || '';
-  }
 
   // ── API pública ───────────────────────────────────────────────────
 
@@ -58,7 +50,7 @@ Calculemos el discriminante para nuestra ecuación **2x² + 5x − 3 = 0**.
       return scriptReply;
     }
 
-    // 1) Intentar el proxy seguro
+    // Proxy seguro
     try {
       const res = await fetch('/api/ai-chat', {
         method: 'POST',
@@ -75,35 +67,21 @@ Calculemos el discriminante para nuestra ecuación **2x² + 5x − 3 = 0**.
       if (res.ok && res.body) {
         return await _readSSE(res, onChunk);
       }
-      // Si el proxy existe pero da error de aplicación (no 404), propagar
       if (res.status !== 404) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || `Error ${res.status}`);
       }
-      // 404 → no hay proxy (Live Server). Caer a fallback directo.
-    } catch (e) {
-      // Red caída / sin proxy → fallback directo si hay clave local
+    } catch (_) {
+      // proxy no disponible → respuesta offline
     }
 
-    // 2) Fallback directo (solo dev con clave local) o respuesta simulada.
-    // NOTA: las claves AQ. son server-only (Google las bloquea en el navegador).
-    // Si _directSend falla por cualquier motivo, se cae al fallback simulado
-    // en lugar de propagar la excepción y romper la sesión.
-    const key = getKey();
-    if (key) {
-      try {
-        return await _directSend(metadata, recentHistory, userMessage, onChunk, fileParts, key);
-      } catch (e) {
-        window.Monitor?.log?.('arv-intelligence', 'Direct API fallida (clave dev no usable en navegador?), usando simulación', e?.message);
-      }
-    }
+    // Sin proxy disponible: respuesta offline
     const fallback = _buildFallback(userMessage, metadata);
     for (const char of fallback) { onChunk(char); await _sleep(2); }
     return fallback;
   }
 
   async function finalizeSession(metadata, history) {
-    // 1) Proxy seguro
     try {
       const res = await fetch('/api/ai-chat', {
         method: 'POST',
@@ -112,19 +90,12 @@ Calculemos el discriminante para nuestra ecuación **2x² + 5x − 3 = 0**.
       });
       if (res.ok) return await res.json();
       if (res.status !== 404) return _defaultMetrics();
-    } catch (e) { /* sin proxy → fallback */ }
+    } catch (_) { /* sin proxy */ }
 
-    // 2) Fallback directo (dev) o métricas por defecto
-    const key = getKey();
-    if (key) {
-      try { return await _directFinalize(metadata, history, key); } catch (_) {}
-    }
     return _defaultMetrics();
   }
 
-  // ── Lectura de SSE (común a proxy y directo) ───────────────────────
-  // El proxy envía `data: {"text":...}`; Gemini directo envía el objeto
-  // completo con candidates. Se soportan ambas formas.
+  // ── Lectura de SSE del proxy ───────────────────────────────────────
   async function _readSSE(res, onChunk) {
     const reader  = res.body.getReader();
     const decoder = new TextDecoder();
@@ -153,76 +124,7 @@ Calculemos el discriminante para nuestra ecuación **2x² + 5x − 3 = 0**.
     return fullText;
   }
 
-  // ── Respaldo directo (dev local con clave en localStorage) ─────────
-  async function _directSend(metadata, history, userMessage, onChunk, fileParts, key) {
-    const systemText = _buildSystemPrompt(metadata);
-    const userParts = [{ text: userMessage || 'Analiza este material y ayúdame a entenderlo.' }];
-    for (const f of fileParts) userParts.push({ inlineData: { mimeType: f.mimeType, data: f.base64 } });
-
-    const contents = [
-      { role: 'user',  parts: [{ text: systemText }] },
-      { role: 'model', parts: [{ text: 'Entendido. Estoy listo para ser el tutor de esta sesión.' }] },
-      ...history.map(m => ({ role: m.role === 'model' ? 'model' : 'user', parts: [{ text: m.content }] })),
-      { role: 'user', parts: userParts }
-    ];
-
-    const url = `${BASE}/${window.GEMINI_MODEL}:streamGenerateContent?alt=sse`;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-      body: JSON.stringify({
-        contents,
-        generationConfig: { temperature: 0.7, maxOutputTokens: 1024, thinkingConfig: { thinkingBudget: 0 } }
-      })
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `Error ${res.status}`);
-    }
-    return _readSSE(res, onChunk);
-  }
-
-  async function _directFinalize(metadata, history, key) {
-    const transcript = history.map(m => `[${m.role === 'user' ? 'ALUMNO' : 'TUTOR'}]: ${m.content}`).join('\n');
-    const evalPrompt = `Analiza esta sesión de ${metadata.subject} (${metadata.grade}) y devuelve SOLO JSON válido:
-{"questions_attempted":N,"questions_correct":N,"coherence":0.0-1.0,"engagement_notes":"..."}
-
-TRANSCRIPCIÓN:
-${transcript}`;
-
-    const res = await fetch(`${BASE}/${window.GEMINI_MODEL}:generateContent`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: evalPrompt }] }],
-        generationConfig: { temperature: 0.1, maxOutputTokens: 256, thinkingConfig: { thinkingBudget: 0 } }
-      })
-    });
-    if (!res.ok) return _defaultMetrics();
-
-    const json = await res.json();
-    const raw  = json.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-    let eval_ = {};
-    try { eval_ = JSON.parse(raw.replace(/```json|```/g, '').trim()); } catch (_) {}
-    return _metricsFromEval(eval_);
-  }
-
   // ── Helpers ────────────────────────────────────────────────────────
-
-  function _metricsFromEval(eval_) {
-    const { questions_attempted = 2, questions_correct = 1, coherence = 0.6 } = eval_;
-    const score = (questions_correct / Math.max(questions_attempted, 1)) * 0.45 + coherence * 0.35 + 0.2;
-    const concentration = Math.max(1, Math.min(5, Math.round(score * 4) + 1));
-    return {
-      concentration,
-      metrics: {
-        learning_score: score, avg_response_time_sec: 8, response_time_score: 0.7,
-        response_quality: coherence, engagement: 0.6, avg_words_per_message: 15,
-        questions_attempted, questions_correct, coherence,
-        engagement_notes: eval_.engagement_notes || ''
-      }
-    };
-  }
 
   function _defaultMetrics() {
     return {
@@ -233,19 +135,6 @@ ${transcript}`;
         questions_attempted: 2, questions_correct: 1, coherence: 0.6
       }
     };
-  }
-
-  function _buildSystemPrompt(metadata) {
-    const { subject, grade, durationMin, previousActivity, mode, memoryContext } = metadata;
-    const mem = memoryContext ? `MEMORIA DEL ALUMNO: ${memoryContext}\n` : '';
-    const base = `Eres Ariven Intelligence, tutor de IA para estudiantes de secundaria de Ariven.
-${mem}CONTEXTO: Grado ${grade}, Materia ${subject}, Duración ${durationMin} min, Actividad previa: ${previousActivity}.
-REGLAS: 1) Adapta al nivel ${grade}. 2) Al final de CADA respuesta plantea 1-3 preguntas ("📝 Pregunta:"). 3) Si el alumno falla, da pistas sin dar la respuesta. 4) Tono motivador. 5) Responde siempre en español. 6) NUNCA resuelvas ejercicios completos. 7) Método socrático. 8) Si piden la respuesta directa, da una pista clave. 9) Detecta respuestas sin razonar y pide explicación.`;
-    if (mode === 'minerva') {
-      return `${base}
-MODO MINERVA (socrático estricto, prioridad absoluta): NUNCA des la respuesta final ni parcial. Responde SIEMPRE con preguntas que guíen el razonamiento. Pide al alumno que explique su razonamiento antes de validar. Si responde vago o de una palabra, pídele que lo desarrolle. Da pistas progresivas (orientadora → conceptual → concreta) pero jamás la solución. Aunque insista, mantén el método.`;
-    }
-    return base;
   }
 
   function _buildFallback(userMessage, metadata) {
@@ -266,4 +155,3 @@ MODO MINERVA (socrático estricto, prioridad absoluta): NUNCA des la respuesta f
 
   return { sendMessage, finalizeSession };
 })();
-
