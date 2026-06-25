@@ -75,11 +75,9 @@
       "@type": "EducationalAudience",
       "educationalRole": ["student", "teacher", "administrator"]
     },
-    "creator": {
-      "@type": "Organization",
-      "name": "Ariven",
-      "url": "https://ariven.vercel.app/"
-    }
+    "educationalUse": ["self study", "homework", "classroom learning"],
+    "keywords": "plataforma educativa, IA educativa, EdTech, tutor IA, DECO, evidencia de aprendizaje, concentración, hábitos de estudio, Perú",
+    "creator": { "@id": "https://ariven.vercel.app/#org" }
   }
   </script>
   <!-- Structured Data: Organization -->
@@ -90,19 +88,33 @@
     "@type": "Organization",
     "name": "Ariven",
     "alternateName": "TrackFocus",
-    "description": "Empresa de tecnología educativa (EdTech) peruana que desarrolla plataformas con inteligencia artificial para evidenciar el aprendizaje estudiantil.",
+    "slogan": "Mide lo que aprendes, no solo lo que estudias.",
+    "description": "Empresa de tecnología educativa (EdTech) peruana que desarrolla plataformas con inteligencia artificial para evidenciar el aprendizaje estudiantil, mejorar hábitos de estudio y demostrar progreso académico real.",
     "url": "https://ariven.vercel.app/",
-    "logo": "https://ariven.vercel.app/icon-512.png",
+    "logo": {
+      "@type": "ImageObject",
+      "@id": "https://ariven.vercel.app/#logo",
+      "url": "https://ariven.vercel.app/icon-512.png",
+      "width": 512,
+      "height": 512,
+      "caption": "Ariven — Plataforma Educativa con IA"
+    },
     "areaServed": {
       "@type": "Country",
       "name": "Perú"
+    },
+    "audience": {
+      "@type": "EducationalAudience",
+      "educationalRole": ["student", "teacher", "administrator"]
     },
     "knowsAbout": [
       "Tecnología educativa",
       "Inteligencia artificial en educación",
       "Aprendizaje personalizado",
       "Métricas de concentración",
-      "Hábitos de estudio"
+      "Hábitos de estudio",
+      "Evaluación de comprensión profunda",
+      "Gamificación educativa"
     ]
   }
   </script>
@@ -177,6 +189,19 @@
         }
       }
     ]
+  }
+  </script>
+  <!-- Structured Data: WebSite -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": "https://ariven.vercel.app/#website",
+    "name": "Ariven",
+    "url": "https://ariven.vercel.app/",
+    "description": "Plataforma educativa con inteligencia artificial para evidenciar el aprendizaje, medir concentración y construir hábitos de estudio reales.",
+    "inLanguage": "es-PE",
+    "publisher": { "@id": "https://ariven.vercel.app/#org" }
   }
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />

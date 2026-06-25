@@ -80,6 +80,7 @@ Ariven es una aplicación web (SPA) diseñada para el mercado educativo peruano.
 ## Páginas disponibles
 
 - [Inicio / App](https://ariven.vercel.app/) — Landing page y acceso completo a la plataforma
+- [Sobre Ariven](https://ariven.vercel.app/about-ariven.html) — Descripción completa: qué es, cómo funciona, para quién es
 - [Política de Privacidad](https://ariven.vercel.app/privacy.html)
 - [Términos y Condiciones](https://ariven.vercel.app/terms.html)
 - [Cumplimiento y Transparencia de Datos](https://ariven.vercel.app/data-transparency.html)

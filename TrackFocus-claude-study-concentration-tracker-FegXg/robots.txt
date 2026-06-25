@@ -30,4 +30,13 @@ Allow: /
 User-agent: DuckDuckBot
 Allow: /
 
+User-agent: GoogleOther
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
 Sitemap: https://ariven.vercel.app/sitemap.xml
