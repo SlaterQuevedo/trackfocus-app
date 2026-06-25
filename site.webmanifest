@@ -1,7 +1,7 @@
 {
-  "name": "TrackFocus",
-  "short_name": "TrackFocus",
-  "description": "Plataforma educativa inteligente — Concentración, hábitos y aprendizaje real",
+  "name": "Ariven",
+  "short_name": "Ariven",
+  "description": "Plataforma educativa con IA — Evidencia tu aprendizaje, mejora tus hábitos y demuestra tu progreso real.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

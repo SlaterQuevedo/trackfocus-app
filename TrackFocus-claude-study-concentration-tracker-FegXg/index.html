@@ -14,21 +14,19 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Ariven" />
-  <!-- Open Graph & Social -->
-  <meta property="og:site_name" content="Ariven" />
-  <meta property="og:title" content="Ariven — Plataforma Educativa" />
-  <meta property="og:description" content="Mide tu concentración, construye hábitos y convierte tu tiempo de estudio en progreso real." />
-  <meta property="og:image" content="/icon-512.png" />
-  <meta property="og:type" content="website" />
-  <meta name="description" content="Ariven es una plataforma educativa con inteligencia artificial para medir concentración, construir hábitos de estudio y convertir cada sesión en aprendizaje real. Para estudiantes, docentes e instituciones en Perú." />
-  <meta name="keywords" content="plataforma educativa, concentración, hábitos de estudio, inteligencia artificial, aprendizaje, Perú, estudiantes, universidad, pomodoro, docentes" />
+  <!-- SEO -->
+  <meta name="description" content="Ariven es una plataforma educativa con inteligencia artificial para evidenciar el aprendizaje, medir concentración y construir hábitos de estudio reales. Para estudiantes, docentes e instituciones en Perú." />
+  <meta name="keywords" content="plataforma educativa, concentración, hábitos de estudio, inteligencia artificial, aprendizaje, Perú, estudiantes, universidad, pomodoro, docentes, edtech, evidencia de aprendizaje, tutor IA, evaluación DECO, gamificación educativa, Ariven" />
   <meta name="author" content="Ariven" />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://ariven.vercel.app/" />
-  <!-- Open Graph mejorado -->
+  <link rel="alternate" hreflang="es-PE" href="https://ariven.vercel.app/" />
+  <!-- Open Graph -->
+  <meta property="og:site_name" content="Ariven" />
+  <meta property="og:type" content="website" />
   <meta property="og:url" content="https://ariven.vercel.app/" />
   <meta property="og:title" content="Ariven — No estudies más. Estudia mejor." />
-  <meta property="og:description" content="Plataforma educativa con IA para medir concentración, construir hábitos y convertir cada hora de estudio en aprendizaje real." />
+  <meta property="og:description" content="Plataforma educativa con IA para evidenciar el aprendizaje, medir concentración y construir hábitos reales. Gratis para estudiantes, docentes e instituciones en Perú." />
   <meta property="og:locale" content="es_PE" />
   <meta property="og:image" content="https://ariven.vercel.app/icon-512.png" />
   <meta property="og:image:width" content="512" />
@@ -37,19 +35,25 @@
   <!-- Twitter / X Cards -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Ariven — No estudies más. Estudia mejor." />
-  <meta name="twitter:description" content="Mide tu concentración, construye hábitos y demuestra tu progreso con inteligencia artificial. Gratis para estudiantes y docentes." />
+  <meta name="twitter:description" content="Mide tu concentración, construye hábitos y demuestra tu progreso con inteligencia artificial. Gratis para estudiantes y docentes en Perú." />
   <meta name="twitter:image" content="https://ariven.vercel.app/icon-512.png" />
-  <!-- JSON-LD Structured Data -->
+  <meta name="twitter:url" content="https://ariven.vercel.app/" />
+  <!-- Structured Data: SoftwareApplication -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
+    "@type": ["SoftwareApplication", "WebApplication"],
     "name": "Ariven",
-    "description": "Plataforma educativa con inteligencia artificial para medir concentración, construir hábitos de estudio y convertir cada sesión en aprendizaje real. Diseñada para estudiantes, docentes e instituciones en Perú.",
+    "alternateName": "TrackFocus",
+    "description": "Plataforma educativa con inteligencia artificial para evidenciar el aprendizaje, medir concentración, construir hábitos de estudio y demostrar progreso real. Diseñada para estudiantes, docentes e instituciones en Perú.",
     "url": "https://ariven.vercel.app/",
     "applicationCategory": "EducationalApplication",
-    "operatingSystem": "Web — cualquier dispositivo con navegador",
+    "applicationSubCategory": "EdTech",
+    "operatingSystem": "Web",
+    "browserRequirements": "Requiere navegador moderno con JavaScript habilitado",
     "inLanguage": "es-PE",
+    "isAccessibleForFree": true,
+    "dateModified": "2026-06-24",
     "offers": {
       "@type": "Offer",
       "price": "0",
@@ -58,12 +62,13 @@
     },
     "featureList": [
       "Seguimiento de sesiones de estudio con métricas de concentración",
-      "Inteligencia artificial para recomendaciones personalizadas",
-      "Sistema Pomodoro integrado",
+      "Tutor IA mediante chat (Google Gemini vía proxy seguro)",
+      "Sistema Pomodoro integrado con Focus Player",
+      "Evaluaciones de comprensión profunda DECO",
       "Panel docente con monitoreo de aula en tiempo real",
-      "Evaluaciones de comprensión profunda (DECO)",
       "Gamificación con rachas, XP y logros",
-      "Sincronización en la nube con Supabase"
+      "Sincronización en la nube con Supabase",
+      "Exportación de reportes como evidencia de aprendizaje"
     ],
     "audience": {
       "@type": "EducationalAudience",
@@ -74,6 +79,102 @@
       "name": "Ariven",
       "url": "https://ariven.vercel.app/"
     }
+  }
+  </script>
+  <!-- Structured Data: Organization -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Ariven",
+    "alternateName": "TrackFocus",
+    "description": "Empresa de tecnología educativa (EdTech) peruana que desarrolla plataformas con inteligencia artificial para evidenciar el aprendizaje estudiantil.",
+    "url": "https://ariven.vercel.app/",
+    "logo": "https://ariven.vercel.app/icon-512.png",
+    "areaServed": {
+      "@type": "Country",
+      "name": "Perú"
+    },
+    "knowsAbout": [
+      "Tecnología educativa",
+      "Inteligencia artificial en educación",
+      "Aprendizaje personalizado",
+      "Métricas de concentración",
+      "Hábitos de estudio"
+    ]
+  }
+  </script>
+  <!-- Structured Data: FAQPage -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "¿Qué es Ariven?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Ariven es una plataforma educativa web con inteligencia artificial que ayuda a los estudiantes a evidenciar su aprendizaje real. Incluye temporizador Pomodoro, tutor IA, evaluaciones de comprensión profunda (DECO) y gamificación. Diseñada para estudiantes, docentes e instituciones educativas en Perú."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Ariven es gratuito?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Sí, Ariven tiene un plan gratuito disponible para estudiantes. No requiere tarjeta de crédito para registrarse."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Cómo mide Ariven el aprendizaje?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Ariven mide el aprendizaje mediante cuatro dimensiones: (1) concentración por sesión de estudio, (2) comprensión profunda vía evaluaciones DECO generadas por IA, (3) constancia mediante rachas diarias, y (4) progreso hacia metas académicas definidas por el estudiante."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Qué es el sistema DECO de Ariven?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "DECO (Diagnóstico de Comprensión Profunda) es el sistema de evaluación de Ariven que genera preguntas personalizadas sobre el material estudiado en cada sesión, midiendo comprensión real en lugar de memorización superficial."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Ariven funciona en celular?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Sí. Ariven es una Progressive Web App (PWA) que funciona en cualquier dispositivo con navegador moderno: celular, tablet o computadora. No requiere descarga desde ninguna tienda de aplicaciones."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Cómo usa Ariven la inteligencia artificial?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Ariven usa Google Gemini vía un proxy seguro en el servidor para: generar respuestas del tutor IA en el chat, crear preguntas de comprensión profunda (DECO) personalizadas por sesión, y transcribir notas de voz. La clave API nunca se expone al navegador del usuario."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Cómo puede un docente monitorear a sus estudiantes con Ariven?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Los docentes acceden a un panel de aula con métricas individuales de cada estudiante: tiempo de estudio acumulado, índice de concentración, comprensión por materia, racha activa y alertas de riesgo académico, todo en tiempo real."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Ariven cumple con la ley de protección de datos en Perú?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Sí. Ariven cumple con la Ley N.° 29733, Ley de Protección de Datos Personales del Perú. Los usuarios pueden ejercer sus derechos ARCO (Acceso, Rectificación, Cancelación y Oposición) contactando al equipo desde su perfil en la plataforma."
+        }
+      }
+    ]
   }
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -410,6 +511,12 @@
         <span>© 2026 Ariven</span>
         <span class="lp-footer-sep" aria-hidden="true">·</span>
         <span>Datos sincronizados de forma segura en la nube</span>
+        <span class="lp-footer-sep" aria-hidden="true">·</span>
+        <a href="privacy.html" style="color:inherit;opacity:0.75;text-decoration:none;">Privacidad</a>
+        <span class="lp-footer-sep" aria-hidden="true">·</span>
+        <a href="terms.html" style="color:inherit;opacity:0.75;text-decoration:none;">Términos</a>
+        <span class="lp-footer-sep" aria-hidden="true">·</span>
+        <a href="data-transparency.html" style="color:inherit;opacity:0.75;text-decoration:none;">Transparencia</a>
       </footer>
     </div>
     <!-- /lpStaticShell -->

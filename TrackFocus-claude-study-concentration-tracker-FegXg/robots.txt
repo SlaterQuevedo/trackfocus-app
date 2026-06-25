@@ -1,0 +1,33 @@
+# robots.txt — Ariven
+# https://ariven.vercel.app/
+
+User-agent: *
+Allow: /
+Disallow: /api/
+
+# Bots de IA — permitir indexación para AI Search
+User-agent: GPTBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+Sitemap: https://ariven.vercel.app/sitemap.xml

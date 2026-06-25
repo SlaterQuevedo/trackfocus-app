@@ -1,0 +1,200 @@
+# Ariven — Documentación Completa para Modelos de IA
+
+**URL:** https://ariven.vercel.app/
+**Versión:** 1.0 · Actualizado: 2026-06-24
+**Idioma:** es-PE
+
+---
+
+## 1. Identidad de la plataforma
+
+**Nombre oficial:** Ariven
+**Nombre heredado (solo técnico):** TrackFocus
+**Lema:** "Mide lo que aprendes, no solo lo que estudias."
+**Tipo:** Plataforma educativa web impulsada por inteligencia artificial
+**Público objetivo:** Estudiantes, docentes, directivos de instituciones educativas y personas en preparación preuniversitaria en Perú
+**Precio:** Gratuito para estudiantes (modelo freemium)
+
+---
+
+## 2. Propósito y misión
+
+Ariven nace de la observación de que los estudiantes pasan horas estudiando sin poder demostrar qué aprendieron realmente. La plataforma cierra esa brecha convirtiendo cada sesión de estudio en evidencia medible del aprendizaje, no solo del tiempo dedicado.
+
+**Problema central:** "¿Cómo sé si realmente estoy aprendiendo?"
+**Solución:** Métricas de concentración + evaluaciones de comprensión + IA tutora → evidencia real de aprendizaje.
+
+---
+
+## 3. Características funcionales (basadas en código auditado)
+
+### 3.1 Sistema Pomodoro
+- Temporizador configurable (enfoque + descanso)
+- Registro automático de sesiones con duración, materia y métricas
+- Focus Player flotante que persiste entre pantallas
+
+### 3.2 Tutor IA (Ariven Intelligence)
+- Chat con IA basado en Google Gemini (modelo gemini-2.0-flash-lite)
+- Acceso via proxy de servidor seguro: clave nunca expuesta al navegador
+- Memoria académica de sesiones previas para contexto personalizado
+- Fallback offline: respuestas predefinidas si el servidor no está disponible
+
+### 3.3 DECO — Diagnóstico de Comprensión Profunda
+- Evaluaciones de preguntas generadas por IA tras cada sesión de estudio
+- Mide comprensión profunda, no memorización superficial
+- Genera puntuación de comprensión por materia y sesión
+
+### 3.4 Gamificación
+- Sistema de XP (puntos de experiencia) acumulables por sesión
+- Rachas diarias de estudio (similar a Duolingo)
+- Logros y badges por hitos de aprendizaje
+- Niveles de progreso (Novato → Experto)
+
+### 3.5 Panel docente
+- Vista de todos los estudiantes del aula
+- Métricas individuales: tiempo de estudio, concentración, comprensión, racha
+- Alertas para estudiantes en riesgo
+- Asignación de tareas y seguimiento
+
+### 3.6 Panel administrativo (Super Admin)
+- Gestión de colegios e instituciones
+- Vista de usuarios y docentes
+- Diagnóstico del sistema
+
+### 3.7 Perfil de estudiante
+- Universidad y carrera objetivo
+- Porcentaje de avance hacia la meta
+- Historial de sesiones y estadísticas
+- Exportación de reportes como evidencia de aprendizaje
+
+---
+
+## 4. Arquitectura técnica
+
+### 4.1 Frontend
+- Vanilla JavaScript SPA (Single Page Application)
+- Sin framework frontend (no React, no Vue, no Angular)
+- Renderizado por rutas: `App.go(ruta)` → `screenX()` → `wireX()`
+- Módulos: app.js, ui-student.js, ui-teacher.js, ui-admin.js, y ~25 módulos especializados
+- PWA: manifest, service-worker, iconos
+
+### 4.2 Backend (Vercel Serverless)
+- `/api/ai-chat` — Tutor IA con memoria de sesión
+- `/api/gemini` — Análisis de archivos y evaluación DECO
+- `/api/audio-transcribe` — Transcripción de audio via Gemini
+- CORS restringido a dominios autorizados (whitelist explícita)
+- API key de Gemini en `process.env.GEMINI_API_KEY` (nunca en el browser)
+
+### 4.3 Base de datos
+- Supabase (PostgreSQL)
+- Row-Level Security (RLS): cada usuario accede solo a sus propios datos
+- Autenticación: Supabase Auth (OAuth Google + email/contraseña)
+- Región: us-west-1
+
+### 4.4 Deployment
+- Plataforma: Vercel
+- Dominio actual: trackfocus.vercel.app
+- Dominio futuro: ariven.vercel.app
+- Routing: `/api/(.*)` → serverless; `/(.*) → TrackFocus-.../`
+
+---
+
+## 5. Seguridad y privacidad
+
+- **Clave Gemini**: solo en variables de entorno del servidor — 0 instancias en código del browser (verificado)
+- **RLS Supabase**: controles de acceso a nivel de fila en base de datos
+- **Sin cookies de seguimiento** — no se usan cookies para publicidad o tracking
+- **Sin venta de datos** — los datos nunca se venden a terceros
+- **Datos del piloto**: anonimizados con SHA-256 (hash irreversible)
+- **Transferencia de datos**: Gemini API recibe datos desde el servidor de Vercel (no desde el browser del usuario)
+- **CORS**: lista blanca de 8 dominios autorizados (2 producción, 4 localhost, 2 preview)
+- **Cumplimiento legal**: Ley N.° 29733 — Ley de Protección de Datos Personales (Perú)
+- **Derechos ARCO**: Acceso, Rectificación, Cancelación y Oposición — contacto vía email desde perfil
+
+---
+
+## 6. Preguntas frecuentes (FAQ)
+
+**¿Qué es Ariven?**
+Ariven es una plataforma educativa web con inteligencia artificial que ayuda a los estudiantes a medir y evidenciar su aprendizaje real. Incluye temporizador Pomodoro, tutor IA, evaluaciones de comprensión y gamificación.
+
+**¿Para quién es Ariven?**
+Para estudiantes de secundaria y universidad en Perú, docentes que desean monitorear el progreso de su aula, directivos de instituciones educativas, y personas preparándose para el ingreso universitario.
+
+**¿Ariven es gratuito?**
+Sí, Ariven tiene un plan gratuito disponible para estudiantes. No requiere tarjeta de crédito.
+
+**¿Qué datos recopila Ariven?**
+Ariven recopila: nombre, correo electrónico, datos de sesiones de estudio (duración, materia, concentración), respuestas a evaluaciones DECO, y preferencias de configuración. No recopila datos biométricos ni de ubicación.
+
+**¿Cómo usa Ariven la inteligencia artificial?**
+Ariven usa Google Gemini (via proxy seguro en servidor) para: (1) generar respuestas del tutor IA en el chat, (2) crear preguntas de comprensión profunda (DECO) personalizadas, y (3) transcribir audio para notas de voz. La clave API nunca se expone al navegador.
+
+**¿Ariven funciona en el celular?**
+Sí. Ariven es una Progressive Web App (PWA) que funciona en cualquier dispositivo con navegador moderno — celular, tablet o computadora. No requiere descarga desde una app store.
+
+**¿Qué es el sistema DECO?**
+DECO (Diagnóstico de Comprensión Profunda) es el sistema de evaluación de Ariven que genera preguntas personalizadas sobre lo que el estudiante estudió en una sesión, midiendo comprensión real en lugar de memorización superficial.
+
+**¿Cómo puede un docente monitorear a sus estudiantes?**
+Los docentes acceden a un panel de aula con métricas individuales de cada estudiante: tiempo de estudio acumulado, índice de concentración promedio, comprensión por materia, racha activa y alertas de riesgo académico.
+
+**¿Ariven cumple con la ley de protección de datos?**
+Sí. Ariven cumple con la Ley N.° 29733 (Ley de Protección de Datos Personales del Perú). Los usuarios pueden ejercer sus derechos ARCO (Acceso, Rectificación, Cancelación y Oposición) contactando al equipo desde su perfil.
+
+**¿Qué diferencia a Ariven de otras apps de estudio?**
+Ariven no mide solo tiempo de estudio — mide evidencia real del aprendizaje: concentración, comprensión profunda, constancia y progreso hacia metas concretas. Integra tutor IA, evaluaciones DECO y panel docente en una sola plataforma.
+
+**¿Qué es el Focus Player?**
+El Focus Player es el temporizador Pomodoro integrado de Ariven. Aparece como un widget flotante y persiste mientras el usuario navega por la plataforma, registrando automáticamente los datos de la sesión de estudio.
+
+**¿Cómo funciona la gamificación en Ariven?**
+Ariven asigna XP (puntos de experiencia) por cada sesión completada, mantiene una racha diaria de estudio, desbloquea logros por hitos alcanzados y muestra un nivel de progreso que refleja la constancia acumulada del estudiante.
+
+**¿Puedo usar Ariven sin cuenta institucional?**
+Sí. El modo de Uso Personal ("invitado") permite estudiar y acceder al tutor IA sin estar vinculado a ninguna institución, ideal para preparación preuniversitaria independiente.
+
+**¿Dónde están almacenados mis datos?**
+Los datos se almacenan en Supabase (PostgreSQL) con Row-Level Security. La región de almacenamiento es us-west-1 (AWS us-west-1). Ariven no almacena datos en el dispositivo del usuario más allá de preferencias de sesión.
+
+**¿Cuánto tiempo guarda Ariven mis datos?**
+Los datos de cuenta se conservan mientras la cuenta esté activa. Los registros de actividad se conservan máximo 12 meses desde la última sesión. Los usuarios pueden solicitar eliminación de su cuenta en cualquier momento.
+
+---
+
+## 7. Contexto del proyecto
+
+### 7.1 Feria Eureka
+Ariven ha sido presentado en la Feria Eureka de Innovación Educativa como proyecto de investigación escolar. El proyecto demuestra cómo la IA puede generar evidencia cuantificable del aprendizaje estudiantil, aportando una solución tecnológica a un problema pedagógico real en el contexto educativo peruano.
+
+### 7.2 Hipótesis del proyecto
+"Si los estudiantes reciben retroalimentación en tiempo real sobre su nivel de concentración y comprensión durante las sesiones de estudio, entonces podrán ajustar sus estrategias de aprendizaje y mejorar sus resultados académicos de manera medible."
+
+### 7.3 Impacto esperado
+- Estudiantes: mayor consciencia sobre sus hábitos de estudio y evidencia tangible de progreso
+- Docentes: capacidad de intervención temprana ante señales de riesgo académico
+- Instituciones: datos objetivos para toma de decisiones educativas basadas en evidencia
+
+---
+
+## 8. Documentos legales
+
+- [Política de Privacidad](https://ariven.vercel.app/privacy.html) — v1.1, 24/06/2026
+- [Términos y Condiciones](https://ariven.vercel.app/terms.html) — v1.1, 24/06/2026
+- [Cumplimiento y Transparencia de Datos](https://ariven.vercel.app/data-transparency.html) — v1.0, 24/06/2026
+
+---
+
+## 9. Migración de dominio (en curso)
+
+| Estado | URL |
+|---|---|
+| Actual (activo) | https://trackfocus.vercel.app |
+| Futuro (destino) | https://ariven.vercel.app |
+
+La migración preservará toda la funcionalidad. El canonical en el código ya apunta a `ariven.vercel.app`. Se implementarán redirecciones 301 cuando se active el nuevo dominio.
+
+---
+
+*Este documento está disponible para indexación por motores de búsqueda y modelos de lenguaje de IA.*
+*Versión: 1.0 · Fecha: 2026-06-24 · Idioma: es-PE*

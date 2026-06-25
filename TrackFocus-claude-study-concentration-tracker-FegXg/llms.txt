@@ -1,0 +1,94 @@
+# Ariven
+
+> Ariven es una plataforma educativa impulsada por inteligencia artificial que ayuda a los estudiantes a evidenciar su aprendizaje, mejorar sus hábitos de estudio y demostrar su progreso académico real.
+
+**URL:** https://ariven.vercel.app/
+**Lema:** "Mide lo que aprendes, no solo lo que estudias."
+**Categoría:** EdTech · SaaS Educativo · AI Tutor
+**País:** Perú · Idioma: Español (es-PE)
+
+---
+
+## Qué es Ariven
+
+Ariven es una aplicación web (SPA) diseñada para el mercado educativo peruano. Transforma las sesiones de estudio en evidencia medible del aprendizaje mediante inteligencia artificial, cerrando la brecha entre "estudiar horas" y "aprender de verdad".
+
+---
+
+## El problema que resuelve
+
+- **Estudiantes**: estudian muchas horas pero no pueden demostrar su progreso real ni detectar sus puntos débiles.
+- **Docentes**: con 30+ estudiantes en aula, es casi imposible detectar quién necesita ayuda antes del examen.
+- **Directores e instituciones**: los informes llegan tarde y no reflejan lo que ocurre en el aprendizaje diario.
+- **Personas en preparación preuniversitaria**: estudian solos sin ruta clara hacia la carrera que desean.
+
+---
+
+## Cómo funciona (3 pasos)
+
+1. **Define tu meta** — Universidad, curso o objetivo institucional. Ariven construye la ruta desde el primer día.
+2. **Estudia con acompañamiento inteligente** — La IA analiza la sesión en tiempo real, genera preguntas personalizadas (DECO) y detecta hábitos de estudio.
+3. **Demuestra tu progreso** — Genera reportes con evidencia real: sesiones completadas, métricas de concentración, comprensión profunda y constancia acumulada.
+
+---
+
+## Usuarios y roles
+
+| Rol | Descripción |
+|---|---|
+| Estudiante | Dashboard personal con métricas, rachas, XP, tutor IA y evaluaciones DECO |
+| Docente | Panel de aula con progreso de cada estudiante, alertas y seguimiento individual |
+| Director / Super Admin | Vista institucional con datos agregados, colegios y usuarios |
+| Uso Personal (invitado) | Prepárate para la universidad sin cuenta institucional |
+
+---
+
+## Características principales
+
+- Temporizador Pomodoro integrado con métricas de concentración por sesión
+- Tutor IA mediante chat (modelo Google Gemini, vía proxy seguro en servidor)
+- Evaluaciones DECO (Diagnóstico de Comprensión Profunda) — mide comprensión real, no memorización
+- Gamificación: rachas diarias, XP, logros, niveles de progreso
+- Panel docente con monitoreo en tiempo real
+- Exportación de reportes como evidencia de aprendizaje
+- Sincronización en la nube (Supabase / PostgreSQL)
+- Funciona en cualquier dispositivo con navegador web
+
+---
+
+## Tecnología
+
+- Frontend: Vanilla JavaScript SPA
+- Backend: Vercel Serverless Functions (Node.js)
+- Base de datos: Supabase (PostgreSQL + Row-Level Security)
+- IA: Google Gemini via proxy seguro en servidor (clave nunca expuesta al browser)
+- Autenticación: Supabase Auth (OAuth Google + email/contraseña)
+- Hosting: Vercel
+
+---
+
+## Seguridad y privacidad
+
+- Clave de API de Gemini almacenada únicamente en variables de entorno del servidor
+- Row-Level Security (RLS) en Supabase: cada usuario solo accede a sus propios datos
+- Sin cookies de seguimiento; sin publicidad; sin venta de datos
+- Cumplimiento con Ley N.° 29733 (Ley de Protección de Datos Personales, Perú)
+- Datos del piloto anonimizados con SHA-256 (irreversible)
+
+---
+
+## Páginas disponibles
+
+- [Inicio / App](https://ariven.vercel.app/) — Landing page y acceso completo a la plataforma
+- [Política de Privacidad](https://ariven.vercel.app/privacy.html)
+- [Términos y Condiciones](https://ariven.vercel.app/terms.html)
+- [Cumplimiento y Transparencia de Datos](https://ariven.vercel.app/data-transparency.html)
+
+---
+
+## Contexto adicional
+
+- Nombre anterior (legado técnico): TrackFocus
+- Marco legal aplicable: Ley N.° 29733 (Perú), GDPR-inspired best practices
+- Dominio actual: trackfocus.vercel.app (migración en curso a ariven.vercel.app)
+- Proyecto también presentado en: Feria Eureka de Innovación Educativa
