@@ -10,6 +10,9 @@ export function geminiHeaders(apiKey) {
 
 // ── CORS ─────────────────────────────────────────────────────────────────────
 // Orígenes explícitamente permitidos para llamar a los endpoints de la API.
+// Producción: https://trackfocus.vercel.app
+// Preview Vercel: https://trackfocus-*.vercel.app  [EXCEPCIÓN: URL de deploy pendiente de migrar a ariven]
+// Dev local: localhost:3000 y :5173 (Vite/live-server), equivalente con 127.0.0.1
 const _ALLOWED_ORIGINS = new Set([
   'https://trackfocus.vercel.app',
   'https://ariven.vercel.app',

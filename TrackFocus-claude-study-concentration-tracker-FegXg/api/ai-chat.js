@@ -377,34 +377,39 @@ async function handleMessage(req, res) {
 
   const reader = geminiRes.body.getReader();
   const decoder = new TextDecoder();
+  let sseBuffer = '';
+
+  const safeWrite = (chunk) => {
+    if (!res.writableEnded) res.write(chunk);
+  };
 
   try {
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
-      const chunk = decoder.decode(value, { stream: true });
-      // Cada chunk puede tener múltiples líneas SSE
-      for (const line of chunk.split('\n')) {
+      sseBuffer += decoder.decode(value, { stream: true });
+      const lines = sseBuffer.split('\n');
+      sseBuffer = lines.pop(); // retener línea incompleta para el próximo chunk
+
+      for (const line of lines) {
         if (!line.startsWith('data: ')) continue;
         const data = line.slice(6).trim();
         if (data === '[DONE]') continue;
         try {
           const parsed = JSON.parse(data);
           const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (text) {
-            res.write(`data: ${JSON.stringify({ text })}\n\n`);
-          }
+          if (text) safeWrite(`data: ${JSON.stringify({ text })}\n\n`);
         } catch {
           // línea SSE incompleta o no JSON — ignorar
         }
       }
     }
   } catch (err) {
-    res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
+    safeWrite(`data: ${JSON.stringify({ error: err.message })}\n\n`);
   } finally {
-    res.write('data: [DONE]\n\n');
-    res.end();
+    safeWrite('data: [DONE]\n\n');
+    if (!res.writableEnded) res.end();
   }
 }
 
