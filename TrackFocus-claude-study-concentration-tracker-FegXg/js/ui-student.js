@@ -3459,6 +3459,10 @@ const UIStudent = (() => {
                   <button class="ghost ph2-acct-btn" id="ppLegalBtn">Legal</button>
                 </div>
                 <div class="ph2-account-row">
+                  <span class="ph2-account-val ph2-muted">Seguridad de sesión</span>
+                  <button class="ghost ph2-acct-btn pp-security-trigger">🔒</button>
+                </div>
+                <div class="ph2-account-row">
                   <span class="ph2-account-val ph2-muted">Dispositivos conectados</span>
                   <button class="ghost ph2-acct-btn" id="ppRestoreBtn">📤</button>
                 </div>
@@ -3717,6 +3721,7 @@ const UIStudent = (() => {
         </div>
         <div class="pp-account-actions">
           <button class="ghost pp-account-btn" id="ppLegalBtn">⚖️ Información legal</button>
+          <button class="ghost pp-account-btn pp-security-trigger">🔒 Seguridad de sesión</button>
           <button class="ghost pp-account-btn" id="ppExportBtn">📥 Exportar mis datos</button>
           <input type="file" id="ppRestoreInput" accept=".json" style="display:none;" />
           <button class="ghost pp-account-btn" id="ppRestoreBtn">📤 Restaurar respaldo</button>
@@ -4141,6 +4146,7 @@ const UIStudent = (() => {
         </div>
         <div class="pp-account-actions">
           <button class="ghost pp-account-btn" id="ppLegalBtn">⚖️ Información legal</button>
+          <button class="ghost pp-account-btn pp-security-trigger">🔒 Seguridad de sesión</button>
           <button class="ghost pp-account-btn" id="ppExportBtn">📥 Exportar mis datos</button>
           <input type="file" id="ppRestoreInput" accept=".json" style="display:none;" />
           <button class="ghost pp-account-btn" id="ppRestoreBtn">📤 Restaurar respaldo</button>
@@ -4724,6 +4730,9 @@ const UIStudent = (() => {
   function _wireAccountPanel(user) {
     const r = () => root();
     r().querySelector('#ppLegalBtn')?.addEventListener('click', () => App.go('legal'));
+    r().querySelectorAll('.pp-security-trigger').forEach(btn =>
+      btn.addEventListener('click', () => App.openSecurityModal?.())
+    );
     r().querySelector('#ppLogoutBtn')?.addEventListener('click', () => {
       document.getElementById('logoutBtn')?.click();
     });

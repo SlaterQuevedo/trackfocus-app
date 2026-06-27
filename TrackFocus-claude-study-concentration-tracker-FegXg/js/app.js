@@ -273,6 +273,8 @@ const App = (() => {
     // Los estudiantes acceden exclusivamente desde Mi Perfil (ppLegalBtn).
     const _lnb = document.getElementById('legalNavBtn');
     if (_lnb) _lnb.classList.toggle('hidden', user.role === 'student');
+    const _snb = document.getElementById('securityNavBtn');
+    if (_snb) _snb.classList.toggle('hidden', user.role === 'student');
   }
 
   function bindGlobal() {
@@ -285,12 +287,15 @@ const App = (() => {
       if (r) go(r);
     });
     document.getElementById('logoutBtn').addEventListener('click', async () => {
+      localStorage.removeItem('arv_al');
       await Auth.logout();
       sessionStorage.removeItem('tf.loginInProgress');
       go('welcome');
     });
     document.getElementById('legalNavBtn')?.addEventListener('click', () => go('legal'));
+    document.getElementById('securityNavBtn')?.addEventListener('click', () => _openSecurityModal());
     document.getElementById('changeAccountBtn')?.addEventListener('click', async () => {
+      localStorage.removeItem('arv_al');
       await Auth.logout();
       sessionStorage.clear(); // limpia preferencias de sesión para no auto-loguear
       go('welcome');
@@ -497,6 +502,11 @@ const App = (() => {
     const _isAutoLogin = !sessionStorage.getItem('tf.loginInProgress');
     const authSession = await Auth.getSession();
     if (!authSession) return go('welcome');
+    // Bloquear auto-login si el usuario lo desactivó (equipos compartidos)
+    if (_isAutoLogin && localStorage.getItem('arv_al') !== '1') {
+      await window.SB?.auth?.signOut?.();
+      return go('welcome');
+    }
     sessionStorage.removeItem('tf.loginInProgress'); // consumir el flag
 
     // Nombre pendiente: si el usuario eligió un nombre manual en el modal de conflicto
@@ -540,6 +550,8 @@ const App = (() => {
     }
 
     Storage.setCurrent((authSession.user?.email || authSession.session?.user?.email || '').toLowerCase());
+    // Restaurar preferencia de auto-login en localStorage desde el perfil persistido
+    { const _st = Storage.get(); if (_st.users[_st.currentUserId]?.autoLogin) localStorage.setItem('arv_al', '1'); }
 
     // Suscribirse a cambios remotos (multi-dispositivo).
     // IMPORTANTE: Supabase Realtime reenvía al mismo cliente sus propios writes (loopback).
@@ -1746,9 +1758,96 @@ const App = (() => {
     }
   }
 
+  function _setAutoLogin(enabled) {
+    const user = Roles.current();
+    if (!user) return;
+    if (enabled) {
+      localStorage.setItem('arv_al', '1');
+    } else {
+      localStorage.removeItem('arv_al');
+    }
+    Storage.set(st => { if (st.users[user.id]) st.users[user.id].autoLogin = !!enabled; });
+  }
+
+  function _openSecurityModal() {
+    const user = Roles.current();
+    if (!user) return;
+    const s = Storage.get();
+    const isOn = !!(s.users[user.id]?.autoLogin);
+
+    const el = document.createElement('div');
+    el.id = 'arv-sec-modal';
+    el.innerHTML = `
+      <div class="arv-sec-backdrop"></div>
+      <div class="arv-sec-box">
+        <button class="arv-sec-close" id="arvSecClose" aria-label="Cerrar">✕</button>
+        <div class="arv-sec-hd">
+          <div class="arv-sec-ico">🛡️</div>
+          <div>
+            <div class="arv-sec-title">Seguridad de la sesión</div>
+            <div class="arv-sec-sub">Controla cómo Ariven recuerda tu cuenta en este dispositivo</div>
+          </div>
+        </div>
+        <div class="arv-sec-row">
+          <div class="arv-sec-row-info">
+            <div class="arv-sec-row-title">Inicio de sesión automático</div>
+            <div class="arv-sec-row-desc">Permite que Ariven recuerde tu sesión al volver a abrir el sitio. Desactívalo en equipos compartidos como los de un colegio.</div>
+          </div>
+          <label class="arv-toggle" aria-label="Inicio de sesión automático">
+            <input type="checkbox" id="arvAlChk"${isOn ? ' checked' : ''}>
+            <span class="arv-toggle-track"><span class="arv-toggle-thumb"></span></span>
+          </label>
+        </div>
+        <div id="arvSecBadge" class="arv-sec-badge ${isOn ? 'arv-sec-warn' : 'arv-sec-ok'}">
+          ${isOn ? '⚠️ Sesión guardada — no recomendado en equipos compartidos' : '✅ Modo seguro activo — recomendado para colegios'}
+        </div>
+        <div id="arvSecConfirm" class="arv-sec-confirm hidden">
+          <p class="arv-sec-confirm-txt">Esta opción está pensada únicamente para dispositivos personales. Si la activas en un equipo compartido, otras personas podrían acceder a tu cuenta. Ariven no se hace responsable del acceso no autorizado derivado de esta configuración.</p>
+          <div class="arv-sec-confirm-btns">
+            <button class="arv-sec-btn-cancel" id="arvSecCancel">Cancelar</button>
+            <button class="arv-sec-btn-ok primary" id="arvSecOk">Entiendo, activar</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(el);
+
+    const chk    = el.querySelector('#arvAlChk');
+    const badge  = el.querySelector('#arvSecBadge');
+    const confirm = el.querySelector('#arvSecConfirm');
+    const close  = () => el.remove();
+
+    el.querySelector('.arv-sec-backdrop').addEventListener('click', close);
+    el.querySelector('#arvSecClose').addEventListener('click', close);
+
+    el.querySelector('#arvSecCancel').addEventListener('click', () => {
+      chk.checked = false;
+      confirm.classList.add('hidden');
+    });
+
+    el.querySelector('#arvSecOk').addEventListener('click', () => {
+      _setAutoLogin(true);
+      close();
+      typeof UI !== 'undefined' && UI.flash?.('Inicio de sesión automático activado.', 'success');
+    });
+
+    chk.addEventListener('change', () => {
+      if (chk.checked) {
+        confirm.classList.remove('hidden');
+        badge.className = 'arv-sec-badge arv-sec-warn';
+        badge.textContent = '⚠️ Sesión guardada — no recomendado en equipos compartidos';
+      } else {
+        confirm.classList.add('hidden');
+        _setAutoLogin(false);
+        close();
+        typeof UI !== 'undefined' && UI.flash?.('Modo seguro activado. La sesión no se recordará automáticamente.', 'success');
+      }
+    });
+  }
+
   return {
     go,
     start,
+    openSecurityModal: _openSecurityModal,
     _historyFilters: {},
     _lbScope: 'classroom',
     _lbPeriod: 'week',
