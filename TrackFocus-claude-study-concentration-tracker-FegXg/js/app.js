@@ -38,6 +38,10 @@ const App = (() => {
     // Vista de exposición (Eureka)
     'eureka':             ['teacher', 'super_admin'],
 
+    // Padre de Familia
+    'parent-link':        null,
+    'parent-dashboard':   ['parent'],
+
     // Super Admin
     'admin-dashboard':    ['super_admin'],
     'manage-schools':     ['super_admin'],
@@ -90,6 +94,7 @@ const App = (() => {
       if (!user) return go('welcome');
       if (user.role === 'super_admin') return go('admin-dashboard');
       if (user.role === 'teacher')     return go('teacher-dashboard');
+      if (user.role === 'parent')      return go('parent-dashboard');
       return go('dashboard');
     }
 
@@ -108,7 +113,8 @@ const App = (() => {
       ...UIStudent.screens,
       ...UITeacher.screens,
       ...UIAdmin.screens,
-      ...(typeof UIEureka !== 'undefined' ? UIEureka.screens : {})
+      ...(typeof UIEureka  !== 'undefined' ? UIEureka.screens  : {}),
+      ...(typeof ParentUI  !== 'undefined' ? ParentUI.screens  : {})
     };
 
     const screen = allScreens[route];
@@ -235,6 +241,14 @@ const App = (() => {
         { route: 'admin-dashboard', icon: '🏠', label: 'Global' },
         { route: 'manage-schools',  icon: '🏫', label: 'Colegios' },
         { route: 'manage-users',    icon: '👥', label: 'Usuarios' }
+      ];
+    } else if (user.role === 'parent') {
+      navButtons = `
+        <button data-route="parent-dashboard">Monitoreo</button>
+        <button data-route="parent-link">Vincular</button>`;
+      bottomItems = [
+        { route: 'parent-dashboard', icon: '📊', label: 'Monitoreo' },
+        { route: 'parent-link',      icon: '🔗', label: 'Vincular' }
       ];
     }
 
@@ -1366,23 +1380,50 @@ const App = (() => {
   function screenStudentOnboarding() {
     const u = Roles.current();
     if (!u) { return ''; }
+    const isNew = !u.schoolId && !u.linkedStudentIds?.length;
     return `
       <div class="card" style="max-width:520px;margin:48px auto;">
         <h2 style="margin:0 0 8px;">¡Bienvenido${u.name ? ', ' + u.name.split(' ')[0] : ''}!</h2>
-        <p class="muted" style="margin:0 0 22px;">Para unirte a tu colegio, ingresa los códigos que te dio tu profesor. Puedes saltarlo y agregarlos después.</p>
-        <form id="onboardForm">
-          <label>Código del colegio <span class="muted">(opcional)</span></label>
-          <input name="code" maxlength="6" placeholder="6 caracteres" style="text-transform:uppercase;" />
-          <label style="margin-top:14px;">Código del aula <span class="muted">(opcional)</span></label>
-          <input name="inviteCode" maxlength="8" placeholder="8 caracteres" style="text-transform:uppercase;" />
-          <div style="display:flex;gap:10px;margin-top:18px;">
-            <button class="primary" type="submit">Continuar</button>
-            <button class="ghost" type="button" id="skipOnboard">Saltar por ahora</button>
+        ${isNew ? `
+        <div id="pobRoleChoice">
+          <p class="muted" style="margin:0 0 20px;">¿Cómo vas a usar Ariven?</p>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;">
+            <button class="primary" id="pobIsStudent" style="flex:1;padding:16px;font-size:15px;">📚 Soy Estudiante</button>
+            <button class="secondary" id="pobIsParent" style="flex:1;padding:16px;font-size:15px;">👨‍👩‍👧 Soy Padre / Tutor</button>
           </div>
-        </form>
+        </div>
+        <div id="pobStudentForm" style="display:none;margin-top:20px;">` : '<div id="pobStudentForm">'}
+          <p class="muted" style="margin:0 0 22px;">Para unirte a tu colegio, ingresa los códigos que te dio tu profesor. Puedes saltarlo y agregarlos después.</p>
+          <form id="onboardForm">
+            <label>Código del colegio <span class="muted">(opcional)</span></label>
+            <input name="code" maxlength="6" placeholder="6 caracteres" style="text-transform:uppercase;" />
+            <label style="margin-top:14px;">Código del aula <span class="muted">(opcional)</span></label>
+            <input name="inviteCode" maxlength="8" placeholder="8 caracteres" style="text-transform:uppercase;" />
+            <div style="display:flex;gap:10px;margin-top:18px;">
+              <button class="primary" type="submit">Continuar</button>
+              <button class="ghost" type="button" id="skipOnboard">Saltar por ahora</button>
+            </div>
+          </form>
+        </div>
       </div>`;
   }
   function wireStudentOnboarding() {
+    document.getElementById('pobIsStudent')?.addEventListener('click', () => {
+      document.getElementById('pobRoleChoice').style.display = 'none';
+      document.getElementById('pobStudentForm').style.display = '';
+    });
+    document.getElementById('pobIsParent')?.addEventListener('click', async () => {
+      const u = Roles.current();
+      if (!u) return;
+      Storage.set(st => {
+        if (st.users[u.id]) {
+          st.users[u.id].role = 'parent';
+          st.users[u.id].linkedStudentIds = [];
+        }
+      });
+      try { await Storage.flush(); } catch (_) {}
+      go('parent-link');
+    });
     document.getElementById('onboardForm')?.addEventListener('submit', async e => {
       e.preventDefault();
       const fd = new FormData(e.target);
@@ -1773,6 +1814,7 @@ const App = (() => {
     _lbPeriod: 'week',
     _classroomId: null,
     _studentDetailId: null,
+    _parentViewingStudentId: null,
     _joinCode: null,
     _editSchoolId: null,
     _userFilterRole: '',

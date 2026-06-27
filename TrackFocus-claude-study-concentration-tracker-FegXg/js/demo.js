@@ -8,6 +8,7 @@ const Demo = (() => {
   const SUBJECTS = ['Matemática', 'Comunicación', 'Ciencia y Tecnología', 'Ciencias Sociales', 'Inglés', 'Arte y Cultura'];
   const ACTS = ['comer', 'ejercicio', 'cafe', 'descanso', 'redes'];
   const TEACHER = 'demo.teacher@trackfocus.demo';
+  const PARENT  = 'demo.padre@trackfocus.demo';
   const SCHOOL = 'demo-school';
   const CR = 'demo-cr';
 
@@ -52,6 +53,16 @@ const Demo = (() => {
       institutionType: 'colegio', approvalStatus: null,
       parentalConsent: true, consentAt: today.toISOString(), createdAt: today.toISOString(),
       gamification: { xp: 0, level: 1, streak: 0, lastStudyDate: null, badges: [], challengeProgress: {} }
+    };
+
+    // Padre demo vinculado a Lucía
+    state.users[PARENT] = {
+      id: PARENT, email: PARENT, name: 'Carlos Ramírez', role: 'parent',
+      linkedStudentIds: [STUDENTS[0].id],
+      parentalConsent: true, createdAt: today.toISOString(),
+      privacyPolicyAcceptedAt: today.toISOString(),
+      termsAcceptedAt: today.toISOString(),
+      transparencyAcceptedAt: today.toISOString()
     };
 
     // Estudiantes + sesiones de los últimos 42 días
@@ -171,8 +182,9 @@ const Demo = (() => {
     window.__TF_DEMO_PILOT_ROWS = _buildPilotRows();
 
     // Usuario actual según el modo de demo.
+    const asParent  = mode === 'parent';
     const asStudent = (mode === 'student' || mode === 'guided');
-    const currentId = asStudent ? STUDENTS[0].id : TEACHER;
+    const currentId = asParent ? PARENT : asStudent ? STUDENTS[0].id : TEACHER;
     state.currentUserId = currentId;
 
     Storage.hydrate(state);
@@ -191,6 +203,9 @@ const Demo = (() => {
         topic: 'Ecuaciones cuadráticas'
       };
       App.go('ai-study');
+    } else if (asParent) {
+      App._parentViewingStudentId = STUDENTS[0].id;
+      App.go('parent-dashboard');
     } else {
       App.go(asStudent ? 'dashboard' : 'eureka');
     }

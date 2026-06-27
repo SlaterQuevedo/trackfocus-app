@@ -251,6 +251,11 @@ const Storage = (() => {
     });
   }
 
+  function findUserByStudentCode(code) {
+    const s = get();
+    return Object.values(s.users).find(u => u.role === 'student' && u.studentCode === code) || null;
+  }
+
   return {
     get,
     set,
@@ -264,6 +269,7 @@ const Storage = (() => {
     bindRealtime,
     uuid,
     genStudentCode: _genStudentCode,
+    findUserByStudentCode,
     DEFAULT_STATE,
     isBooted: () => booted
   };

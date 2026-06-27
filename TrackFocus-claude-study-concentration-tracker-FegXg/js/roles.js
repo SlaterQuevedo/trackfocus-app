@@ -3,6 +3,7 @@ const Roles = (() => {
   const SUPER_ADMIN = 'super_admin';
   const TEACHER     = 'teacher';
   const STUDENT     = 'student';
+  const PARENT      = 'parent';
 
   function current() {
     const s = Storage.get();
@@ -54,5 +55,5 @@ const Roles = (() => {
     return u;
   }
 
-  return { SUPER_ADMIN, TEACHER, STUDENT, current, is, require };
+  return { SUPER_ADMIN, TEACHER, STUDENT, PARENT, current, is, require };
 })();
