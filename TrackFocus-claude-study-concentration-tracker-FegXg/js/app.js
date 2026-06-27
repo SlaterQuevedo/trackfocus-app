@@ -216,11 +216,11 @@ const App = (() => {
     } else if (user.role === 'teacher') {
       navButtons = `
         <button data-route="teacher-dashboard">Mi Panel</button>
-        <button data-route="classroom-manage">Aulas</button>
+        <button data-route="classroom-manage">Aula</button>
         <button data-route="classroom-stats">Estadísticas</button>`;
       bottomItems = [
         { route: 'teacher-dashboard', icon: '🏠', label: 'Panel' },
-        { route: 'classroom-manage',  icon: '🏫', label: 'Aulas' },
+        { route: 'classroom-manage',  icon: '🏫', label: 'Aula' },
         { route: 'classroom-stats',   icon: '📊', label: 'Stats' }
       ];
     } else if (user.role === 'super_admin') {

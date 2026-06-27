@@ -523,8 +523,16 @@ const UITeacher = (() => {
   function screenClassroomManage() {
     const s = Storage.get();
     const user = s.users[s.currentUserId];
-    const classroomId = App._classroomId;
     const school = user.schoolId ? s.schools[user.schoolId] : null;
+
+    // Auto-resolve primary classroom when navigating from nav (no _classroomId set)
+    if (!App._classroomId || App._classroomId === 'new' || !s.classrooms[App._classroomId]) {
+      const allCrs = school ? Schools.listClassrooms(school.id) : [];
+      const primary = allCrs.find(cr => cr.tutorId === user.id) || allCrs.find(cr => cr.teacherIds && cr.teacherIds.includes(user.id)) || allCrs[0] || null;
+      if (primary) App._classroomId = primary.id;
+    }
+
+    const classroomId = App._classroomId;
     const isNew = !classroomId || classroomId === 'new' || !s.classrooms[classroomId];
 
     // ── helpers ──
