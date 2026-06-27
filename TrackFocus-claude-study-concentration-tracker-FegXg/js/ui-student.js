@@ -3689,6 +3689,9 @@ const UIStudent = (() => {
         if (ei) { _selInst = ei; _renderChip(ei); }
       }
 
+      // Prevent blur from stealing focus when user clicks a dropdown item
+      dropdown.addEventListener('mousedown', e => e.preventDefault());
+
       let _searchTimer = null;
       searchInp.addEventListener('input', () => {
         clearTimeout(_searchTimer);
@@ -3869,6 +3872,8 @@ const UIStudent = (() => {
           progSearch.focus();
         });
       }
+
+      progDrop.addEventListener('mousedown', e => e.preventDefault());
 
       progSearch.addEventListener('input', () => {
         clearTimeout(_progTimer);
