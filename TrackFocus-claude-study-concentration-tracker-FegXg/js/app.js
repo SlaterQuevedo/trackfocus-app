@@ -1363,6 +1363,9 @@ const App = (() => {
       <p class="lp-form-foot">Al continuar aceptas que tus datos se sincronicen de forma segura en la nube.</p>
     `;
 
+    // Aplicar política de autocompletado según preferencia de auto-login
+    _applyAutocompletePolicy();
+
     // Formulario email/contraseña
     document.getElementById('emailAuthForm').addEventListener('submit', async e => {
       e.preventDefault();
@@ -1758,6 +1761,53 @@ const App = (() => {
     }
   }
 
+  // Aplica/retira la política de autocompletado en el formulario de auth.
+  // Cuando auto-login está OFF: usa valores no estándar (ariven-*) que los
+  // navegadores no reconocen como campos de credenciales, y new-password para
+  // contraseñas (el valor más respetado universalmente por Chrome/Safari/Firefox).
+  // Cuando está ON: restaura los valores semánticos originales.
+  function _applyAutocompletePolicy() {
+    const secure = localStorage.getItem('arv_al') !== '1';
+    const form   = document.getElementById('emailAuthForm');
+    if (!form) return;
+
+    if (secure) {
+      form.setAttribute('autocomplete', 'off');
+      const fields = {
+        firstName:       'ariven-given-name',
+        lastName:        'ariven-family-name',
+        email:           'ariven-email',
+        password:        'new-password',
+        confirmPassword: 'new-password'
+      };
+      Object.entries(fields).forEach(([name, ac]) => {
+        const inp = form.querySelector(`[name="${name}"]`);
+        if (!inp) return;
+        inp.setAttribute('autocomplete', ac);
+        inp.setAttribute('data-lpignore', 'true');   // LastPass
+        inp.setAttribute('data-form-type', 'other'); // Dashlane
+        inp.setAttribute('data-1p-ignore', '');      // 1Password
+      });
+    } else {
+      form.setAttribute('autocomplete', 'on');
+      const fields = {
+        firstName:       'given-name',
+        lastName:        'family-name',
+        email:           'email',
+        password:        'current-password',
+        confirmPassword: 'new-password'
+      };
+      Object.entries(fields).forEach(([name, ac]) => {
+        const inp = form.querySelector(`[name="${name}"]`);
+        if (!inp) return;
+        inp.setAttribute('autocomplete', ac);
+        inp.removeAttribute('data-lpignore');
+        inp.removeAttribute('data-form-type');
+        inp.removeAttribute('data-1p-ignore');
+      });
+    }
+  }
+
   function _setAutoLogin(enabled) {
     const user = Roles.current();
     if (!user) return;
@@ -1767,6 +1817,7 @@ const App = (() => {
       localStorage.removeItem('arv_al');
     }
     Storage.set(st => { if (st.users[user.id]) st.users[user.id].autoLogin = !!enabled; });
+    _applyAutocompletePolicy();
   }
 
   function _openSecurityModal() {
