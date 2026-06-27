@@ -5,7 +5,7 @@
 //
 // IMPORTANTE: Actualizar CACHE_VERSION en cada deploy para invalidar caché.
 
-const CACHE_VERSION = 'ariven-v25';
+const CACHE_VERSION = 'ariven-v28';
 
 // Extensiones estáticas que se almacenan en caché
 const STATIC_EXTS = /\.(js|css|svg|png|ico|webmanifest|woff|woff2|ttf)(\?.*)?$/;
@@ -19,6 +19,13 @@ const PRECACHE = [
   '/assets/logo.svg',
   '/js/youtube-recommender.js',
   '/js/institutions.js',
+  '/js/storage.js',
+  '/js/cloud.js',
+  '/js/gamification.js',
+  '/js/stats.js',
+  '/js/roles.js',
+  '/js/app.js',
+  '/js/ui-legal.js',
 ];
 
 // ── Install: pre-cachear assets críticos ──────────────────────────────────────

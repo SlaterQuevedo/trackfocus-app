@@ -1,0 +1,85 @@
+config:
+  target: "https://ariven.vercel.app"
+  phases:
+    - name: "Smoke (10 usuarios)"
+      duration: 60
+      arrivalRate: 2
+
+    - name: "Rampa 10 → 100 usuarios"
+      duration: 120
+      arrivalRate: 2
+      rampTo: 20
+
+    - name: "Sostenido 300 usuarios (10 min)"
+      duration: 600
+      arrivalRate: 60
+
+    - name: "Pico 500 usuarios (5 min)"
+      duration: 300
+      arrivalRate: 100
+
+  defaults:
+    headers:
+      Content-Type: "application/json"
+      Origin: "https://ariven.vercel.app"
+
+  ensure:
+    p95: 3000       # p95 < 3s
+    maxErrorRate: 1  # < 1% de errores
+
+scenarios:
+  # 80% del tráfico — estudiante cargando la app y navegando
+  - name: "Flujo estudiante típico"
+    weight: 80
+    flow:
+      - get:
+          url: "/"
+          expect:
+            - statusCode: 200
+      - think: 1
+      - get:
+          url: "/js/app.js"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/assets/styles.css"
+          expect:
+            - statusCode: 200
+      - think: 2
+      - get:
+          url: "/js/storage.js"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/js/gamification.js"
+          expect:
+            - statusCode: 200
+
+  # 10% — búsquedas de YouTube (recurso con cuota)
+  - name: "Búsqueda YouTube"
+    weight: 10
+    flow:
+      - post:
+          url: "/api/youtube-search"
+          json:
+            queries:
+              - "matemática fracciones explicación"
+              - "álgebra básica para estudiantes"
+            maxResults: 3
+            language: "es"
+          expect:
+            - statusCode: 200
+
+  # 10% — IA Study chat
+  - name: "AI Chat Gemini"
+    weight: 10
+    flow:
+      - post:
+          url: "/api/ai-chat"
+          json:
+            userMessage: "¿Cómo puedo mejorar mi concentración al estudiar?"
+            history: []
+            subject: "Matemática"
+            institutionType: "colegio"
+          expect:
+            - statusCode: 200

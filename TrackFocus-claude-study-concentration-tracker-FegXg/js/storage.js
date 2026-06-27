@@ -235,6 +235,7 @@ const Storage = (() => {
   let _realtimeBound = false;
   function bindRealtime(onAfterRefresh) {
     if (_realtimeBound || !window.SB) return;
+    if (window.__ARV_NO_REALTIME) return;
     _realtimeBound = true;
     let _refreshTimer = null;
     Cloud.subscribeRealtime(() => {

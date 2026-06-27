@@ -361,10 +361,7 @@ const UITeacher = (() => {
       }).join('')}</div>
     </div>` : ''}
 
-    <div style="margin-top:20px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-      <button class="ghost" id="teacherLegalBtn" style="font-size:13px;padding:6px 14px;">⚖️ Centro Legal</button>
-      <span class="muted" style="font-size:12px;">Política de Privacidad · Términos · Transparencia de Datos</span>
-    </div>`;
+    `;
   }
 
   function _wireApprovalButtons(teacherId) {
@@ -441,7 +438,6 @@ const UITeacher = (() => {
       try { window.Monitor?.exportLog?.(); UI.flash('Registro de errores exportado.', 'success'); }
       catch (_) { UI.flash('No se pudo exportar el registro.', 'error'); }
     });
-    document.getElementById('teacherLegalBtn')?.addEventListener('click', () => App.go('legal'));
     document.getElementById('btnBackup')?.addEventListener('click', () => Exporter.backupJSON());
     const restoreInput = document.getElementById('restoreFile');
     document.getElementById('btnRestore')?.addEventListener('click', () => restoreInput?.click());

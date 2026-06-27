@@ -188,7 +188,7 @@ const Cloud = (() => {
       window.SB.from('users').select('*'),
       window.SB.from('schools').select('*'),
       window.SB.from('classrooms').select('*'),
-      window.SB.from('study_sessions').select('*'),
+      window.SB.from('study_sessions').select('*').order('datetime', { ascending: false }).limit(1000),
       window.SB.from('custom_subjects').select('*'),
       window.SB.from('classroom_requests').select('*'),
       window.SB.from('uploaded_files').select('*')
@@ -249,10 +249,11 @@ const Cloud = (() => {
       row => ops.push(window.SB.from('classrooms').upsert(toDb.classroom(row))),
       id  => ops.push(window.SB.from('classrooms').delete().eq('id', id)));
 
-    // SESSIONS (array)
+    // SESSIONS (array) — Map para lookup O(1) en lugar de find() O(n)
+    const beforeSidsMap = new Map(before.sessions.map(s => [s.id, s]));
     const afterSids = new Set(after.sessions.map(s => s.id));
     for (const s of after.sessions) {
-      const prev = before.sessions.find(x => x.id === s.id);
+      const prev = beforeSidsMap.get(s.id);
       // upsert (no insert) → idempotente: reintentar tras una caída de red no duplica filas
       if (!prev) ops.push(window.SB.from('study_sessions').upsert(toDb.session(s)));
       else if (JSON.stringify(prev) !== JSON.stringify(s))
@@ -318,6 +319,7 @@ const Cloud = (() => {
 
   function subscribeRealtime(onChange) {
     if (!window.SB || _channel) return;
+    if (window.__ARV_NO_REALTIME) return;
     _channel = window.SB
       .channel('ariven-sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'users' },          onChange)

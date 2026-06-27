@@ -34,7 +34,7 @@ const Gamification = (() => {
   ];
 
   const _lbCache  = new Map(); // TTL cache: "${scope}:${scopeId}:${period}" → {ts, result}
-  const LB_TTL_MS = 30_000;   // 30 segundos
+  const LB_TTL_MS = 300_000;  // 5 minutos (reduce cálculos O(n×m) a 1 cada 5min bajo carga)
 
   function getLevelInfo(xp) {
     let current = LEVELS[0];
@@ -110,33 +110,27 @@ const Gamification = (() => {
 
     if (sessions.length >= 1)   earn('primera_sesion');
     if (user.gamification.streak >= 3)  earn('racha_3');
-    if (user.gamification.streak >= 7)  earn('racha_7');
+    if (user.gamification.streak >= 7)  { earn('racha_7'); earn('semana_perfecta'); }
     if (user.gamification.streak >= 30) earn('racha_30');
-    if (user.gamification.streak >= 7)  earn('semana_perfecta');
 
-    const highFocus = sessions.filter(se => se.concentration === 5).length;
-    if (highFocus >= 10) earn('maestro_enfoque');
-
-    const totalMin = sessions.reduce((a, b) => a + b.durationMin, 0);
-    if (totalMin >= 1000) earn('maratonista');
-
-    const pomSessions = sessions.filter(se => se.comment && se.comment.includes('Pomodoro')).length;
-    if (pomSessions >= 10) earn('pomodoro_master');
-
-    const subjects = new Set(sessions.map(se => se.subject));
+    // Single-pass O(n): acumula todos los contadores en un solo loop sin Date objects
+    let highFocus = 0, totalMin = 0, pomSessions = 0, nocturnal = 0, earlyBird = 0;
+    const subjects = new Set();
+    for (const se of sessions) {
+      if (se.concentration === 5) highFocus++;
+      totalMin += se.durationMin;
+      if (se.comment && se.comment.includes('Pomodoro')) pomSessions++;
+      subjects.add(se.subject);
+      const h = parseInt(se.datetime.substring(11, 13), 10);
+      if (h >= 22) nocturnal++;
+      else if (h < 8) earlyBird++;
+    }
+    if (highFocus >= 10)    earn('maestro_enfoque');
+    if (totalMin >= 1000)   earn('maratonista');
+    if (pomSessions >= 10)  earn('pomodoro_master');
     if (subjects.size >= 5) earn('multimaterias');
-
-    const nocturnalSessions = sessions.filter(se => {
-      const h = new Date(se.datetime).getHours();
-      return h >= 22;
-    }).length;
-    if (nocturnalSessions >= 10) earn('noctambulo');
-
-    const earlyBirdSessions = sessions.filter(se => {
-      const h = new Date(se.datetime).getHours();
-      return h < 8;
-    }).length;
-    if (earlyBirdSessions >= 10) earn('madrugador');
+    if (nocturnal >= 10)    earn('noctambulo');
+    if (earlyBird >= 10)    earn('madrugador');
 
     if (toEarn.length > 0) {
       Storage.set(st => {

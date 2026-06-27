@@ -28,7 +28,7 @@ const Stats = (() => {
   }
 
   function hourBucket(iso) {
-    const h = new Date(iso).getHours();
+    const h = parseInt(iso.substring(11, 13), 10);
     if (h < 6) return 'Madrugada (00–06)';
     if (h < 12) return 'Mañana (06–12)';
     if (h < 18) return 'Tarde (12–18)';

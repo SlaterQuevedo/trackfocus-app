@@ -268,6 +268,11 @@ const App = (() => {
 
     const schoolName = user.schoolId && s.schools[user.schoolId] ? ` · ${s.schools[user.schoolId].name}` : '';
     document.getElementById('userLabel').textContent = `${user.name}${schoolName}`;
+
+    // "Información Legal" en el userbox solo para docente, admin y padre.
+    // Los estudiantes acceden exclusivamente desde Mi Perfil (ppLegalBtn).
+    const _lnb = document.getElementById('legalNavBtn');
+    if (_lnb) _lnb.classList.toggle('hidden', user.role === 'student');
   }
 
   function bindGlobal() {
@@ -1526,103 +1531,13 @@ const App = (() => {
 
   // ---- Pantalla: Aceptación obligatoria de documentos legales (PP + T&C) ----
   function screenPrivacyPolicy() {
-    const u = Roles.current();
-    const nombre = u?.name ? u.name.split(' ')[0] : '';
-    const ppOk  = !!u?.privacyPolicyAcceptedAt;
-    const tcOk  = !!u?.termsAcceptedAt;
-    const dtOk  = !!u?.transparencyAcceptedAt;
-    return `
-      <div class="card" style="max-width:700px;margin:20px auto;padding:0;">
-        <div style="padding:20px;border-bottom:1px solid rgba(255,255,255,0.1);position:sticky;top:0;background:var(--card-bg,#1a1a2e);z-index:1;">
-          <h2 style="margin:0;">Documentos legales — Ariven</h2>
-          <p class="muted" style="margin:8px 0 0;">Hola${nombre ? ', ' + nombre : ''}. Antes de continuar debes leer y aceptar los siguientes documentos.</p>
-        </div>
-        <div id="legalAcceptContent" style="max-height:420px;overflow-y:auto;padding:20px;font-size:14px;line-height:1.7;">
-
-          <div style="border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:16px;margin-bottom:16px;">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-              <span style="font-size:22px;">🔒</span>
-              <strong style="font-size:15px;">Política de Privacidad</strong>
-            </div>
-            <p style="margin:0 0 10px;color:var(--muted);">Cómo recopilamos, usamos y protegemos tus datos personales (correo, sesiones de estudio, gamificación). Incluye el uso de Google Gemini como tutor de IA y tus derechos ARCO conforme a la Ley N.° 29733 del Perú.</p>
-            <a href="privacy.html" target="_blank" style="font-size:13px;font-weight:600;color:var(--accent,#6c63ff);text-decoration:none;">Leer política completa →</a>
-          </div>
-
-          <div style="border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:16px;margin-bottom:16px;">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-              <span style="font-size:22px;">📋</span>
-              <strong style="font-size:15px;">Términos y Condiciones</strong>
-            </div>
-            <p style="margin:0 0 10px;color:var(--muted);">Reglas de uso, limitaciones de responsabilidad académica (Ariven no garantiza calificaciones, admisiones ni becas), uso adecuado de la IA, propiedad intelectual y condiciones de la plataforma. Actualmente gratuita; sin pagos activos.</p>
-            <a href="terms.html" target="_blank" style="font-size:13px;font-weight:600;color:var(--accent,#6c63ff);text-decoration:none;">Leer términos completos →</a>
-          </div>
-
-          <div style="border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:16px;margin-bottom:16px;">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-              <span style="font-size:22px;">📊</span>
-              <strong style="font-size:15px;">Cumplimiento y Transparencia de Datos</strong>
-            </div>
-            <p style="margin:0 0 10px;color:var(--muted);">Qué datos recopilamos, qué NO recopilamos, cómo los protegemos, cómo funciona la IA con tus datos y cuáles son tus derechos. Explicado en lenguaje simple.</p>
-            <a href="data-transparency.html" target="_blank" style="font-size:13px;font-weight:600;color:var(--accent,#6c63ff);text-decoration:none;">Leer documento completo →</a>
-          </div>
-
-        </div>
-        <div style="padding:20px;border-top:1px solid rgba(255,255,255,0.1);">
-          <form id="legalAcceptForm">
-            <label class="consent-check" style="margin-bottom:14px;display:flex;align-items:flex-start;gap:10px;">
-              <input type="checkbox" id="checkPP" ${ppOk ? 'checked' : ''} style="margin-top:3px;flex-shrink:0;">
-              <span>He leído y acepto la <strong>Política de Privacidad</strong> de Ariven</span>
-            </label>
-            <label class="consent-check" style="margin-bottom:14px;display:flex;align-items:flex-start;gap:10px;">
-              <input type="checkbox" id="checkTC" ${tcOk ? 'checked' : ''} style="margin-top:3px;flex-shrink:0;">
-              <span>He leído y acepto los <strong>Términos y Condiciones</strong> de Ariven</span>
-            </label>
-            <label class="consent-check" style="margin-bottom:20px;display:flex;align-items:flex-start;gap:10px;">
-              <input type="checkbox" id="checkDT" ${dtOk ? 'checked' : ''} style="margin-top:3px;flex-shrink:0;">
-              <span>He leído y acepto el documento de <strong>Cumplimiento y Transparencia de Datos</strong> de Ariven</span>
-            </label>
-            <div style="display:flex;gap:10px;flex-wrap:wrap;">
-              <button class="primary" type="submit">Aceptar y continuar</button>
-              <button class="ghost" type="button" id="legalDeclineBtn">Rechazar y salir</button>
-            </div>
-          </form>
-        </div>
-      </div>`;
+    return typeof LegalUI !== 'undefined'
+      ? LegalUI.screenPrivacyPolicy()
+      : '<div style="padding:40px;text-align:center;color:var(--muted);">Cargando documentos legales…</div>';
   }
 
   function wirePrivacyPolicy() {
-    document.getElementById('legalAcceptForm')?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const ppChecked = document.getElementById('checkPP')?.checked;
-      const tcChecked = document.getElementById('checkTC')?.checked;
-      const dtChecked = document.getElementById('checkDT')?.checked;
-      if (!ppChecked || !tcChecked || !dtChecked) {
-        UI.flash('Debes aceptar los tres documentos para continuar.', 'error');
-        return;
-      }
-      const u = Roles.current();
-      if (!u) return go('welcome');
-      const now = new Date().toISOString();
-      Storage.set(st => {
-        if (st.users[u.id]) {
-          st.users[u.id].privacyPolicyAcceptedAt = st.users[u.id].privacyPolicyAcceptedAt || now;
-          st.users[u.id].termsAcceptedAt         = st.users[u.id].termsAcceptedAt         || now;
-          st.users[u.id].transparencyAcceptedAt  = st.users[u.id].transparencyAcceptedAt  || now;
-        }
-      });
-      try { await Storage.flush(); } catch (_) {}
-      UI.flash('¡Gracias! Documentos aceptados.', 'success');
-      if (u.role === 'super_admin') return go('admin-dashboard');
-      if (u.role === 'teacher')     return go('teacher-dashboard');
-      return go('dashboard');
-    });
-
-    document.getElementById('legalDeclineBtn')?.addEventListener('click', async () => {
-      if (window.confirm('Si rechazas los documentos legales, no podrás usar Ariven. ¿Deseas salir?')) {
-        await Auth.logout();
-        go('welcome');
-      }
-    });
+    if (typeof LegalUI !== 'undefined') LegalUI.wirePrivacyPolicy();
   }
 
   // ---- Pantalla: Centro Legal (Política de Privacidad + T&C + Cumplimiento) ----

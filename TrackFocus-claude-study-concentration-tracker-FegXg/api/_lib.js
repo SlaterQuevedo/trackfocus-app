@@ -65,3 +65,36 @@ export function applyCors(req, res) {
 
   return false; // continuar con el handler normal
 }
+
+// ── Rate Limiting por IP ──────────────────────────────────────────────────────
+// Instancia por-proceso (serverless: cada instancia tiene su propio contador).
+// Suficiente para contener ráfagas en la misma instancia; no requiere Redis.
+const _rlWindows = new Map(); // ip → { count, resetAt }
+
+/**
+ * Verifica rate limit por IP. Si se supera el límite responde 429 y retorna true.
+ * El caller debe hacer `return` inmediato si retorna true.
+ *
+ * @param {object} req - Request de Vercel/Node
+ * @param {object} res - Response de Vercel/Node
+ * @param {{ maxRequests?: number, windowMs?: number }} opts
+ * @returns {boolean} true si la petición fue rechazada por rate limit
+ */
+export function checkRateLimit(req, res, { maxRequests = 30, windowMs = 60_000 } = {}) {
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
+  const now = Date.now();
+  const entry = _rlWindows.get(ip);
+
+  if (!entry || now > entry.resetAt) {
+    _rlWindows.set(ip, { count: 1, resetAt: now + windowMs });
+    return false;
+  }
+
+  entry.count++;
+  if (entry.count > maxRequests) {
+    res.setHeader('Retry-After', Math.ceil((entry.resetAt - now) / 1000));
+    res.status(429).json({ error: 'Too many requests — intenta de nuevo en un momento.' });
+    return true;
+  }
+  return false;
+}
