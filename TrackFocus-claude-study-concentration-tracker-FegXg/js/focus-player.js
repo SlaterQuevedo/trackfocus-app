@@ -9,8 +9,118 @@ const FocusPlayer = (() => {
   const _observers = [];
 
   // Dimensiones cacheadas del bar (evita leer offsetWidth/offsetHeight en cada frame).
-  let _cachedW = 340;
+  let _cachedW = 400;
   let _cachedH = 100;
+
+  // Circunferencias SVG: 2π × r
+  const _CIRC_MINI  = 263.9; // r=42, viewBox 100×100
+  const _CIRC_MODAL = 553.0; // r=88, viewBox 200×200
+
+  // ── Anillo de progreso + bloques de info ──────────────────────────────────
+
+  function _parseTimeSecs(str) {
+    const parts = (str || '').trim().split(':').map(Number);
+    const m = isFinite(parts[0]) ? parts[0] : 0;
+    const s = isFinite(parts[1]) ? parts[1] : 0;
+    return m * 60 + s;
+  }
+
+  function _updateRing(fillId, remSecs, totalSecs, circ) {
+    const el = document.getElementById(fillId);
+    if (!el) return;
+    const pct = totalSecs > 0 ? Math.max(0, Math.min(1, remSecs / totalSecs)) : 0;
+    el.style.strokeDashoffset = (circ * (1 - pct)).toFixed(1);
+  }
+
+  function _updateInfoBlocks() {
+    try {
+      const displayEl = document.getElementById('pomBarDisplay');
+      const modeEl    = document.getElementById('pomBarMode');
+      const focusIn   = document.getElementById('pomBarFocus');
+      const breakIn   = document.getElementById('pomBarBreak');
+      if (!displayEl || !modeEl || !focusIn || !breakIn) return;
+
+      const remSecs   = _parseTimeSecs(displayEl.textContent);
+      const modeTxt   = modeEl.textContent.toLowerCase();
+      const isFocus   = modeTxt.includes('enfoc');
+      const isBreak   = modeTxt.includes('descans');
+      const totalMin  = isFocus ? Number(focusIn.value)
+                      : isBreak ? Number(breakIn.value)
+                      : Number(focusIn.value);
+      const totalSecs = totalMin * 60;
+
+      // Actualizar anillos
+      _updateRing('fpRingFill',      remSecs, totalSecs, _CIRC_MINI);
+      _updateRing('fpModalRingFill', remSecs, totalSecs, _CIRC_MODAL);
+
+      // Fin estimado
+      const endDate = new Date(Date.now() + remSecs * 1000);
+      const endStr  = endDate.getHours().toString().padStart(2, '0') + ':'
+                    + endDate.getMinutes().toString().padStart(2, '0');
+      const endEl = document.getElementById('fpEndVal');
+      if (endEl) endEl.textContent = endStr;
+
+      // Fase siguiente
+      const nextEl = document.getElementById('fpNextLbl');
+      if (nextEl) {
+        nextEl.textContent = isFocus
+          ? `Siguiente: Descanso (${breakIn.value} min)`
+          : `Siguiente: Foco (${focusIn.value} min)`;
+      }
+
+      // Valores de steppers
+      const fn = document.getElementById('fpFocusNum');
+      const bn = document.getElementById('fpBreakNum');
+      if (fn) fn.textContent = focusIn.value;
+      if (bn) bn.textContent = breakIn.value;
+
+      _updateProgress();
+    } catch (_) {}
+  }
+
+  function _updateProgress() {
+    try {
+      const s   = typeof Storage !== 'undefined' ? Storage.get() : null;
+      const uid = s && s.currentUserId;
+      if (!uid || !s.sessions) return;
+
+      const today = new Date().toISOString().slice(0, 10);
+      const cnt   = s.sessions.filter(x => x.email === uid && x.datetime.slice(0, 10) === today).length;
+      const goal  = 4;
+
+      const sesEl  = document.getElementById('fpSessionVal');
+      const doneEl = document.getElementById('fpDoneVal');
+      const cntEl  = document.getElementById('fpPomCnt');
+      const fillEl = document.getElementById('fpProgFill');
+      if (sesEl)  sesEl.textContent  = Math.min(cnt + 1, goal) + '/' + goal;
+      if (doneEl) doneEl.textContent = cnt;
+      if (cntEl)  cntEl.textContent  = cnt + '/' + goal + ' Pomodoros';
+      if (fillEl) fillEl.style.width = Math.min(100, (cnt / goal) * 100) + '%';
+
+      document.querySelectorAll('#fpProgDots .fp-pdot').forEach((d, i) => {
+        d.classList.toggle('fp-pdot--done', i < cnt);
+      });
+    } catch (_) {}
+  }
+
+  function _wireSteppers() {
+    document.querySelectorAll('.fp-step-btn[data-input]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const input = document.getElementById(btn.dataset.input);
+        if (!input) return;
+        const delta  = Number(btn.dataset.delta) || 1;
+        const min    = Number(input.min) || 1;
+        const max    = Number(input.max) || 120;
+        const newVal = Math.max(min, Math.min(max, Number(input.value) + delta));
+        input.value  = newVal;
+        input.dispatchEvent(new Event('input',  { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        const dispId = input.id === 'pomBarFocus' ? 'fpFocusNum' : 'fpBreakNum';
+        const dispEl = document.getElementById(dispId);
+        if (dispEl) dispEl.textContent = newVal;
+      });
+    });
+  }
 
   // ── Posicionamiento y drag ─────────────────────────────────────────────────
 
@@ -182,6 +292,7 @@ const FocusPlayer = (() => {
       }
 
       _updateLabel();
+      _updateInfoBlocks();
     } catch (_) {}
   }
 
@@ -235,16 +346,18 @@ const FocusPlayer = (() => {
     if (!bar) return;
 
     // Cachear dimensiones una sola vez (el bar tiene tamaño fijo)
-    _cachedW = bar.offsetWidth || 340;
+    _cachedW = bar.offsetWidth || 400;
     _cachedH = bar.offsetHeight || 100;
 
     _initDrag(bar);
     _initToggle(bar);
+    _wireSteppers();
 
     // Rellenar materias cuando el player se hace visible
     const visObs = new MutationObserver(() => {
       if (!bar.classList.contains('hidden') && !bar.classList.contains('fp-minimized')) {
         _fillSubjects();
+        _updateInfoBlocks();
       }
     });
     visObs.observe(bar, { attributes: true, attributeFilter: ['class'] });
@@ -289,10 +402,13 @@ const FocusPlayer = (() => {
       if (t) t.value = e.target.value;
     });
 
-    // MutationObserver: sincronizar modal con el reloj en tiempo real
+    // MutationObserver: sincronizar modal + anillo con el reloj en tiempo real
     const displayEl = document.getElementById('pomBarDisplay');
     if (displayEl) {
-      const clockObs = new MutationObserver(_syncModal);
+      const clockObs = new MutationObserver(() => {
+        _syncModal();
+        _updateInfoBlocks();
+      });
       clockObs.observe(displayEl, { childList: true, characterData: true, subtree: true });
       _observers.push(clockObs);
     }
@@ -308,6 +424,7 @@ const FocusPlayer = (() => {
           : 'idle';
         bar.setAttribute('data-mode', mode);
         _syncModal();
+        _updateInfoBlocks();
       });
       modeObs.observe(modeEl, { childList: true, characterData: true, subtree: true });
       _observers.push(modeObs);
