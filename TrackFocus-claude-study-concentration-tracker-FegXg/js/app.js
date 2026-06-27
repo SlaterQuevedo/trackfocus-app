@@ -49,7 +49,8 @@ const App = (() => {
   };
 
   let _current              = null;
-  let _landingScrollHandler = null; // referencia para limpiar el listener en navegación
+  let _landingScrollHandler = null;
+  let _lastInteraction      = 0; // timestamp de última interacción del usuario
 
   function _esc(s) {
     return String(s ?? '').replace(/[&<>"']/g,
@@ -438,6 +439,12 @@ const App = (() => {
     bindGlobal();
     wirePomodoroBar();
 
+    // Registrar interacciones del usuario para el guard anti-bucle Realtime.
+    const _markInteraction = () => { _lastInteraction = Date.now(); };
+    document.addEventListener('click',   _markInteraction, { passive: true, capture: true });
+    document.addEventListener('keydown',  _markInteraction, { passive: true, capture: true });
+    document.addEventListener('touchstart', _markInteraction, { passive: true, capture: true });
+
     // Page Visibility API: pausar trabajo no crítico cuando la pestaña está oculta.
     // Ahorra CPU y batería en iPhone/MacBook cuando el usuario cambia de pestaña.
     document.addEventListener('visibilitychange', () => {
@@ -532,11 +539,14 @@ const App = (() => {
     // Suscribirse a cambios remotos (multi-dispositivo)
     const _debouncedRefresh = _debounce(() => go(_current), 300);
     Storage.bindRealtime(() => {
-      // Repintar la pantalla actual cuando llegan cambios, EXCEPTO si interrumpiría
-      // al usuario (rendimiento + UX): chat IA en curso o un modal/quiz abierto.
+      // Repintar SÓLO si el cambio viene de otro dispositivo/usuario, no del propio cliente.
+      // Guard 1: pantallas que no deben interrumpirse
       if (!_current || _current === 'welcome' || _current === 'consent' || _current === 'privacy-policy' || _current === 'legal') return;
       if (_current === 'ai-study') return;
       if (document.querySelector('.quiz-modal') || document.querySelector('.pom-modal:not(.hidden)')) return;
+      // Guard 2: si el usuario interactuó en los últimos 4 segundos, no re-renderizar.
+      // Esto corta el bucle Storage.set() → Realtime → go() → Storage.set() → ...
+      if (Date.now() - _lastInteraction < 4000) return;
       _debouncedRefresh();
     });
 

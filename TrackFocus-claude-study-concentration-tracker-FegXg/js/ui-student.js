@@ -3189,13 +3189,10 @@ const UIStudent = (() => {
   }
 
   function _profilePersonal(user, sessions, s) {
-    // Identidad Digital: generar código permanente si aún no existe
-    let _studentCode = user.studentCode;
-    if (!_studentCode) {
-      _studentCode = Storage.genStudentCode();
-      Storage.set(st => { if (st.users[user.id]) st.users[user.id].studentCode = _studentCode; });
-    }
-    const _studentUrl = 'https://trackfocus.vercel.app/s/' + _studentCode;
+    // Identidad Digital: leer código (la generación ocurre en _wireProfilePersonal, NO aquí,
+    // para evitar el bucle Realtime: render → Storage.set → Supabase → re-render → loop).
+    const _studentCode = user.studentCode || '';
+    const _studentUrl = _studentCode ? 'https://trackfocus.vercel.app/s/' + _studentCode : '';
     const _createdYear = user.createdAt ? new Date(user.createdAt).getFullYear() : new Date().getFullYear();
     const _idInitial = user.name ? user.name.trim()[0].toUpperCase() : '?';
 
@@ -4754,9 +4751,21 @@ const UIStudent = (() => {
     });
 
     // ── Identidad Digital ──
+    // Generar código aquí (wire, no render) para evitar el bucle Realtime.
+    // Si no existe todavía, lo generamos, persistimos, y actualizamos el DOM sin llamar go().
     const _s2 = Storage.get();
     const _u2 = _s2.users[_s2.currentUserId];
-    const _code2 = _u2?.studentCode || '';
+    let _code2 = _u2?.studentCode || '';
+    if (!_code2 && _u2) {
+      _code2 = Storage.genStudentCode();
+      Storage.set(st => { if (st.users[_u2.id]) st.users[_u2.id].studentCode = _code2; });
+      // Actualizar DOM directamente sin re-render para no disparar el bucle
+      const codeEl = r()?.querySelector('.ph2-id-code');
+      const urlEl  = r()?.querySelector('.ph2-id-url');
+      if (codeEl) codeEl.textContent = _code2;
+      const _newUrl = 'https://trackfocus.vercel.app/s/' + _code2;
+      if (urlEl)  { urlEl.textContent = _newUrl; urlEl.title = _newUrl; }
+    }
     const _url2 = _code2 ? 'https://trackfocus.vercel.app/s/' + _code2 : '';
 
     if (_code2 && typeof QRScanner !== 'undefined') {
