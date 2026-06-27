@@ -28,13 +28,6 @@ const UIStudent = (() => {
     return `${n}° Sec.`;
   }
 
-  const _MALLAS = {
-    'UNI':     ['Álgebra', 'Aritmética', 'Geometría', 'Trigonometría', 'Física', 'Química', 'R. Matemático', 'R. Verbal'],
-    'UNMSM':   ['Biología', 'Química', 'Física', 'Álgebra', 'Aritmética', 'Geometría', 'Comprensión Lectora', 'R. Verbal'],
-    'PUCP':    ['Matemáticas', 'Comprensión Lectora', 'Argumentación', 'Redacción', 'Pensamiento Crítico'],
-    'UNAC':    ['Matemáticas', 'Física', 'Química', 'Comprensión Aplicada'],
-    'Beca 18': ['Comprensión Lectora', 'R. Verbal', 'R. Matemático', 'Pensamiento Crítico', 'Hábitos de Estudio']
-  };
 
   function showXpToast(xpEarned, newBadges) {
     const el = document.createElement('div');
@@ -2976,21 +2969,24 @@ const UIStudent = (() => {
     } else {
       panelUniversity = `
         <div class="pp-panel" data-panel="university">
-          <h2 class="pp-section-title">Meta Universitaria</h2>
+          <h2 class="pp-section-title">Meta Académica</h2>
           <div class="card">
-            <p class="muted" style="font-size:13px;margin-bottom:14px;">Selecciona tu universidad objetivo para obtener una ruta personalizada.</p>
+            <p class="muted" style="font-size:13px;margin-bottom:14px;">
+              Selecciona la institución a la que deseas ingresar para obtener una ruta personalizada.
+            </p>
             <div style="display:flex;flex-direction:column;gap:10px;">
-              <select id="pp-uni-select" style="padding:10px;border-radius:var(--radius-sm);background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;">
-                <option value="">Selecciona universidad</option>
-                <option value="UNI">UNI — Universidad Nacional de Ingeniería</option>
-                <option value="UNMSM">UNMSM — Universidad Mayor de San Marcos</option>
-                <option value="PUCP">PUCP — Pontificia Universidad Católica del Perú</option>
-                <option value="UNAC">UNAC — Universidad Nacional del Callao</option>
-                <option value="Beca 18">Beca 18</option>
-                <option value="otro">Otra universidad</option>
-              </select>
-              <input type="text" id="pp-custom-uni" placeholder="Nombre de tu universidad" style="display:none;padding:10px;border-radius:var(--radius-sm);background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;" />
-              <input type="text" id="pp-career-input" placeholder="¿Qué carrera quieres estudiar?" style="padding:10px;border-radius:var(--radius-sm);background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;" />
+              <div class="pp-inst-wrap" id="pp-inst-wrap">
+                <div class="pp-inst-row">
+                  <span class="pp-inst-icon">🔍</span>
+                  <input type="text" id="pp-inst-search" class="pp-inst-input" autocomplete="off"
+                    spellcheck="false" placeholder="Busca: UNI, San Marcos, PUCP, PNP, Marina…" />
+                </div>
+                <div class="pp-inst-dropdown" id="pp-inst-dropdown" role="listbox" style="display:none;"></div>
+                <div class="pp-inst-chip" id="pp-inst-chip" style="display:none;"></div>
+              </div>
+              <input type="text" id="pp-career-input" class="pp-career-inp"
+                placeholder="¿Qué carrera o especialidad quieres estudiar?"
+                value="${esc(acadProfile.career || '')}" />
               <button class="primary" id="pp-save-meta" style="width:100%;">Guardar mi meta 🎯</button>
             </div>
           </div>
@@ -3664,30 +3660,131 @@ const UIStudent = (() => {
     function _clearMeta() {
       const p = JSON.parse(localStorage.getItem('arv-academic-profile-v3') || '{}');
       delete p.university; delete p.career; delete p.enabledSubjects;
+      delete p.institutionId; delete p.institutionCat;
       localStorage.setItem('arv-academic-profile-v3', JSON.stringify(p));
       sessionStorage.setItem('arv-profile-panel', 'university');
       App.go('profile');
     }
 
-    r().querySelector('#pp-uni-select')?.addEventListener('change', function() {
-      const customInput = r().querySelector('#pp-custom-uni');
-      if (customInput) customInput.style.display = this.value === 'otro' ? 'block' : 'none';
-    });
+    // Institution search
+    let _selInst = null;
+    const searchInp = r().querySelector('#pp-inst-search');
+    const dropdown  = r().querySelector('#pp-inst-dropdown');
+    const chip      = r().querySelector('#pp-inst-chip');
+
+    if (searchInp && dropdown && chip) {
+      const existingId = acadProfile.institutionId;
+      if (existingId) {
+        const ei = (typeof Institutions !== 'undefined') ? Institutions.getById(existingId) : null;
+        if (ei) { _selInst = ei; _renderChip(ei); }
+      }
+
+      let _searchTimer = null;
+      searchInp.addEventListener('input', () => {
+        clearTimeout(_searchTimer);
+        _searchTimer = setTimeout(() => _runSearch(searchInp.value), 120);
+      });
+      searchInp.addEventListener('focus', () => {
+        if (!searchInp.value.trim()) _showRecent();
+        else _runSearch(searchInp.value);
+      });
+      document.addEventListener('click', (e) => {
+        if (!r().querySelector('#pp-inst-wrap')?.contains(e.target)) {
+          dropdown.style.display = 'none';
+        }
+      }, { capture: false });
+    }
+
+    function _esc_attr(s) { return String(s || '').replace(/"/g, '&quot;'); }
+
+    function _buildItem(inst) {
+      const meta = (typeof Institutions !== 'undefined') ? Institutions.getCatMeta(inst.cat) : {};
+      const icon  = meta.icon  || '🎓';
+      const badge = meta.badge || '';
+      const cls   = meta.cls   || '';
+      return `<div class="pp-inst-item" data-id="${_esc_attr(inst.id)}" role="option" tabindex="-1">
+        <span class="pp-inst-item-icon">${icon}</span>
+        <div class="pp-inst-item-body">
+          <div class="pp-inst-item-name">${esc(inst.name)}</div>
+          <div class="pp-inst-item-meta">${esc(inst.abbr || inst.id)} · ${esc(inst.city)}</div>
+        </div>
+        ${badge ? `<span class="pp-inst-badge pp-inst-badge-${cls}">${badge}</span>` : ''}
+      </div>`;
+    }
+
+    function _runSearch(q) {
+      if (typeof Institutions === 'undefined') return;
+      if (!q.trim()) { _showRecent(); return; }
+      const results = Institutions.search(q, 8);
+      if (!results.length) {
+        dropdown.innerHTML = '<div class="pp-inst-no-results">Sin resultados. Prueba con otro nombre o abreviatura.</div>';
+      } else {
+        dropdown.innerHTML = results.map(_buildItem).join('');
+        dropdown.querySelectorAll('.pp-inst-item').forEach(el => {
+          el.addEventListener('click', () => _selectInst(el.dataset.id));
+        });
+      }
+      dropdown.style.display = 'block';
+    }
+
+    function _showRecent() {
+      if (typeof Institutions === 'undefined') return;
+      const recentIds = Institutions.getRecent();
+      const recent = recentIds.map(id => Institutions.getById(id)).filter(Boolean);
+      if (!recent.length) { dropdown.style.display = 'none'; return; }
+      dropdown.innerHTML = '<div class="pp-inst-recent-label">Búsquedas recientes</div>'
+        + recent.map(_buildItem).join('');
+      dropdown.querySelectorAll('.pp-inst-item').forEach(el => {
+        el.addEventListener('click', () => _selectInst(el.dataset.id));
+      });
+      dropdown.style.display = 'block';
+    }
+
+    function _selectInst(id) {
+      if (typeof Institutions === 'undefined') return;
+      const inst = Institutions.getById(id);
+      if (!inst) return;
+      _selInst = inst;
+      Institutions.saveRecent(id);
+      dropdown.style.display = 'none';
+      searchInp.value = '';
+      _renderChip(inst);
+    }
+
+    function _renderChip(inst) {
+      if (!chip) return;
+      const meta = (typeof Institutions !== 'undefined') ? Institutions.getCatMeta(inst.cat) : {};
+      chip.innerHTML = `
+        <span class="pp-inst-chip-icon">${meta.icon || '🎓'}</span>
+        <div class="pp-inst-chip-body">
+          <div class="pp-inst-chip-name">${esc(inst.name)}</div>
+          <div class="pp-inst-chip-meta">${esc(inst.abbr || inst.id)} · ${esc(inst.city)}</div>
+        </div>
+        <span class="pp-inst-badge pp-inst-badge-${meta.cls || ''}">${meta.badge || ''}</span>
+        <button class="pp-inst-chip-change ghost" type="button">Cambiar</button>
+      `;
+      chip.style.display = 'flex';
+      chip.querySelector('.pp-inst-chip-change')?.addEventListener('click', () => {
+        _selInst = null;
+        chip.style.display = 'none';
+        searchInp.value = '';
+        searchInp.focus();
+      });
+    }
+
     r().querySelector('#pp-save-meta')?.addEventListener('click', () => {
-      const uniSelect = r().querySelector('#pp-uni-select');
-      const customUni = r().querySelector('#pp-custom-uni');
-      const careerInput = r().querySelector('#pp-career-input');
-      const uniVal = uniSelect?.value;
-      const university = uniVal === 'otro' ? customUni?.value.trim() : uniVal;
-      const career = careerInput?.value.trim();
-      if (!university || !career) return UI.flash('Completa universidad y carrera.', 'error');
+      if (!_selInst) return UI.flash('Selecciona una institución.', 'error');
+      const career = r().querySelector('#pp-career-input')?.value.trim();
+      if (!career) return UI.flash('Escribe tu carrera o especialidad.', 'error');
+      const malla = (typeof Institutions !== 'undefined') ? Institutions.getMalla(_selInst.id) : [];
       const existing = JSON.parse(localStorage.getItem('arv-academic-profile-v3') || '{}');
       localStorage.setItem('arv-academic-profile-v3', JSON.stringify({
         ...existing,
-        university: uniVal === 'otro' ? 'otro' : university,
-        customUniversity: uniVal === 'otro' ? university : undefined,
+        university:      _selInst.name,
+        institutionId:   _selInst.id,
+        institutionCat:  _selInst.cat,
         career,
-        enabledSubjects: _MALLAS[university] || []
+        enabledSubjects: malla
       }));
       UI.flash('¡Meta guardada! Tu ruta está lista.', 'success');
       sessionStorage.setItem('arv-profile-panel', 'route');
