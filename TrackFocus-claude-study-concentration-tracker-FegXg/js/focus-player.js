@@ -13,7 +13,7 @@ const FocusPlayer = (() => {
   let _cachedH = 100;
 
   // Circunferencias SVG: 2π × r
-  const _CIRC_MINI  = 263.9; // r=42, viewBox 100×100
+  const _CIRC_MINI  = 628.0; // r=100, viewBox 220×220
   const _CIRC_MODAL = 553.0; // r=88, viewBox 200×200
 
   // ── Anillo de progreso + bloques de info ──────────────────────────────────

@@ -242,86 +242,111 @@
 
   <!-- Focus Player — reproductor flotante persistente. Los IDs son requeridos por app.js. -->
   <div id="pomBar" class="focus-player hidden">
-    <!-- Cabecera / drag handle -->
-    <div class="fp-header">
-      <div class="fp-status">
-        <span class="fp-dot" id="fpDot"></span>
-        <span id="pomBarMode" class="fp-mode">LISTO</span>
-      </div>
-      <span class="fp-subject-label" id="fpSubjectLabel">—</span>
-      <button id="pomBarToggle" class="fp-toggle-btn" title="Ocultar" aria-label="Ocultar">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M11 9L7 5L3 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-    </div>
 
-    <!-- Cuerpo: anillo + bloques de info -->
-    <div class="fp-body">
-      <div class="fp-ring-wrap" id="fpExpandTrigger" tabindex="0" role="button" aria-label="Expandir Pomodoro">
-        <svg class="fp-ring-svg" viewBox="0 0 100 100" aria-hidden="true">
-          <circle class="fp-ring-track" cx="50" cy="50" r="42"/>
-          <circle class="fp-ring-fill" cx="50" cy="50" r="42" id="fpRingFill"/>
-        </svg>
-        <div class="fp-ring-inner">
-          <span id="pomBarDisplay" class="fp-clock">25:00</span>
-        </div>
-      </div>
-      <div class="fp-info-col">
-        <div class="fp-info-card">
-          <div class="fp-info-row"><span class="fp-info-lbl">Sesión</span><span class="fp-info-val" id="fpSessionVal">1/4</span></div>
-          <div class="fp-info-row"><span class="fp-info-lbl">Completadas hoy</span><span class="fp-info-val" id="fpDoneVal">0</span></div>
-        </div>
-        <div class="fp-info-card">
-          <span class="fp-info-next" id="fpNextLbl">Siguiente: Descanso (5 min)</span>
-          <span class="fp-info-end">Fin est. <span id="fpEndVal">—</span></span>
-        </div>
-      </div>
-    </div>
+    <!-- fp-header = zona de drag (envuelve ambas columnas) -->
+    <div class="fp-header fp-main-inner">
 
-    <!-- Controles de acción -->
-    <div class="fp-controls">
-      <button id="pomBarStart" class="fp-start-btn">▶&nbsp;Iniciar</button>
-      <button id="pomBarPause" class="fp-ctrl-btn" aria-label="Pausar">
-        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="3" y="2" width="3.5" height="12" rx="1.5" fill="currentColor"/><rect x="9.5" y="2" width="3.5" height="12" rx="1.5" fill="currentColor"/></svg>
-      </button>
-      <button id="pomBarReset" class="fp-ctrl-btn" aria-label="Reiniciar">
-        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M13.5 8A5.5 5.5 0 1 1 8 2.5c1.8 0 3.4.86 4.4 2.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M10.5 1.5L13 4.5L9.5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-      <button id="pomBarSkip" class="fp-ctrl-btn fp-skip-btn" aria-label="Saltar fase" title="Saltar">
-        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 3.5l7 4.5-7 4.5V3.5z" fill="currentColor"/><rect x="11.5" y="3.5" width="2" height="9" rx="1" fill="currentColor"/></svg>
-      </button>
-    </div>
+      <!-- Columna izquierda: anillo + materia + estado + controles + progreso -->
+      <div class="fp-left">
+        <div class="fp-ring-wrap" id="fpExpandTrigger" tabindex="0" role="button" aria-label="Expandir Pomodoro">
+          <svg class="fp-ring-svg" viewBox="0 0 220 220" fill="none" aria-hidden="true">
+            <circle class="fp-ring-track" cx="110" cy="110" r="100" fill="none"/>
+            <circle class="fp-ring-fill" cx="110" cy="110" r="100" fill="none" id="fpRingFill"/>
+          </svg>
+          <div class="fp-ring-inner">
+            <span id="pomBarDisplay" class="fp-clock">25:00</span>
+          </div>
+        </div>
+        <div class="fp-ring-meta">
+          <span id="fpSubjectLabel" class="fp-ring-subject">—</span>
+          <div class="fp-ring-mode">
+            <span class="fp-dot" id="fpDot"></span>
+            <span id="pomBarMode" class="fp-mode">LISTO</span>
+          </div>
+        </div>
+        <div class="fp-controls">
+          <button id="pomBarStart" class="fp-start-btn">▶&nbsp;Iniciar</button>
+          <button id="pomBarPause" class="fp-ctrl-btn" aria-label="Pausar">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="3" y="2" width="3.5" height="12" rx="1.5" fill="currentColor"/><rect x="9.5" y="2" width="3.5" height="12" rx="1.5" fill="currentColor"/></svg>
+          </button>
+          <button id="pomBarReset" class="fp-ctrl-btn" aria-label="Reiniciar">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M13.5 8A5.5 5.5 0 1 1 8 2.5c1.8 0 3.4.86 4.4 2.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M10.5 1.5L13 4.5L9.5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button id="pomBarSkip" class="fp-ctrl-btn fp-skip-btn" aria-label="Saltar">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 3.5l7 4.5-7 4.5V3.5z" fill="currentColor"/><rect x="11.5" y="3.5" width="2" height="9" rx="1" fill="currentColor"/></svg>
+          </button>
+        </div>
+        <div class="fp-progress-row">
+          <span class="fp-prog-lbl">Foco de hoy</span>
+          <div class="fp-prog-dots" id="fpProgDots">
+            <span class="fp-pdot"></span><span class="fp-pdot"></span>
+            <span class="fp-pdot"></span><span class="fp-pdot"></span>
+          </div>
+          <div class="fp-prog-track"><div class="fp-prog-fill" id="fpProgFill" style="width:0%"></div></div>
+          <span class="fp-pom-cnt" id="fpPomCnt">0/4 Pomodoros</span>
+        </div>
+      </div><!-- /fp-left -->
 
-    <!-- Steppers de duración + barra de progreso diario -->
+      <!-- Columna derecha: 3 tarjetas de info -->
+      <div class="fp-right">
+        <div class="fp-card">
+          <div class="fp-card-row">
+            <span class="fp-card-lbl">Sesión:</span>
+            <span class="fp-card-val" id="fpSessionVal">1/4</span>
+          </div>
+          <div class="fp-card-row">
+            <span class="fp-card-lbl">Completadas hoy</span>
+            <span class="fp-card-val" id="fpDoneVal">0</span>
+          </div>
+        </div>
+        <div class="fp-card">
+          <div class="fp-card-row">
+            <span class="fp-card-lbl">Siguiente:</span>
+          </div>
+          <div class="fp-card-row">
+            <span class="fp-card-next" id="fpNextLbl">Descanso (5 min)</span>
+          </div>
+        </div>
+        <div class="fp-card">
+          <div class="fp-card-row">
+            <span class="fp-card-lbl">Fin estimado:</span>
+            <span class="fp-card-val" id="fpEndVal">—</span>
+          </div>
+          <div class="fp-card-row">
+            <span class="fp-card-lbl">Estado</span>
+            <span class="fp-card-lbl">Pomodoro</span>
+          </div>
+        </div>
+      </div><!-- /fp-right -->
+
+    </div><!-- /fp-main-inner -->
+
+    <!-- Pie: steppers (ancho completo, debajo de las columnas) -->
     <div class="fp-footer">
-      <div class="fp-steppers">
-        <div class="fp-stepper-group">
-          <span class="fp-step-lbl">Foco (min)</span>
-          <div class="fp-stepper">
-            <button class="fp-step-btn" data-input="pomBarFocus" data-delta="1" aria-label="Aumentar">+</button>
-            <span class="fp-step-num" id="fpFocusNum">25</span>
-            <button class="fp-step-btn" data-input="pomBarFocus" data-delta="-1" aria-label="Reducir">−</button>
-          </div>
-        </div>
-        <div class="fp-stepper-group">
-          <span class="fp-step-lbl">Descanso (min)</span>
-          <div class="fp-stepper">
-            <button class="fp-step-btn" data-input="pomBarBreak" data-delta="1" aria-label="Aumentar">+</button>
-            <span class="fp-step-num" id="fpBreakNum">5</span>
-            <button class="fp-step-btn" data-input="pomBarBreak" data-delta="-1" aria-label="Reducir">−</button>
-          </div>
+      <div class="fp-stepper-group">
+        <span class="fp-step-lbl">Foco (min)</span>
+        <div class="fp-stepper">
+          <button class="fp-step-btn" data-input="pomBarFocus" data-delta="1">+</button>
+          <span class="fp-step-num" id="fpFocusNum">25</span>
+          <button class="fp-step-btn" data-input="pomBarFocus" data-delta="-1">−</button>
         </div>
       </div>
-      <div class="fp-progress-row">
-        <span class="fp-prog-lbl">Foco de hoy</span>
-        <div class="fp-prog-dots" id="fpProgDots">
-          <span class="fp-pdot"></span><span class="fp-pdot"></span><span class="fp-pdot"></span><span class="fp-pdot"></span>
+      <div class="fp-stepper-group">
+        <span class="fp-step-lbl">Descanso (min)</span>
+        <div class="fp-stepper">
+          <button class="fp-step-btn" data-input="pomBarBreak" data-delta="1">+</button>
+          <span class="fp-step-num" id="fpBreakNum">5</span>
+          <button class="fp-step-btn" data-input="pomBarBreak" data-delta="-1">−</button>
         </div>
-        <div class="fp-prog-track"><div class="fp-prog-fill" id="fpProgFill" style="width:0%"></div></div>
-        <span class="fp-pom-cnt" id="fpPomCnt">0/4 Pomodoros</span>
       </div>
     </div>
 
-    <!-- Inputs ocultos requeridos por app.js (valores preservados) -->
+    <!-- Toggle (posicionado absolutamente arriba-derecha) -->
+    <button id="pomBarToggle" class="fp-toggle-btn" title="Ocultar" aria-label="Ocultar">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M11 9L7 5L3 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+
+    <!-- Inputs ocultos requeridos por app.js -->
     <select id="pomBarSubject" hidden></select>
     <input type="number" id="pomBarFocus" value="25" min="1" max="120" hidden/>
     <input type="number" id="pomBarBreak" value="5"  min="1" max="30"  hidden/>
