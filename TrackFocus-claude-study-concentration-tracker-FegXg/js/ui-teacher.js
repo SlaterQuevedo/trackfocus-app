@@ -587,7 +587,7 @@ const UITeacher = (() => {
                 <div class="field" style="margin-bottom:12px;">
                   <label>Grado</label>
                   <select name="grade" style="width:100%;">
-                    <option>1ro</option><option>2do</option><option>3ro</option><option>4to</option><option>5to</option>
+                    <option>1°</option><option>2°</option><option>3°</option><option>4°</option><option>5°</option>
                   </select>
                 </div>
                 <div class="field" style="margin-bottom:16px;">

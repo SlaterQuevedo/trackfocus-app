@@ -40,7 +40,7 @@ const Demo = (() => {
       adminIds: [TEACHER], createdAt: today.toISOString()
     };
     state.classrooms[CR] = {
-      id: CR, schoolId: SCHOOL, name: '5to A', grade: '5to', section: 'A',
+      id: CR, schoolId: SCHOOL, name: '5° A', grade: '5°', section: 'A',
       teacherIds: [TEACHER], studentIds: STUDENTS.map(s => s.id),
       inviteCode: 'DEMO5A01', createdAt: today.toISOString()
     };
@@ -184,7 +184,7 @@ const Demo = (() => {
     if (mode === 'guided') {
       window.__TF_DEMO_GUIDED_META = {
         subject: 'Matemática',
-        grade: '4to',
+        grade: '4°',
         durationMin: 45,
         previousActivity: 'repaso-previo',
         topic: 'Ecuaciones cuadráticas'

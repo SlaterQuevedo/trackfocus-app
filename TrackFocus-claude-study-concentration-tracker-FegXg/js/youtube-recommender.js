@@ -72,11 +72,11 @@ const YoutubeRecommender = (() => {
     const { grade = '', subject = '', studyMode = '' } = ctx;
 
     const gradeMap = {
-      '1ro': '1ro secundaria',
-      '2do': '2do secundaria',
-      '3ro': '3ro secundaria',
-      '4to': '4to secundaria',
-      '5to': '5to secundaria'
+      '1°': '1ro secundaria',
+      '2°': '2do secundaria',
+      '3°': '3ro secundaria',
+      '4°': '4to secundaria',
+      '5°': '5to secundaria'
     };
     const gradeLabel = gradeMap[grade] || grade || 'secundaria';
 

@@ -558,11 +558,11 @@ const UIStudent = (() => {
     const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 
     const grades = [
-      { id: '5to', label: '5° de Secundaria' },
-      { id: '4to', label: '4° de Secundaria' },
-      { id: '3ro', label: '3° de Secundaria' },
-      { id: '2do', label: '2° de Secundaria' },
-      { id: '1ro', label: '1° de Secundaria' }
+      { id: '5°', label: '5° de Secundaria' },
+      { id: '4°', label: '4° de Secundaria' },
+      { id: '3°', label: '3° de Secundaria' },
+      { id: '2°', label: '2° de Secundaria' },
+      { id: '1°', label: '1° de Secundaria' }
     ];
 
     return `
@@ -4725,11 +4725,11 @@ const UIStudent = (() => {
     const sessions = Sessions.listFor(user.id);
 
     const grades = [
-      { id: '5to', label: '5° de Secundaria' },
-      { id: '4to', label: '4° de Secundaria' },
-      { id: '3ro', label: '3° de Secundaria' },
-      { id: '2do', label: '2° de Secundaria' },
-      { id: '1ro', label: '1° de Secundaria' }
+      { id: '5°', label: '5° de Secundaria' },
+      { id: '4°', label: '4° de Secundaria' },
+      { id: '3°', label: '3° de Secundaria' },
+      { id: '2°', label: '2° de Secundaria' },
+      { id: '1°', label: '1° de Secundaria' }
     ];
 
     const now = new Date();
