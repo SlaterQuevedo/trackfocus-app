@@ -12,12 +12,12 @@ const Demo = (() => {
   const CR = 'demo-cr';
 
   const STUDENTS = [
-    { id: 'demo.lucia@trackfocus.demo',     name: 'Lucía Ramírez',   xp: 1240, level: 8, streak: 12, badges: ['primera_sesion','racha_3','racha_7','maestro_enfoque','madrugador'] },
-    { id: 'demo.mateo@trackfocus.demo',     name: 'Mateo Flores',    xp: 980,  level: 7, streak: 5,  badges: ['primera_sesion','racha_3','multimaterias'] },
-    { id: 'demo.sofia@trackfocus.demo',     name: 'Sofía Castro',    xp: 1520, level: 9, streak: 21, badges: ['primera_sesion','racha_3','racha_7','racha_30','maratonista'] },
-    { id: 'demo.diego@trackfocus.demo',     name: 'Diego Huamán',    xp: 460,  level: 4, streak: 3,  badges: ['primera_sesion','racha_3'] },
-    { id: 'demo.valentina@trackfocus.demo', name: 'Valentina Ríos',  xp: 760,  level: 6, streak: 7,  badges: ['primera_sesion','racha_3','racha_7','noctambulo'] },
-    { id: 'demo.joaquin@trackfocus.demo',   name: 'Joaquín Mendoza', xp: 300,  level: 3, streak: 1,  badges: ['primera_sesion'] }
+    { id: 'demo.lucia@trackfocus.demo',     name: 'Lucía Ramírez',   xp: 1240, level: 8, streak: 12, badges: ['primera_sesion','racha_3','racha_7','maestro_enfoque','madrugador'], studentCode: 'ARV-STU-DEMO0001' },
+    { id: 'demo.mateo@trackfocus.demo',     name: 'Mateo Flores',    xp: 980,  level: 7, streak: 5,  badges: ['primera_sesion','racha_3','multimaterias'],                         studentCode: 'ARV-STU-DEMO0002' },
+    { id: 'demo.sofia@trackfocus.demo',     name: 'Sofía Castro',    xp: 1520, level: 9, streak: 21, badges: ['primera_sesion','racha_3','racha_7','racha_30','maratonista'],      studentCode: 'ARV-STU-DEMO0003' },
+    { id: 'demo.diego@trackfocus.demo',     name: 'Diego Huamán',    xp: 460,  level: 4, streak: 3,  badges: ['primera_sesion','racha_3'],                                        studentCode: 'ARV-STU-DEMO0004' },
+    { id: 'demo.valentina@trackfocus.demo', name: 'Valentina Ríos',  xp: 760,  level: 6, streak: 7,  badges: ['primera_sesion','racha_3','racha_7','noctambulo'],                 studentCode: 'ARV-STU-DEMO0005' },
+    { id: 'demo.joaquin@trackfocus.demo',   name: 'Joaquín Mendoza', xp: 300,  level: 3, streak: 1,  badges: ['primera_sesion'],                                                  studentCode: 'ARV-STU-DEMO0006' }
   ];
 
   // PRNG simple y determinista (demo reproducible).
@@ -61,6 +61,7 @@ const Demo = (() => {
         schoolId: SCHOOL, classroomId: CR, classroomIds: [],
         institutionType: 'colegio', approvalStatus: 'approved',
         parentalConsent: true, consentAt: today.toISOString(), createdAt: today.toISOString(),
+        studentCode: st.studentCode || null,
         gamification: {
           xp: st.xp, level: st.level, streak: st.streak,
           lastStudyDate: today.toISOString().slice(0, 10),

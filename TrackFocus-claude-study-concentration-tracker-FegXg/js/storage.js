@@ -46,6 +46,13 @@ const Storage = (() => {
     });
   }
 
+  function _genStudentCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let c = 'ARV-STU-';
+    for (let i = 0; i < 8; i++) c += chars[Math.floor(Math.random() * chars.length)];
+    return c;
+  }
+
   // Snapshot profundo del estado para diffing posterior.
   function snapshot(s) { return JSON.parse(JSON.stringify(s)); }
 
@@ -256,6 +263,7 @@ const Storage = (() => {
     hydrate,
     bindRealtime,
     uuid,
+    genStudentCode: _genStudentCode,
     DEFAULT_STATE,
     isBooted: () => booted
   };

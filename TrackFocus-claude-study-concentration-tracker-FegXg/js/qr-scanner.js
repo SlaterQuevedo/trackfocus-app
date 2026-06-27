@@ -187,6 +187,104 @@ const QRScanner = (() => {
     }
   }
 
+  // ── Identidad Digital (URL directa, sin inviteUrl) ────────────────────────
+
+  // Genera QR desde una URL directa en un contenedor (elementId).
+  function generateQRUrl(url, elementId, opts = {}) {
+    const { size = 200, dark = '#000000', light = '#ffffff' } = opts;
+    const el = document.getElementById(elementId);
+    if (!el) return Promise.resolve(null);
+
+    if (typeof QRCode === 'undefined') {
+      el.innerHTML = '<div style="color:var(--muted);font-size:11px;text-align:center;">QR no disponible</div>';
+      return Promise.resolve(null);
+    }
+
+    el.innerHTML = '';
+    new QRCode(el, {
+      text: url,
+      width: size,
+      height: size,
+      colorDark: dark,
+      colorLight: light,
+      correctLevel: QRCode.CorrectLevel.H
+    });
+
+    const canvas = el.querySelector('canvas');
+    return Promise.resolve(canvas ? canvas.toDataURL('image/png') : null);
+  }
+
+  // Modal fullscreen con QR grande desde URL directa.
+  function openQRModalUrl(url, displayTitle, displayCode) {
+    const existing = document.getElementById('qr-fullscreen-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'qr-fullscreen-modal';
+    modal.style.cssText = `
+      position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:990;
+      display:flex;align-items:center;justify-content:center;padding:20px;
+    `;
+    modal.innerHTML = `
+      <div style="background:var(--bg,#111);border:1px solid rgba(255,255,255,.12);border-radius:20px;
+                  padding:28px 24px;max-width:380px;width:100%;text-align:center;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div style="font-size:16px;font-weight:700;">${displayTitle || 'Código QR'}</div>
+          <button id="qrModalClose" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);
+            color:var(--text,#fff);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;">✕</button>
+        </div>
+        ${displayCode ? `<div style="font-size:18px;font-weight:800;letter-spacing:3px;color:#c8a06e;font-family:monospace;margin-bottom:16px;">${displayCode}</div>` : ''}
+        <div id="qr-modal-canvas-wrap" style="display:flex;align-items:center;justify-content:center;
+             background:#fff;border-radius:12px;padding:16px;margin:0 auto 16px;width:fit-content;"></div>
+        <div style="font-size:11px;color:var(--muted);word-break:break-all;margin-bottom:16px;">${url}</div>
+        <div id="qr-modal-actions" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;"></div>
+      </div>`;
+
+    document.body.appendChild(modal);
+    document.getElementById('qrModalClose').onclick = () => modal.remove();
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+
+    if (typeof QRCode !== 'undefined') {
+      const wrap = document.getElementById('qr-modal-canvas-wrap');
+      new QRCode(wrap, {
+        text: url,
+        width: 240,
+        height: 240,
+        colorDark: '#1a1a1a',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H
+      });
+      const canvas = wrap.querySelector('canvas');
+
+      const dlBtn = document.createElement('button');
+      dlBtn.className = 'cm-code-btn';
+      dlBtn.textContent = '⬇ Descargar';
+      dlBtn.onclick = () => {
+        const a = document.createElement('a');
+        a.href = canvas.toDataURL('image/png');
+        a.download = `ariven-id-${(displayCode || 'qr').replace(/[^A-Z0-9]/gi, '-').toLowerCase()}.png`;
+        a.click();
+      };
+
+      const shBtn = document.createElement('button');
+      shBtn.className = 'cm-code-btn';
+      shBtn.textContent = '↗ Compartir';
+      shBtn.onclick = () => {
+        const text = `${displayTitle || 'Perfil Ariven'}${displayCode ? ' · ' + displayCode : ''}: ${url}`;
+        if (navigator.share) navigator.share({ title: 'Ariven — Identidad Digital', text, url }).catch(() => {});
+        else if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => {
+          if (typeof UI !== 'undefined') UI.flash('Enlace copiado.', 'success');
+        });
+      };
+
+      const actionsEl = document.getElementById('qr-modal-actions');
+      if (actionsEl) { actionsEl.appendChild(dlBtn); actionsEl.appendChild(shBtn); }
+    } else {
+      document.getElementById('qr-modal-canvas-wrap').innerHTML =
+        '<div style="color:#999;font-size:12px;padding:20px;">Librería QR no cargada</div>';
+    }
+  }
+
   // ── Escáner ────────────────────────────────────────────────────────────────
 
   let _stream = null;
@@ -291,5 +389,5 @@ const QRScanner = (() => {
     document.getElementById('qr-scanner-modal')?.remove();
   }
 
-  return { generateQR, generateQRWithActions, openQRModal, startScanner, stopScanner, inviteUrl };
+  return { generateQR, generateQRWithActions, openQRModal, generateQRUrl, openQRModalUrl, startScanner, stopScanner, inviteUrl };
 })();

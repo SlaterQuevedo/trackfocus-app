@@ -3189,6 +3189,16 @@ const UIStudent = (() => {
   }
 
   function _profilePersonal(user, sessions, s) {
+    // Identidad Digital: generar código permanente si aún no existe
+    let _studentCode = user.studentCode;
+    if (!_studentCode) {
+      _studentCode = Storage.genStudentCode();
+      Storage.set(st => { if (st.users[user.id]) st.users[user.id].studentCode = _studentCode; });
+    }
+    const _studentUrl = 'https://trackfocus.vercel.app/s/' + _studentCode;
+    const _createdYear = user.createdAt ? new Date(user.createdAt).getFullYear() : new Date().getFullYear();
+    const _idInitial = user.name ? user.name.trim()[0].toUpperCase() : '?';
+
     const gam = user.gamification || {};
     const levelInfo = Gamification.getLevelInfo(gam.xp || 0);
     const sum = Stats.summary(sessions);
@@ -3458,6 +3468,32 @@ const UIStudent = (() => {
               </div>
               <input type="file" id="ppRestoreInput" accept=".json" style="display:none;" />
               <button class="ph2-logout-btn" id="ppLogoutBtn">Cerrar Sesión</button>
+            </div>
+
+            <!-- Identidad Digital -->
+            <div class="ph2-card ph2-id-card">
+              <div class="ph2-card-title">
+                Identidad Digital
+                <span class="ph2-id-status">● Activo</span>
+              </div>
+              <div class="ph2-id-header">
+                <div class="ph2-id-avatar" style="background:${esc(avatarColor)};">${esc(_idInitial)}</div>
+                <div class="ph2-id-info">
+                  <div class="ph2-id-name">${esc(user.name)}</div>
+                  <div class="ph2-id-code">${esc(_studentCode)}</div>
+                  <div class="ph2-id-meta">Estudiante · ${_createdYear}</div>
+                </div>
+              </div>
+              <button class="ph2-id-qr-btn" id="studentQRBtn" title="Ampliar QR">
+                <div id="studentQRCode" class="ph2-id-qr"></div>
+              </button>
+              <div class="ph2-id-url" title="${esc(_studentUrl)}">${esc(_studentUrl)}</div>
+              <div class="ph2-id-actions">
+                <button class="ph2-id-btn" id="copyStudentCode">📋 Código</button>
+                <button class="ph2-id-btn" id="copyStudentUrl">🔗 Enlace</button>
+                <button class="ph2-id-btn" id="shareStudent">↗ Compartir</button>
+                <button class="ph2-id-btn" id="downloadStudentQR">⬇ QR</button>
+              </div>
             </div>
 
           </div><!-- /ph2-col-r -->
@@ -4715,6 +4751,49 @@ const UIStudent = (() => {
     r().querySelector('#ppDiagBtn')?.addEventListener('click', () => {
       try { window.Monitor?.exportLog?.(); UI.flash('Registro de errores exportado.', 'success'); }
       catch (_) { UI.flash('No se pudo exportar el registro.', 'error'); }
+    });
+
+    // ── Identidad Digital ──
+    const _s2 = Storage.get();
+    const _u2 = _s2.users[_s2.currentUserId];
+    const _code2 = _u2?.studentCode || '';
+    const _url2 = _code2 ? 'https://trackfocus.vercel.app/s/' + _code2 : '';
+
+    if (_code2 && typeof QRScanner !== 'undefined') {
+      QRScanner.generateQRUrl(_url2, 'studentQRCode', { size: 180, dark: '#1a1a1a', light: '#ffffff' });
+    }
+
+    r().querySelector('#studentQRBtn')?.addEventListener('click', () => {
+      if (typeof QRScanner !== 'undefined' && _url2)
+        QRScanner.openQRModalUrl(_url2, 'Identidad Digital', _code2);
+    });
+
+    r().querySelector('#copyStudentCode')?.addEventListener('click', () => {
+      if (!_code2) return;
+      navigator.clipboard?.writeText(_code2).then(() => UI.flash('Código copiado.', 'success'))
+        .catch(() => UI.flash('No se pudo copiar.', 'error'));
+    });
+
+    r().querySelector('#copyStudentUrl')?.addEventListener('click', () => {
+      if (!_url2) return;
+      navigator.clipboard?.writeText(_url2).then(() => UI.flash('Enlace copiado.', 'success'))
+        .catch(() => UI.flash('No se pudo copiar.', 'error'));
+    });
+
+    r().querySelector('#shareStudent')?.addEventListener('click', () => {
+      if (!_url2) return;
+      const text = `Mi perfil en Ariven · ${_code2}: ${_url2}`;
+      if (navigator.share) navigator.share({ title: 'Ariven — Identidad Digital', text, url: _url2 }).catch(() => {});
+      else navigator.clipboard?.writeText(_url2).then(() => UI.flash('Enlace copiado.', 'success'));
+    });
+
+    r().querySelector('#downloadStudentQR')?.addEventListener('click', () => {
+      const canvas = r().querySelector('#studentQRCode canvas');
+      if (!canvas) return UI.flash('QR no disponible aún.', 'error');
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL('image/png');
+      a.download = `ariven-id-${_code2}.png`;
+      a.click();
     });
   }
 
