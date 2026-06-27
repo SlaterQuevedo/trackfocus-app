@@ -4259,3 +4259,157 @@ body.light .sv3-rarity-legendario { background: rgba(200,155,109,.15); }
   .sv3-logros-sidebar { flex-direction: column; }
   .sv3-sidebar-card { min-width: unset; }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   PERFIL HUB — Redesign visual  (ph-* prefix)
+   Solo visual — no rompe lógica ni IDs funcionales existentes
+═══════════════════════════════════════════════════════════════ */
+
+/* ── Sidebar enhanced ── */
+.ph-sidebar {
+  background: linear-gradient(180deg, rgba(200,155,109,.07) 0%, var(--panel) 40%);
+  border-color: rgba(200,155,109,.2);
+  padding: 0 0 12px;
+  overflow: hidden;
+}
+.ph-sidebar-hero {
+  display: flex; align-items: center; gap: 12px;
+  padding: 18px 14px 14px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, rgba(200,155,109,.09), rgba(139,92,246,.05));
+  margin-bottom: 4px;
+}
+.ph-sidebar-avatar {
+  width: 40px !important; height: 40px !important;
+  font-size: 15px !important; flex-shrink: 0;
+  margin: 0 !important;
+  transition: transform .15s;
+}
+.ph-sidebar-avatar:hover { transform: scale(1.08); }
+.ph-sidebar-user-info { min-width: 0; flex: 1; }
+.ph-sidebar-user-name {
+  font-size: 14px; font-weight: 700; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ph-sidebar-user-level {
+  font-size: 11px; color: var(--primary); margin-top: 2px; font-weight: 600;
+}
+
+/* ── Nav categories ── */
+.ph-nav { padding: 4px 8px 4px; }
+.ph-nav-sep {
+  font-size: 9px; font-weight: 800; letter-spacing: .1em;
+  color: var(--muted); padding: 10px 8px 4px;
+  text-transform: uppercase; -webkit-user-select: none; user-select: none;
+}
+
+/* ── Nav items — active indicator ── */
+.ph-sidebar .pp-nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 10px 9px 12px; border-radius: 10px;
+  border-left: 2px solid transparent;
+  font-size: 13px; font-weight: 500; color: var(--muted);
+  transition: background .13s, color .13s, border-color .13s;
+}
+.ph-sidebar .pp-nav-item:hover {
+  background: rgba(255,255,255,.04); color: var(--text);
+  border-left-color: rgba(200,155,109,.35);
+}
+.ph-sidebar .pp-nav-item.active {
+  background: linear-gradient(90deg, rgba(200,155,109,.16), rgba(139,92,246,.07));
+  color: var(--primary); font-weight: 700;
+  border-left-color: var(--primary);
+}
+.ph-nav-icon { font-size: 14px; flex-shrink: 0; }
+
+/* ── Panel header (icon + title + subtitle) ── */
+.ph-panel-hdr {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 20px; padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.ph-panel-hdr-icon {
+  width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+  background: linear-gradient(135deg, rgba(200,155,109,.14), rgba(139,92,246,.08));
+  border: 1px solid rgba(200,155,109,.2);
+}
+.ph-panel-title { font-size: 18px; font-weight: 800; color: var(--text); line-height: 1.2; }
+.ph-panel-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+/* ── Mi Perfil: hero card ── */
+.ph-hero-card {
+  background: linear-gradient(135deg, rgba(200,155,109,.06), rgba(139,92,246,.04));
+  border: 1px solid rgba(200,155,109,.15);
+  border-radius: var(--radius); padding: 20px; margin-bottom: 16px;
+  transition: border-color .2s;
+}
+.ph-hero-card:hover { border-color: rgba(200,155,109,.3); }
+
+/* ── Meta badge inside profile panel ── */
+.ph-meta-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 800; letter-spacing: .06em;
+  color: var(--primary); text-transform: uppercase;
+  background: rgba(200,155,109,.12); border-radius: 20px;
+  padding: 3px 10px; margin-bottom: 8px;
+}
+.ph-meta-card { transition: border-color .2s; }
+.ph-meta-card:hover { border-color: rgba(200,155,109,.4); }
+
+/* ── CTA card enhanced ── */
+.ph-cta-card {
+  background: linear-gradient(135deg, rgba(200,155,109,.06), rgba(139,92,246,.04));
+  border-color: rgba(200,155,109,.2);
+}
+
+/* ── Progress KPI grid enhanced ── */
+.ph-kpi-grid .pp-kpi-card {
+  background: linear-gradient(135deg, rgba(200,155,109,.05), rgba(139,92,246,.03));
+  border-color: rgba(200,155,109,.15);
+  transition: border-color .15s, transform .15s;
+}
+.ph-kpi-grid .pp-kpi-card:hover {
+  border-color: rgba(200,155,109,.35);
+  transform: translateY(-1px);
+}
+.ph-kpi-grid .pp-kpi-val { color: var(--primary); }
+
+/* ── Light theme ── */
+html[data-theme="light"] .ph-sidebar {
+  background: linear-gradient(180deg, rgba(200,155,109,.05) 0%, rgba(255,255,255,.97) 40%);
+  border-color: rgba(200,155,109,.25);
+}
+html[data-theme="light"] .ph-sidebar-hero {
+  background: linear-gradient(135deg, rgba(200,155,109,.07), rgba(139,92,246,.04));
+}
+html[data-theme="light"] .ph-hero-card {
+  background: linear-gradient(135deg, rgba(200,155,109,.05), rgba(139,92,246,.03));
+}
+html[data-theme="light"] .ph-panel-hdr-icon {
+  background: linear-gradient(135deg, rgba(200,155,109,.1), rgba(139,92,246,.06));
+}
+html[data-theme="light"] .ph-sidebar .pp-nav-item:hover { background: rgba(0,0,0,.03); }
+html[data-theme="light"] .ph-sidebar .pp-nav-item.active {
+  background: linear-gradient(90deg, rgba(200,155,109,.12), rgba(139,92,246,.05));
+}
+
+/* ── Mobile ── */
+@media (max-width: 700px) {
+  .ph-sidebar { padding: 0; }
+  .ph-sidebar-hero { padding: 10px 12px 8px; }
+  .ph-sidebar-user-info { display: none; }
+  .ph-nav { padding: 0; }
+  .ph-nav-sep { display: none; }
+  .ph-sidebar .pp-nav-item {
+    border-left: none; border-bottom: 2px solid transparent;
+    border-radius: 20px; padding: 7px 12px;
+  }
+  .ph-sidebar .pp-nav-item.active {
+    border-bottom: none;
+    background: linear-gradient(135deg, rgba(200,155,109,.2), rgba(139,92,246,.1));
+  }
+  .ph-panel-hdr { margin-bottom: 16px; padding-bottom: 12px; }
+  .ph-panel-hdr-icon { width: 36px; height: 36px; font-size: 17px; border-radius: 10px; }
+  .ph-panel-title { font-size: 16px; }
+}

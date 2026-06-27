@@ -3212,34 +3212,40 @@ const UIStudent = (() => {
     // ── Panel: Mi Perfil ──
     const panelProfile = `
       <div class="pp-panel active" data-panel="profile">
-        <h2 class="pp-section-title">Mi Perfil</h2>
-        <div class="pp-avatar-row">
-          <div class="pp-avatar-side">
-            <div class="pp-avatar-big" id="ppAvatarBig" style="background:${esc(avatarColor)};">${esc(initials)}</div>
-            <div class="pp-avatar-colors">${colorDotsHtml}</div>
-          </div>
-          <div class="pp-profile-info">
-            <div class="pp-name">${esc(user.name)}</div>
-            <div class="pp-msg-wrap">
-              <div class="pp-msg-display" id="ppMsgDisplay">
-                <span class="pp-msg-text" id="ppMsgText">${esc(message)}</span>
-                <button class="pp-msg-edit-btn ghost" id="ppMsgEditBtn">✏️</button>
-              </div>
-              <div id="ppMsgEdit" style="display:none;flex-direction:column;gap:6px;">
-                <textarea class="pp-msg-textarea" id="ppMsgInput" maxlength="100">${esc(message)}</textarea>
-                <button class="primary pp-msg-edit-btn" id="ppMsgSaveBtn" style="align-self:flex-end;padding:5px 14px;">Guardar</button>
+        <div class="ph-panel-hdr">
+          <div class="ph-panel-hdr-icon">👤</div>
+          <div><div class="ph-panel-title">Mi Perfil</div><div class="ph-panel-sub">Tu identidad en Ariven</div></div>
+        </div>
+        <div class="ph-hero-card">
+          <div class="pp-avatar-row">
+            <div class="pp-avatar-side">
+              <div class="pp-avatar-big" id="ppAvatarBig" style="background:${esc(avatarColor)};">${esc(initials)}</div>
+              <div class="pp-avatar-colors">${colorDotsHtml}</div>
+            </div>
+            <div class="pp-profile-info">
+              <div class="pp-name">${esc(user.name)}</div>
+              <div class="pp-msg-wrap">
+                <div class="pp-msg-display" id="ppMsgDisplay">
+                  <span class="pp-msg-text" id="ppMsgText">${esc(message)}</span>
+                  <button class="pp-msg-edit-btn ghost" id="ppMsgEditBtn">✏️</button>
+                </div>
+                <div id="ppMsgEdit" style="display:none;flex-direction:column;gap:6px;">
+                  <textarea class="pp-msg-textarea" id="ppMsgInput" maxlength="100">${esc(message)}</textarea>
+                  <button class="primary pp-msg-edit-btn" id="ppMsgSaveBtn" style="align-self:flex-end;padding:5px 14px;">Guardar</button>
+                </div>
               </div>
             </div>
           </div>
         </div>
         ${acadProfile.university ? `
-          <div class="pp-summary-card">
+          <div class="pp-summary-card ph-meta-card">
+            <div class="ph-meta-badge">🎓 Meta activa</div>
             <div class="pp-summary-uni">${esc(acadProfile.university === 'otro' ? (acadProfile.customUniversity || 'Mi universidad') : acadProfile.university)}</div>
             <div class="pp-summary-meta">${esc(acadProfile.career || '')}${nearestExam ? ` · 📅 ${nearestExam.days} días para ${esc(nearestExam.label)}` : ''}</div>
             <div class="pp-summary-bar-wrap"><div class="pp-summary-bar" style="width:${prepPct}%;"></div></div>
             <div class="pp-summary-prep">${prepPct}% de preparación</div>
           </div>` : `
-          <div class="pp-cta-card">
+          <div class="pp-cta-card ph-cta-card">
             <div class="pp-cta-icon">🎓</div>
             <div class="pp-cta-title">Configura tu meta universitaria</div>
             <div class="pp-cta-sub">Define tu universidad y carrera para personalizar tu ruta de preparación.</div>
@@ -3254,18 +3260,24 @@ const UIStudent = (() => {
         ? (acadProfile.customUniversity || 'Mi universidad') : acadProfile.university;
       panelUniversity = `
         <div class="pp-panel" data-panel="university">
-          <h2 class="pp-section-title">Meta Universitaria</h2>
-          <div class="card">
-            <div style="font-size:16px;font-weight:700;margin-bottom:4px;">${esc(uniDisplay)}</div>
-            <div style="color:var(--primary);font-size:14px;margin-bottom:10px;">${esc(acadProfile.career || '')}</div>
-            <div style="font-size:13px;color:var(--muted);margin-bottom:14px;">Materias: ${(acadProfile.enabledSubjects || []).map(s => esc(s)).join(', ') || 'Ninguna'}</div>
+          <div class="ph-panel-hdr">
+            <div class="ph-panel-hdr-icon">🎯</div>
+            <div><div class="ph-panel-title">Meta Universitaria</div><div class="ph-panel-sub">Tu objetivo de ingreso</div></div>
+          </div>
+          <div class="ph-meta-card card" style="border-color:rgba(200,155,109,.25);">
+            <div style="font-size:17px;font-weight:800;margin-bottom:4px;color:var(--text);">${esc(uniDisplay)}</div>
+            <div style="color:var(--primary);font-size:14px;font-weight:600;margin-bottom:12px;">${esc(acadProfile.career || '')}</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">📚 Materias: ${(acadProfile.enabledSubjects || []).map(s => esc(s)).join(', ') || 'Ninguna'}</div>
             <button class="ghost" id="ppChangeMeta" style="width:100%;">Cambiar meta</button>
           </div>
         </div>`;
     } else {
       panelUniversity = `
         <div class="pp-panel" data-panel="university">
-          <h2 class="pp-section-title">Meta Académica</h2>
+          <div class="ph-panel-hdr">
+            <div class="ph-panel-hdr-icon">🎯</div>
+            <div><div class="ph-panel-title">Meta Académica</div><div class="ph-panel-sub">Tu objetivo de ingreso</div></div>
+          </div>
           <div class="card">
             <p class="muted" style="font-size:13px;margin-bottom:14px;">
               Selecciona la institución a la que deseas ingresar para obtener una ruta personalizada.
@@ -3303,8 +3315,11 @@ const UIStudent = (() => {
     if (!acadProfile.university || !(acadProfile.enabledSubjects || []).length) {
       panelRoute = `
         <div class="pp-panel" data-panel="route">
-          <h2 class="pp-section-title">Ruta de Aprendizaje</h2>
-          <div class="pp-cta-card">
+          <div class="ph-panel-hdr">
+            <div class="ph-panel-hdr-icon">📚</div>
+            <div><div class="ph-panel-title">Ruta de Aprendizaje</div><div class="ph-panel-sub">Materias y avance</div></div>
+          </div>
+          <div class="pp-cta-card ph-cta-card">
             <div class="pp-cta-icon">📚</div>
             <div class="pp-cta-title">Define tu ruta primero</div>
             <div class="pp-cta-sub">Configura tu meta universitaria para ver tu ruta personalizada.</div>
@@ -3332,12 +3347,13 @@ const UIStudent = (() => {
             <button class="pp-route-btn ghost" data-go="ai-study">▶</button>
           </div>`;
       }).join('');
-      const uniLabel = acadProfile.university === 'otro' ? (acadProfile.customUniversity || '') : acadProfile.university;
       panelRoute = `
         <div class="pp-panel" data-panel="route">
-          <h2 class="pp-section-title">Ruta de Aprendizaje</h2>
-          <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);margin-bottom:12px;flex-wrap:wrap;gap:6px;">
-            <span>${esc(acadProfile.career)} · ${esc(uniLabel)}</span>
+          <div class="ph-panel-hdr">
+            <div class="ph-panel-hdr-icon">📚</div>
+            <div><div class="ph-panel-title">Ruta de Aprendizaje</div><div class="ph-panel-sub">${esc(acadProfile.career)} · ${esc(acadProfile.university === 'otro' ? (acadProfile.customUniversity || '') : acadProfile.university)}</div></div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
             <button class="ghost" id="ppChangeMeta2" style="font-size:12px;padding:4px 10px;">Cambiar meta</button>
           </div>
           <div class="pp-route-list">${routeRows || '<p class="muted" style="text-align:center;padding:20px;">Aún no tienes sesiones en estas materias.</p>'}</div>
@@ -3356,7 +3372,10 @@ const UIStudent = (() => {
       </div>`).join('');
     const panelCalendar = `
       <div class="pp-panel" data-panel="calendar">
-        <h2 class="pp-section-title">Calendario de Exámenes</h2>
+        <div class="ph-panel-hdr">
+          <div class="ph-panel-hdr-icon">📅</div>
+          <div><div class="ph-panel-title">Calendario de Exámenes</div><div class="ph-panel-sub">Fechas y cuenta regresiva</div></div>
+        </div>
         ${sortedExams.length
           ? `<div class="pp-dates-list">${examItemsHtml}</div>`
           : `<p class="muted" style="text-align:center;padding:24px 0;font-size:13px;">No hay fechas registradas. Agrega tu próximo examen.</p>`}
@@ -3412,8 +3431,10 @@ const UIStudent = (() => {
     }).join('');
     const panelSchedule = `
       <div class="pp-panel" data-panel="schedule">
-        <h2 class="pp-section-title">Planificador Semanal</h2>
-        <p class="muted" style="font-size:13px;margin-bottom:16px;">Organiza tu semana asignando materias, horarios y prioridades.</p>
+        <div class="ph-panel-hdr">
+          <div class="ph-panel-hdr-icon">📋</div>
+          <div><div class="ph-panel-title">Planificador Semanal</div><div class="ph-panel-sub">Organiza tu semana con materias y prioridades</div></div>
+        </div>
         <div class="pp-days-list">${daysHtml}</div>
       </div>`;
 
@@ -3421,8 +3442,11 @@ const UIStudent = (() => {
     const earnedBadges = Gamification.BADGES.filter(b => (gam.badges || []).includes(b.id));
     const panelProgress = `
       <div class="pp-panel" data-panel="progress">
-        <h2 class="pp-section-title">Mi Progreso</h2>
-        <div class="pp-kpi-grid">
+        <div class="ph-panel-hdr">
+          <div class="ph-panel-hdr-icon">🏆</div>
+          <div><div class="ph-panel-title">Mi Progreso</div><div class="ph-panel-sub">XP, logros e insignias</div></div>
+        </div>
+        <div class="pp-kpi-grid ph-kpi-grid">
           <div class="pp-kpi-card"><div class="pp-kpi-val">${esc(levelInfo.current.title)}</div><div class="pp-kpi-lbl">Nivel ${levelInfo.current.level}</div></div>
           <div class="pp-kpi-card"><div class="pp-kpi-val">${gam.xp||0}</div><div class="pp-kpi-lbl">XP Total</div></div>
           <div class="pp-kpi-card"><div class="pp-kpi-val">🔥 ${gam.streak||0}</div><div class="pp-kpi-lbl">Días seguidos</div></div>
@@ -3439,7 +3463,10 @@ const UIStudent = (() => {
     // ── Panel: Cuenta ──
     const panelAccount = `
       <div class="pp-panel" data-panel="account">
-        <h2 class="pp-section-title">🔐 Mi Cuenta</h2>
+        <div class="ph-panel-hdr">
+          <div class="ph-panel-hdr-icon">🔐</div>
+          <div><div class="ph-panel-title">Mi Cuenta</div><div class="ph-panel-sub">Datos de sesión y privacidad</div></div>
+        </div>
         <div class="pp-account-card">
           <div class="pp-account-name">${esc(user.name)}</div>
           <div class="pp-account-email">${esc(user.email || '—')}</div>
@@ -3460,7 +3487,10 @@ const UIStudent = (() => {
     const currentTheme = localStorage.getItem('arv-theme') || 'dark';
     const panelPrefs = `
       <div class="pp-panel" data-panel="prefs">
-        <h2 class="pp-section-title">Preferencias</h2>
+        <div class="ph-panel-hdr">
+          <div class="ph-panel-hdr-icon">⚙️</div>
+          <div><div class="ph-panel-title">Ajustes</div><div class="ph-panel-sub">Apariencia y funcionalidades</div></div>
+        </div>
         <div class="pp-prefs-section">
           <div class="pp-prefs-section-title">Apariencia</div>
           <div class="pp-prefs-row">
@@ -3498,7 +3528,10 @@ const UIStudent = (() => {
     // ── Panel: Institución (vinculación mediante código) ──
     const panelInstitution = `
       <div class="pp-panel" data-panel="institution">
-        <h2 class="pp-section-title">Mi Institución</h2>
+        <div class="ph-panel-hdr">
+          <div class="ph-panel-hdr-icon">🏫</div>
+          <div><div class="ph-panel-title">Mi Institución</div><div class="ph-panel-sub">Vinculación a tu colegio</div></div>
+        </div>
         <div class="card" style="margin-bottom:14px;">
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
             <span style="font-size:28px;">🎒</span>
@@ -3528,18 +3561,47 @@ const UIStudent = (() => {
 
     return `
       <div class="pp-layout">
-        <aside class="pp-sidebar">
-          <div class="pp-avatar-big" style="background:${esc(avatarColor)};">${esc(initials)}</div>
-          <nav class="pp-nav">
-            <button class="pp-nav-item active" data-panel="profile">👤 Mi Perfil</button>
-            <button class="pp-nav-item" data-panel="university">🎯 Meta</button>
-            <button class="pp-nav-item" data-panel="route">📚 Ruta</button>
-            <button class="pp-nav-item" data-panel="calendar">📅 Calendario</button>
-            <button class="pp-nav-item" data-panel="schedule">📋 Planificador</button>
-            <button class="pp-nav-item" data-panel="progress">🏆 Progreso</button>
-            <button class="pp-nav-item" data-panel="institution">🏫 Institución</button>
-            <button class="pp-nav-item" data-panel="prefs">⚙️ Ajustes</button>
-            <button class="pp-nav-item" data-panel="account">🔐 Cuenta</button>
+        <aside class="pp-sidebar ph-sidebar">
+          <div class="ph-sidebar-hero">
+            <div class="pp-avatar-big ph-sidebar-avatar" style="background:${esc(avatarColor)};">${esc(initials)}</div>
+            <div class="ph-sidebar-user-info">
+              <div class="ph-sidebar-user-name">${esc(user.name.split(' ')[0])}</div>
+              <div class="ph-sidebar-user-level">${esc(levelInfo.current.title)}</div>
+            </div>
+          </div>
+          <nav class="pp-nav ph-nav">
+            <div class="ph-nav-sep">PERFIL</div>
+            <button class="pp-nav-item active" data-panel="profile">
+              <span class="ph-nav-icon">👤</span><span>Mi Perfil</span>
+            </button>
+            <div class="ph-nav-sep">OBJETIVOS</div>
+            <button class="pp-nav-item" data-panel="university">
+              <span class="ph-nav-icon">🎯</span><span>Meta</span>
+            </button>
+            <button class="pp-nav-item" data-panel="route">
+              <span class="ph-nav-icon">📚</span><span>Ruta</span>
+            </button>
+            <div class="ph-nav-sep">PLANIFICACIÓN</div>
+            <button class="pp-nav-item" data-panel="calendar">
+              <span class="ph-nav-icon">📅</span><span>Calendario</span>
+            </button>
+            <button class="pp-nav-item" data-panel="schedule">
+              <span class="ph-nav-icon">📋</span><span>Planificador</span>
+            </button>
+            <div class="ph-nav-sep">PROGRESO</div>
+            <button class="pp-nav-item" data-panel="progress">
+              <span class="ph-nav-icon">🏆</span><span>Progreso</span>
+            </button>
+            <button class="pp-nav-item" data-panel="institution">
+              <span class="ph-nav-icon">🏫</span><span>Institución</span>
+            </button>
+            <div class="ph-nav-sep">CONFIGURACIÓN</div>
+            <button class="pp-nav-item" data-panel="prefs">
+              <span class="ph-nav-icon">⚙️</span><span>Ajustes</span>
+            </button>
+            <button class="pp-nav-item" data-panel="account">
+              <span class="ph-nav-icon">🔐</span><span>Cuenta</span>
+            </button>
           </nav>
         </aside>
         <main class="pp-content">
