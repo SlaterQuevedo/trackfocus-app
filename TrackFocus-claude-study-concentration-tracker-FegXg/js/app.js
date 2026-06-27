@@ -41,16 +41,39 @@ const App = (() => {
     'manage-users':       ['super_admin'],
   };
 
-  let _current = null;
+  let _current              = null;
+  let _landingScrollHandler = null; // referencia para limpiar el listener en navegación
+
+  function _esc(s) {
+    return String(s ?? '').replace(/[&<>"']/g,
+      c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function _debounce(fn, ms) {
+    let t;
+    return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+  }
+
+  // Ejecuta fn en tiempo libre del navegador; fallback para Safari (sin requestIdleCallback).
+  function _ric(fn) {
+    return 'requestIdleCallback' in window
+      ? requestIdleCallback(fn, { timeout: 2000 })
+      : setTimeout(fn, 200);
+  }
 
   function go(route, params = {}) {
+    performance.mark?.('go:' + route + ':start');
     Charts.destroyAll();
+    if (_landingScrollHandler) {
+      window.removeEventListener('scroll', _landingScrollHandler);
+      _landingScrollHandler = null;
+    }
 
     const user = Roles.current();
     const allowed = ROUTE_ROLES[route];
 
     if (allowed === undefined) {
-      document.getElementById('app').innerHTML = `<div class="alert error">Pantalla desconocida: ${route}</div>`;
+      document.getElementById('app').innerHTML = `<div class="alert error">Pantalla desconocida: ${_esc(route)}</div>`;
       return;
     }
 
@@ -87,7 +110,7 @@ const App = (() => {
 
     const screen = allScreens[route];
     if (!screen) {
-      document.getElementById('app').innerHTML = `<div class="alert error">Pantalla no implementada: ${route}</div>`;
+      document.getElementById('app').innerHTML = `<div class="alert error">Pantalla no implementada: ${_esc(route)}</div>`;
       return;
     }
 
@@ -95,8 +118,10 @@ const App = (() => {
     screen.wire(params);
     updateChrome();
     // TRACKY (Fase 8): mascota contextual. Vive fuera de #app y sobrevive al re-render.
-    if (typeof Tracky !== 'undefined') Tracky.checkContext(_current, Roles.current());
+    // Diferido a tiempo libre del navegador: no bloquea el render de la pantalla.
+    if (typeof Tracky !== 'undefined') _ric(() => Tracky.checkContext(_current, Roles.current()));
     window.scrollTo({ top: 0, behavior: 'instant' });
+    performance.measure?.('go:' + route, 'go:' + route + ':start');
   }
 
   function updateChrome() {
@@ -396,6 +421,18 @@ const App = (() => {
     bindGlobal();
     wirePomodoroBar();
 
+    // Page Visibility API: pausar trabajo no crítico cuando la pestaña está oculta.
+    // Ahorra CPU y batería en iPhone/MacBook cuando el usuario cambia de pestaña.
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        if (typeof Connectivity !== 'undefined' && Connectivity.pausePoll) Connectivity.pausePoll();
+        if (typeof Tracky      !== 'undefined' && Tracky.suspend)          Tracky.suspend();
+      } else {
+        if (typeof Connectivity !== 'undefined' && Connectivity.resumePoll) Connectivity.resumePoll();
+        if (typeof Tracky       !== 'undefined' && Tracky.resume)           Tracky.resume();
+      }
+    }, { passive: true });
+
     // Modo demostración (Fase G): ?demo=1 (docente→Eureka), ?demo=student (dashboard),
     // o ?demo=guided (chat directo). No requiere Supabase ni internet; datos ficticios aislados.
     const _demo = new URLSearchParams(location.search).get('demo');
@@ -440,7 +477,7 @@ const App = (() => {
         }
       } catch (_) {}
     }
-    console.log('[App] Auth session:', { email: authSession.user?.email, isSuperAdmin: authSession.isSuperAdmin, roles: authSession.availableRoles?.map(r => r.role), autoLogin: _isAutoLogin });
+    console.log('[App] Auth session:', { isSuperAdmin: authSession.isSuperAdmin, roles: authSession.availableRoles?.map(r => r.role), autoLogin: _isAutoLogin });
 
     // 2. Verificar roles disponibles y multi-rol.
     // NEW: Si es super_admin oficial, auto-seleccionar su rol admin (skip selector)
@@ -470,13 +507,14 @@ const App = (() => {
     Storage.setCurrent((authSession.user?.email || authSession.session?.user?.email || '').toLowerCase());
 
     // Suscribirse a cambios remotos (multi-dispositivo)
+    const _debouncedRefresh = _debounce(() => go(_current), 300);
     Storage.bindRealtime(() => {
       // Repintar la pantalla actual cuando llegan cambios, EXCEPTO si interrumpiría
       // al usuario (rendimiento + UX): chat IA en curso o un modal/quiz abierto.
       if (!_current || _current === 'welcome' || _current === 'consent' || _current === 'privacy-policy' || _current === 'legal') return;
       if (_current === 'ai-study') return;
       if (document.querySelector('.quiz-modal') || document.querySelector('.pom-modal:not(.hidden)')) return;
-      go(_current);
+      _debouncedRefresh();
     });
 
     let user;
@@ -491,7 +529,7 @@ const App = (() => {
       console.warn('[App] No user from Roles.current()');
       return go('welcome');
     }
-    console.log('[App] Current user:', { email: user.email, role: user.role });
+    console.log('[App] Current user:', { role: user.role });
 
     // Auto-login: sesión restaurada automáticamente → saludo de bienvenida
     if (_isAutoLogin) {
@@ -1674,6 +1712,8 @@ const App = (() => {
     if (reveals.length) {
       if (reduced) {
         reveals.forEach(el => el.classList.add('visible'));
+      } else if (typeof IntersectionObserver === 'undefined') {
+        reveals.forEach(el => el.classList.add('visible'));
       } else {
         const ro = new IntersectionObserver((entries) => {
           entries.forEach(entry => {
@@ -1700,6 +1740,7 @@ const App = (() => {
         if (glows[1]) glows[1].style.transform = 'translateY(' + (y * -0.08) + 'px)';
         if (glows[2]) glows[2].style.transform = 'translateY(' + (y * 0.06) + 'px)';
       }
+      _landingScrollHandler = onScroll;
       window.addEventListener('scroll', onScroll, { passive: true });
     }
   }

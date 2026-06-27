@@ -33,6 +33,9 @@ const Gamification = (() => {
     { id: 'madrugador',       label: 'Madrugador',          icon: '🌅', desc: '10 sesiones antes de las 8:00' }
   ];
 
+  const _lbCache  = new Map(); // TTL cache: "${scope}:${scopeId}:${period}" → {ts, result}
+  const LB_TTL_MS = 30_000;   // 30 segundos
+
   function getLevelInfo(xp) {
     let current = LEVELS[0];
     let next = LEVELS[1];
@@ -190,6 +193,7 @@ const Gamification = (() => {
       g.xp = newXp;
       g.level = newLevel;
     });
+    _lbCache.clear(); // XP cambió — leaderboard debe recalcularse en el próximo acceso
 
     const newBadges = checkBadges(userId);
     return { xpEarned, newBadges, levelUp: newLevel > prevLevel, newLevel };
@@ -213,6 +217,10 @@ const Gamification = (() => {
   }
 
   function getLeaderboard(scope, scopeId, period) {
+    const key = `${scope}:${scopeId || ''}:${period}`;
+    const cached = _lbCache.get(key);
+    if (cached && (Date.now() - cached.ts) < LB_TTL_MS) return cached.result;
+
     const s = Storage.get();
     const now = new Date();
     let fromDate = null;
@@ -272,6 +280,7 @@ const Gamification = (() => {
 
     entries.sort((a, b) => b.xp - a.xp || b.streak - a.streak);
     entries.forEach((e, i) => { e.rank = i + 1; });
+    _lbCache.set(key, { ts: Date.now(), result: entries });
     return entries;
   }
 

@@ -94,6 +94,22 @@ const Monitor = (() => {
     window.addEventListener('unhandledrejection', (e) => {
       try { log('critical', 'Promesa no manejada', e.reason?.message || String(e.reason || '')); } catch (_) {}
     });
+
+    // PerformanceObserver para Long Tasks (Chromium/Edge; falla silenciosamente en Safari/Firefox).
+    // Registra tareas ≥50ms en el buffer circular sin costo cuando no hay tareas largas.
+    if (typeof PerformanceObserver !== 'undefined') {
+      try {
+        const _perfObs = new PerformanceObserver((list) => {
+          list.getEntries().forEach(function(entry) {
+            if (entry.duration >= 50) {
+              log('perf', 'Long task ' + Math.round(entry.duration) + 'ms',
+                  (entry.attribution && entry.attribution[0] && entry.attribution[0].containerType) || 'window');
+            }
+          });
+        });
+        _perfObs.observe({ type: 'longtask', buffered: false });
+      } catch (_) {}
+    }
   }
 
   return api;

@@ -11,6 +11,10 @@ export default async (req, res) => {
   if (!audio || !mimeType) {
     return res.status(400).json({ error: 'audio (base64) y mimeType son requeridos' });
   }
+  const MAX_AUDIO_BASE64 = 5 * 1024 * 1024; // 5 MB en base64 ≈ 3.75 MB de audio real
+  if (audio.length > MAX_AUDIO_BASE64) {
+    return res.status(413).json({ error: 'Audio demasiado grande (máx 3.75 MB)' });
+  }
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {

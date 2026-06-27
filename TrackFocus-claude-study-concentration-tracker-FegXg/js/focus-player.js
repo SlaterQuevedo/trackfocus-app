@@ -5,6 +5,13 @@ const FocusPlayer = (() => {
 
   const LS_POS = 'arv-fp-pos';
 
+  // Registro central de MutationObservers para hacer disconnect en unload.
+  const _observers = [];
+
+  // Dimensiones cacheadas del bar (evita leer offsetWidth/offsetHeight en cada frame).
+  let _cachedW = 340;
+  let _cachedH = 100;
+
   // ── Posicionamiento y drag ─────────────────────────────────────────────────
 
   function _loadPos() {
@@ -21,9 +28,10 @@ const FocusPlayer = (() => {
     };
   }
   function _applyPos(bar, x, y) {
-    const p = _clampPos(x, y, bar.offsetWidth || 340, bar.offsetHeight || 100);
-    bar.style.left   = p.x + 'px';
-    bar.style.top    = p.y + 'px';
+    const p = _clampPos(x, y, _cachedW, _cachedH);
+    bar.style.transform = `translate(${p.x}px, ${p.y}px)`;
+    bar.style.left   = '0';
+    bar.style.top    = '0';
     bar.style.right  = 'auto';
     bar.style.bottom = 'auto';
   }
@@ -71,9 +79,15 @@ const FocusPlayer = (() => {
       _savePos(rect.left, rect.top);
     });
 
+    let _resizeT;
     window.addEventListener('resize', () => {
-      const rect = bar.getBoundingClientRect();
-      _applyPos(bar, rect.left, rect.top);
+      clearTimeout(_resizeT);
+      _resizeT = setTimeout(() => {
+        _cachedW = bar.offsetWidth || _cachedW;
+        _cachedH = bar.offsetHeight || _cachedH;
+        const rect = bar.getBoundingClientRect();
+        _applyPos(bar, rect.left, rect.top);
+      }, 150);
     }, { passive: true });
   }
 
@@ -126,6 +140,7 @@ const FocusPlayer = (() => {
         }
       });
       obs.observe(displayEl, { childList: true, characterData: true, subtree: true });
+      _observers.push(obs);
     }
 
     // Cuando app.js llama window._showPomBar() (desde Estudio IA), también restaurar
@@ -219,6 +234,10 @@ const FocusPlayer = (() => {
     const bar = document.getElementById('pomBar');
     if (!bar) return;
 
+    // Cachear dimensiones una sola vez (el bar tiene tamaño fijo)
+    _cachedW = bar.offsetWidth || 340;
+    _cachedH = bar.offsetHeight || 100;
+
     _initDrag(bar);
     _initToggle(bar);
 
@@ -229,6 +248,7 @@ const FocusPlayer = (() => {
       }
     });
     visObs.observe(bar, { attributes: true, attributeFilter: ['class'] });
+    _observers.push(visObs);
 
     // Expand/minimize modal
     const trigger  = document.getElementById('fpExpandTrigger');
@@ -272,15 +292,15 @@ const FocusPlayer = (() => {
     // MutationObserver: sincronizar modal con el reloj en tiempo real
     const displayEl = document.getElementById('pomBarDisplay');
     if (displayEl) {
-      new MutationObserver(_syncModal).observe(displayEl, {
-        childList: true, characterData: true, subtree: true
-      });
+      const clockObs = new MutationObserver(_syncModal);
+      clockObs.observe(displayEl, { childList: true, characterData: true, subtree: true });
+      _observers.push(clockObs);
     }
 
     // data-mode en #pomBar para colores CSS
     const modeEl = document.getElementById('pomBarMode');
     if (modeEl) {
-      new MutationObserver(() => {
+      const modeObs = new MutationObserver(() => {
         const txt  = modeEl.textContent.toLowerCase();
         const mode = txt.includes('enfocado') ? 'focus'
           : txt.includes('descanso') ? 'break'
@@ -288,7 +308,9 @@ const FocusPlayer = (() => {
           : 'idle';
         bar.setAttribute('data-mode', mode);
         _syncModal();
-      }).observe(modeEl, { childList: true, characterData: true, subtree: true });
+      });
+      modeObs.observe(modeEl, { childList: true, characterData: true, subtree: true });
+      _observers.push(modeObs);
     }
 
     // Espacio = pausar/reanudar cuando el modal está abierto
@@ -300,7 +322,14 @@ const FocusPlayer = (() => {
     });
   }
 
+  function _disconnectObservers() {
+    _observers.forEach(o => o.disconnect());
+    _observers.length = 0;
+  }
+
   window.addEventListener('load', init);
+  window.addEventListener('beforeunload', _disconnectObservers, { once: true });
+  window.addEventListener('pagehide',     _disconnectObservers, { once: true });
 
   return { open: _open, close: _close };
 })();

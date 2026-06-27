@@ -14,7 +14,8 @@ const Tracky = (() => {
   let _lastRoute = null;
   let _bubbleTimer = null;
   let _idleTimer = null;
-  let _idleBound = false;
+  let _idleBound  = false;
+  let _suspended  = false;
 
   function _isHidden() {
     try { return localStorage.getItem(LS_HIDDEN) === '1'; } catch (_) { return false; }
@@ -85,7 +86,7 @@ const Tracky = (() => {
 
   // Muestra un mensaje en el globo (si Tracky está visible).
   function show(message, opts = {}) {
-    if (_isHidden() || !message) return;
+    if (_isHidden() || _suspended || !message) return;
     const root = _ensureRoot();
     if (!root.querySelector('.tracky-container')) _renderVisibleState();
     const bubble = root.querySelector('#trackyBubble');
@@ -154,6 +155,7 @@ const Tracky = (() => {
   }
 
   function _armIdle() {
+    if (_suspended) return;
     if (_idleTimer) clearTimeout(_idleTimer);
     _idleTimer = setTimeout(() => {
       show('⏱ ¿Un descanso? El Pomodoro te espera cuando quieras.');
@@ -169,6 +171,7 @@ const Tracky = (() => {
 
   // Llamado por el router tras cada navegación. Decide visibilidad y mensaje.
   function checkContext(route, user) {
+    if (_suspended) return;
     const root = _ensureRoot();
 
     // Pantallas de autenticación / sin sesión → Tracky no aparece.
@@ -195,5 +198,17 @@ const Tracky = (() => {
     }
   }
 
-  return { checkContext, show, hide };
+  function suspend() {
+    _suspended = true;
+    _clearBubbleTimer();
+    if (_idleTimer) { clearTimeout(_idleTimer); _idleTimer = null; }
+  }
+
+  function resume() {
+    if (!_suspended) return;
+    _suspended = false;
+    if (_lastRoute && !NO_TRACKY_ROUTES.includes(_lastRoute)) _armIdle();
+  }
+
+  return { checkContext, show, hide, suspend, resume };
 })();

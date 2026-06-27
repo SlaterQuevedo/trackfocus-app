@@ -784,17 +784,21 @@ const UIAdmin = (() => {
     // ── Search: Enter key también aplica ──
     var searchInput = document.getElementById('umSearchInput');
     if (searchInput) {
-      // Live search via DOM manipulation (sin re-render)
+      // Live search via DOM manipulation (sin re-render) — debounced 120ms
+      var _umSearchT;
       searchInput.addEventListener('input', function() {
-        var q = searchInput.value.toLowerCase();
-        root().querySelectorAll('.um-user-row').forEach(function(row) {
-          var text = row.dataset.search || '';
-          row.style.display = text.includes(q) ? '' : 'none';
-        });
-        // Update count badge
-        var visible = root().querySelectorAll('.um-user-row:not([style*="none"])').length;
-        var titleEl = root().querySelector('.um-table-title');
-        if (titleEl) titleEl.textContent = visible + ' usuario' + (visible !== 1 ? 's' : '') + (q ? ' (filtrado)' : '');
+        clearTimeout(_umSearchT);
+        _umSearchT = setTimeout(function() {
+          var q = searchInput.value.toLowerCase();
+          root().querySelectorAll('.um-user-row').forEach(function(row) {
+            var text = row.dataset.search || '';
+            row.style.display = text.includes(q) ? '' : 'none';
+          });
+          // Update count badge
+          var visible = root().querySelectorAll('.um-user-row:not([style*="none"])').length;
+          var titleEl = root().querySelector('.um-table-title');
+          if (titleEl) titleEl.textContent = visible + ' usuario' + (visible !== 1 ? 's' : '') + (q ? ' (filtrado)' : '');
+        }, 120);
       });
       searchInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
@@ -986,7 +990,7 @@ const UIAdmin = (() => {
       var sid = changeCrSchoolSel.value;
       var crs = sid ? Schools.listClassrooms(sid) : [];
       changeCrClassSel.innerHTML = '<option value="">Sin aula</option>' +
-        crs.map(function(cr) { return '<option value="'+cr.id+'">'+cr.name+'</option>'; }).join('');
+        crs.map(function(cr) { return '<option value="'+esc(cr.id)+'">'+esc(cr.name)+'</option>'; }).join('');
     });
     var saveChangeCr = document.getElementById('umSaveChangeCr');
     saveChangeCr && saveChangeCr.addEventListener('click', function() {
@@ -1251,7 +1255,7 @@ const UIAdmin = (() => {
       if (bulkClassSel) {
         bulkClassSel.disabled = !sid;
         bulkClassSel.innerHTML = '<option value="">Seleccionar aula...</option>' +
-          crs.map(function(cr) { return '<option value="'+cr.id+'">'+cr.name+'</option>'; }).join('');
+          crs.map(function(cr) { return '<option value="'+esc(cr.id)+'">'+esc(cr.name)+'</option>'; }).join('');
       }
     });
     var bulkMoveConfirm = document.getElementById('umBulkMoveConfirm');
@@ -1740,12 +1744,16 @@ const UIAdmin = (() => {
       var crId = inp.id.replace('tutorSearch-','');
       var list = document.getElementById('tutorList-'+crId);
       if (!list) return;
+      var _tutorT;
       inp.addEventListener('input',function(){
-        var q = inp.value.toLowerCase().trim();
-        list.querySelectorAll('.cp-tutor-item').forEach(function(item){
-          var name = (item.dataset.teacherName || '');
-          item.style.display = (!q || name.includes(q)) ? '' : 'none';
-        });
+        clearTimeout(_tutorT);
+        _tutorT = setTimeout(function(){
+          var q = inp.value.toLowerCase().trim();
+          list.querySelectorAll('.cp-tutor-item').forEach(function(item){
+            var name = (item.dataset.teacherName || '');
+            item.style.display = (!q || name.includes(q)) ? '' : 'none';
+          });
+        }, 120);
       });
     });
 

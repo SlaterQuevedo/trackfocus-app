@@ -5,7 +5,8 @@
 const Connectivity = (() => {
 
   const BACKOFFS = [1000, 4000, 10000, 30000]; // ms — reintentos escalonados
-  let _retryTimer = null;
+  let _retryTimer    = null;
+  let _pollIntervalId = null;
   let _attempt = 0;
 
   function isOnline() {
@@ -46,15 +47,40 @@ const Connectivity = (() => {
   function init() {
     window.addEventListener('online', _onOnline);
     window.addEventListener('offline', _onOffline);
-    // Al cargar, si quedó algo pendiente de una sesión previa, reintentar tras estabilizar.
-    if (isOnline()) setTimeout(_tryResync, 2000);
+    // Al cargar, si quedó algo pendiente, diferir a tiempo libre del navegador.
+    if (isOnline()) {
+      var _ric = 'requestIdleCallback' in window
+        ? function(fn) { requestIdleCallback(fn, { timeout: 3000 }); }
+        : function(fn) { setTimeout(fn, 200); };
+      _ric(_tryResync);
+    }
     // Red de seguridad: cubre fallos transitorios estando online (sin evento 'online').
-    setInterval(() => {
+    _startPoll();
+  }
+
+  function _startPoll() {
+    if (_pollIntervalId) return;
+    _pollIntervalId = setInterval(() => {
       if (!isOnline()) return;
       const stateDirty = (typeof Storage !== 'undefined' && Storage.isDirty && Storage.isDirty());
       const pilotPending = (typeof Pilot !== 'undefined' && Pilot.pendingCount && Pilot.pendingCount() > 0);
       if (stateDirty || pilotPending) _tryResync();
     }, 20000);
+  }
+
+  function pausePoll() {
+    if (_pollIntervalId) { clearInterval(_pollIntervalId); _pollIntervalId = null; }
+  }
+
+  function resumePoll() {
+    _startPoll();
+    // Reintento inmediato por si hubo cambios mientras la pestaña estuvo oculta.
+    if (isOnline()) {
+      var _r = 'requestIdleCallback' in window
+        ? function(fn) { requestIdleCallback(fn, { timeout: 3000 }); }
+        : function(fn) { setTimeout(fn, 200); };
+      _r(_tryResync);
+    }
   }
 
   // Auto-init cuando el DOM esté listo (Storage/UI ya cargados por orden de <script>).
@@ -66,5 +92,5 @@ const Connectivity = (() => {
     }
   }
 
-  return { isOnline, resyncNow: _tryResync, init };
+  return { isOnline, resyncNow: _tryResync, init, pausePoll, resumePoll };
 })();

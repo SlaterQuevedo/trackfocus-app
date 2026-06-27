@@ -59,10 +59,15 @@ async function callGemini(parts, generationConfig) {
   return { text };
 }
 
+const MAX_FILE_BASE64 = 10 * 1024 * 1024; // 10 MB en base64 ≈ 7.5 MB de archivo real
+
 async function handleAnalyze(req, res) {
   const { mimeType, base64 } = req.body || {};
   if (!base64 || !mimeType) {
     return res.status(400).json({ error: 'base64 y mimeType requeridos' });
+  }
+  if (base64.length > MAX_FILE_BASE64) {
+    return res.status(413).json({ error: 'Archivo demasiado grande (máx 7.5 MB)' });
   }
 
   const result = await callGemini(
@@ -78,6 +83,9 @@ async function handleAnswerQuestion(req, res) {
   const { question, mimeType, base64 } = req.body || {};
   if (!question || !base64 || !mimeType) {
     return res.status(400).json({ error: 'question, base64 y mimeType requeridos' });
+  }
+  if (base64.length > MAX_FILE_BASE64) {
+    return res.status(413).json({ error: 'Archivo demasiado grande (máx 7.5 MB)' });
   }
 
   const instruction = `Actúa como tutor educativo socrático para estudiantes de secundaria.

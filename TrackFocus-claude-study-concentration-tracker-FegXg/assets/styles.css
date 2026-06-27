@@ -96,6 +96,8 @@ html, body {
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 body {
   display: flex;
@@ -136,6 +138,7 @@ body {
   font-size: 16px;
   letter-spacing: -0.3px;
   color: var(--text);
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -471,6 +474,18 @@ button.danger:hover {
 .table tbody tr:hover {
   background: rgba(255,255,255,0.025);
 }
+
+/* ---- History pagination ---- */
+.hist-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  font-size: 13px;
+  color: var(--muted);
+}
+.hist-pagination span:empty { width: 80px; }
 
 /* ---- KPI Cards ---- */
 .kpi {
@@ -1580,7 +1595,9 @@ html[data-theme="light"] {
   flex-direction: column;
   gap: 10px;
   transition: border-color 300ms ease, box-shadow 300ms ease;
+  -webkit-user-select: none;
   user-select: none;
+  will-change: transform;
 }
 .focus-player.hidden { display: none; }
 .focus-player.fp-minimized { display: none; }
@@ -1609,6 +1626,7 @@ html[data-theme="light"] {
   font-weight: 600;
   color: var(--text);
   transition: transform 150ms, box-shadow 150ms;
+  -webkit-user-select: none;
   user-select: none;
 }
 .fp-pill:hover {
@@ -2133,6 +2151,7 @@ body.pom-active .container { padding-top: 0; }
   align-items: center;
   gap: 8px;
   list-style: none;
+  -webkit-user-select: none;
   user-select: none;
 }
 .deco-level summary::-webkit-details-marker { display: none; }
@@ -2705,6 +2724,9 @@ body.pom-active .container { padding-top: 0; }
    Todas las animaciones usan transform/opacity para
    evitar reflows (sin width/height/margin animados).
    ================================================ */
+
+/* Elimina el retraso 300ms de tap en Android/iOS */
+button, a, [role="button"], input[type="submit"], input[type="button"] { touch-action: manipulation; }
 
 /* Feedback inmediato en botones */
 button { transition: transform var(--transition), opacity var(--transition); }

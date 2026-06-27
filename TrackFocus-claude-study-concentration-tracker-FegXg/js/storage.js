@@ -34,6 +34,11 @@ const Storage = (() => {
     classroomRequests: {}
   };
 
+  function _clone(x) {
+    if (typeof structuredClone === 'function') return structuredClone(x);
+    return JSON.parse(JSON.stringify(x));
+  }
+
   function uuid() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
       const r = Math.random() * 16 | 0;
@@ -45,7 +50,7 @@ const Storage = (() => {
   function snapshot(s) { return JSON.parse(JSON.stringify(s)); }
 
   // Estado interno
-  let state = structuredClone(DEFAULT_STATE);
+  let state = _clone(DEFAULT_STATE);
   let booted = false;
   let pendingSync = Promise.resolve();
 
@@ -133,7 +138,7 @@ const Storage = (() => {
   }
 
   function clear() {
-    state = structuredClone(DEFAULT_STATE);
+    state = _clone(DEFAULT_STATE);
     booted = false;
     _syncDirty = false;
     // Privacidad en equipos compartidos (colegio): no dejar datos en el cache tras salir.
@@ -185,7 +190,7 @@ const Storage = (() => {
     if (!uid) return;
 
     // Sub-estado con SOLO lo escribible por este usuario.
-    const scoped = structuredClone(DEFAULT_STATE);
+    const scoped = _clone(DEFAULT_STATE);
     if (state.users[uid]) scoped.users[uid] = state.users[uid];
     scoped.sessions = (state.sessions || []).filter(s => s.email === uid);
     if (state.customSubjects[uid]) scoped.customSubjects[uid] = state.customSubjects[uid];
@@ -197,7 +202,7 @@ const Storage = (() => {
     }
 
     try {
-      await Cloud.syncDiff(structuredClone(DEFAULT_STATE), snapshot(scoped));
+      await Cloud.syncDiff(_clone(DEFAULT_STATE), snapshot(scoped));
       _syncDirty = false;
       window.Monitor?.log?.('sync', 'resync OK tras reconexión');
       console.info('[Storage] resync completado tras reconexión.');

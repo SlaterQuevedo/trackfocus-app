@@ -302,6 +302,7 @@ tr.self td { background: rgba(200,155,109,0.07) !important; }
 .pom-modal-inner {
   max-width: 420px;
   width: 90%;
+  max-height: calc(100vh - 32px);
   max-height: calc(100dvh - 32px);
   overflow-y: auto;
   animation: modalIn 0.22s cubic-bezier(0.16,1,0.3,1);

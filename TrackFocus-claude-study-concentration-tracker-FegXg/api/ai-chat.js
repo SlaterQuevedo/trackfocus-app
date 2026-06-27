@@ -313,6 +313,9 @@ async function handleMessage(req, res) {
   if (!metadata || !userMessage) {
     return res.status(400).json({ error: 'metadata y userMessage son requeridos' });
   }
+  if (userMessage.length > 10000) {
+    return res.status(400).json({ error: 'Mensaje demasiado largo (máx 10 000 caracteres)' });
+  }
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {

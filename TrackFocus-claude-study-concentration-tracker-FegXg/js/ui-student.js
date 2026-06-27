@@ -241,13 +241,8 @@ const UIStudent = (() => {
       });
     }
 
-    // Mentor tip from analytics
-    let mentorTip = '';
-    const dpAlerts = Analytics.generateAlerts(user.id);
-    const successAlert = dpAlerts.find(function(a) { return a.type === 'success'; });
-    const infoAlert = dpAlerts.find(function(a) { return a.type === 'info'; });
-    if (successAlert) mentorTip = successAlert.msg;
-    else if (infoAlert) mentorTip = infoAlert.msg;
+    // Mentor tip — se rellena en idle time (wireDashboard) para no bloquear el render.
+    const mentorTip = '';
 
     // Last session not today (resume card)
     const todayStr = new Date().toDateString();
@@ -347,14 +342,14 @@ const UIStudent = (() => {
       + resumeHtml
       + habitsHtml
       + pathHtml
-      + mentorCardHtml
+      + '<div id="dpv-mentor-placeholder"></div>'
       + (goalsCard ? '<div class="dpv-goals-wrap">' + goalsCard + '</div>' : '')
       + '</div>';
   }
 
   function _dashStudent(user, sessions, s) {
     const gam = user.gamification || {};
-    const alerts = Analytics.generateAlerts(user.id);
+    const alerts = [];  // se rellena en idle time (wireDashboard)
     const school = user.schoolId ? s.schools[user.schoolId] : null;
     const classroom = user.classroomId ? s.classrooms[user.classroomId] : null;
     const tutorUser = classroom?.tutorId ? s.users[classroom.tutorId] : null;
@@ -418,11 +413,6 @@ const UIStudent = (() => {
     }
     const examsCount = exams.length;
     const coursesCount = new Set(sessions.map(sess => sess.subject)).size;
-    const alertsHtml = alerts.length ? `
-      <div class="ds-alerts">
-        ${alerts.slice(0, 2).map(a => `<div class="ds-alert-item">⚡ ${a.msg}</div>`).join('')}
-      </div>` : '';
-
     return `
       <div class="ds-wrap">
         ${heroHtml}
@@ -461,7 +451,7 @@ const UIStudent = (() => {
             <div class="ds-hub-arrow">→</div>
           </div>
         </div>
-        ${alertsHtml}
+        <div id="ds-alerts-placeholder"></div>
       </div>`;
   }
 
@@ -511,6 +501,36 @@ const UIStudent = (() => {
   function wireDashboard() {
     root().querySelectorAll('[data-go]').forEach(b =>
       b.addEventListener('click', () => App.go(b.dataset.go)));
+
+    // Diferir Analytics.generateAlerts al tiempo libre del navegador para no
+    // bloquear el render inicial del dashboard.
+    var _ricDash = 'requestIdleCallback' in window
+      ? function(fn) { requestIdleCallback(fn, { timeout: 2000 }); }
+      : function(fn) { setTimeout(fn, 200); };
+    _ricDash(function() {
+      var uid = Storage.get().currentUserId;
+      var alerts = (typeof Analytics !== 'undefined') ? Analytics.generateAlerts(uid) : [];
+      // Ruta institucional
+      var dsPlaceholder = root().querySelector('#ds-alerts-placeholder');
+      if (dsPlaceholder && alerts.length) {
+        dsPlaceholder.innerHTML = '<div class="ds-alerts">'
+          + alerts.slice(0, 2).map(function(a) { return '<div class="ds-alert-item">⚡ ' + esc(a.msg) + '</div>'; }).join('')
+          + '</div>';
+      }
+      // Ruta personal
+      var dpPlaceholder = root().querySelector('#dpv-mentor-placeholder');
+      if (dpPlaceholder) {
+        var successAlert = alerts.find(function(a) { return a.type === 'success'; });
+        var infoAlert    = alerts.find(function(a) { return a.type === 'info'; });
+        var tip = successAlert ? successAlert.msg : (infoAlert ? infoAlert.msg : '');
+        if (tip) {
+          dpPlaceholder.innerHTML = '<div class="dpv-mentor-card">'
+            + '<div class="dpv-mentor-header"><span class="dpv-mentor-badge">✦ Ariven Intelligence</span></div>'
+            + '<div class="dpv-mentor-text">' + esc(tip) + '</div>'
+            + '</div>';
+        }
+      }
+    });
 
     // Sistema de Metas (Fase 9): editar el valor objetivo de cada meta.
     const labels = {
@@ -1441,6 +1461,19 @@ const UIStudent = (() => {
     const subjects = Subjects.listSubjects(user.institutionType || 'colegio', user.id);
     const list = Sessions.listFor(user.id, filters);
 
+    const PAGE = 50;
+    const page = App._histPage || 0;
+    const totalPages = Math.ceil(list.length / PAGE) || 1;
+    const safePage = Math.min(page, totalPages - 1);
+    const pageItems = list.slice(safePage * PAGE, (safePage + 1) * PAGE);
+
+    const paginationHtml = totalPages > 1 ? `
+      <div class="hist-pagination">
+        ${safePage > 0 ? `<button class="ghost" id="histPrev">← Anterior</button>` : '<span></span>'}
+        <span>Página ${safePage + 1} de ${totalPages}</span>
+        ${safePage < totalPages - 1 ? `<button class="ghost" id="histNext">Siguiente →</button>` : '<span></span>'}
+      </div>` : '';
+
     return `
       <h1>Historial de sesiones</h1>
       <div class="toolbar">
@@ -1463,7 +1496,7 @@ const UIStudent = (() => {
             <th>Fecha</th><th>Materia</th><th>Conc.</th><th>Min</th><th>Actividad previa</th><th>Comentario</th><th></th>
           </tr></thead>
           <tbody>
-            ${list.map(x => `
+            ${pageItems.map(x => `
               <tr>
                 <td>${new Date(x.datetime).toLocaleString('es-PE')}</td>
                 <td>${esc(x.subject)}</td>
@@ -1474,7 +1507,8 @@ const UIStudent = (() => {
                 <td><button class="danger" data-rm="${x.id}">Eliminar</button></td>
               </tr>`).join('')}
           </tbody>
-        </table>`}
+        </table>
+        ${paginationHtml}`}
       </div>`;
   }
 
@@ -1495,12 +1529,23 @@ const UIStudent = (() => {
       if (!list.length) return UI.flash('No hay sesiones para exportar.', 'error');
       Exporter.exportSessions(list);
     });
-    root().querySelectorAll('[data-rm]').forEach(b => {
-      b.addEventListener('click', () => {
-        if (!confirm('¿Eliminar esta sesión?')) return;
-        Sessions.remove(b.dataset.rm);
-        App.go('history');
-      });
+    // Event delegation: un solo listener para todos los botones Eliminar.
+    root().querySelector('tbody')?.addEventListener('click', e => {
+      const btn = e.target.closest('[data-rm]');
+      if (!btn) return;
+      if (!confirm('¿Eliminar esta sesión?')) return;
+      Sessions.remove(btn.dataset.rm);
+      App._histPage = 0;
+      App.go('history');
+    });
+
+    document.getElementById('histPrev')?.addEventListener('click', () => {
+      App._histPage = Math.max(0, (App._histPage || 0) - 1);
+      App.go('history');
+    });
+    document.getElementById('histNext')?.addEventListener('click', () => {
+      App._histPage = (App._histPage || 0) + 1;
+      App.go('history');
     });
   }
 
@@ -3266,6 +3311,10 @@ const UIStudent = (() => {
       const target = parseFloat(el.dataset.count);
       const suffix = el.dataset.suffix || '';
       if (reduced) { el.textContent = target + suffix; return; }
+      if (typeof IntersectionObserver === 'undefined') {
+        el.textContent = target + suffix;
+        return;
+      }
       const observer = new IntersectionObserver(([entry]) => {
         if (!entry.isIntersecting) return;
         observer.unobserve(el);

@@ -207,7 +207,7 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
   <link rel="stylesheet" href="assets/styles.css" />
   <link rel="stylesheet" href="assets/styles-gamification.css" />
   <link rel="stylesheet" href="assets/styles-charts.css" />
@@ -223,7 +223,7 @@
   <!-- Supabase con defer. Chart.js NO se carga aquí: se difiere y solo se
        descarga cuando se necesita un gráfico (charts.js → ensure()),
        reduciendo RAM/CPU en el arranque para equipos de gama baja. -->
-  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.0"></script>
 </head>
 <body>
   <header class="topbar" style="display:none">
@@ -610,6 +610,14 @@
       vs.defer = true;
       vs.src = '/_vercel/insights/script.js';
       document.head.appendChild(vs);
+    }
+  </script>
+  <!-- Service Worker para caché de assets estáticos (segunda visita <500ms) -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js').catch(function () {});
+      });
     }
   </script>
 </body>

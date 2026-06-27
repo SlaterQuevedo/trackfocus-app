@@ -6,6 +6,12 @@ const AudioTranscriber = (() => {
   let chunks = [];
   let isRecording = false;
 
+  const RECORDER_MIME =
+    typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' :
+    typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/mp4')              ? 'audio/mp4' :
+    typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')  ? 'audio/ogg;codecs=opus' :
+    '';
+
   // ── Nivel 1: Dictado nativo del navegador (Web Speech API) ──────────
   let recognition = null;
 
@@ -77,9 +83,9 @@ const AudioTranscriber = (() => {
         }
       });
 
-      mediaRecorder = new MediaRecorder(audioStream, {
-        mimeType: 'audio/webm;codecs=opus'
-      });
+      mediaRecorder = new MediaRecorder(audioStream,
+        RECORDER_MIME ? { mimeType: RECORDER_MIME } : {}
+      );
 
       chunks = [];
       isRecording = true;
@@ -117,7 +123,7 @@ const AudioTranscriber = (() => {
       mediaRecorder.onstop = async () => {
         try {
           // Crear blob de audio
-          const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+          const audioBlob = new Blob(chunks, { type: RECORDER_MIME || 'audio/webm' });
           chunks = [];
 
           // Detener todos los tracks

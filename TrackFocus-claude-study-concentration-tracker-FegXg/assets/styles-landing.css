@@ -104,6 +104,7 @@
   font-weight: 700;
   color: var(--text);
   letter-spacing: -0.4px;
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -2476,6 +2477,7 @@ html[data-theme="light"] .lp-cta-v2-sub { color: #6B7280; }
 .lp-prev-chip--ghost {
   opacity: 0.6;
   pointer-events: none;
+  -webkit-user-select: none;
   user-select: none;
 }
 
