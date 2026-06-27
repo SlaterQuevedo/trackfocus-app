@@ -313,33 +313,32 @@
             <span class="fp-card-val" id="fpEndVal">—</span>
           </div>
           <div class="fp-card-row">
-            <span class="fp-card-lbl">Estado</span>
-            <span class="fp-card-lbl">Pomodoro</span>
+            <span class="fp-card-lbl">Siguiente</span>
+            <span class="fp-card-next" id="fpNextLbl" style="font-size:11px">—</span>
+          </div>
+        </div>
+        <!-- Steppers compactos al fondo de la columna derecha -->
+        <div class="fp-footer">
+          <div class="fp-stepper-group">
+            <span class="fp-step-lbl">Foco (min)</span>
+            <div class="fp-stepper">
+              <button class="fp-step-btn" data-input="pomBarFocus" data-delta="1">+</button>
+              <span class="fp-step-num" id="fpFocusNum">25</span>
+              <button class="fp-step-btn" data-input="pomBarFocus" data-delta="-1">−</button>
+            </div>
+          </div>
+          <div class="fp-stepper-group">
+            <span class="fp-step-lbl">Descanso (min)</span>
+            <div class="fp-stepper">
+              <button class="fp-step-btn" data-input="pomBarBreak" data-delta="1">+</button>
+              <span class="fp-step-num" id="fpBreakNum">5</span>
+              <button class="fp-step-btn" data-input="pomBarBreak" data-delta="-1">−</button>
+            </div>
           </div>
         </div>
       </div><!-- /fp-right -->
 
     </div><!-- /fp-main-inner -->
-
-    <!-- Pie: steppers (ancho completo, debajo de las columnas) -->
-    <div class="fp-footer">
-      <div class="fp-stepper-group">
-        <span class="fp-step-lbl">Foco (min)</span>
-        <div class="fp-stepper">
-          <button class="fp-step-btn" data-input="pomBarFocus" data-delta="1">+</button>
-          <span class="fp-step-num" id="fpFocusNum">25</span>
-          <button class="fp-step-btn" data-input="pomBarFocus" data-delta="-1">−</button>
-        </div>
-      </div>
-      <div class="fp-stepper-group">
-        <span class="fp-step-lbl">Descanso (min)</span>
-        <div class="fp-stepper">
-          <button class="fp-step-btn" data-input="pomBarBreak" data-delta="1">+</button>
-          <span class="fp-step-num" id="fpBreakNum">5</span>
-          <button class="fp-step-btn" data-input="pomBarBreak" data-delta="-1">−</button>
-        </div>
-      </div>
-    </div>
 
     <!-- Toggle (posicionado absolutamente arriba-derecha) -->
     <button id="pomBarToggle" class="fp-toggle-btn" title="Ocultar" aria-label="Ocultar">
