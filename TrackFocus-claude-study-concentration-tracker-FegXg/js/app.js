@@ -536,16 +536,31 @@ const App = (() => {
 
     Storage.setCurrent((authSession.user?.email || authSession.session?.user?.email || '').toLowerCase());
 
-    // Suscribirse a cambios remotos (multi-dispositivo)
+    // Suscribirse a cambios remotos (multi-dispositivo).
+    // IMPORTANTE: Supabase Realtime reenvía al mismo cliente sus propios writes (loopback).
+    // Los guards a continuación evitan el bucle Storage.set → Supabase → Realtime → go() → Storage.set → ∞
     const _debouncedRefresh = _debounce(() => go(_current), 300);
+
+    // Rutas personales: el Realtime nunca aporta nada útil aquí (datos de un solo usuario)
+    // y sí causa re-renders disruptivos. Se excluyen permanentemente.
+    const _REALTIME_SKIP = new Set([
+      'welcome', 'consent', 'privacy-policy', 'legal',
+      'ai-study',                    // chat activo
+      'profile',                     // personal, no colaborativo
+      'stats', 'history', 'achievements',  // datos propios históricos
+      'parent-dashboard', 'parent-link',   // panel padre, solo lectura
+      'student-onboarding', 'teacher-promote', 'admin-promote',
+      'pending-approval', 'institution', 'new-session', 'pomodoro',
+    ]);
+
     Storage.bindRealtime(() => {
-      // Repintar SÓLO si el cambio viene de otro dispositivo/usuario, no del propio cliente.
-      // Guard 1: pantallas que no deben interrumpirse
-      if (!_current || _current === 'welcome' || _current === 'consent' || _current === 'privacy-policy' || _current === 'legal') return;
-      if (_current === 'ai-study') return;
+      // Guard 1: rutas donde el Realtime es disruptivo y no aporta valor
+      if (!_current || _REALTIME_SKIP.has(_current)) return;
       if (document.querySelector('.quiz-modal') || document.querySelector('.pom-modal:not(.hidden)')) return;
-      // Guard 2: si el usuario interactuó en los últimos 4 segundos, no re-renderizar.
-      // Esto corta el bucle Storage.set() → Realtime → go() → Storage.set() → ...
+      // Guard 2: loopback — ignorar si este cliente escribió en los últimos 8 s.
+      // Supabase tarda ~400-2000 ms en devolver el evento; 8 s cubre cualquier latencia.
+      if (Date.now() - Storage.lastWriteAt() < 8000) return;
+      // Guard 3: interacción activa del usuario (click, tecla, touch)
       if (Date.now() - _lastInteraction < 4000) return;
       _debouncedRefresh();
     });

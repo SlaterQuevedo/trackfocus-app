@@ -82,7 +82,8 @@ const Storage = (() => {
     });
     localStorage.setItem('arv-migrated-v1', '1');
   })();
-  let _syncDirty = false;
+  let _syncDirty  = false;
+  let _lastWriteAt = 0; // timestamp del último Storage.set() → usado para suprimir loopback Realtime
 
   // ¿Estamos en modo demostración aislado? (Fase G). Nunca sincroniza ni cachea datos reales.
   function _isDemo() { return !!window.__TF_DEMO; }
@@ -173,6 +174,7 @@ const Storage = (() => {
     mutator(state);
     const after = snapshot(state);
     _persistCache();
+    _lastWriteAt = Date.now(); // marcar write propio para suprimir loopback Realtime
     pendingSync = pendingSync
       .then(() => Cloud.syncDiff(before, after))
       .catch(e => {
@@ -270,6 +272,7 @@ const Storage = (() => {
     uuid,
     genStudentCode: _genStudentCode,
     findUserByStudentCode,
+    lastWriteAt: () => _lastWriteAt,
     DEFAULT_STATE,
     isBooted: () => booted
   };
