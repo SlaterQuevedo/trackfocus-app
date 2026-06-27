@@ -3204,53 +3204,264 @@ const UIStudent = (() => {
       .map(e => ({ ...e, days: Math.ceil((new Date(e.date) - nowMs) / 86400000) }))
       .filter(e => e.days > 0).sort((a, b) => a.days - b.days)[0] || null;
 
+    const currentTheme = localStorage.getItem('arv-theme') || 'dark';
+    const xp = gam.xp || 0;
+    const xpPct = levelInfo.next
+      ? Math.min(100, Math.round(((xp - levelInfo.current.minXP) / (levelInfo.next.minXP - levelInfo.current.minXP)) * 100))
+      : 100;
+    const xpToNext = levelInfo.next ? (levelInfo.next.minXP - xp) : 0;
+    const avgConc = sessions.length ? Math.round(sessions.reduce((a, s) => a + (s.concentration || 0), 0) / sessions.length / 5 * 100) : 0;
+    const earnedBadges = Gamification.BADGES.filter(b => (gam.badges || []).includes(b.id));
+
+    // Route preview data for dashboard
+    const dashSubjs = acadProfile.enabledSubjects || [];
+    const dashStat = {};
+    dashSubjs.forEach(subj => { dashStat[subj] = { count: 0, total: 0 }; });
+    sessions.forEach(sess => {
+      if (dashStat[sess.subject] !== undefined) {
+        dashStat[sess.subject].count++;
+        dashStat[sess.subject].total += (sess.concentration || 0);
+      }
+    });
+    const dashRouteCards = dashSubjs.slice(0, 3).map((subj, i) => {
+      const st = dashStat[subj];
+      const idx = st.count ? Math.round((st.total / st.count / 5) * 100) : 0;
+      return `<div class="ph2-route-card">
+        <div class="ph2-route-card-hdr">Módulo ${i + 1}: ${esc(subj)}</div>
+        <div class="ph2-route-card-bar"><div class="ph2-route-card-fill" style="width:${idx}%;"></div></div>
+        <div class="ph2-route-card-stats"><span>${st.count > 0 ? st.count + ' ses.' : '—'}</span><span>${idx}%</span></div>
+      </div>`;
+    }).join('');
+    const dashRouteNodes = dashSubjs.slice(0, 3).map((subj, i) => {
+      const st = dashStat[subj];
+      return `<span class="ph2-rn-dot${st.count > 0 ? ' ph2-rn-active' : ''}">${i + 1}</span>`;
+    }).join('<span class="ph2-rn-line"></span>');
+    const instCat = acadProfile.institutionCat || '';
+    const instTypeLabel = instCat ? instCat.charAt(0).toUpperCase() + instCat.slice(1) : 'Personal';
+    const uniDisplayDash = acadProfile.university === 'otro'
+      ? (acadProfile.customUniversity || 'Mi institución') : (acadProfile.university || '—');
+
     const AVATAR_COLORS = ['#C89B6D','#8B5CF6','#3B82F6','#22C55E','#EF4444','#F59E0B'];
     const colorDotsHtml = AVATAR_COLORS.map(c =>
       `<div class="pp-color-dot${c === avatarColor ? ' active' : ''}" data-color="${esc(c)}" style="background:${esc(c)};"></div>`
     ).join('');
 
-    // ── Panel: Mi Perfil ──
+    // ── Panel: Mi Perfil (Dashboard completo 2 columnas) ──
     const panelProfile = `
       <div class="pp-panel active" data-panel="profile">
-        <div class="ph-panel-hdr">
-          <div class="ph-panel-hdr-icon">👤</div>
-          <div><div class="ph-panel-title">Mi Perfil</div><div class="ph-panel-sub">Tu identidad en Ariven</div></div>
-        </div>
-        <div class="ph-hero-card">
-          <div class="pp-avatar-row">
-            <div class="pp-avatar-side">
-              <div class="pp-avatar-big" id="ppAvatarBig" style="background:${esc(avatarColor)};">${esc(initials)}</div>
-              <div class="pp-avatar-colors">${colorDotsHtml}</div>
+
+        <!-- HERO: Avatar + Nombre + KPIs -->
+        <div class="ph2-hero">
+          <div class="ph2-hero-main">
+            <div class="ph2-avatar-wrap">
+              <div class="pp-avatar-big ph2-avatar" id="ppAvatarBig" style="background:${esc(avatarColor)};">${esc(initials)}</div>
             </div>
-            <div class="pp-profile-info">
-              <div class="pp-name">${esc(user.name)}</div>
-              <div class="pp-msg-wrap">
-                <div class="pp-msg-display" id="ppMsgDisplay">
-                  <span class="pp-msg-text" id="ppMsgText">${esc(message)}</span>
-                  <button class="pp-msg-edit-btn ghost" id="ppMsgEditBtn">✏️</button>
-                </div>
-                <div id="ppMsgEdit" style="display:none;flex-direction:column;gap:6px;">
-                  <textarea class="pp-msg-textarea" id="ppMsgInput" maxlength="100">${esc(message)}</textarea>
-                  <button class="primary pp-msg-edit-btn" id="ppMsgSaveBtn" style="align-self:flex-end;padding:5px 14px;">Guardar</button>
-                </div>
+            <div class="ph2-hero-info">
+              <div class="ph2-hero-name">${esc(user.name)}</div>
+              <div class="pp-msg-display ph2-hero-msg" id="ppMsgDisplay">
+                <span class="pp-msg-text ph2-motto" id="ppMsgText">${esc(message)}</span>
+                <button class="pp-msg-edit-btn ph2-edit-btn" id="ppMsgEditBtn">✏️</button>
+              </div>
+              <div id="ppMsgEdit" style="display:none;flex-direction:column;gap:6px;margin-top:6px;">
+                <textarea class="pp-msg-textarea" id="ppMsgInput" maxlength="100">${esc(message)}</textarea>
+                <button class="primary pp-msg-edit-btn" id="ppMsgSaveBtn" style="align-self:flex-end;padding:5px 14px;font-size:12px;">Guardar</button>
               </div>
             </div>
           </div>
+          <div class="ph2-kpi-bar">
+            <div class="ph2-kpi-card">
+              <div class="ph2-kpi-icon">🎓</div>
+              <div class="ph2-kpi-lbl">Nivel ${levelInfo.current.level}</div>
+              <div class="ph2-kpi-val">${xp.toLocaleString()}</div>
+            </div>
+            <div class="ph2-kpi-card">
+              <div class="ph2-kpi-icon">⭐</div>
+              <div class="ph2-kpi-lbl">XP Total</div>
+              <div class="ph2-kpi-val">${xpPct}%</div>
+            </div>
+            <div class="ph2-kpi-card">
+              <div class="ph2-kpi-icon">🔥</div>
+              <div class="ph2-kpi-lbl">Racha Actual</div>
+              <div class="ph2-kpi-val">${gam.streak || 0} días</div>
+            </div>
+            <div class="ph2-kpi-card">
+              <div class="ph2-kpi-icon">🎯</div>
+              <div class="ph2-kpi-lbl">Progresa hacia la Meta</div>
+              <div class="ph2-kpi-val">${prepPct} 🔥</div>
+            </div>
+          </div>
         </div>
-        ${acadProfile.university ? `
-          <div class="pp-summary-card ph-meta-card">
-            <div class="ph-meta-badge">🎓 Meta activa</div>
-            <div class="pp-summary-uni">${esc(acadProfile.university === 'otro' ? (acadProfile.customUniversity || 'Mi universidad') : acadProfile.university)}</div>
-            <div class="pp-summary-meta">${esc(acadProfile.career || '')}${nearestExam ? ` · 📅 ${nearestExam.days} días para ${esc(nearestExam.label)}` : ''}</div>
-            <div class="pp-summary-bar-wrap"><div class="pp-summary-bar" style="width:${prepPct}%;"></div></div>
-            <div class="pp-summary-prep">${prepPct}% de preparación</div>
-          </div>` : `
-          <div class="pp-cta-card ph-cta-card">
-            <div class="pp-cta-icon">🎓</div>
-            <div class="pp-cta-title">Configura tu meta universitaria</div>
-            <div class="pp-cta-sub">Define tu universidad y carrera para personalizar tu ruta de preparación.</div>
-            <button class="primary" id="ppGoToMeta" style="margin-top:4px;">Configurar ahora →</button>
-          </div>`}
+
+        <!-- DASHBOARD GRID (2 columnas) -->
+        <div class="ph2-dashboard">
+
+          <!-- COLUMNA IZQUIERDA -->
+          <div class="ph2-col-l">
+
+            <!-- Meta / Color Personal -->
+            <div class="ph2-card">
+              <div class="ph2-card-title">Meta</div>
+              <div class="pp-avatar-colors ph2-color-row">${colorDotsHtml}</div>
+              <div class="ph2-color-label">Color Personal</div>
+            </div>
+
+            <!-- Insignias Destacadas -->
+            <div class="ph2-card">
+              <div class="ph2-card-title">Insignias Destacadas</div>
+              ${earnedBadges.length ? `
+                <div class="ph2-badges-row">
+                  ${earnedBadges.slice(0, 3).map(b => `
+                    <div class="ph2-badge-item">
+                      <div class="ph2-badge-circle">${esc(b.icon || '🏅')}</div>
+                      <div class="ph2-badge-name">${esc(b.name)}</div>
+                    </div>`).join('')}
+                </div>` : `
+                <div class="ph2-empty">Completa sesiones para desbloquear insignias.</div>`}
+            </div>
+
+            <!-- Ruta (preview horizontal) -->
+            <div class="ph2-card">
+              <div class="ph2-card-title">Ruta
+                <button class="ghost pp-nav-item ph2-card-nav" data-panel="route">Ver todo →</button>
+              </div>
+              ${dashRouteCards ? `
+                <div class="ph2-route-cards">${dashRouteCards}</div>
+                <div class="ph2-route-nodes">${dashRouteNodes}</div>` : `
+                <div class="ph2-empty">
+                  ${acadProfile.university ? 'Sin sesiones en las materias aún.' : 'Configura tu meta para ver tu ruta.'}
+                  ${!acadProfile.university ? `<button class="primary" id="ppGoToMetaRoute" style="margin-top:8px;width:100%;">Configurar meta →</button>` : ''}
+                </div>`}
+            </div>
+
+            <!-- Planificador stats -->
+            <div class="ph2-card">
+              <div class="ph2-card-title">Planificador</div>
+              <div class="ph2-planner-grid">
+                <div class="ph2-planner-stat">
+                  <div class="ph2-planner-big">${esc(levelInfo.current.title)}</div>
+                  <div class="ph2-planner-sub">Nivel ${levelInfo.current.level} · XP</div>
+                  <div class="ph2-planner-row">📚 Sesiones: ${sum.total}</div>
+                  <div class="ph2-planner-row">⏱ Estudio: ${Math.floor(sum.totalMin / 60)}h ${sum.totalMin % 60}min</div>
+                </div>
+                <div class="ph2-planner-stat">
+                  <div class="ph2-planner-big">${xp.toLocaleString()}</div>
+                  <div class="ph2-planner-sub">XP Acumulado</div>
+                  <div class="ph2-planner-row">🎯 Sesiones AM: ${sum.total}</div>
+                  <div class="ph2-planner-row">📊 Conc. Promedio: ${avgConc}%</div>
+                </div>
+              </div>
+              <button class="primary" data-go="stats" style="width:100%;margin-top:14px;">Ver Estadísticas</button>
+            </div>
+
+          </div>
+
+          <!-- COLUMNA DERECHA -->
+          <div class="ph2-col-r">
+
+            <!-- Objetivo Principal -->
+            <div class="ph2-card ph2-objective-card">
+              <div class="ph2-card-title">Objetivo Principal:</div>
+              ${acadProfile.university ? `
+                <div class="ph2-obj-body">
+                  <div class="ph2-obj-row"><b>Beca/Meta:</b> ${esc(uniDisplayDash)}</div>
+                  ${acadProfile.institutionId ? `<div class="ph2-obj-row"><b>Institución:</b> ${esc(acadProfile.institutionId)}</div>` : ''}
+                  <div class="ph2-obj-row"><b>Carrera:</b> ${esc(acadProfile.career || '—')}</div>
+                  ${nearestExam ? `<div class="ph2-obj-row"><b>Fecha Objetivo:</b> ${esc(nearestExam.label)}</div>` : ''}
+                  <div class="ph2-obj-row"><b>Progreso:</b> ${prepPct}% Completado</div>
+                  <div class="ph2-obj-bar-wrap"><div class="ph2-obj-bar-fill" style="width:${prepPct}%;"></div></div>
+                  <button class="ghost ph2-obj-edit-btn pp-nav-item" data-panel="university">Editar Perfil</button>
+                </div>` : `
+                <div class="ph2-empty">
+                  <div style="font-size:28px;margin-bottom:8px;">🎓</div>
+                  <div style="font-size:13px;margin-bottom:12px;">Define tu objetivo universitario.</div>
+                  <button class="primary" id="ppGoToMeta" style="width:100%;">Configurar Meta →</button>
+                </div>`}
+            </div>
+
+            <!-- Etapa / Progress stages -->
+            ${acadProfile.university ? `
+            <div class="ph2-card ph2-etapa-card">
+              <div class="ph2-card-title">Etapa Presiones</div>
+              <div class="ph2-etapa-labels">
+                <span>Etapa 1 Preparación</span>
+                <span>Examen</span>
+                <span>Hoy</span>
+                <span class="ph2-etapa-pct">${prepPct}%</span>
+              </div>
+              <div class="ph2-etapa-track">
+                <div class="ph2-etapa-fill" style="width:${prepPct}%;"></div>
+                <div class="ph2-etapa-dot" style="left:${Math.min(prepPct,98)}%;"></div>
+              </div>
+            </div>` : ''}
+
+            <!-- Ficha Institucional -->
+            <div class="ph2-card ph2-inst-card">
+              <div class="ph2-card-title">Ficha Institucional</div>
+              <div class="ph2-inst-body">
+                <div class="ph2-inst-logo">${esc(initials)}</div>
+                <div class="ph2-inst-info">
+                  <div class="ph2-inst-name">Ficha Institucional</div>
+                  <div class="ph2-inst-row">Tipo: ${esc(instTypeLabel)}</div>
+                  <div class="ph2-inst-row">Ciudad: Lima</div>
+                </div>
+              </div>
+              <button class="ghost pp-nav-item ph2-inst-change-btn" data-panel="institution" style="width:100%;margin-top:10px;">Cambiar Institución</button>
+            </div>
+
+            <!-- Ajustes (grid 2 cols) -->
+            <div class="ph2-card ph2-settings-card">
+              <div class="ph2-card-title">Ajustes</div>
+              <div class="ph2-settings-grid">
+                <label class="ph2-setting-row">
+                  <span class="ph2-setting-lbl">Tema Oscuro</span>
+                  <button class="pp-theme-btn ph2-theme-mini${currentTheme==='dark'?' ph2-theme-on':''}" data-theme="dark">🌙</button>
+                </label>
+                <label class="ph2-setting-row">
+                  <span class="ph2-setting-lbl">Reducir animaciones</span>
+                  <input type="checkbox" class="pp-toggle" id="ppToggleMotion"${prefs.reduceMotion?' checked':''} />
+                </label>
+                <label class="ph2-setting-row">
+                  <span class="ph2-setting-lbl">Mostrar Tracky</span>
+                  <input type="checkbox" class="pp-toggle" id="ppToggleTracky"${prefs.tracky!==false?' checked':''} />
+                </label>
+                <label class="ph2-setting-row">
+                  <span class="ph2-setting-lbl">Sonidos Pomodoro</span>
+                  <input type="checkbox" class="pp-toggle" id="ppToggleSounds"${prefs.sounds!==false?' checked':''} />
+                </label>
+                <label class="ph2-setting-row">
+                  <span class="ph2-setting-lbl">Tema Claro</span>
+                  <button class="pp-theme-btn ph2-theme-mini${currentTheme==='light'?' ph2-theme-on':''}" data-theme="light">☀️</button>
+                </label>
+                <div class="ph2-setting-row">
+                  <span class="ph2-setting-lbl">Diagnóstico</span>
+                  <button class="ghost ph2-diag-btn" id="ppDiagBtn">🩺</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cuenta / Email -->
+            <div class="ph2-card ph2-account-card">
+              <div class="ph2-card-title">Correo Electrónico:</div>
+              <div class="ph2-account-rows">
+                <div class="ph2-account-row">
+                  <span class="ph2-account-val">${esc(user.email || '—')}</span>
+                  <button class="ghost ph2-acct-btn" id="ppExportBtn">Editar</button>
+                </div>
+                <div class="ph2-account-row">
+                  <span class="ph2-account-val">${esc(user.name)}</span>
+                  <button class="ghost ph2-acct-btn" id="ppLegalBtn">Legal</button>
+                </div>
+                <div class="ph2-account-row">
+                  <span class="ph2-account-val ph2-muted">Dispositivos conectados</span>
+                  <button class="ghost ph2-acct-btn" id="ppRestoreBtn">📤</button>
+                </div>
+              </div>
+              <input type="file" id="ppRestoreInput" accept=".json" style="display:none;" />
+              <button class="ph2-logout-btn" id="ppLogoutBtn">Cerrar Sesión</button>
+            </div>
+
+          </div><!-- /ph2-col-r -->
+        </div><!-- /ph2-dashboard -->
       </div>`;
 
     // ── Panel: Meta Universitaria ──
@@ -3438,8 +3649,7 @@ const UIStudent = (() => {
         <div class="pp-days-list">${daysHtml}</div>
       </div>`;
 
-    // ── Panel: Progreso (compacto — dirige a pantallas existentes) ──
-    const earnedBadges = Gamification.BADGES.filter(b => (gam.badges || []).includes(b.id));
+    // ── Panel: Progreso ──
     const panelProgress = `
       <div class="pp-panel" data-panel="progress">
         <div class="ph-panel-hdr">
@@ -3484,7 +3694,6 @@ const UIStudent = (() => {
       </div>`;
 
     // ── Panel: Preferencias ──
-    const currentTheme = localStorage.getItem('arv-theme') || 'dark';
     const panelPrefs = `
       <div class="pp-panel" data-panel="prefs">
         <div class="ph-panel-hdr">
@@ -3567,6 +3776,8 @@ const UIStudent = (() => {
             <div class="ph-sidebar-user-info">
               <div class="ph-sidebar-user-name">${esc(user.name.split(' ')[0])}</div>
               <div class="ph-sidebar-user-level">${esc(levelInfo.current.title)}</div>
+              <div class="ph-sidebar-xp-bar"><div class="ph-sidebar-xp-fill" style="width:${xpPct}%;"></div></div>
+              <div class="ph-sidebar-xp-text">${xp} XP</div>
             </div>
           </div>
           <nav class="pp-nav ph-nav">
