@@ -4989,6 +4989,165 @@ const UIStudent = (() => {
     });
   }
 
+  // ── Pantalla: Unirse a aula por QR ──────────────────────────────────────────
+  function screenJoinClassroom() {
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+    const code = App._joinCode;
+    const s = Storage.get();
+    const user = s.users[s.currentUserId];
+
+    if (!code) {
+      return `<div style="text-align:center;padding:80px 20px;">
+        <div style="font-size:48px;margin-bottom:16px;">🔗</div>
+        <h2>Sin código de invitación</h2>
+        <p class="muted" style="max-width:360px;margin:0 auto 24px;">El enlace no contiene un código de aula válido.</p>
+        <button class="primary" data-go="dashboard">Ir al inicio</button>
+      </div>`;
+    }
+
+    const cr = Schools.findClassroomByCode(code);
+
+    if (!cr) {
+      return `<div style="text-align:center;padding:80px 20px;">
+        <div style="font-size:48px;margin-bottom:16px;">🏫</div>
+        <h2>Aula no encontrada</h2>
+        <p class="muted" style="max-width:360px;margin:0 auto 24px;">El código <strong>${esc(code)}</strong> no corresponde a ningún aula activa. Puede que el código haya cambiado.</p>
+        <button class="primary" data-go="dashboard">Ir al inicio</button>
+      </div>`;
+    }
+
+    const school = s.schools[cr.schoolId] || {};
+    const teacherId = cr.tutorId || (cr.teacherIds && cr.teacherIds[0]);
+    const teacher = teacherId ? s.users[teacherId] : null;
+    const studentCount = (cr.studentIds || []).length;
+
+    const alreadyMember = (cr.studentIds || []).includes(user?.id);
+    const hasPending = s.classroomRequests
+      ? Object.values(s.classroomRequests).some(r =>
+          r.studentId === user?.id && r.classroomId === cr.id && r.status === 'pending')
+      : false;
+    const differentSchool = user?.schoolId && user.schoolId !== cr.schoolId;
+
+    let stateHtml;
+    if (alreadyMember) {
+      stateHtml = `
+        <div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:12px;padding:16px;text-align:center;margin-bottom:16px;">
+          <div style="font-size:22px;margin-bottom:6px;">✅</div>
+          <div style="font-weight:600;color:#22c55e;">Ya perteneces a esta aula</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:4px;">Ya estás inscrito en ${esc(cr.name)}.</div>
+        </div>
+        <button class="primary" data-go="dashboard" style="width:100%;">Ir al inicio</button>`;
+    } else if (hasPending) {
+      stateHtml = `
+        <div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:16px;text-align:center;margin-bottom:16px;">
+          <div style="font-size:22px;margin-bottom:6px;">⏳</div>
+          <div style="font-weight:600;color:#f59e0b;">Solicitud en espera</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:4px;">Tu solicitud para unirte a ${esc(cr.name)} está pendiente de aprobación del docente.</div>
+        </div>
+        <button class="primary" data-go="dashboard" style="width:100%;">Ir al inicio</button>`;
+    } else if (differentSchool) {
+      stateHtml = `
+        <div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:12px;padding:16px;text-align:center;margin-bottom:16px;">
+          <div style="font-size:22px;margin-bottom:6px;">⚠</div>
+          <div style="font-weight:600;color:#ef4444;">Colegio diferente</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:4px;">Ya perteneces a otro colegio. Consulta con tu docente para gestionar la transferencia.</div>
+        </div>
+        <button class="primary" data-go="dashboard" style="width:100%;">Ir al inicio</button>`;
+    } else {
+      stateHtml = `
+        <button class="primary" id="joinClassroomBtn" style="width:100%;margin-bottom:10px;font-size:15px;padding:14px;">Unirme al aula</button>
+        <button class="ghost" data-go="dashboard" style="width:100%;">Cancelar</button>`;
+    }
+
+    return `
+      <div style="max-width:440px;margin:0 auto;padding:40px 20px;">
+        <div style="text-align:center;margin-bottom:28px;">
+          <div style="font-size:48px;margin-bottom:12px;">🏫</div>
+          <h1 style="margin:0 0 6px;font-size:24px;">Invitación al aula</h1>
+          <p class="muted" style="font-size:14px;margin:0;">Alguien te ha invitado a unirte</p>
+        </div>
+
+        <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:20px;margin-bottom:20px;">
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
+            <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,rgba(200,160,110,.3),rgba(200,160,110,.1));
+                        border:1px solid rgba(200,160,110,.4);display:flex;align-items:center;justify-content:center;
+                        font-size:20px;font-weight:800;color:#c8a06e;flex-shrink:0;">${esc((cr.name || 'A')[0].toUpperCase())}</div>
+            <div>
+              <div style="font-size:18px;font-weight:700;">${esc(cr.name)}</div>
+              <div style="font-size:13px;color:var(--muted);">${esc(school.name || '')}</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px;">
+              <div style="font-size:11px;color:var(--muted);margin-bottom:2px;">DOCENTE</div>
+              <div style="font-size:13px;font-weight:500;">${esc(teacher?.name || '—')}</div>
+            </div>
+            <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px;">
+              <div style="font-size:11px;color:var(--muted);margin-bottom:2px;">ALUMNOS</div>
+              <div style="font-size:13px;font-weight:500;">${studentCount} inscritos</div>
+            </div>
+            <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px;">
+              <div style="font-size:11px;color:var(--muted);margin-bottom:2px;">GRADO</div>
+              <div style="font-size:13px;font-weight:500;">${esc(cr.grade || '—')} ${esc(cr.section || '')}</div>
+            </div>
+            <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px;">
+              <div style="font-size:11px;color:var(--muted);margin-bottom:2px;">CÓDIGO</div>
+              <div style="font-size:13px;font-weight:600;font-family:monospace;letter-spacing:2px;color:#c8a06e;">${esc(code)}</div>
+            </div>
+          </div>
+        </div>
+
+        ${stateHtml}
+
+        <p class="muted" style="font-size:12px;text-align:center;margin-top:16px;">
+          Al unirte, el docente deberá aprobar tu solicitud antes de que puedas acceder al aula.
+        </p>
+      </div>`;
+  }
+
+  function wireJoinClassroom() {
+    const s = Storage.get();
+    const user = s.users[s.currentUserId];
+    const code = App._joinCode;
+
+    r().querySelectorAll('[data-go]').forEach(btn => {
+      btn.addEventListener('click', () => App.go(btn.dataset.go));
+    });
+
+    document.getElementById('joinClassroomBtn')?.addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      btn.textContent = 'Enviando solicitud…';
+      try {
+        Schools.joinByInviteCode(user.id, code);
+        try { await Storage.flush(); } catch (_) {}
+        App._joinCode = null;
+        // Replace button area with success state
+        btn.closest('div')?.insertAdjacentHTML('afterend', `
+          <div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:12px;padding:20px;text-align:center;margin-bottom:10px;">
+            <div style="font-size:28px;margin-bottom:8px;">🎉</div>
+            <div style="font-weight:700;color:#22c55e;font-size:16px;">¡Solicitud enviada!</div>
+            <div style="font-size:13px;color:var(--muted);margin-top:6px;">El docente recibirá tu solicitud y deberá aprobarla.</div>
+          </div>
+          <button class="primary" data-go="dashboard" style="width:100%;">Ir al inicio</button>`);
+        btn.parentElement?.remove();
+        r().querySelector('[data-go="dashboard"]')?.addEventListener('click', () => App.go('dashboard'));
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Unirme al aula';
+        const msgs = {
+          'YA_MIEMBRO': 'Ya perteneces a esta aula.',
+          'YA_PENDIENTE': 'Ya tienes una solicitud pendiente para esta aula.',
+          'AULA_NO_ENCONTRADA': 'Aula no encontrada. El código puede haber cambiado.',
+          'COLEGIO_DIFERENTE': 'Este aula pertenece a un colegio diferente al tuyo.',
+          'COLEGIO_NO_ENCONTRADO': 'No se encontró el colegio asociado a esta aula.',
+        };
+        const msg = msgs[err.message] || err.message || 'Error al procesar la solicitud.';
+        if (typeof UI !== 'undefined') UI.flash(msg, 'error');
+      }
+    });
+  }
+
   const _wrap = (typeof window !== 'undefined' && window.__tfSafeScreens) || ((n, s) => s);
   return {
     screens: _wrap('student', {
@@ -5004,7 +5163,8 @@ const UIStudent = (() => {
       leaderboard:  { render: screenLeaderboard,  wire: wireLeaderboard },
       pomodoro:     { render: screenPomodoro,     wire: wirePomodoro },
       profile:      { render: screenProfile,      wire: wireProfile },
-      'ai-study':   { render: screenAIStudy,      wire: wireAIStudy }
+      'ai-study':   { render: screenAIStudy,      wire: wireAIStudy },
+      'join-classroom': { render: screenJoinClassroom, wire: wireJoinClassroom }
     })
   };
 })();

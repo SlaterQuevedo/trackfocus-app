@@ -414,6 +414,45 @@ const Schools = (() => {
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
 
+  // Unirse a un aula directamente por código de invitación (flujo QR).
+  // Devuelve { cr, school } o lanza un error con código de estado.
+  function joinByInviteCode(userId, inviteCode) {
+    const s = Storage.get();
+    const code = (inviteCode || '').trim().toUpperCase();
+    if (!code) throw new Error('CODIGO_INVALIDO');
+
+    const cr = findClassroomByCode(code);
+    if (!cr) throw new Error('AULA_NO_ENCONTRADA');
+
+    const school = s.schools[cr.schoolId];
+    if (!school) throw new Error('COLEGIO_NO_ENCONTRADO');
+
+    const user = s.users[userId];
+    if (!user) throw new Error('PERFIL_NO_ENCONTRADO');
+
+    if (cr.studentIds && cr.studentIds.includes(userId)) throw new Error('YA_MIEMBRO');
+
+    const pending = s.classroomRequests
+      ? Object.values(s.classroomRequests).find(r =>
+          r.studentId === userId && r.classroomId === cr.id && r.status === 'pending')
+      : null;
+    if (pending) throw new Error('YA_PENDIENTE');
+
+    if (user.schoolId && user.schoolId !== cr.schoolId) throw new Error('COLEGIO_DIFERENTE');
+
+    if (!user.schoolId) {
+      Storage.set(st => {
+        if (!st.users[userId]) return;
+        st.users[userId].schoolId = cr.schoolId;
+        st.users[userId].institutionType = 'colegio';
+        st.users[userId].approvalStatus = 'pending';
+      });
+    }
+
+    createJoinRequest(userId, cr.schoolId, cr.id);
+    return { cr, school };
+  }
+
   return {
     createSchool, listSchools, getSchool, deleteSchool, updateSchool, updateSchoolCode, updateClassroomCode,
     createClassroom, listClassrooms, getClassroom, deleteClassroom,
@@ -423,6 +462,7 @@ const Schools = (() => {
     listStudentsInClassroom, listStudentsInSchool, getSchoolStats,
     getTutorClassroom, setClassroomTutor, removeClassroomTutor,
     createJoinRequest, createChangeRequest, listRequestsForSchool,
-    getPendingCount, approveRequest, rejectRequest, getStudentRequests
+    getPendingCount, approveRequest, rejectRequest, getStudentRequests,
+    joinByInviteCode
   };
 })();

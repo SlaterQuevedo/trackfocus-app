@@ -11,6 +11,9 @@ const App = (() => {
     'privacy-policy':     null,  // Accesible por todos los roles autenticados
     'legal':              null,  // Hub de información legal (PP + T&C)
 
+    // Invitación por QR (pública — se verifica dentro de la pantalla)
+    'join-classroom':     ['student'],
+
     // Estudiante
     'pending-approval':   ['student'],
     'institution':        ['student'],
@@ -433,6 +436,12 @@ const App = (() => {
       }
     }, { passive: true });
 
+    // Invitación por QR: ?join=CODE — guardar en sessionStorage para redirigir post-login
+    const _qrJoin = new URLSearchParams(location.search).get('join');
+    if (_qrJoin && /^[A-Z0-9]{4,12}$/i.test(_qrJoin.trim())) {
+      sessionStorage.setItem('tf.pendingJoin', _qrJoin.trim().toUpperCase());
+    }
+
     // Modo demostración (Fase G): ?demo=1 (docente→Eureka), ?demo=student (dashboard),
     // o ?demo=guided (chat directo). No requiere Supabase ni internet; datos ficticios aislados.
     const _demo = new URLSearchParams(location.search).get('demo');
@@ -569,6 +578,17 @@ const App = (() => {
     // Consentimiento parental obligatorio (Fase E): sin él no se accede al panel
     // (y nunca se registran datos del piloto). Cumplimiento LPDP para menores.
     if (!user.parentalConsent) return go('consent');
+
+    // Invitación QR pendiente: redirigir al estudiante a la pantalla de unirse
+    if (user.role === 'student') {
+      const _pendingJoin = sessionStorage.getItem('tf.pendingJoin');
+      if (_pendingJoin) {
+        sessionStorage.removeItem('tf.pendingJoin');
+        App._joinCode = _pendingJoin;
+        return go('join-classroom');
+      }
+    }
+
     return go('dashboard');
   }
 
@@ -1753,6 +1773,7 @@ const App = (() => {
     _lbPeriod: 'week',
     _classroomId: null,
     _studentDetailId: null,
+    _joinCode: null,
     _editSchoolId: null,
     _userFilterRole: '',
     _userFilterSchool: ''

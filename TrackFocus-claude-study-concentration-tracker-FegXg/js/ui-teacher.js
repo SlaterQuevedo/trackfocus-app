@@ -404,6 +404,21 @@ const UITeacher = (() => {
     });
     _wireApprovalButtons(user.id);
 
+    // QR button in header pill
+    const school = user.schoolId ? s.schools[user.schoolId] : null;
+    const classrooms = school ? Schools.listClassrooms(school.id) : [];
+    const primaryCr = classrooms.find(cr => cr.tutorId === user.id) || classrooms[0] || null;
+    if (primaryCr?.inviteCode && typeof QRScanner !== 'undefined') {
+      const qrBtn = document.createElement('button');
+      qrBtn.className = 'cm-code-btn';
+      qrBtn.style.cssText = 'font-size:11px;padding:3px 8px;';
+      qrBtn.textContent = '⊞ QR';
+      qrBtn.title = 'Ver código QR de invitación';
+      qrBtn.addEventListener('click', () => QRScanner.openQRModal(primaryCr.inviteCode, primaryCr.name));
+      const pill = root().querySelector('.td-cr-pill');
+      if (pill) pill.appendChild(qrBtn);
+    }
+
     // Counter animation for KPI values
     root().querySelectorAll('.td-kpi-v[data-count]').forEach(el => {
       const target = parseInt(el.dataset.count, 10) || 0;
@@ -1038,33 +1053,14 @@ const UITeacher = (() => {
     const classroomId = App._classroomId;
     const cr = classroomId ? s.classrooms[classroomId] : null;
 
-    // ── Generate QR code ──
+    // ── Generate QR code (small thumbnail, click = full modal) ──
     if (cr && cr.inviteCode && typeof QRScanner !== 'undefined') {
-      QRScanner.generateQR(cr.inviteCode, 'cmQRCode', { width: 56, margin: 1 });
-      // Make QR clickable to open scanner (optional for docentes, mainly for demo)
+      QRScanner.generateQR(cr.inviteCode, 'cmQRCode', { size: 52, dark: '#1a1a1a', light: '#ffffff' });
       const qrEl = document.getElementById('cmQRCode');
       if (qrEl) {
         qrEl.style.cursor = 'pointer';
-        qrEl.title = 'Clic para mostrar código QR grande';
-        qrEl.addEventListener('click', () => {
-          const modal = document.createElement('div');
-          modal.style.cssText = `
-            position: fixed; inset: 0; background: rgba(0,0,0,.9); z-index: 999;
-            display: flex; align-items: center; justify-content: center;
-            flex-direction: column; gap: 20px; padding: 20px;
-          `;
-          modal.onclick = () => modal.remove();
-          const qrContainer = document.createElement('div');
-          qrContainer.id = 'qr-modal-display';
-          qrContainer.style.cssText = 'cursor: pointer; display: flex; align-items: center; justify-content: center;';
-          modal.appendChild(qrContainer);
-          const closeBtn = document.createElement('div');
-          closeBtn.style.cssText = 'color: #fff; font-size: 12px; margin-top: 10px; cursor: pointer;';
-          closeBtn.textContent = '✕ Clic para cerrar';
-          modal.appendChild(closeBtn);
-          document.body.appendChild(modal);
-          QRScanner.generateQR(cr.inviteCode, 'qr-modal-display', { width: 280, margin: 2 });
-        });
+        qrEl.title = 'Clic para ver QR completo con opciones';
+        qrEl.addEventListener('click', () => QRScanner.openQRModal(cr.inviteCode, cr.name));
       }
     }
 
