@@ -4,11 +4,7 @@
 import { applyCors } from './_lib.js';
 
 export default async function handler(req, res) {
-  applyCors(res);
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (applyCors(req, res)) return;
 
   if (req.method !== 'POST') {
     return res.status(405).json({ videos: [], error: 'Method not allowed' });
