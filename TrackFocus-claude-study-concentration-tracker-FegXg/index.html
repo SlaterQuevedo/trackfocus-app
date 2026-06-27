@@ -224,6 +224,9 @@
        descarga cuando se necesita un gráfico (charts.js → ensure()),
        reduciendo RAM/CPU en el arranque para equipos de gama baja. -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.0"></script>
+  <!-- QR Scanner & Generator -->
+  <script defer src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 </head>
 <body>
   <header class="topbar" style="display:none">
@@ -587,6 +590,7 @@
   <script defer src="js/auth.js"></script>
   <script defer src="js/sessions.js"></script>
   <script defer src="js/ui.js"></script>
+  <script defer src="js/qr-scanner.js"></script>
   <script defer src="js/connectivity.js"></script>
   <script defer src="js/files.js"></script>
   <script defer src="js/gemini-proxy.js"></script>

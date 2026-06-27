@@ -754,8 +754,8 @@ const UITeacher = (() => {
                   <button class="cm-code-btn" id="regenCodeBtn" data-cr="${esc(classroomId)}" title="Regenerar código">↻ Nuevo</button>
                 </div>
                 <div class="cm-qr-ph">
-                  <div class="cm-qr-inner">${qrCells}</div>
-                  <div class="cm-qr-lbl">QR</div>
+                  <div id="cmQRCode" style="width:56px;height:56px;display:flex;align-items:center;justify-content:center;margin-bottom:4px;"></div>
+                  <div class="cm-qr-lbl">Escanear</div>
                 </div>
               </div>
             </div>
@@ -1036,6 +1036,37 @@ const UITeacher = (() => {
     const s = Storage.get();
     const user = s.users[s.currentUserId];
     const classroomId = App._classroomId;
+    const cr = classroomId ? s.classrooms[classroomId] : null;
+
+    // ── Generate QR code ──
+    if (cr && cr.inviteCode && typeof QRScanner !== 'undefined') {
+      QRScanner.generateQR(cr.inviteCode, 'cmQRCode', { width: 56, margin: 1 });
+      // Make QR clickable to open scanner (optional for docentes, mainly for demo)
+      const qrEl = document.getElementById('cmQRCode');
+      if (qrEl) {
+        qrEl.style.cursor = 'pointer';
+        qrEl.title = 'Clic para mostrar código QR grande';
+        qrEl.addEventListener('click', () => {
+          const modal = document.createElement('div');
+          modal.style.cssText = `
+            position: fixed; inset: 0; background: rgba(0,0,0,.9); z-index: 999;
+            display: flex; align-items: center; justify-content: center;
+            flex-direction: column; gap: 20px; padding: 20px;
+          `;
+          modal.onclick = () => modal.remove();
+          const qrContainer = document.createElement('div');
+          qrContainer.id = 'qr-modal-display';
+          qrContainer.style.cssText = 'cursor: pointer; display: flex; align-items: center; justify-content: center;';
+          modal.appendChild(qrContainer);
+          const closeBtn = document.createElement('div');
+          closeBtn.style.cssText = 'color: #fff; font-size: 12px; margin-top: 10px; cursor: pointer;';
+          closeBtn.textContent = '✕ Clic para cerrar';
+          modal.appendChild(closeBtn);
+          document.body.appendChild(modal);
+          QRScanner.generateQR(cr.inviteCode, 'qr-modal-display', { width: 280, margin: 2 });
+        });
+      }
+    }
 
     // ── data-go navigation ──
     root().querySelectorAll('[data-go]').forEach(btn => {

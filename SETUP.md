@@ -1,4 +1,9 @@
-# TrackFocus — Setup de la nube (Supabase + Google OAuth)
+# Ariven — Setup de la nube (Supabase + Google OAuth)
+
+> Nota: el proyecto se llama **Ariven** (antes *TrackFocus*). Algunos nombres de infraestructura ya
+> creados (proyecto Supabase `trackfocus`, app OAuth `TrackFocus`, URL `track-focus.vercel.app`) conservan
+> su nombre original a propósito; no los renombres salvo que migres la infraestructura. Ver
+> `eureka/ALINEACION.md`.
 
 Sigue estos pasos para activar la sincronización en la nube. **No requiere instalar nada localmente.**
 
@@ -116,13 +121,13 @@ El `schema.sql` ya incluye Row-Level Security estricta:
 
 Como la RLS no permite que un usuario se auto-promueva a super_admin por la app (medida de seguridad), debes hacerlo manualmente la primera vez:
 
-1. Inicia sesión con Google en TrackFocus (entrarás como estudiante)
+1. Inicia sesión con Google en Ariven (entrarás como estudiante)
 2. Ve a **Supabase Dashboard → SQL Editor → New query**
 3. Ejecuta (reemplaza el email):
    ```sql
    update public.users set role = 'super_admin' where id = 'tu-email@gmail.com';
    ```
-4. Recarga TrackFocus. Ahora verás el panel de administrador.
+4. Recarga Ariven. Ahora verás el panel de administrador.
 
 Desde el panel admin puedes promover docentes editando su rol desde Supabase, o usar el flujo de promoción en la app (Soy Docente + código de colegio).
 

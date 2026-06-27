@@ -3756,9 +3756,15 @@ const UIStudent = (() => {
             <p class="muted" style="font-size:13px;margin:0 0 14px;">Ingresa el código que te dio tu docente. Puedes ingresar solo el código del colegio, solo el del aula, o ambos. Tu progreso (sesiones, logros, racha) se conservará intacto.</p>
             <form id="ppJoinSchoolForm">
               <label style="display:block;margin-bottom:4px;font-size:13px;font-weight:500;">Código de colegio <span class="muted">(opcional)</span></label>
-              <input name="schoolCode" maxlength="6" placeholder="6 caracteres" style="text-transform:uppercase;margin-bottom:12px;width:100%;" />
+              <div style="display:flex;gap:8px;margin-bottom:12px;">
+                <input name="schoolCode" maxlength="6" placeholder="6 caracteres" style="text-transform:uppercase;flex:1;" />
+                <button type="button" class="ghost pp-scan-school" style="padding:8px 12px;font-size:13px;">📷 Escanear</button>
+              </div>
               <label style="display:block;margin-bottom:4px;font-size:13px;font-weight:500;">Código de aula <span class="muted">(opcional)</span></label>
-              <input name="inviteCode" maxlength="8" placeholder="8 caracteres" style="text-transform:uppercase;margin-bottom:14px;width:100%;" />
+              <div style="display:flex;gap:8px;margin-bottom:14px;">
+                <input name="inviteCode" maxlength="8" placeholder="8 caracteres" style="text-transform:uppercase;flex:1;" />
+                <button type="button" class="ghost pp-scan-invite" style="padding:8px 12px;font-size:13px;">📷 Escanear</button>
+              </div>
               <div style="display:flex;gap:8px;">
                 <button class="primary" type="submit" style="flex:1;">Vincularme</button>
                 <button class="ghost" type="button" id="ppCancelJoinInst">Cancelar</button>
@@ -4567,6 +4573,37 @@ const UIStudent = (() => {
         btn.disabled = false; btn.textContent = 'Vincularme';
         UI.flash(err.message || 'Código inválido. Verifica con tu docente.', 'error');
       }
+    });
+
+    // ── QR Scanner buttons ──
+    r().querySelector('.pp-scan-school')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (typeof QRScanner === 'undefined') { UI.flash('QR no disponible en este navegador.', 'error'); return; }
+      QRScanner.start({
+        onSuccess: (code) => {
+          const input = r().querySelector('input[name="schoolCode"]');
+          if (input) input.value = code;
+          UI.flash('Código escaneado correctamente.', 'success');
+        },
+        onError: (err) => {
+          UI.flash('Error al escanear: ' + err.message, 'error');
+        }
+      });
+    });
+
+    r().querySelector('.pp-scan-invite')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (typeof QRScanner === 'undefined') { UI.flash('QR no disponible en este navegador.', 'error'); return; }
+      QRScanner.start({
+        onSuccess: (code) => {
+          const input = r().querySelector('input[name="inviteCode"]');
+          if (input) input.value = code;
+          UI.flash('Código escaneado correctamente.', 'success');
+        },
+        onError: (err) => {
+          UI.flash('Error al escanear: ' + err.message, 'error');
+        }
+      });
     });
   }
 
