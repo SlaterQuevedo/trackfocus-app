@@ -53,118 +53,318 @@ const UITeacher = (() => {
     const user = s.users[s.currentUserId];
     const school = user.schoolId ? s.schools[user.schoolId] : null;
     const classrooms = school ? Schools.listClassrooms(school.id) : [];
+    const primaryCr = classrooms.find(cr => cr.tutorId === user.id) || classrooms[0] || null;
 
-    // Calcular KPIs
-    let totalStudents = 0;
-    let totalSessions = 0;
-    let atRiskStudents = 0;
-    const classroomCards = classrooms.map(cr => {
-      const students = Schools.listStudentsInClassroom(cr.id);
-      totalStudents += students.length;
+    const students = primaryCr ? Schools.listStudentsInClassroom(primaryCr.id) : [];
+    const from7 = new Date(); from7.setDate(from7.getDate() - 7);
+    const from7Iso = from7.toISOString();
+    const weekSessions = primaryCr ? Sessions.listForClassroom(primaryCr.id, { from: from7Iso }) : [];
+    const allCrSessions = primaryCr ? Sessions.listForClassroom(primaryCr.id) : [];
 
-      // Sesiones de esta semana del aula
-      const from7 = new Date(); from7.setDate(from7.getDate() - 7);
-      const crSessions = Sessions.listForClassroom(cr.id, { from: from7.toISOString() });
-      totalSessions += crSessions.length;
+    const avgConcRaw = weekSessions.length ? weekSessions.reduce((a, b) => a + b.concentration, 0) / weekSessions.length : 0;
+    const avgConcDisplay = weekSessions.length ? avgConcRaw.toFixed(1) : '—';
+    const avgConcPct = Math.min(100, Math.round((avgConcRaw / 5) * 100));
+    const activeStudentIds = new Set(weekSessions.map(se => se.email));
+    const activeCount = activeStudentIds.size;
+    const totalMinWeek = weekSessions.reduce((a, b) => a + b.durationMin, 0);
+    const timeDisplay = totalMinWeek >= 60 ? `${Math.floor(totalMinWeek / 60)}h ${totalMinWeek % 60}m` : `${totalMinWeek}m`;
+    const avgStreak = students.length ? Math.round(students.reduce((a, st) => a + ((st.gamification || {}).streak || 0), 0) / students.length) : 0;
+    const participationPct = students.length ? Math.round((activeCount / students.length) * 100) : 0;
 
-      const avgConc = crSessions.length
-        ? (crSessions.reduce((a, b) => a + b.concentration, 0) / crSessions.length).toFixed(1)
-        : '—';
-
-      // Alumnos en riesgo (últimas 5 sesiones < 2.5)
-      let crAtRisk = 0;
-      students.forEach(st => {
-        const stSessions = s.sessions.filter(se => se.email === st.id).slice(-5);
-        if (stSessions.length >= 5) {
-          const avg = stSessions.reduce((a, b) => a + b.concentration, 0) / stSessions.length;
-          if (avg < 2.5) { crAtRisk++; atRiskStudents++; }
-        }
-      });
-
-      const lb = Gamification.getLeaderboard('classroom', cr.id, 'week');
-      const topStudent = lb[0]?.name || '—';
-
-      return `
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
-            <h2 style="margin:0;">${esc(cr.name)}</h2>
-            ${crAtRisk > 0 ? `<span class="risk-badge">⚠️ ${crAtRisk} en riesgo</span>` : '<span class="ok-badge">✓ OK</span>'}
-          </div>
-          <div class="grid cols-3" style="gap:8px;margin-bottom:14px;">
-            <div class="kpi" style="padding:10px;"><div class="v" style="font-size:20px;">${students.length}</div><div class="l">Alumnos</div></div>
-            <div class="kpi" style="padding:10px;"><div class="v" style="font-size:20px;">${avgConc}</div><div class="l">Conc. sem.</div></div>
-            <div class="kpi" style="padding:10px;"><div class="v" style="font-size:20px;">${crSessions.length}</div><div class="l">Ses. sem.</div></div>
-          </div>
-          <p class="muted" style="font-size:12px;margin:0 0 10px;">Mejor esta semana: <strong>${esc(topStudent)}</strong></p>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="primary" data-go="classroom-stats" data-id="${cr.id}">Ver estadísticas</button>
-            <button class="ghost" data-go="classroom-manage" data-id="${cr.id}">Gestionar aula</button>
-          </div>
-        </div>`;
-    });
-
-    const pendingCount = school ? Schools.getPendingCount(school.id) : 0;
-
-    // Índice de Aprendizaje promedio del colegio (Fase 11): de las sesiones de IA
-    // de los alumnos (sin exponer conversaciones; solo el agregado numérico).
     const schoolStudentIds = new Set();
     classrooms.forEach(cr => Schools.listStudentsInClassroom(cr.id).forEach(st => schoolStudentIds.add(st.id)));
-    const allIndices = s.sessions
-      .filter(se => schoolStudentIds.has(se.email))
-      .map(se => Stats.parseMetrics(se).learning_index)
-      .filter(v => typeof v === 'number' && !isNaN(v));
-    const avgLearningIndex = allIndices.length
-      ? Math.round(allIndices.reduce((a, b) => a + b, 0) / allIndices.length)
-      : null;
+    const allIndices = s.sessions.filter(se => schoolStudentIds.has(se.email))
+      .map(se => Stats.parseMetrics(se).learning_index).filter(v => typeof v === 'number' && !isNaN(v));
+    const avgLearningIndex = allIndices.length ? Math.round(allIndices.reduce((a, b) => a + b, 0) / allIndices.length) : null;
+
+    const atRiskList = students.filter(st => {
+      const last5 = s.sessions.filter(se => se.email === st.id).slice(-5);
+      if (last5.length < 3) return false;
+      return last5.reduce((a, b) => a + b.concentration, 0) / last5.length < 2.5;
+    });
+
+    const nowMs = Date.now();
+    const inactiveStudents = students.filter(st => {
+      const stSess = s.sessions.filter(se => se.email === st.id);
+      if (!stSess.length) return true;
+      const lastMs = new Date(stSess.reduce((a, b) => a.datetime > b.datetime ? a : b).datetime).getTime();
+      return (nowMs - lastMs) > 3 * 86400000;
+    });
+
+    const weeklyConc = [], weeklySessionCounts = [];
+    for (let w = 5; w >= 0; w--) {
+      const to = new Date(); to.setDate(to.getDate() - w * 7);
+      const fr = new Date(to); fr.setDate(to.getDate() - 7);
+      const wS = allCrSessions.filter(se => { const d = new Date(se.datetime); return d >= fr && d < to; });
+      weeklyConc.push(wS.length ? parseFloat((wS.reduce((a, b) => a + b.concentration, 0) / wS.length).toFixed(2)) : 0);
+      weeklySessionCounts.push(wS.length);
+    }
+
+    const lb = primaryCr ? Gamification.getLeaderboard('classroom', primaryCr.id, 'week') : [];
+    const top5 = lb.slice(0, 5);
+    const recentSessions = allCrSessions.slice().sort((a, b) => b.datetime.localeCompare(a.datetime)).slice(0, 6);
+    const pendingCount = school ? Schools.getPendingCount(school.id) : 0;
+    const weeklyGoalSessions = Math.max(1, students.length * 3);
+    const weeklyGoalPct = Math.min(100, Math.round((weekSessions.length / weeklyGoalSessions) * 100));
+    const noRiskPct = students.length ? Math.round(((students.length - atRiskList.length) / students.length) * 100) : 100;
+
+    // Insights IA (rule-based from real data)
+    const insights = [];
+    if (inactiveStudents.length > 0) {
+      const names = inactiveStudents.slice(0, 2).map(st => st.name.split(' ')[0]).join(' y ');
+      const extra = inactiveStudents.length > 2 ? ` +${inactiveStudents.length - 2} más` : '';
+      insights.push({ icon: '⚠️', type: 'warn', text: `${names}${extra} llevan más de 3 días sin estudiar.` });
+    }
+    if (atRiskList.length > 0) insights.push({ icon: '🔴', type: 'bad', text: `${atRiskList.length} alumno${atRiskList.length > 1 ? 's' : ''} con concentración crítica. Considera intervenir.` });
+    if (activeCount < students.length * 0.6 && students.length > 1) insights.push({ icon: '📊', type: 'info', text: `Solo el ${participationPct}% del aula tuvo sesiones esta semana.` });
+    const bySub = {};
+    weekSessions.forEach(se => {
+      if (!bySub[se.subject]) bySub[se.subject] = { sum: 0, count: 0 };
+      bySub[se.subject].sum += se.concentration; bySub[se.subject].count++;
+    });
+    const subEntries = Object.entries(bySub).map(([k, v]) => ({ subject: k, avg: v.sum / v.count }));
+    if (subEntries.length > 1) {
+      const lowest = [...subEntries].sort((a, b) => a.avg - b.avg)[0];
+      if (lowest.avg < 3.0) insights.push({ icon: '📚', type: 'info', text: `${lowest.subject} muestra la concentración más baja (${lowest.avg.toFixed(1)}/5). Considera reforzar.` });
+    }
+    if (avgConcRaw >= 3.5 && weekSessions.length >= 3) insights.push({ icon: '🌟', type: 'good', text: `Concentración promedio excelente del aula: ${avgConcRaw.toFixed(1)}/5.` });
+    if (top5.length > 0) insights.push({ icon: '🏆', type: 'good', text: `Destacado esta semana: ${top5[0].name} con ${top5[0].xp} XP y racha de ${top5[0].streak} días.` });
+    if (!insights.length) insights.push({ icon: '✅', type: 'good', text: 'Todo en orden. Continúa monitoreando el progreso del aula.' });
+
+    // Helpers
+    function _spark(data, w, h, color) {
+      w = w || 72; h = h || 26; color = color || 'currentColor';
+      const valid = data.filter(v => v > 0);
+      if (valid.length < 2) return `<svg width="${w}" height="${h}"></svg>`;
+      const mn = Math.min(...valid) * 0.85, mx = Math.max(...valid) * 1.05, rng = (mx - mn) || 1;
+      const pts = data.map((v, i) => {
+        const x = (i / (data.length - 1)) * (w - 4) + 2;
+        const y = h - 2 - (((v || mn) - mn) / rng) * (h - 6);
+        return x.toFixed(1) + ',' + y.toFixed(1);
+      }).join(' ');
+      return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="display:block;overflow:visible;"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/></svg>`;
+    }
+    function _trend(data) {
+      const v = data.filter(x => x > 0);
+      if (v.length < 2) return '';
+      const d = v[v.length - 1] - v[v.length - 2];
+      if (Math.abs(d) < 0.05) return '<span class="td-tr td-tr-flat">→</span>';
+      return d > 0 ? `<span class="td-tr td-tr-up">↑ ${d.toFixed(1)}</span>` : `<span class="td-tr td-tr-dn">↓ ${Math.abs(d).toFixed(1)}</span>`;
+    }
+    function _ago(iso) {
+      const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+      if (m < 1) return 'Ahora'; if (m < 60) return `${m}m`; if (m < 1440) return `${Math.round(m/60)}h`; return `${Math.round(m/1440)}d`;
+    }
+    const _ini = n => (n || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    const _clr = n => ['#C89B6D','#8B5CF6','#3B82F6','#10B981','#F59E0B'][(n || '').length % 5];
+    const teacherIni = user.name ? user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : '?';
+    const dateStr = new Date().toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long' });
+    const inviteCode = primaryCr ? (primaryCr.inviteCode || '—') : '—';
+
+    // Concentration ring
+    const rr = 30, cx = 36, cy = 36, circ = 2 * Math.PI * rr;
+    const ringOff = circ * (1 - avgConcPct / 100);
 
     return `
-      <h1>Panel del Docente</h1>
-      ${school ? `<p class="muted">Colegio: <strong>${esc(school.name)}</strong> · Código de colegio: <strong>${school.code}</strong></p>` : '<p class="muted">No estás asignado a ningún colegio.</p>'}
+    <div class="td-header">
+      <div class="td-hdr-left">
+        <div class="td-teacher-av" style="background:${_clr(user.name)};">${esc(teacherIni)}</div>
+        <div class="td-teacher-inf">
+          <div class="td-teacher-nm">${esc(user.name)}</div>
+          <div class="td-teacher-mt">${school ? esc(school.name) : 'Sin colegio'}${primaryCr ? ' · ' + esc(primaryCr.name) : ''}</div>
+        </div>
+      </div>
+      <div class="td-hdr-center">
+        ${primaryCr ? `<div class="td-cr-pill">
+          <span class="td-cr-nm">${esc(primaryCr.name)}</span>
+          <span class="td-cr-sep"></span>
+          <span class="td-cr-inf">Código: <strong>${esc(inviteCode)}</strong></span>
+          <span class="td-cr-sep"></span>
+          <span class="td-cr-cnt">${students.length} alumnos</span>
+          ${pendingCount > 0 ? `<span class="td-cr-pend">${pendingCount}</span>` : ''}
+        </div>` : ''}
+        <div class="td-hdr-date">${dateStr}</div>
+      </div>
+      <div class="td-hdr-right">
+        ${primaryCr ? `<button class="ghost td-hdr-btn" data-go="classroom-stats" data-id="${primaryCr.id}">📊 Estadísticas</button>
+        <button class="primary td-hdr-btn" data-go="classroom-manage" data-id="${primaryCr.id}">⚙️ Gestionar</button>` : `<button class="primary td-hdr-btn" data-go="classroom-manage" data-id="new">+ Nueva aula</button>`}
+      </div>
+    </div>
 
-      ${school ? _pendingRequestsPanel(school.id, user.id) : ''}
+    ${school ? _pendingRequestsPanel(school.id, user.id) : ''}
 
-      <div class="grid cols-4" style="margin:16px 0;">
-        <div class="kpi"><div class="v">${totalStudents}</div><div class="l">Total alumnos</div></div>
-        <div class="kpi"><div class="v">${totalSessions}</div><div class="l">Sesiones esta semana</div></div>
-        <div class="kpi"><div class="v" style="color:var(--accent);">${avgLearningIndex != null ? avgLearningIndex + '/100' : '—'}</div><div class="l">Índice aprendizaje prom.</div></div>
-        <div class="kpi"><div class="v" style="color:${atRiskStudents > 0 ? 'var(--bad)' : 'var(--good)'};">${atRiskStudents}</div><div class="l">Alumnos en riesgo</div></div>
+    <div class="td-kpi-strip">
+      <div class="td-kpi">
+        <div class="td-kpi-top"><span class="td-kpi-ico">👨‍🎓</span><div class="td-kpi-sp td-sp-muted">${_spark(weeklySessionCounts)}</div></div>
+        <div class="td-kpi-v" data-count="${activeCount}">${activeCount}</div>
+        <div class="td-kpi-l">Activos esta semana</div>
+        <div class="td-kpi-s">${students.length} total · ${participationPct}%</div>
+      </div>
+      <div class="td-kpi">
+        <div class="td-kpi-top"><span class="td-kpi-ico">📚</span><div class="td-kpi-sp td-sp-muted">${_spark(weeklySessionCounts)}</div></div>
+        <div class="td-kpi-v" data-count="${weekSessions.length}">${weekSessions.length}</div>
+        <div class="td-kpi-l">Sesiones esta semana</div>
+        <div class="td-kpi-s">${_trend(weeklySessionCounts)}</div>
+      </div>
+      <div class="td-kpi">
+        <div class="td-kpi-top"><span class="td-kpi-ico">🧠</span><div class="td-kpi-sp td-sp-gold">${_spark(weeklyConc)}</div></div>
+        <div class="td-kpi-v">${avgConcDisplay}</div>
+        <div class="td-kpi-l">Concentración prom.</div>
+        <div class="td-kpi-s">${_trend(weeklyConc)}</div>
+      </div>
+      <div class="td-kpi${atRiskList.length > 0 ? ' td-kpi-alert' : ''}">
+        <div class="td-kpi-top"><span class="td-kpi-ico">${atRiskList.length > 0 ? '⚠️' : '✅'}</span></div>
+        <div class="td-kpi-v${atRiskList.length > 0 ? ' td-v-bad' : ' td-v-good'}" data-count="${atRiskList.length}">${atRiskList.length}</div>
+        <div class="td-kpi-l">En riesgo</div>
+        <div class="td-kpi-s">${atRiskList.length === 0 ? 'Ningún alumno crítico' : 'Requieren atención'}</div>
+      </div>
+      <div class="td-kpi">
+        <div class="td-kpi-top"><span class="td-kpi-ico">🔥</span></div>
+        <div class="td-kpi-v">${avgStreak}</div>
+        <div class="td-kpi-l">Racha promedio</div>
+        <div class="td-kpi-s">días consecutivos</div>
+      </div>
+      <div class="td-kpi">
+        <div class="td-kpi-top"><span class="td-kpi-ico">⏱️</span></div>
+        <div class="td-kpi-v">${timeDisplay || '0m'}</div>
+        <div class="td-kpi-l">Tiempo estudiado</div>
+        <div class="td-kpi-s">esta semana</div>
+      </div>
+    </div>
+
+    <div class="td-main-grid">
+
+      <div class="td-card td-estado">
+        <div class="td-sh"><div class="td-sh-l"><span class="td-sh-ico">🏫</span><span class="td-sh-ttl">Estado del Aula</span></div>${primaryCr ? `<span class="td-sh-badge">${esc(primaryCr.name)}</span>` : ''}</div>
+        <div class="td-estado-body">
+          <div class="td-ring-wrap">
+            <svg width="72" height="72" viewBox="0 0 72 72">
+              <circle cx="${cx}" cy="${cy}" r="${rr}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="7"/>
+              <circle cx="${cx}" cy="${cy}" r="${rr}" fill="none" stroke="url(#tdG)" stroke-width="7"
+                stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${ringOff.toFixed(1)}"
+                stroke-linecap="round" transform="rotate(-90 ${cx} ${cy})" class="td-ring-prog"/>
+              <defs><linearGradient id="tdG" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#C89B6D"/><stop offset="100%" stop-color="#8B5CF6"/>
+              </linearGradient></defs>
+            </svg>
+            <div class="td-ring-ctr"><div class="td-ring-pct">${avgConcPct}%</div><div class="td-ring-sub">Conc.</div></div>
+          </div>
+          <div class="td-metrics">
+            <div class="td-met"><span class="td-met-l">Participación</span><div class="td-mbar"><div class="td-mf td-mf-gold" style="width:${participationPct}%"></div></div><span class="td-met-v">${participationPct}%</span></div>
+            <div class="td-met"><span class="td-met-l">Meta semanal</span><div class="td-mbar"><div class="td-mf td-mf-purple" style="width:${weeklyGoalPct}%"></div></div><span class="td-met-v">${weeklyGoalPct}%</span></div>
+            <div class="td-met"><span class="td-met-l">Sin riesgo</span><div class="td-mbar"><div class="td-mf td-mf-green" style="width:${noRiskPct}%"></div></div><span class="td-met-v">${noRiskPct}%</span></div>
+            <div class="td-met"><span class="td-met-l">Índice aprendizaje</span><div class="td-mbar"><div class="td-mf td-mf-gold" style="width:${avgLearningIndex || 0}%"></div></div><span class="td-met-v">${avgLearningIndex != null ? avgLearningIndex + '/100' : '—'}</span></div>
+          </div>
+        </div>
+        ${allCrSessions.length >= 3 ? `<div class="td-spark-row"><span class="td-spark-lbl">Concentración · 6 semanas</span><div class="td-sp-gold">${_spark(weeklyConc, 180, 30, '#C89B6D')}</div></div>` : ''}
       </div>
 
-      <div class="card" id="pilotCard" style="margin:16px 0;">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
-          <h2 style="margin:0;">🔬 Piloto científico</h2>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="primary" data-go="eureka">🏆 Vista Eureka</button>
-            <button class="ghost" id="btnWeeklyReport">🖨️ Reporte semanal</button>
-            <button class="ghost" id="btnPilotCsv">⬇️ CSV piloto</button>
-            <button class="ghost" id="btnBackup">💾 Backup</button>
-            <button class="ghost" id="btnRestore">♻️ Restaurar</button>
-            <button class="ghost" id="btnDiagLog">🩺 Registro de errores</button>
+      <div class="td-card td-attention">
+        <div class="td-sh"><div class="td-sh-l"><span class="td-sh-ico">🎯</span><span class="td-sh-ttl">Atención del Docente</span></div>${atRiskList.length + inactiveStudents.length > 0 ? `<span class="td-sh-warn">${atRiskList.length + inactiveStudents.filter(x => !atRiskList.find(r => r.id === x.id)).length}</span>` : ''}</div>
+        ${atRiskList.length === 0 && inactiveStudents.length === 0 ? `<div class="td-empty"><span class="td-empty-ico">🎉</span><span>Todos los alumnos están al día</span></div>` : ''}
+        ${atRiskList.slice(0, 3).map(st => {
+          const stSess = s.sessions.filter(se => se.email === st.id).sort((a, b) => b.datetime.localeCompare(a.datetime));
+          const gam = st.gamification || {};
+          return `<div class="td-stcard td-stc-risk">
+            <div class="td-stav" style="background:${_clr(st.name)};">${esc(_ini(st.name))}</div>
+            <div class="td-stinf">
+              <div class="td-stnm">${esc(st.name)}</div>
+              <div class="td-stbadge td-b-risk">⚠️ Concentración crítica</div>
+              <div class="td-stmeta">Última: ${stSess.length ? _ago(stSess[0].datetime) : 'Nunca'} · Nv.${gam.level || 1}</div>
+            </div>
+            <button class="ghost td-stbtn" data-go="student-detail" data-sid="${esc(st.id)}">Ver</button>
+          </div>`;
+        }).join('')}
+        ${inactiveStudents.filter(st => !atRiskList.find(r => r.id === st.id)).slice(0, 2).map(st => {
+          const stSess = s.sessions.filter(se => se.email === st.id).sort((a, b) => b.datetime.localeCompare(a.datetime));
+          return `<div class="td-stcard td-stc-inactive">
+            <div class="td-stav" style="background:${_clr(st.name)};">${esc(_ini(st.name))}</div>
+            <div class="td-stinf">
+              <div class="td-stnm">${esc(st.name)}</div>
+              <div class="td-stbadge td-b-inactive">😴 Sin sesiones recientes</div>
+              <div class="td-stmeta">Última: ${stSess.length ? _ago(stSess[0].datetime) : 'Nunca'}</div>
+            </div>
+            <button class="ghost td-stbtn" data-go="student-detail" data-sid="${esc(st.id)}">Ver</button>
+          </div>`;
+        }).join('')}
+      </div>
+
+      <div class="td-right-col">
+        <div class="td-card td-top-stud">
+          <div class="td-sh"><div class="td-sh-l"><span class="td-sh-ico">🏆</span><span class="td-sh-ttl">Top Estudiantes</span></div><span class="td-sh-meta">esta semana</span></div>
+          ${top5.length === 0 ? `<div class="td-empty"><span>Sin sesiones esta semana</span></div>` :
+          top5.map((e, i) => `<div class="td-top-row${i === 0 ? ' td-top-1st' : ''}">
+            <span class="td-top-rnk">${['🥇','🥈','🥉'][i] || '#'+(i+1)}</span>
+            <div class="td-top-av" style="background:${_clr(e.name)};">${esc(_ini(e.name))}</div>
+            <div class="td-top-inf"><div class="td-top-nm">${esc(e.name)}</div><div class="td-top-mt">${e.xp} XP · 🔥 ${e.streak}d</div></div>
+            <div class="td-top-conc">${e.avgConcentration}/5</div>
+          </div>`).join('')}
+        </div>
+        <div class="td-card td-activity">
+          <div class="td-sh"><div class="td-sh-l"><span class="td-sh-ico">⚡</span><span class="td-sh-ttl">Actividad Reciente</span></div></div>
+          ${recentSessions.length === 0 ? `<div class="td-empty"><span>Sin actividad reciente</span></div>` :
+          recentSessions.map(se => {
+            const st = students.find(x => x.id === se.email);
+            const nm = st ? st.name.split(' ')[0] : 'Alumno';
+            return `<div class="td-tl-item">
+              <div class="td-tl-dot" style="background:${_clr(nm)};"></div>
+              <div class="td-tl-body"><span class="td-tl-nm">${esc(nm)}</span><span class="td-tl-txt"> · ${esc(se.subject)}</span><div class="td-tl-mt">${_ago(se.datetime)} · ${se.concentration}/5 ⭐</div></div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="td-sec-grid">
+      <div class="td-card td-insights">
+        <div class="td-sh" style="margin-bottom:12px;"><div class="td-sh-l"><span class="td-sh-ico">✨</span><span class="td-sh-ttl">Ariven Intelligence</span></div></div>
+        ${insights.map(ins => `<div class="td-insight td-ins-${ins.type}"><span class="td-ins-ico">${ins.icon}</span><span class="td-ins-txt">${esc(ins.text)}</span></div>`).join('')}
+      </div>
+      <div class="td-card td-quick">
+        <div class="td-sh" style="margin-bottom:12px;"><div class="td-sh-l"><span class="td-sh-ico">⚡</span><span class="td-sh-ttl">Acciones Rápidas</span></div></div>
+        <div class="td-qa-grid">
+          ${primaryCr ? `<button class="td-qa" data-go="classroom-manage" data-id="${primaryCr.id}"><span class="td-qa-ico">⚙️</span><span class="td-qa-lbl">Gestionar</span></button>` : ''}
+          ${primaryCr ? `<button class="td-qa" data-go="classroom-stats" data-id="${primaryCr.id}"><span class="td-qa-ico">📊</span><span class="td-qa-lbl">Stats</span></button>` : ''}
+          <button class="td-qa" id="tdWeeklyBtn"><span class="td-qa-ico">🖨️</span><span class="td-qa-lbl">Reporte</span></button>
+          <button class="td-qa" id="tdCsvBtn"><span class="td-qa-ico">⬇️</span><span class="td-qa-lbl">CSV</span></button>
+          <button class="td-qa" id="tdBkpBtn"><span class="td-qa-ico">💾</span><span class="td-qa-lbl">Backup</span></button>
+          <button class="td-qa" data-go="eureka"><span class="td-qa-ico">🏆</span><span class="td-qa-lbl">Eureka</span></button>
+        </div>
+      </div>
+      <div class="td-card" id="pilotCard">
+        <div class="td-sh" style="margin-bottom:10px;">
+          <div class="td-sh-l"><span class="td-sh-ico">🔬</span><span class="td-sh-ttl">Piloto Científico</span></div>
+          <div class="td-pilot-btns">
+            <button class="ghost" id="btnWeeklyReport" style="font-size:11px;padding:4px 8px;">Reporte</button>
+            <button class="ghost" id="btnPilotCsv" style="font-size:11px;padding:4px 8px;">CSV</button>
+            <button class="ghost" id="btnBackup" style="font-size:11px;padding:4px 8px;">💾</button>
+            <button class="ghost" id="btnRestore" style="font-size:11px;padding:4px 8px;">♻️</button>
+            <button class="ghost" id="btnDiagLog" style="font-size:11px;padding:4px 8px;">🩺</button>
             <input type="file" id="restoreFile" accept=".json,application/json" style="display:none">
           </div>
         </div>
         <div id="pilotCardBody">
-          <div class="grid cols-3" style="gap:8px;margin-top:12px;">
-            <div class="skeleton skeleton-kpi"></div>
-            <div class="skeleton skeleton-kpi"></div>
-            <div class="skeleton skeleton-kpi"></div>
+          <div class="grid cols-3" style="gap:8px;margin-top:8px;">
+            <div class="skeleton skeleton-kpi"></div><div class="skeleton skeleton-kpi"></div><div class="skeleton skeleton-kpi"></div>
           </div>
         </div>
       </div>
+    </div>
 
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <h2 style="margin:0;">Mis Aulas</h2>
-        <button class="primary" data-go="classroom-manage" data-id="new">+ Nueva aula</button>
-      </div>
+    ${classrooms.length > 1 ? `
+    <div class="td-card" style="margin-top:16px;">
+      <div class="td-sh" style="margin-bottom:12px;"><div class="td-sh-l"><span class="td-sh-ico">🏫</span><span class="td-sh-ttl">Otras Aulas</span></div><button class="primary" data-go="classroom-manage" data-id="new" style="font-size:12px;padding:5px 12px;">+ Nueva</button></div>
+      <div class="grid cols-2">${classrooms.filter(cr => cr.id !== (primaryCr && primaryCr.id)).map(cr => {
+        const crS = Schools.listStudentsInClassroom(cr.id);
+        const crW = Sessions.listForClassroom(cr.id, { from: from7Iso });
+        return `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><h3 style="margin:0;">${esc(cr.name)}</h3></div><div class="grid cols-2" style="gap:6px;margin-bottom:10px;"><div class="kpi" style="padding:8px;"><div class="v" style="font-size:17px;">${crS.length}</div><div class="l">Alumnos</div></div><div class="kpi" style="padding:8px;"><div class="v" style="font-size:17px;">${crW.length}</div><div class="l">Ses. sem.</div></div></div><div style="display:flex;gap:6px;"><button class="ghost" data-go="classroom-stats" data-id="${cr.id}" style="font-size:12px;">Estadísticas</button><button class="ghost" data-go="classroom-manage" data-id="${cr.id}" style="font-size:12px;">Gestionar</button></div></div>`;
+      }).join('')}</div>
+    </div>` : ''}
 
-      ${classroomCards.length > 0
-        ? `<div class="grid cols-2">${classroomCards.join('')}</div>`
-        : '<div class="card empty">No tienes aulas creadas. Crea tu primera aula para empezar.</div>'}
-
-      <div style="margin-top:20px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-        <button class="ghost" id="teacherLegalBtn" style="font-size:13px;padding:6px 14px;">⚖️ Centro Legal</button>
-        <span class="muted" style="font-size:12px;">Política de Privacidad · Términos · Transparencia de Datos</span>
-      </div>`;
+    <div style="margin-top:20px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <button class="ghost" id="teacherLegalBtn" style="font-size:13px;padding:6px 14px;">⚖️ Centro Legal</button>
+      <span class="muted" style="font-size:12px;">Política de Privacidad · Términos · Transparencia de Datos</span>
+    </div>`;
   }
 
   function _wireApprovalButtons(teacherId) {
@@ -189,32 +389,44 @@ const UITeacher = (() => {
   }
 
   function wireTeacherDashboard() {
-    const user = Storage.get().users[Storage.get().currentUserId];
+    const s = Storage.get();
+    const user = s.users[s.currentUserId];
+
     root().querySelectorAll('[data-go]').forEach(btn => {
       btn.addEventListener('click', () => {
         const go = btn.dataset.go;
         const id = btn.dataset.id;
+        const sid = btn.dataset.sid;
         if (id) App._classroomId = id;
+        if (sid) App._studentDetailId = sid;
         App.go(go);
       });
     });
     _wireApprovalButtons(user.id);
 
-    // Piloto científico (Fase D): carga asíncrona de agregados + reportes.
+    // Counter animation for KPI values
+    root().querySelectorAll('.td-kpi-v[data-count]').forEach(el => {
+      const target = parseInt(el.dataset.count, 10) || 0;
+      if (target === 0) return;
+      let cur = 0;
+      const step = Math.max(1, Math.ceil(target / 18));
+      const t = setInterval(() => { cur = Math.min(cur + step, target); el.textContent = cur; if (cur >= target) clearInterval(t); }, 35);
+    });
+
     _loadPilotCard();
     document.getElementById('btnWeeklyReport')?.addEventListener('click', () => _weeklyReport(user));
     document.getElementById('btnPilotCsv')?.addEventListener('click', () => _exportPilotCsv());
 
-    // Observabilidad: exportar el registro de errores capturado por Monitor.
+    // Quick action aliases
+    document.getElementById('tdWeeklyBtn')?.addEventListener('click', () => _weeklyReport(user));
+    document.getElementById('tdCsvBtn')?.addEventListener('click', () => _exportPilotCsv());
+    document.getElementById('tdBkpBtn')?.addEventListener('click', () => Exporter.backupJSON());
+
     document.getElementById('btnDiagLog')?.addEventListener('click', () => {
       try { window.Monitor?.exportLog?.(); UI.flash('Registro de errores exportado.', 'success'); }
       catch (_) { UI.flash('No se pudo exportar el registro.', 'error'); }
     });
-
-    // Acceso al Centro Legal desde el dashboard del docente.
     document.getElementById('teacherLegalBtn')?.addEventListener('click', () => App.go('legal'));
-
-    // Backups y recuperación (Fase J).
     document.getElementById('btnBackup')?.addEventListener('click', () => Exporter.backupJSON());
     const restoreInput = document.getElementById('restoreFile');
     document.getElementById('btnRestore')?.addEventListener('click', () => restoreInput?.click());
@@ -229,9 +441,7 @@ const UITeacher = (() => {
           UI.flash('Respaldo cargado (vista local). Recarga la página para volver a los datos en vivo.', 'success');
           App.go('teacher-dashboard');
         }
-      } catch (err) {
-        UI.flash(err.message, 'error');
-      }
+      } catch (err) { UI.flash(err.message, 'error'); }
       e.target.value = '';
     });
   }
