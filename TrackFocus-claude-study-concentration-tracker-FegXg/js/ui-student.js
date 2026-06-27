@@ -3625,6 +3625,7 @@ const UIStudent = (() => {
 
   function _wireProfilePersonal(user) {
     const r = () => root();
+    const acadProfile = JSON.parse(localStorage.getItem('arv-academic-profile-v3') || '{}');
 
     r().querySelectorAll('.pp-color-dot').forEach(dot => {
       dot.addEventListener('click', () => {
