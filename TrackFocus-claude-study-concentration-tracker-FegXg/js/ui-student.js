@@ -1719,90 +1719,301 @@ const UIStudent = (() => {
     const sessions = Sessions.listFor(user.id);
 
     if (!sessions.length) {
-      return `<h1>Estadísticas</h1><div class="card empty">Aún no tienes sesiones registradas. <a href="#" data-go="new-session" style="color:var(--accent);">Registra tu primera sesión.</a></div>`;
+      return `
+        <div class="s-empty">
+          <div class="s-empty-stars">✦ ✦ ✦</div>
+          <div class="s-empty-icon">📊</div>
+          <h2 class="s-empty-title">Tus estadísticas te esperan</h2>
+          <p class="s-empty-sub">Registra tu primera sesión de estudio y Ariven empezará a analizar tus patrones de concentración.</p>
+          <button class="primary" data-go="new-session" style="margin-top:8px;min-width:180px;">Registrar sesión</button>
+        </div>`;
     }
 
-    const sum = Stats.summary(sessions);
-    const subs = Stats.bySubject(sessions);
+    const sum   = Stats.summary(sessions);
+    const subs  = Stats.bySubject(sessions);
     const buckets = Stats.byHourBucket(sessions);
-    const acts = Stats.byPreviousActivity(sessions);
-    const dist = Stats.likertDistribution(sessions);
-    const total = sessions.length;
-
-    const renderBar = (rows, key) => rows.map(r => {
-      const pct = (r.avgConcentration / 5) * 100;
-      return `<div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;">
-          <span>${esc(r[key])}</span>
-          <span class="muted">${r.avgConcentration}/5 · ${r.count} ses.</span>
-        </div>
-        <div class="bar"><span style="width:${pct}%"></span></div>
-      </div>`;
-    }).join('');
-
-    // Índice de Aprendizaje (Fase 5): última medición + evolución reciente.
+    const acts  = Stats.byPreviousActivity(sessions);
     const liSeries = Stats.learningIndexSeries(sessions);
     const liLatest = liSeries.length ? liSeries[liSeries.length - 1].value : null;
     const liRecent = liSeries.slice(-8);
-    const liCard = liLatest != null ? `
-      <div class="card" style="margin-top:18px;">
-        <h3 style="margin:0 0 4px;">📊 Índice de Aprendizaje</h3>
-        <p class="muted" style="margin:0 0 14px;font-size:13px;">Combina precisión, coherencia, participación, rapidez y razonamiento (0–100).</p>
-        <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
-          <div class="learning-index-badge" style="--li:${liLatest};">
-            <span class="li-val">${liLatest}</span>
-            <span class="li-lbl">de 100</span>
+    const patterns = Analytics.detectPatterns(sessions);
+    const profile  = Analytics.classifyProfile(sessions);
+    const gam      = user.gamification || {};
+    const streak   = gam.streak || 0;
+    const xp       = gam.xp || 0;
+    const level    = Gamification.getLevelInfo ? Gamification.getLevelInfo(xp) : null;
+
+    // Weekly change: concentración esta semana vs la semana pasada
+    const now = Date.now();
+    const w7  = now - 7 * 86400000;
+    const w14 = now - 14 * 86400000;
+    const thisWeek  = sessions.filter(se => new Date(se.datetime).getTime() >= w7);
+    const lastWeek  = sessions.filter(se => { const t = new Date(se.datetime).getTime(); return t >= w14 && t < w7; });
+    const avgThis   = thisWeek.length  ? (thisWeek.reduce((a,b)=>a+b.concentration,0)/thisWeek.length).toFixed(1)  : null;
+    const avgLast   = lastWeek.length  ? (lastWeek.reduce((a,b)=>a+b.concentration,0)/lastWeek.length).toFixed(1)  : null;
+    const weekDelta = avgThis && avgLast ? (Number(avgThis) - Number(avgLast)).toFixed(1) : null;
+    const deltaClass = weekDelta == null ? 's-kpi-delta--neu' : Number(weekDelta) > 0 ? 's-kpi-delta--up' : Number(weekDelta) < 0 ? 's-kpi-delta--down' : 's-kpi-delta--neu';
+    const deltaIcon  = weekDelta == null ? '–' : Number(weekDelta) > 0 ? '↑' : Number(weekDelta) < 0 ? '↓' : '→';
+
+    // Total hours
+    const totalHrs = (sum.totalMin / 60).toFixed(1);
+
+    // Heatmap month labels: compute position for each month in the 52-week grid
+    const _heatmapMonthLabels = (() => {
+      const today = new Date();
+      const totalCells = 52 * 7;
+      const cellW = 14; // px per cell (12px + 2px gap)
+      const positions = {};
+      for (let i = totalCells - 1; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        const col = Math.floor((totalCells - 1 - i) / 7);
+        const dayOfMonth = d.getDate();
+        if (dayOfMonth <= 7) {
+          const monthKey = `${d.getFullYear()}-${d.getMonth()}`;
+          if (!positions[monthKey]) {
+            positions[monthKey] = { col, label: d.toLocaleDateString('es-PE', { month: 'short' }) };
+          }
+        }
+      }
+      const cols = Object.values(positions).sort((a,b) => a.col - b.col);
+      let html = '';
+      let prevCol = 0;
+      cols.forEach(m => {
+        const gap = m.col - prevCol;
+        html += `<span class="s-hm-month-label" style="flex:${Math.max(gap,1)}">${m.label}</span>`;
+        prevCol = m.col + 1;
+      });
+      if (prevCol < 52) html += `<span style="flex:${52 - prevCol}"></span>`;
+      return html;
+    })();
+
+    // Top 3 subjects
+    const top3Subs = [...subs].slice(0, 3);
+    const ringColors = ['var(--primary)', 'var(--accent)', 'var(--blue)'];
+    const rankLabels = ['1', '2', '3'];
+    const rankClass  = ['s-rank--1','s-rank--2','s-rank--3'];
+
+    const subjectRingsHtml = top3Subs.length ? top3Subs.map((sub, i) => {
+      const pct = Math.round((sub.avgConcentration / 5) * 100);
+      return `
+        <div class="s-subject-row">
+          <span class="s-rank ${rankClass[i]}">${rankLabels[i]}</span>
+          <div class="s-subject-ring" style="--s-ring-color:${ringColors[i]};--s-ring-pct:${pct}">
+            <span class="s-subject-ring-val">${pct}%</span>
           </div>
-          <div style="flex:1;min-width:200px;">
-            <div style="display:flex;align-items:flex-end;gap:6px;height:80px;">
-              ${liRecent.map(p => `<div title="${esc(new Date(p.datetime).toLocaleDateString('es-PE'))}: ${p.value}" style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;">
-                <div style="height:${Math.max(4, p.value)}%;background:linear-gradient(180deg,var(--accent),var(--primary));border-radius:4px 4px 0 0;"></div>
-              </div>`).join('')}
-            </div>
-            <p class="muted" style="font-size:12px;margin:8px 0 0;">Últimas ${liRecent.length} sesiones con Estudio IA.</p>
+          <div class="s-subject-info">
+            <div class="s-subject-name">${esc(sub.subject)}</div>
+            <div class="s-subject-meta">${sub.count} ses · ${sub.avgConcentration}/5</div>
+          </div>
+        </div>`;
+    }).join('') : `<p class="muted" style="font-size:13px;text-align:center;">Registra más sesiones para ver el ranking.</p>`;
+
+    // AI Insights
+    const bestHourLabel = patterns && patterns.bestHour != null
+      ? `${patterns.bestHour}:00 (${patterns.bestHour < 12 ? 'mañana' : patterns.bestHour < 18 ? 'tarde' : 'noche'})`
+      : null;
+    const insightRows = [];
+    if (bestHourLabel) insightRows.push({ icon: '⏰', label: 'Mejor hora', val: bestHourLabel, sub: `Concentración ${patterns.bestHourAvg.toFixed(1)}/5 prom.` });
+    if (subs.length) insightRows.push({ icon: '🏆', label: 'Materia top', val: esc(subs[0].subject), sub: `${subs[0].avgConcentration}/5 prom.` });
+    if (weekDelta != null) insightRows.push({ icon: Number(weekDelta) >= 0 ? '📈' : '📉', label: 'vs semana pasada', val: `${Number(weekDelta) >= 0 ? '+' : ''}${weekDelta} pts`, sub: `${avgThis}/5 esta semana` });
+    if (patterns && patterns.optimalDuration) insightRows.push({ icon: '⏱', label: 'Duración óptima', val: patterns.optimalDuration, sub: 'según tu concentración' });
+    if (!insightRows.length) insightRows.push({ icon: '💡', label: 'Consejo', val: 'Sigue registrando', sub: 'Más sesiones = mejores insights' });
+
+    const insightHtml = insightRows.slice(0, 4).map(r => `
+      <div class="s-insight-row">
+        <span class="s-insight-icon">${r.icon}</span>
+        <div class="s-insight-body">
+          <div class="s-insight-label">${r.label}</div>
+          <div class="s-insight-val">${r.val}</div>
+          ${r.sub ? `<div class="s-insight-sub">${r.sub}</div>` : ''}
+        </div>
+      </div>`).join('');
+
+    // Learning Index card
+    const liCardHtml = liLatest != null ? `
+      <div class="s-li-card">
+        <div class="s-li-label">📊 Índice de Aprendizaje</div>
+        <div class="s-li-ring" style="--li:${liLatest}">
+          <div style="position:relative;text-align:center;">
+            <div class="s-li-val">${liLatest}</div>
+            <div class="s-li-of100">de 100</div>
           </div>
         </div>
-      </div>` : '';
+        ${liRecent.length ? `<div class="s-li-sparkline">
+          ${liRecent.map(p => {
+            const h = Math.max(6, Math.round((p.value / 100) * 100));
+            return `<div class="s-li-bar" style="height:${h}%" title="${new Date(p.datetime).toLocaleDateString('es-PE')}: ${p.value}"></div>`;
+          }).join('')}
+        </div>` : ''}
+      </div>` : `
+      <div class="s-li-card">
+        <div class="s-li-label">📊 Índice de Aprendizaje</div>
+        <div style="text-align:center;color:var(--muted);font-size:13px;">Usa Estudio IA para obtener tu índice.</div>
+      </div>`;
+
+    // Analysis bars
+    const renderSBar = (rows, key) => rows.slice(0, 6).map(r => {
+      const pct = Math.round((r.avgConcentration / 5) * 100);
+      return `<div class="s-bar-row">
+        <div class="s-bar-meta">
+          <span class="s-bar-label">${esc(r[key])}</span>
+          <span class="s-bar-score">${r.avgConcentration}/5 · ${r.count} ses.</span>
+        </div>
+        <div class="s-bar-track"><div class="s-bar-fill" style="width:${pct}%"></div></div>
+      </div>`;
+    }).join('');
+
+    // Gamification
+    const levelHtml = level ? (() => {
+      const arcPct = level.progress || 0;
+      const xpToNext = level.next ? `${xp.toLocaleString()} / ${level.next.xpRequired.toLocaleString()} XP` : `${xp.toLocaleString()} XP`;
+      return `
+        <div class="s-gam-level-row">
+          <div class="s-level-arc" style="--s-arc-pct:${arcPct}">
+            <div>
+              <div class="s-level-num">${level.current.level}</div>
+              <div class="s-level-sub">nivel</div>
+            </div>
+          </div>
+          <div class="s-level-info">
+            <div class="s-level-name">${esc(level.current.title || 'Estudiante')}</div>
+            <div class="s-level-xp">${xpToNext}</div>
+            <div class="s-level-bar"><div class="s-level-bar-fill" style="width:${arcPct}%"></div></div>
+          </div>
+        </div>`;
+    })() : '';
+
+    // Streak dots: last 8 days
+    const streakDotsHtml = (() => {
+      const dayMap = {};
+      sessions.forEach(se => { dayMap[se.datetime.slice(0,10)] = true; });
+      const dots = [];
+      for (let i = 7; i >= 0; i--) {
+        const d = new Date(); d.setDate(d.getDate() - i);
+        const key = d.toISOString().slice(0,10);
+        const isToday = i === 0;
+        const active  = !!dayMap[key];
+        const dayLabel = d.toLocaleDateString('es-PE', { weekday: 'narrow' });
+        dots.push(`<div class="s-streak-dot ${active ? (isToday ? 'today' : 'active') : ''}">
+          <span>${active ? '🔥' : dayLabel}</span>
+        </div>`);
+      }
+      return dots.join('');
+    })();
+
+    // Profile card
+    const profileHtml = profile ? `
+      <div class="s-profile-card">
+        <div class="s-profile-head">Tu perfil de aprendizaje</div>
+        <div class="s-profile-badge-row">
+          <div class="s-profile-icon">${profile.icon}</div>
+          <div>
+            <div class="s-profile-name">${esc(profile.label)}</div>
+            <div class="s-profile-desc">${esc(profile.desc)}</div>
+          </div>
+        </div>
+      </div>` : `
+      <div class="s-profile-card">
+        <div class="s-profile-head">Tu perfil de aprendizaje</div>
+        <div class="s-profile-desc" style="color:var(--muted);font-size:13px;">Necesitas al menos 3 sesiones para generar tu perfil.</div>
+      </div>`;
 
     return `
-      <h1>Estadísticas</h1>
-      <div class="grid cols-4">
-        <div class="kpi"><div class="v">${sum.total}</div><div class="l">Sesiones</div></div>
-        <div class="kpi"><div class="v">${sum.avgConc}</div><div class="l">Concentración prom.</div></div>
-        <div class="kpi"><div class="v">${sum.totalMin}</div><div class="l">Min totales</div></div>
-        <div class="kpi"><div class="v">${sum.avgDur}</div><div class="l">Min prom./sesión</div></div>
+      <div class="s-header">
+        <h1 class="s-title">Estadísticas</h1>
+        <span class="s-subtitle">${sum.total} sesión${sum.total !== 1 ? 'es' : ''} registrada${sum.total !== 1 ? 's' : ''}</span>
       </div>
 
-      ${liCard}
+      <div class="s-hero-grid">
+        <div class="s-kpi s-kpi--gold">
+          <span class="s-kpi-icon">📚</span>
+          <div class="s-kpi-val">${sum.total}</div>
+          <div class="s-kpi-lbl">Sesiones totales</div>
+        </div>
+        <div class="s-kpi s-kpi--purple">
+          <span class="s-kpi-icon">🧠</span>
+          <div class="s-kpi-val">${sum.avgConc}</div>
+          <div class="s-kpi-lbl">Concentración prom.</div>
+          ${weekDelta != null ? `<span class="s-kpi-delta ${deltaClass}">${deltaIcon} ${Math.abs(weekDelta)} vs sem. ant.</span>` : ''}
+        </div>
+        <div class="s-kpi s-kpi--blue">
+          <span class="s-kpi-icon">⏱</span>
+          <div class="s-kpi-val">${totalHrs}<span style="font-size:18px;font-weight:600"> h</span></div>
+          <div class="s-kpi-lbl">Horas de estudio</div>
+        </div>
+        <div class="s-kpi s-kpi--green">
+          <span class="s-kpi-icon">🔥</span>
+          <div class="s-kpi-val">${streak}</div>
+          <div class="s-kpi-lbl">Días de racha</div>
+        </div>
+      </div>
 
-      <div class="card" style="margin-top:18px;">
-        <h3>Actividad semanal (últimas 52 semanas)</h3>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Menos →→ Más actividad</div>
+      <div class="s-mid-grid">
+        <div class="s-insight-card">
+          <div class="s-insight-head">✦ Ariven Insights</div>
+          ${insightHtml}
+        </div>
+        <div class="s-subject-card">
+          <div class="s-subject-head">Top materias</div>
+          <div class="s-subject-list">${subjectRingsHtml}</div>
+        </div>
+        ${liCardHtml}
+      </div>
+
+      <div class="s-heatmap-wrap">
+        <div class="s-hm-head">
+          <span class="s-hm-title">Actividad semanal — últimas 52 semanas</span>
+          ${streak > 0 ? `<span class="s-hm-streak">🔥 ${streak} días seguidos</span>` : ''}
+        </div>
+        <div class="s-hm-month-labels">${_heatmapMonthLabels}</div>
         ${Charts.heatmapGrid(sessions)}
+        <div class="s-hm-legend">
+          <span>Menos</span>
+          <div class="s-hm-legend-bar">
+            ${[0.05,0.25,0.5,0.75,1].map(v=>`<div class="s-hm-legend-cell" style="background:rgba(200,155,109,${v})"></div>`).join('')}
+          </div>
+          <span>Más actividad</span>
+        </div>
       </div>
 
-      <div class="grid cols-2" style="margin-top:18px;">
+      <div class="s-charts-grid">
         <div class="card">
-          <h2>Concentración por materia</h2>
+          <h3 style="margin:0 0 14px;font-size:14px;font-weight:700;">Concentración por materia</h3>
           <div class="chart-container">
             <div class="chart-skeleton skeleton"></div>
             <canvas id="chartSubject"></canvas>
           </div>
         </div>
         <div class="card">
-          <h2>Distribución Likert</h2>
+          <h3 style="margin:0 0 14px;font-size:14px;font-weight:700;">Distribución de concentración</h3>
           <div class="chart-container">
             <div class="chart-skeleton skeleton"></div>
             <canvas id="chartLikert"></canvas>
           </div>
         </div>
-        <div class="card">
-          <h2>Por franja horaria</h2>
-          ${renderBar(buckets, 'bucket')}
+      </div>
+
+      <div class="s-analysis-grid">
+        <div class="s-bar-card">
+          <div class="s-bar-head">Por franja horaria</div>
+          ${renderSBar(buckets, 'bucket')}
         </div>
-        <div class="card">
-          <h2>Por actividad previa</h2>
-          ${renderBar(acts, 'activity')}
+        <div class="s-bar-card">
+          <div class="s-bar-head">Por actividad previa</div>
+          ${renderSBar(acts, 'activity')}
+        </div>
+      </div>
+
+      <div class="s-bottom-grid">
+        ${profileHtml}
+        <div class="s-gam-card">
+          <div class="s-gam-head">Progreso y racha</div>
+          ${levelHtml}
+          <div class="s-streak-row">
+            <div class="s-streak-label">Últimos 8 días</div>
+            <div class="s-streak-dots">${streakDotsHtml}</div>
+          </div>
         </div>
       </div>`;
   }
