@@ -10,12 +10,21 @@ const YoutubeRecommender = (() => {
   const _debounceMap      = new Map();    // timers por bubble element
   let   _observer         = null;         // MutationObserver activo
   let   _lastChatMessages = null;         // referencia al #chatMessages actual
+  let   _pendingExplicit  = false;        // usuario pidió videos explícitamente
 
   // ── Helpers ───────────────────────────────────────────────────────────────────
 
   function _esc(s) {
     return String(s ?? '').replace(/[&<>"']/g, c =>
       ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  // ── Detección de solicitud explícita de videos ───────────────────────────────
+
+  function _isVideoRequest(text) {
+    const t = (text || '').toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '');
+    return /\b(videos?|recursos?|canales?|youtube|recomiend|muestr[ae]me|buscame|dame videos?|ver videos?)\b/.test(t);
   }
 
   // ── Lógica de filtrado ────────────────────────────────────────────────────────
@@ -47,6 +56,14 @@ const YoutubeRecommender = (() => {
       .replace(/[*_`]/g, '')
       .trim()
       .slice(0, 80);
+  }
+
+  // Para solicitudes explícitas: extraer tema del contexto o del AI response
+  function _extractTopicFromCtx(ctx, iaText) {
+    if (ctx.topicGoal && ctx.topicGoal.trim().length > 3) return ctx.topicGoal.trim().slice(0, 80);
+    if (ctx.subject && ctx.subject.trim().length > 2) return ctx.subject.trim();
+    const firstLine = (iaText || '').split('\n').find(l => l.trim().length > 0) || '';
+    return firstLine.replace(/^#+\s*/, '').replace(/\*\*/g, '').replace(/[*_`]/g, '').trim().slice(0, 80);
   }
 
   // ── Construcción de queries ───────────────────────────────────────────────────
@@ -192,9 +209,12 @@ const YoutubeRecommender = (() => {
 
   // ── Procesamiento de un bubble ────────────────────────────────────────────────
 
-  async function _processBubble(bubble) {
+  async function _processBubble(bubble, forceExplicit) {
     if (_processedBubbles.has(bubble)) return;
     _processedBubbles.add(bubble);
+
+    const isExplicit = forceExplicit || _pendingExplicit;
+    if (isExplicit) _pendingExplicit = false;
 
     const iaText = bubble.textContent || '';
     const ctx = window._arivenChatCtx || {};
@@ -204,9 +224,12 @@ const YoutubeRecommender = (() => {
     const lastUserBubble = userBubbles[userBubbles.length - 1];
     const lastUserMsg = lastUserBubble ? (lastUserBubble.textContent || '') : '';
 
-    if (!_shouldRecommend(iaText, lastUserMsg)) return;
+    if (!isExplicit && !_shouldRecommend(iaText, lastUserMsg)) return;
 
-    const topic   = _extractTopic(lastUserMsg, iaText);
+    // Para solicitudes explícitas, el tema viene del contexto; para automáticas, del mensaje del usuario
+    const topic   = isExplicit
+      ? _extractTopicFromCtx(ctx, iaText)
+      : _extractTopic(lastUserMsg, iaText);
     const queries = _buildQueries(ctx, topic);
     const videos  = await _fetchVideos(queries);
 
@@ -232,27 +255,32 @@ const YoutubeRecommender = (() => {
 
   function _onMutation(mutations) {
     for (const m of mutations) {
-      // childList: nodos añadidos
-      if (m.type === 'childList') {
-        for (const node of m.addedNodes) {
-          if (node.nodeType !== 1) continue;
-          if (node.id === 'chatTyping') continue;
+      if (m.type !== 'childList') continue;
 
-          // Si es el wrap completo de IA
-          if (node.classList && node.classList.contains('chat-bubble-wrap') &&
-              node.classList.contains('ia')) {
+      for (const node of m.addedNodes) {
+        if (node.nodeType !== 1) continue;
+        if (node.id === 'chatTyping') continue;
+
+        if (node.classList && node.classList.contains('chat-bubble-wrap')) {
+          if (node.classList.contains('ia')) {
+            // Nueva burbuja IA: programar procesamiento
             const bub = node.querySelector('.chat-bubble.ia');
             if (bub) _scheduleBubbleProcess(bub);
-            continue;
+          } else if (node.classList.contains('user')) {
+            // Nueva burbuja usuario: detectar solicitud explícita de videos
+            const userBub = node.querySelector('.chat-bubble.user');
+            if (userBub && _isVideoRequest(userBub.textContent)) {
+              _pendingExplicit = true;
+            }
           }
         }
+      }
 
-        // Si la mutación ocurrió dentro de un bubble IA (streaming)
-        if (m.target && m.target.classList &&
-            m.target.classList.contains('chat-bubble') &&
-            m.target.classList.contains('ia')) {
-          _scheduleBubbleProcess(m.target);
-        }
+      // Streaming: mutaciones dentro de un bubble IA ya existente
+      if (m.target && m.target.classList &&
+          m.target.classList.contains('chat-bubble') &&
+          m.target.classList.contains('ia')) {
+        _scheduleBubbleProcess(m.target);
       }
     }
   }
@@ -276,14 +304,23 @@ const YoutubeRecommender = (() => {
     });
   }
 
-  // ── Punto de entrada público ──────────────────────────────────────────────────
+  // ── API pública ───────────────────────────────────────────────────────────────
 
   function init() {
     _setupChatObserver();
     setInterval(_setupChatObserver, 800);
   }
 
-  return { init };
+  // Llamar desde el botón "📹 Videos": fuerza recomendaciones sobre el último bubble IA
+  function requestVideos() {
+    const iaBubbles = document.querySelectorAll('.chat-bubble.ia');
+    const lastBubble = iaBubbles[iaBubbles.length - 1];
+    if (!lastBubble) return;
+    _processedBubbles.delete(lastBubble);
+    _processBubble(lastBubble, true);
+  }
+
+  return { init, requestVideos };
 
 })();
 

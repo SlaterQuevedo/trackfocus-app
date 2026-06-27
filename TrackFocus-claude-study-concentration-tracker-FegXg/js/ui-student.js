@@ -949,6 +949,7 @@ const UIStudent = (() => {
             <div class="ai-toolbar">
               <span class="ai-always-on-badge" title="Método Minerva y Sistema DECO (4 niveles cognitivos) están activos en toda la sesión">🦉 Minerva · 🎯 DECO activos</span>
               <button class="ghost ai-toolbar-btn" id="chatQuizBtn" title="Practicar con un Quiz opcional — no interrumpe la sesión">📝 Quiz</button>
+              <button class="ghost ai-toolbar-btn" id="chatVideosBtn" title="Recibir recomendaciones de videos sobre el tema actual">📹 Videos</button>
               <span class="li-live-chip" id="chatLiChip" style="display:none;" title="Índice de Aprendizaje estimado en tiempo real">📊 <span id="chatLiVal">—</span></span>
             </div>
             <span class="chat-hint">Enter envía · Shift+Enter salto de línea</span>
@@ -1073,6 +1074,7 @@ const UIStudent = (() => {
 
     // Quiz opcional: el estudiante lo activa cuando quiera practicar.
     document.getElementById('chatQuizBtn')?.addEventListener('click', () => _launchOptionalQuiz());
+    document.getElementById('chatVideosBtn')?.addEventListener('click', () => window.YoutubeRecommender?.requestVideos());
   }
 
   // Actualiza el chip de Índice de Aprendizaje en tiempo real en el header del chat.
@@ -1430,7 +1432,7 @@ const UIStudent = (() => {
           if (msgs) {
             const notice = document.createElement('div');
             notice.className = 'chat-bubble-wrap ia';
-            notice.innerHTML = `<div class="chat-bubble ia" style="border:1px solid var(--accent);background:var(--accent-bg,#f5f0ff);padding:12px 14px;">
+            notice.innerHTML = `<div class="chat-bubble ia chat-deco-notice" style="border:1px solid var(--accent);padding:12px 14px;">
               <strong>📊 Evaluación DECO automática</strong><br>
               <span style="font-size:13px;">Llevas 6 intercambios — es el momento perfecto para medir tu comprensión real en los 4 niveles cognitivos.</span>
             </div>`;
