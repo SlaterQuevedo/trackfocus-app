@@ -525,186 +525,529 @@ const UITeacher = (() => {
     const user = s.users[s.currentUserId];
     const classroomId = App._classroomId;
     const school = user.schoolId ? s.schools[user.schoolId] : null;
-    const isNew = classroomId === 'new';
+    const isNew = !classroomId || classroomId === 'new' || !s.classrooms[classroomId];
 
-    let rosterHtml = '';
-    let crName = 'Nueva Aula';
-    let inviteCodeHtml = '';
+    // ── helpers ──
+    function _ini(n) { return Math.max(0, Math.min(100, Math.round(n))); }
+    function _clr(n) { return n >= 70 ? '#22c55e' : n >= 45 ? '#f59e0b' : '#ef4444'; }
+    function _spark(data, w, h, color) {
+      if (!data || data.length < 2) return '';
+      const vals = data.map(v => v ?? 0);
+      const mn = Math.min(...vals), mx = Math.max(...vals);
+      const rng = mx - mn || 1;
+      const pts = vals.map((v, i) =>
+        `${(i / (vals.length - 1) * w).toFixed(1)},${(h - ((v - mn) / rng * h * 0.85 + h * 0.08)).toFixed(1)}`
+      ).join(' ');
+      return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" fill="none" xmlns="http://www.w3.org/2000/svg"><polyline points="${pts}" stroke="${color}" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    }
+    function _ago(iso) {
+      if (!iso) return '—';
+      const d = Math.floor((Date.now() - new Date(iso)) / 86400000);
+      return d === 0 ? 'hoy' : d === 1 ? 'ayer' : `hace ${d}d`;
+    }
+    function _statusColor(key) {
+      return key === 'ok' ? '#22c55e' : key === 'risk' ? '#ef4444' : '#f59e0b';
+    }
+    function _status(st) {
+      const stSessions = s.sessions.filter(se => se.email === st.id);
+      const last5 = stSessions.slice(-5);
+      if (last5.length < 3) return { key: 'new', label: 'Nuevo' };
+      const avg5 = last5.reduce((a, b) => a + b.concentration, 0) / last5.length;
+      if (avg5 < 2.5) return { key: 'risk', label: 'En riesgo' };
+      const daysSince = stSessions.length
+        ? Math.floor((Date.now() - new Date(stSessions[stSessions.length - 1].datetime)) / 86400000)
+        : 99;
+      if (daysSince > 3) return { key: 'inactive', label: 'Inactivo' };
+      return { key: 'ok', label: 'Activo' };
+    }
 
-    if (!isNew && classroomId) {
-      const cr = s.classrooms[classroomId];
-      crName = cr ? cr.name : 'Aula';
-
-      // Invite code card
-      if (cr) {
-        inviteCodeHtml = `
-          <div class="card" style="border-color:rgba(200,155,109,0.3);margin-bottom:18px;">
-            <h3>Código de invitación del aula</h3>
-            <p class="muted" style="font-size:13px;">Comparte este código con tus alumnos para que puedan solicitar unirse a esta aula.</p>
-            <div style="display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap;">
-              <code style="font-size:22px;font-weight:800;letter-spacing:3px;color:var(--primary);background:rgba(200,155,109,0.1);border:1px solid rgba(200,155,109,0.3);padding:10px 20px;border-radius:10px;">${cr.inviteCode || '—'}</code>
-              <button class="ghost" id="regenCodeBtn" data-cr="${classroomId}">↻ Regenerar</button>
-            </div>
-          </div>`;
-      }
-
-      const students = Schools.listStudentsInClassroom(classroomId);
-
-      rosterHtml = `
-        <div class="card" style="padding:0;overflow:auto;margin-top:18px;">
-          <div style="padding:16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
-            <h3 style="margin:0;">Alumnos — ${esc(crName)}</h3>
-            <span class="muted">${students.length} alumnos</span>
+    // ── EMPTY STATE ──
+    if (isNew) {
+      return `
+        <div class="cm-layout">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+            <button class="ghost" data-go="teacher-dashboard">← Volver</button>
+            <h1 style="margin:0;">Mi Aula</h1>
           </div>
-          ${students.length === 0 ? '<div class="empty">Aún no hay alumnos en esta aula. Los estudiantes se unen con el código del colegio.</div>' : `
-          <table class="table">
-            <thead><tr>
-              <th>Nombre</th><th>Nivel</th><th>XP</th><th>Racha</th><th>Conc. prom. (7d)</th><th>Índice apr.</th><th>Última sesión</th><th>Estado</th><th></th>
-            </tr></thead>
-            <tbody>
-              ${students.map(st => {
-                const gam = st.gamification || {};
-                const stSessions = s.sessions.filter(se => se.email === st.id);
-                const from7 = new Date(); from7.setDate(from7.getDate() - 7);
-                const recent = stSessions.filter(se => new Date(se.datetime) >= from7);
-                const avgRecent = recent.length
-                  ? (recent.reduce((a, b) => a + b.concentration, 0) / recent.length).toFixed(1)
-                  : '—';
-                // Índice de Aprendizaje promedio del alumno (de sus sesiones de Estudio IA).
-                const stIndices = stSessions
-                  .map(se => Stats.parseMetrics(se).learning_index)
-                  .filter(v => typeof v === 'number' && !isNaN(v));
-                const avgIndex = stIndices.length
-                  ? Math.round(stIndices.reduce((a, b) => a + b, 0) / stIndices.length)
-                  : null;
-                const lastSession = stSessions.sort((a, b) => b.datetime.localeCompare(a.datetime))[0];
-                const last5 = stSessions.slice(-5);
-                const avg5 = last5.length >= 5 ? last5.reduce((a, b) => a + b.concentration, 0) / last5.length : null;
-                const isAtRisk = avg5 !== null && avg5 < 2.5;
-
-                return `<tr>
-                  <td>${esc(st.name)}</td>
-                  <td><span class="chip">Nv.${gam.level || 1}</span></td>
-                  <td>${gam.xp || 0}</td>
-                  <td>🔥 ${gam.streak || 0}</td>
-                  <td>${avgRecent}</td>
-                  <td>${avgIndex != null ? avgIndex + '/100' : '—'}</td>
-                  <td>${lastSession ? new Date(lastSession.datetime).toLocaleDateString('es-PE') : '—'}</td>
-                  <td>${isAtRisk ? '<span class="risk-badge">En riesgo</span>' : '<span class="ok-badge">OK</span>'}</td>
-                  <td>
-                    <button class="ghost" data-go="student-detail" data-sid="${esc(st.id)}">Ver</button>
-                    <button class="danger" data-remove="${esc(st.id)}">Quitar</button>
-                  </td>
-                </tr>`;
-              }).join('')}
-            </tbody>
-          </table>`}
+          <div class="cm-empty">
+            <div class="cm-empty-ico">🏫</div>
+            <h2>Aún no tienes un aula</h2>
+            <p class="muted">Crea tu primera aula para invitar a tus alumnos y comenzar a hacer seguimiento de su aprendizaje.</p>
+            <div class="card" style="max-width:420px;margin-top:24px;">
+              <h3 style="margin-top:0;">Crear mi primera aula</h3>
+              <form id="createClassroomForm">
+                <div class="field" style="margin-bottom:12px;">
+                  <label>Grado</label>
+                  <select name="grade" style="width:100%;">
+                    <option>1ro</option><option>2do</option><option>3ro</option><option>4to</option><option>5to</option>
+                  </select>
+                </div>
+                <div class="field" style="margin-bottom:16px;">
+                  <label>Sección</label>
+                  <input name="section" placeholder="A, B, C…" maxlength="5" required style="width:100%;" />
+                </div>
+                <button class="primary" type="submit" style="width:100%;">Crear aula</button>
+              </form>
+            </div>
+          </div>
         </div>`;
     }
 
-    // Lista de aulas del colegio para mostrar selector de mover
+    // ── FULL DASHBOARD ──
+    const cr = s.classrooms[classroomId];
+    const crName = cr.name;
+    const students = Schools.listStudentsInClassroom(classroomId);
+    const allCrSessions = Sessions.listForClassroom(classroomId);
+    const from7 = new Date(); from7.setDate(from7.getDate() - 7);
+    const from7Iso = from7.toISOString();
+    const weekSessions = allCrSessions.filter(se => se.datetime >= from7Iso);
     const allClassrooms = school ? Schools.listClassrooms(school.id) : [];
-
     const schoolId = school ? school.id : null;
-    const pendingForCr = schoolId ? Schools.listRequestsForSchool(schoolId)
-      .filter(r => r.status === 'pending' && (r.classroomId === classroomId || (!r.classroomId && !isNew))) : [];
 
-    const unassigned = !isNew && classroomId && school
+    // KPIs
+    const totalStudents = students.length;
+    const activeStudents = students.filter(st => {
+      const last = s.sessions.filter(se => se.email === st.id).slice(-1)[0];
+      return last && new Date(last.datetime) >= from7;
+    }).length;
+    const avgConc7 = weekSessions.length
+      ? weekSessions.reduce((a, b) => a + b.concentration, 0) / weekSessions.length
+      : 0;
+    const totalMin7 = weekSessions.reduce((a, b) => a + (b.durationMin || 0), 0);
+    const atRiskCount = students.filter(st => {
+      const last5 = s.sessions.filter(se => se.email === st.id).slice(-5);
+      return last5.length >= 3 && last5.reduce((a, b) => a + b.concentration, 0) / last5.length < 2.5;
+    }).length;
+    const crIndices = allCrSessions
+      .map(se => Stats.parseMetrics(se).learning_index)
+      .filter(v => typeof v === 'number' && !isNaN(v));
+    const avgIndex = crIndices.length ? Math.round(crIndices.reduce((a, b) => a + b, 0) / crIndices.length) : null;
+    const weekActs = weekSessions.length;
+    const completionRate = totalStudents ? Math.round((activeStudents / totalStudents) * 100) : 0;
+
+    // Weekly trend sparkline data (last 7 days)
+    const dailyConc = Array.from({ length: 7 }, (_, i) => {
+      const day = new Date(); day.setDate(day.getDate() - (6 - i));
+      const dayStr = day.toISOString().slice(0, 10);
+      const daySessions = allCrSessions.filter(se => se.datetime.slice(0, 10) === dayStr);
+      return daySessions.length ? daySessions.reduce((a, b) => a + b.concentration, 0) / daySessions.length : null;
+    });
+
+    // At-risk students list
+    const atRiskList = students.filter(st => {
+      const last5 = s.sessions.filter(se => se.email === st.id).slice(-5);
+      return last5.length >= 3 && last5.reduce((a, b) => a + b.concentration, 0) / last5.length < 2.5;
+    }).slice(0, 5);
+
+    // Pending
+    const pendingForCr = schoolId ? Schools.listRequestsForSchool(schoolId)
+      .filter(r => r.status === 'pending' && (r.classroomId === classroomId || !r.classroomId)) : [];
+
+    // Unassigned students
+    const unassigned = school
       ? Schools.listStudentsInSchool(school.id).filter(u => !u.classroomId && u.approvalStatus !== 'pending')
       : [];
-    const unassignedHtml = unassigned.length > 0 ? `
-      <div class="card" style="margin-bottom:18px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-          <h3 style="margin:0;">Estudiantes sin aula asignada</h3>
-          <span class="chip">${unassigned.length}</span>
-        </div>
-        <p class="muted" style="font-size:13px;margin:0 0 12px;">Pertenecen al colegio pero no están asignados a ningún aula. Puedes incorporarlos directamente.</p>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          ${unassigned.map(st => `
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--panel);border-radius:8px;border:1px solid var(--border);">
-              <div>
-                <div style="font-weight:500;font-size:14px;">${esc(st.name)}</div>
-                <div class="muted" style="font-size:12px;">${esc(st.email)}</div>
-              </div>
-              <button class="ghost" style="font-size:13px;white-space:nowrap;" data-add-student="${esc(st.id)}">+ Añadir al aula</button>
-            </div>`).join('')}
-        </div>
-      </div>` : '';
+
+    // Insights IA (rule-based)
+    const insights = [];
+    if (atRiskCount > 0) insights.push({ type: 'warn', text: `${atRiskCount} alumno${atRiskCount > 1 ? 's' : ''} con concentración en riesgo esta semana.` });
+    const inactive = students.filter(st => {
+      const last = s.sessions.filter(se => se.email === st.id).slice(-1)[0];
+      return !last || (Date.now() - new Date(last.datetime)) > 3 * 86400000;
+    });
+    if (inactive.length > 0) insights.push({ type: 'warn', text: `${inactive.length} alumno${inactive.length > 1 ? 's' : ''} sin sesión en los últimos 3 días.` });
+    if (avgConc7 >= 3.5) insights.push({ type: 'good', text: `Concentración media excelente esta semana: ${avgConc7.toFixed(1)}/5.` });
+    if (completionRate < 40 && totalStudents > 3) insights.push({ type: 'bad', text: `Solo el ${completionRate}% del aula estuvo activo esta semana.` });
+    if (insights.length === 0) insights.push({ type: 'info', text: 'El aula muestra un rendimiento estable. ¡Buen trabajo!' });
+
+    // Alerts
+    const alertsList = [];
+    atRiskList.forEach(st => alertsList.push({ color: '#ef4444', text: `${esc(st.name.split(' ')[0])} — concentración baja en sus últimas sesiones.` }));
+    if (inactive.length > 0) alertsList.push({ color: '#f59e0b', text: `${inactive.length} alumno${inactive.length > 1 ? 's' : ''} sin actividad reciente.` });
+
+    // Trends (last 4 weeks avg concentration)
+    const trendWeeks = Array.from({ length: 4 }, (_, i) => {
+      const to = new Date(); to.setDate(to.getDate() - i * 7);
+      const fr = new Date(to); fr.setDate(fr.getDate() - 7);
+      const ws = allCrSessions.filter(se => { const d = new Date(se.datetime); return d >= fr && d < to; });
+      return ws.length ? parseFloat((ws.reduce((a, b) => a + b.concentration, 0) / ws.length).toFixed(2)) : null;
+    }).reverse();
+
+    // Goals (objectives)
+    const goalParticipation = { label: 'Participación semanal', value: completionRate, target: 80 };
+    const goalConc = { label: 'Concentración media', value: avgConc7 ? parseFloat((avgConc7 / 5 * 100).toFixed(0)) : 0, target: 70 };
+
+    // Recent activity (last 6 sessions across classroom)
+    const recentSessions = allCrSessions
+      .slice().sort((a, b) => b.datetime.localeCompare(a.datetime))
+      .slice(0, 6);
+
+    // Students data with computations
+    const studentsData = students.map(st => {
+      const gam = st.gamification || {};
+      const li = Gamification.getLevelInfo(gam.xp || 0);
+      const stSessions = s.sessions.filter(se => se.email === st.id);
+      const recent7 = stSessions.filter(se => se.datetime >= from7Iso);
+      const avgC7 = recent7.length ? recent7.reduce((a, b) => a + b.concentration, 0) / recent7.length : null;
+      const last5 = stSessions.slice(-5);
+      const weeklyConc = Array.from({ length: 5 }, (_, i) => {
+        const day = new Date(); day.setDate(day.getDate() - (4 - i));
+        const dayStr = day.toISOString().slice(0, 10);
+        const ds = stSessions.filter(se => se.datetime.slice(0, 10) === dayStr);
+        return ds.length ? ds.reduce((a, b) => a + b.concentration, 0) / ds.length : null;
+      });
+      const prev5 = stSessions.slice(-10, -5);
+      const avgNow = last5.length ? last5.reduce((a, b) => a + b.concentration, 0) / last5.length : null;
+      const avgPrev = prev5.length ? prev5.reduce((a, b) => a + b.concentration, 0) / prev5.length : null;
+      const trend = avgNow !== null && avgPrev !== null
+        ? (avgNow > avgPrev + 0.2 ? '↑' : avgNow < avgPrev - 0.2 ? '↓' : '→')
+        : '→';
+      const stIndices = stSessions.map(se => Stats.parseMetrics(se).learning_index).filter(v => typeof v === 'number' && !isNaN(v));
+      const stAvgIdx = stIndices.length ? Math.round(stIndices.reduce((a, b) => a + b, 0) / stIndices.length) : null;
+      const lastS = stSessions.slice(-1)[0];
+      const st_status = _status(st);
+      return { st, gam, li, avgC7, weeklyConc, trend, stAvgIdx, lastS, st_status };
+    });
+
+    // ── HTML ──
+    const qrCells = Array.from({ length: 25 }, (_, i) => `<div class="cm-qr-cell${[0,2,4,10,12,14,20,22,24].includes(i) ? ' cm-qr-dark' : ''}"></div>`).join('');
 
     return `
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-        <button class="ghost" data-go="teacher-dashboard">← Volver</button>
-        <h1 style="margin:0;">${isNew ? 'Nueva Aula' : 'Gestionar: ' + esc(crName)}</h1>
-      </div>
-
-      ${inviteCodeHtml}
-
-      ${!isNew && pendingForCr.length > 0 && school ? _pendingRequestsPanel(school.id, user.id) : ''}
-
-      ${unassignedHtml}
-
-      <div class="card">
-        <h3>Crear nueva aula</h3>
-        <form id="createClassroomForm" class="row">
-          <div class="field">
-            <label>Grado</label>
-            <select name="grade">
-              <option>1ro</option><option>2do</option><option>3ro</option><option>4to</option><option>5to</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Sección</label>
-            <input name="section" placeholder="A, B, C…" maxlength="5" required />
-          </div>
-          <div class="field" style="justify-content:flex-end;">
-            <label style="opacity:0;">.</label>
-            <button class="primary" type="submit">Crear aula</button>
-          </div>
-        </form>
-      </div>
-
-      ${!isNew && allClassrooms.length > 1 ? `
-      <div class="card">
-        <h3>Mover alumno a otra aula</h3>
-        <div class="row">
-          <div class="field">
-            <label>ID del alumno (email)</label>
-            <input id="moveStudentId" placeholder="email@gmail.com" />
-          </div>
-          <div class="field">
-            <label>Destino</label>
-            <select id="moveTargetCr">
-              ${allClassrooms.filter(c => c.id !== classroomId).map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('')}
-            </select>
-          </div>
-          <div class="field" style="justify-content:flex-end;">
-            <label style="opacity:0;">.</label>
-            <button class="primary" id="moveStudentBtn">Mover</button>
-          </div>
+      <div class="cm-layout">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+          <button class="ghost" data-go="teacher-dashboard">← Volver</button>
+          <h1 style="margin:0;">Mi Aula</h1>
         </div>
-      </div>` : ''}
 
-      ${rosterHtml}`;
+        <div class="cm-two-col">
+          <!-- ── MAIN COLUMN ── -->
+          <div class="cm-main-col">
+
+            <!-- Classroom header -->
+            <div class="cm-cr-hdr">
+              <div class="cm-cr-hero">
+                <div class="cm-cr-av">${(crName[0] || 'A').toUpperCase()}</div>
+                <div class="cm-cr-info">
+                  <div class="cm-cr-title">${esc(crName)}</div>
+                  <div class="cm-cr-sub">${esc(school ? school.name : '')} · ${totalStudents} alumnos</div>
+                  <div class="cm-cr-meta-pills">
+                    <span class="cm-cr-pill">📚 ${esc(cr.grade || '')}</span>
+                    <span class="cm-cr-pill">🏷 ${esc(cr.section || '')}</span>
+                    <span class="cm-cr-pill" style="color:${atRiskCount > 0 ? '#f59e0b' : '#22c55e'};">${atRiskCount > 0 ? '⚠ ' + atRiskCount + ' en riesgo' : '✓ Sin riesgos'}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="cm-code-block">
+                <div class="cm-code-label">Código de invitación</div>
+                <div class="cm-code-badge" id="cmInviteCode">${esc(cr.inviteCode || '—')}</div>
+                <div class="cm-code-actions">
+                  <button class="cm-code-btn" id="cmCopyCodeBtn" title="Copiar">📋 Copiar</button>
+                  <button class="cm-code-btn" id="cmShareCodeBtn" title="Compartir">↗ Compartir</button>
+                  <button class="cm-code-btn" id="regenCodeBtn" data-cr="${esc(classroomId)}" title="Regenerar código">↻ Nuevo</button>
+                </div>
+                <div class="cm-qr-ph">
+                  <div class="cm-qr-inner">${qrCells}</div>
+                  <div class="cm-qr-lbl">QR</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- KPI summary grid -->
+            <div class="cm-sum-grid">
+              <div class="cm-sum-card">
+                <div class="cm-sum-top">
+                  <span class="cm-sum-ico">👥</span>
+                  ${_spark(Array(7).fill(totalStudents), 44, 22, '#c8a06e')}
+                </div>
+                <div class="cm-sum-v">${totalStudents}</div>
+                <div class="cm-sum-l">Alumnos</div>
+              </div>
+              <div class="cm-sum-card">
+                <div class="cm-sum-top">
+                  <span class="cm-sum-ico">⚡</span>
+                  ${_spark(Array(7).fill(activeStudents), 44, 22, '#22c55e')}
+                </div>
+                <div class="cm-sum-v ${activeStudents < totalStudents * 0.5 ? 'cm-v-bad' : 'cm-v-good'}">${activeStudents}</div>
+                <div class="cm-sum-l">Activos (7d)</div>
+              </div>
+              <div class="cm-sum-card">
+                <div class="cm-sum-top">
+                  <span class="cm-sum-ico">🎯</span>
+                  ${_spark(dailyConc, 44, 22, _clr(_ini(avgConc7 / 5 * 100)))}
+                </div>
+                <div class="cm-sum-v ${avgConc7 < 2.5 ? 'cm-v-bad' : avgConc7 >= 3.5 ? 'cm-v-good' : ''}">${avgConc7 ? avgConc7.toFixed(1) : '—'}</div>
+                <div class="cm-sum-l">Conc. media (7d)</div>
+              </div>
+              <div class="cm-sum-card">
+                <div class="cm-sum-top">
+                  <span class="cm-sum-ico">⏱</span>
+                  ${_spark(dailyConc, 44, 22, '#a78bfa')}
+                </div>
+                <div class="cm-sum-v">${totalMin7 >= 60 ? Math.round(totalMin7 / 60) + 'h' : totalMin7 + 'm'}</div>
+                <div class="cm-sum-l">Tiempo (7d)</div>
+              </div>
+              <div class="cm-sum-card ${atRiskCount > 0 ? 'cm-sum-alert' : ''}">
+                <div class="cm-sum-top">
+                  <span class="cm-sum-ico">⚠</span>
+                  ${_spark(Array(7).fill(atRiskCount), 44, 22, '#ef4444')}
+                </div>
+                <div class="cm-sum-v ${atRiskCount > 0 ? 'cm-v-bad' : 'cm-v-good'}">${atRiskCount}</div>
+                <div class="cm-sum-l">En riesgo</div>
+              </div>
+              <div class="cm-sum-card">
+                <div class="cm-sum-top">
+                  <span class="cm-sum-ico">📈</span>
+                  ${_spark(trendWeeks, 44, 22, '#38bdf8')}
+                </div>
+                <div class="cm-sum-v">${avgIndex != null ? avgIndex : '—'}</div>
+                <div class="cm-sum-l">Índice apr.</div>
+              </div>
+              <div class="cm-sum-card">
+                <div class="cm-sum-top">
+                  <span class="cm-sum-ico">📝</span>
+                  ${_spark(dailyConc.map((_, i) => weekSessions.filter(se => se.datetime.slice(0, 10) === (() => { const d = new Date(); d.setDate(d.getDate() - (6 - i)); return d.toISOString().slice(0, 10); })()).length), 44, 22, '#c8a06e')}
+                </div>
+                <div class="cm-sum-v">${weekActs}</div>
+                <div class="cm-sum-l">Sesiones (7d)</div>
+              </div>
+              <div class="cm-sum-card">
+                <div class="cm-sum-top">
+                  <span class="cm-sum-ico">✅</span>
+                  ${_spark(Array(7).fill(completionRate), 44, 22, completionRate >= 60 ? '#22c55e' : '#f59e0b')}
+                </div>
+                <div class="cm-sum-v ${completionRate < 40 ? 'cm-v-bad' : completionRate >= 70 ? 'cm-v-good' : ''}">${completionRate}%</div>
+                <div class="cm-sum-l">Participación</div>
+              </div>
+            </div>
+
+            <!-- Student section -->
+            <div class="cm-students-section">
+              <div class="cm-sh">Alumnos <span style="color:var(--muted);font-size:13px;font-weight:400;">${totalStudents}</span></div>
+              <div class="cm-toolbar">
+                <div class="cm-filters">
+                  <button class="cm-chip cm-chip-active" data-filter="all">Todos</button>
+                  <button class="cm-chip" data-filter="ok">Activos</button>
+                  <button class="cm-chip" data-filter="risk">En riesgo</button>
+                  <button class="cm-chip" data-filter="inactive">Inactivos</button>
+                </div>
+                <div class="cm-toolbar-right">
+                  <div class="cm-search-wrap">
+                    <input class="cm-search" id="cmSearch" placeholder="Buscar alumno…" />
+                  </div>
+                  <select class="cm-sort" id="cmSort">
+                    <option value="name">Nombre</option>
+                    <option value="conc">Concentración</option>
+                    <option value="xp">XP</option>
+                    <option value="streak">Racha</option>
+                    <option value="last">Última sesión</option>
+                  </select>
+                  <div class="cm-view-btns">
+                    <button class="cm-view-btn cm-view-active" id="cmViewList" title="Vista lista">☰</button>
+                    <button class="cm-view-btn" id="cmViewCards" title="Vista tarjetas">⊞</button>
+                  </div>
+                </div>
+              </div>
+
+              ${students.length === 0 ? `
+              <div style="padding:40px;text-align:center;color:var(--muted);">
+                <div style="font-size:36px;margin-bottom:12px;">👤</div>
+                <div>Aún no hay alumnos en esta aula.</div>
+                <div style="font-size:13px;margin-top:6px;">Los estudiantes se unen con el código de invitación.</div>
+              </div>` : ''}
+
+              <!-- LIST VIEW -->
+              <div id="cmStudentList" class="cm-student-list">
+                ${studentsData.map(({ st, gam, li, avgC7, weeklyConc, trend, stAvgIdx, lastS, st_status }) => `
+                  <div class="cm-st-row" data-student-id="${esc(st.id)}" data-status="${st_status.key}" data-name="${esc(st.name.toLowerCase())}">
+                    <div class="cm-st-av" style="background:linear-gradient(135deg,${_statusColor(st_status.key)}33,${_statusColor(st_status.key)}11);border-color:${_statusColor(st_status.key)}55;">
+                      ${(st.name[0] || '?').toUpperCase()}
+                    </div>
+                    <div class="cm-st-main">
+                      <div class="cm-st-nm">${esc(st.name)}</div>
+                      <span class="cm-st-level-badge">Nv.${gam.level || 1}</span>
+                    </div>
+                    <div class="cm-st-xp-block">
+                      <div class="cm-st-xpv">${(gam.xp || 0).toLocaleString('es-PE')} XP</div>
+                      <div class="cm-st-xpbar"><div class="cm-st-xpfill" style="width:${li ? _ini((li.xpInLevel / li.xpForLevel) * 100) : 0}%;background:${_statusColor(st_status.key)};"></div></div>
+                    </div>
+                    <div class="cm-st-streak">🔥 ${gam.streak || 0}</div>
+                    <div class="cm-st-conc-block">
+                      <div class="cm-st-concv" style="color:${avgC7 != null ? _clr(_ini(avgC7 / 5 * 100)) : 'var(--muted)'};">${avgC7 != null ? avgC7.toFixed(1) : '—'}</div>
+                      <div class="cm-st-trend">${trend}</div>
+                    </div>
+                    <div class="cm-st-idx">${stAvgIdx != null ? stAvgIdx + '/100' : '—'}</div>
+                    <div class="cm-st-last">${_ago(lastS?.datetime)}</div>
+                    <div class="cm-st-acts">
+                      ${_spark(weeklyConc, 52, 22, _statusColor(st_status.key))}
+                    </div>
+                    <span class="cm-st-badge" style="background:${_statusColor(st_status.key)}22;color:${_statusColor(st_status.key)};border:1px solid ${_statusColor(st_status.key)}44;">${st_status.label}</span>
+                    <button class="cm-code-btn" data-remove="${esc(st.id)}" style="color:#ef4444;margin-left:4px;" title="Quitar alumno">✕</button>
+                  </div>`).join('')}
+              </div>
+
+              <!-- CARDS VIEW (hidden by default) -->
+              <div id="cmStudentCards" class="cm-student-cards" style="display:none;">
+                ${studentsData.map(({ st, gam, li, avgC7, weeklyConc, trend, st_status }) => `
+                  <div class="cm-st-card-item" data-student-id="${esc(st.id)}" data-status="${st_status.key}" data-name="${esc(st.name.toLowerCase())}">
+                    <div class="cm-st-av" style="width:44px;height:44px;font-size:18px;margin:0 auto 10px;background:linear-gradient(135deg,${_statusColor(st_status.key)}33,${_statusColor(st_status.key)}11);border-color:${_statusColor(st_status.key)}55;">
+                      ${(st.name[0] || '?').toUpperCase()}
+                    </div>
+                    <div style="font-weight:600;font-size:13px;text-align:center;margin-bottom:4px;">${esc(st.name)}</div>
+                    <span class="cm-st-badge" style="display:block;text-align:center;margin:0 auto 10px;background:${_statusColor(st_status.key)}22;color:${_statusColor(st_status.key)};border:1px solid ${_statusColor(st_status.key)}44;">${st_status.label}</span>
+                    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px;">
+                      <span>Nv.${gam.level || 1}</span><span>🔥 ${gam.streak || 0}</span><span>${avgC7 != null ? avgC7.toFixed(1) + '/5' : '—'}</span>
+                    </div>
+                    <div class="cm-st-xpbar" style="margin-bottom:6px;"><div class="cm-st-xpfill" style="width:${li ? _ini((li.xpInLevel / li.xpForLevel) * 100) : 0}%;background:${_statusColor(st_status.key)};"></div></div>
+                    <div style="text-align:center;">${_spark(weeklyConc, 80, 26, _statusColor(st_status.key))}</div>
+                  </div>`).join('')}
+              </div>
+            </div>
+
+            <!-- Pending requests (preserved) -->
+            ${pendingForCr.length > 0 && school ? _pendingRequestsPanel(school.id, user.id) : ''}
+
+            <!-- Unassigned students (preserved) -->
+            ${unassigned.length > 0 ? `
+            <div class="cm-rc-card" style="margin-top:16px;">
+              <div class="cm-sh">Sin aula asignada <span style="color:var(--muted);font-size:13px;font-weight:400;">${unassigned.length}</span></div>
+              <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
+                ${unassigned.map(st => `
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:rgba(255,255,255,.04);border-radius:8px;border:1px solid var(--border);">
+                    <div>
+                      <div style="font-weight:500;font-size:14px;">${esc(st.name)}</div>
+                      <div class="muted" style="font-size:12px;">${esc(st.email)}</div>
+                    </div>
+                    <button class="ghost" style="font-size:13px;" data-add-student="${esc(st.id)}">+ Añadir</button>
+                  </div>`).join('')}
+              </div>
+            </div>` : ''}
+
+            <!-- Move student (preserved, hidden if single classroom) -->
+            ${allClassrooms.length > 1 ? `
+            <div class="cm-rc-card" style="margin-top:16px;">
+              <div class="cm-sh">Mover alumno</div>
+              <div class="row" style="margin-top:12px;">
+                <div class="field">
+                  <label>ID alumno (email)</label>
+                  <input id="moveStudentId" placeholder="email@gmail.com" />
+                </div>
+                <div class="field">
+                  <label>Destino</label>
+                  <select id="moveTargetCr">
+                    ${allClassrooms.filter(c => c.id !== classroomId).map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('')}
+                  </select>
+                </div>
+                <div class="field" style="justify-content:flex-end;">
+                  <label style="opacity:0;">.</label>
+                  <button class="primary" id="moveStudentBtn">Mover</button>
+                </div>
+              </div>
+            </div>` : ''}
+
+          </div><!-- /cm-main-col -->
+
+          <!-- ── RIGHT SIDEBAR ── -->
+          <div class="cm-right-col">
+
+            <div class="cm-rc-card">
+              <div class="cm-sh">Insights IA</div>
+              <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
+                ${insights.map(ins => `<div class="cm-insight cm-ins-${ins.type}">${ins.text}</div>`).join('')}
+              </div>
+            </div>
+
+            <div class="cm-rc-card">
+              <div class="cm-sh">Alertas</div>
+              <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
+                ${alertsList.length > 0
+                  ? alertsList.map(a => `<div class="cm-alert-item" style="border-left-color:${a.color};">${a.text}</div>`).join('')
+                  : '<div style="color:var(--muted);font-size:13px;">Sin alertas activas.</div>'}
+              </div>
+            </div>
+
+            <div class="cm-rc-card">
+              <div class="cm-sh">Tendencias (4 sem.)</div>
+              <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px;">
+                ${trendWeeks.map((v, i) => `
+                  <div class="cm-trend-row">
+                    <span style="font-size:12px;color:var(--muted);width:60px;">Sem. -${3 - i}</span>
+                    <div style="flex:1;height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;">
+                      <div style="height:100%;width:${v != null ? _ini(v / 5 * 100) : 0}%;background:${v != null ? _clr(_ini(v / 5 * 100)) : 'transparent'};border-radius:3px;transition:width .4s;"></div>
+                    </div>
+                    <span style="font-size:12px;color:var(--muted);width:28px;text-align:right;">${v != null ? v.toFixed(1) : '—'}</span>
+                  </div>`).join('')}
+              </div>
+            </div>
+
+            <div class="cm-rc-card">
+              <div class="cm-sh">Objetivos</div>
+              <div style="margin-top:14px;display:flex;flex-direction:column;gap:14px;">
+                ${[goalParticipation, goalConc].map(g => `
+                  <div class="cm-goal-row">
+                    <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
+                      <span>${g.label}</span>
+                      <span style="color:${g.value >= g.target ? '#22c55e' : '#f59e0b'};">${g.value}% / ${g.target}%</span>
+                    </div>
+                    <div style="height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;">
+                      <div style="height:100%;width:${Math.min(100, g.value)}%;background:${g.value >= g.target ? '#22c55e' : '#f59e0b'};border-radius:3px;transition:width .4s;"></div>
+                    </div>
+                  </div>`).join('')}
+              </div>
+            </div>
+
+            <div class="cm-rc-card">
+              <div class="cm-sh">Actividad reciente</div>
+              <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
+                ${recentSessions.length === 0
+                  ? '<div style="color:var(--muted);font-size:13px;">Sin sesiones recientes.</div>'
+                  : recentSessions.map(se => {
+                      const stName = s.users[se.email]?.name || se.email;
+                      return `<div class="cm-act-item">
+                        <div class="cm-act-av">${(stName[0] || '?').toUpperCase()}</div>
+                        <div style="flex:1;min-width:0;">
+                          <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(stName.split(' ')[0])}</div>
+                          <div style="font-size:11px;color:var(--muted);">${esc(se.subject || '—')} · ${_ago(se.datetime)}</div>
+                        </div>
+                        <div style="font-size:13px;color:${_clr(_ini(se.concentration / 5 * 100))};font-weight:600;">${se.concentration.toFixed(1)}</div>
+                      </div>`;
+                    }).join('')}
+              </div>
+            </div>
+
+          </div><!-- /cm-right-col -->
+        </div><!-- /cm-two-col -->
+
+        <!-- Side panel -->
+        <div class="cm-sp-overlay" id="cmSPOverlay"></div>
+        <div class="cm-sp-panel" id="cmSidePanel"></div>
+
+      </div><!-- /cm-layout -->`;
   }
 
   function wireClassroomManage() {
     const s = Storage.get();
     const user = s.users[s.currentUserId];
+    const classroomId = App._classroomId;
+
+    // ── data-go navigation ──
     root().querySelectorAll('[data-go]').forEach(btn => {
       btn.addEventListener('click', () => {
-        const id = btn.dataset.sid;
-        if (id) App._studentDetailId = id;
-        App.go(btn.dataset.go);
+        const go = btn.dataset.go;
+        const id = btn.dataset.id;
+        const sid = btn.dataset.sid;
+        if (id) App._classroomId = id;
+        if (sid) App._studentDetailId = sid;
+        App.go(go);
       });
     });
 
+    // ── create classroom form ──
     document.getElementById('createClassroomForm')?.addEventListener('submit', (e) => {
       e.preventDefault();
       const fd = new FormData(e.target);
       if (!user.schoolId) return UI.flash('No estás asignado a un colegio.', 'error');
       try {
         const cr = Schools.createClassroom(user.schoolId, fd.get('grade'), fd.get('section'));
-        // Vincular docente al aula
         Storage.set(st => {
           if (!st.classrooms[cr.id].teacherIds.includes(user.id)) st.classrooms[cr.id].teacherIds.push(user.id);
           if (!st.users[user.id].classroomIds) st.users[user.id].classroomIds = [];
@@ -716,15 +1059,17 @@ const UITeacher = (() => {
       } catch (err) { UI.flash(err.message, 'error'); }
     });
 
+    // ── remove student ──
     root().querySelectorAll('[data-remove]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const classroomId = App._classroomId;
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         if (!confirm('¿Quitar este alumno del aula?')) return;
         Schools.removeStudentFromClassroom(btn.dataset.remove, classroomId);
         App.go('classroom-manage');
       });
     });
 
+    // ── move student ──
     document.getElementById('moveStudentBtn')?.addEventListener('click', () => {
       const studentId = document.getElementById('moveStudentId')?.value.trim();
       const targetCr = document.getElementById('moveTargetCr')?.value;
@@ -734,25 +1079,243 @@ const UITeacher = (() => {
       App.go('classroom-manage');
     });
 
+    // ── regenerate invite code ──
     document.getElementById('regenCodeBtn')?.addEventListener('click', () => {
       const crId = document.getElementById('regenCodeBtn').dataset.cr;
       const newCode = Schools.regenerateInviteCode(crId);
+      const badge = document.getElementById('cmInviteCode');
+      if (badge) badge.textContent = newCode;
       UI.flash(`Nuevo código generado: ${newCode}`, 'success');
-      App.go('classroom-manage');
+    });
+
+    // ── copy invite code ──
+    document.getElementById('cmCopyCodeBtn')?.addEventListener('click', () => {
+      const code = document.getElementById('cmInviteCode')?.textContent || '';
+      if (!code || code === '—') return;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(code).then(() => UI.flash('Código copiado al portapapeles.', 'success'));
+      } else {
+        UI.flash('Código: ' + code, 'success');
+      }
+    });
+
+    // ── share invite code ──
+    document.getElementById('cmShareCodeBtn')?.addEventListener('click', () => {
+      const code = document.getElementById('cmInviteCode')?.textContent || '';
+      const st = Storage.get();
+      const cr = st.classrooms[classroomId];
+      const text = `Únete a mi aula "${cr ? cr.name : ''}" en Ariven usando el código: ${code}`;
+      if (navigator.share) {
+        navigator.share({ title: 'Código de aula Ariven', text }).catch(() => {});
+      } else {
+        if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => UI.flash('Texto copiado para compartir.', 'success'));
+      }
     });
 
     _wireApprovalButtons(user.id);
 
-    // Añadir estudiantes sin aula al aula actual
+    // ── add unassigned student ──
     root().querySelectorAll('[data-add-student]').forEach(btn => {
       btn.addEventListener('click', async () => {
         const studentId = btn.dataset.addStudent;
-        const classroomId = App._classroomId;
         if (!classroomId || classroomId === 'new') return;
         Schools.addStudentToClassroom(studentId, classroomId);
         try { await Storage.flush(); } catch (_) {}
         UI.flash('Estudiante añadido al aula correctamente.', 'success');
         App.go('classroom-manage');
+      });
+    });
+
+    // ── filter chips ──
+    let _activeFilter = 'all';
+    root().querySelectorAll('.cm-chip[data-filter]').forEach(chip => {
+      chip.addEventListener('click', () => {
+        root().querySelectorAll('.cm-chip[data-filter]').forEach(c => c.classList.remove('cm-chip-active'));
+        chip.classList.add('cm-chip-active');
+        _activeFilter = chip.dataset.filter;
+        _applyFilters();
+      });
+    });
+
+    // ── search ──
+    document.getElementById('cmSearch')?.addEventListener('input', _applyFilters);
+
+    function _applyFilters() {
+      const query = (document.getElementById('cmSearch')?.value || '').toLowerCase().trim();
+      const rows = root().querySelectorAll('.cm-st-row, .cm-st-card-item');
+      rows.forEach(row => {
+        const status = row.dataset.status || 'ok';
+        const name = row.dataset.name || '';
+        const matchFilter = _activeFilter === 'all' || status === _activeFilter;
+        const matchSearch = !query || name.includes(query);
+        row.style.display = (matchFilter && matchSearch) ? '' : 'none';
+      });
+    }
+
+    // ── sort ──
+    document.getElementById('cmSort')?.addEventListener('change', (e) => {
+      const key = e.target.value;
+      const list = document.getElementById('cmStudentList');
+      const cards = document.getElementById('cmStudentCards');
+      const sortRows = (container) => {
+        if (!container) return;
+        const items = Array.from(container.children);
+        items.sort((a, b) => {
+          const idA = a.dataset.studentId;
+          const idB = b.dataset.studentId;
+          const st_s = Storage.get();
+          const userA = st_s.users[idA] || {};
+          const userB = st_s.users[idB] || {};
+          const gamA = userA.gamification || {};
+          const gamB = userB.gamification || {};
+          if (key === 'name') return (userA.name || '').localeCompare(userB.name || '');
+          if (key === 'xp') return (gamB.xp || 0) - (gamA.xp || 0);
+          if (key === 'streak') return (gamB.streak || 0) - (gamA.streak || 0);
+          if (key === 'conc') {
+            const sA = st_s.sessions.filter(se => se.email === idA).slice(-7);
+            const sB = st_s.sessions.filter(se => se.email === idB).slice(-7);
+            const cA = sA.length ? sA.reduce((acc, s) => acc + s.concentration, 0) / sA.length : 0;
+            const cB = sB.length ? sB.reduce((acc, s) => acc + s.concentration, 0) / sB.length : 0;
+            return cB - cA;
+          }
+          if (key === 'last') {
+            const lA = st_s.sessions.filter(se => se.email === idA).slice(-1)[0]?.datetime || '';
+            const lB = st_s.sessions.filter(se => se.email === idB).slice(-1)[0]?.datetime || '';
+            return lB.localeCompare(lA);
+          }
+          return 0;
+        });
+        items.forEach(item => container.appendChild(item));
+      };
+      sortRows(list);
+      sortRows(cards);
+    });
+
+    // ── view toggle ──
+    const listEl = document.getElementById('cmStudentList');
+    const cardsEl = document.getElementById('cmStudentCards');
+    document.getElementById('cmViewList')?.addEventListener('click', () => {
+      if (listEl) listEl.style.display = '';
+      if (cardsEl) cardsEl.style.display = 'none';
+      document.getElementById('cmViewList')?.classList.add('cm-view-active');
+      document.getElementById('cmViewCards')?.classList.remove('cm-view-active');
+    });
+    document.getElementById('cmViewCards')?.addEventListener('click', () => {
+      if (listEl) listEl.style.display = 'none';
+      if (cardsEl) cardsEl.style.display = 'grid';
+      document.getElementById('cmViewCards')?.classList.add('cm-view-active');
+      document.getElementById('cmViewList')?.classList.remove('cm-view-active');
+    });
+
+    // ── side panel ──
+    function _sidePanelHtml(studentId) {
+      const st_s = Storage.get();
+      const st = st_s.users[studentId];
+      if (!st) return '<div style="padding:20px;color:var(--muted);">Alumno no encontrado.</div>';
+      const gam = st.gamification || {};
+      const li = Gamification.getLevelInfo(gam.xp || 0);
+      const stSessions = st_s.sessions.filter(se => se.email === studentId);
+      const last5 = stSessions.slice(-5);
+      const avgC = last5.length ? last5.reduce((a, b) => a + b.concentration, 0) / last5.length : null;
+      const lastS = stSessions.slice(-1)[0];
+      const bySub = {};
+      stSessions.forEach(se => {
+        if (!bySub[se.subject]) bySub[se.subject] = { sum: 0, count: 0 };
+        bySub[se.subject].sum += se.concentration;
+        bySub[se.subject].count++;
+      });
+      const subList = Object.entries(bySub).sort((a, b) => b[1].count - a[1].count).slice(0, 4);
+      const recentS = stSessions.slice().sort((a, b) => b.datetime.localeCompare(a.datetime)).slice(0, 5);
+      const clr = avgC != null ? (avgC >= 3.5 ? '#22c55e' : avgC >= 2.5 ? '#f59e0b' : '#ef4444') : 'var(--muted)';
+      return `
+        <div class="cm-sp-inner">
+          <div class="cm-sp-hero">
+            <div class="cm-st-av" style="width:56px;height:56px;font-size:22px;background:linear-gradient(135deg,${clr}33,${clr}11);border-color:${clr}55;">${(st.name[0] || '?').toUpperCase()}</div>
+            <div class="cm-sp-info">
+              <div style="font-size:17px;font-weight:700;">${esc(st.name)}</div>
+              <div style="font-size:12px;color:var(--muted);">${esc(st.email || '')}</div>
+              <div style="font-size:12px;margin-top:4px;">Nv.${gam.level || 1} · 🔥 ${gam.streak || 0} · ${(gam.xp || 0).toLocaleString('es-PE')} XP</div>
+            </div>
+          </div>
+          <div class="cm-sp-stats">
+            <div class="cm-sp-stat">
+              <div style="font-size:20px;font-weight:700;color:${clr};">${avgC != null ? avgC.toFixed(1) : '—'}</div>
+              <div style="font-size:11px;color:var(--muted);">Conc. (últ. 5)</div>
+            </div>
+            <div class="cm-sp-stat">
+              <div style="font-size:20px;font-weight:700;">${stSessions.length}</div>
+              <div style="font-size:11px;color:var(--muted);">Sesiones</div>
+            </div>
+            <div class="cm-sp-stat">
+              <div style="font-size:20px;font-weight:700;">${lastS ? Math.floor((Date.now() - new Date(lastS.datetime)) / 86400000) + 'd' : '—'}</div>
+              <div style="font-size:11px;color:var(--muted);">Días sin sesión</div>
+            </div>
+          </div>
+          ${subList.length > 0 ? `
+          <div class="cm-sp-section">
+            <div class="cm-sh" style="font-size:13px;margin-bottom:10px;">Materias</div>
+            ${subList.map(([sub, data]) => `
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:13px;">
+                <span style="flex:1;color:var(--text);">${esc(sub)}</span>
+                <div style="width:80px;height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;">
+                  <div style="height:100%;width:${(data.sum / data.count / 5 * 100).toFixed(0)}%;background:${clr};border-radius:3px;"></div>
+                </div>
+                <span style="color:var(--muted);width:28px;text-align:right;">${(data.sum / data.count).toFixed(1)}</span>
+              </div>`).join('')}
+          </div>` : ''}
+          ${recentS.length > 0 ? `
+          <div class="cm-sp-section">
+            <div class="cm-sh" style="font-size:13px;margin-bottom:10px;">Últimas sesiones</div>
+            ${recentS.map(se => `
+              <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06);">
+                <span style="color:var(--muted);">${new Date(se.datetime).toLocaleDateString('es-PE')}</span>
+                <span>${esc(se.subject || '—')}</span>
+                <span style="color:${se.concentration >= 3.5 ? '#22c55e' : se.concentration >= 2.5 ? '#f59e0b' : '#ef4444'};font-weight:600;">${se.concentration.toFixed(1)}</span>
+              </div>`).join('')}
+          </div>` : ''}
+          <div style="margin-top:16px;">
+            <button class="primary" style="width:100%;" data-go="student-detail" data-sid="${esc(studentId)}">Ver perfil completo →</button>
+          </div>
+        </div>`;
+    }
+
+    function _openSidePanel(studentId) {
+      const panel = document.getElementById('cmSidePanel');
+      const overlay = document.getElementById('cmSPOverlay');
+      if (!panel || !overlay) return;
+      panel.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.08);">
+          <div style="font-weight:600;">Detalle alumno</div>
+          <button class="ghost" id="cmSPClose" style="padding:6px 10px;">✕</button>
+        </div>
+        ${_sidePanelHtml(studentId)}`;
+      panel.classList.add('cm-sp-open');
+      overlay.classList.add('cm-overlay-show');
+      document.getElementById('cmSPClose')?.addEventListener('click', _closeSidePanel);
+      panel.querySelectorAll('[data-go]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const go = btn.dataset.go;
+          const sid = btn.dataset.sid;
+          if (sid) App._studentDetailId = sid;
+          _closeSidePanel();
+          App.go(go);
+        });
+      });
+    }
+
+    function _closeSidePanel() {
+      document.getElementById('cmSidePanel')?.classList.remove('cm-sp-open');
+      document.getElementById('cmSPOverlay')?.classList.remove('cm-overlay-show');
+    }
+
+    document.getElementById('cmSPOverlay')?.addEventListener('click', _closeSidePanel);
+
+    // ── student row click → side panel ──
+    root().querySelectorAll('.cm-st-row, .cm-st-card-item').forEach(row => {
+      row.addEventListener('click', (e) => {
+        if (e.target.closest('[data-remove]')) return;
+        const studentId = row.dataset.studentId;
+        if (studentId) _openSidePanel(studentId);
       });
     });
   }
