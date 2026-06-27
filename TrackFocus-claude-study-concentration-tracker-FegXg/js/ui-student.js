@@ -873,6 +873,7 @@ const UIStudent = (() => {
       midDecoTriggered: false, // previene doble auto-trigger DECO
       quizResult: null        // resultado del quiz opcional (si el alumno lo usó)
     };
+    window._arivenChatCtx = { grade: metadata.grade, subject: metadata.subject, studyMode: metadata.studyMode, topicGoal: metadata.topicGoal || '' };
     // El chat reemplaza el cuerpo de la pantalla actual. Funciona tanto en
     // 'ai-study' (#aiPanelBody) como en 'new-session' (.session-setup-wrap).
     const panelBody = document.getElementById('aiPanelBody')

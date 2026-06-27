@@ -1,0 +1,97 @@
+// api/youtube-search.js — Serverless Vercel function
+// Busca videos de YouTube relevantes para el Tutor IA de Ariven.
+
+import { applyCors } from './_lib.js';
+
+export default async function handler(req, res) {
+  applyCors(res);
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ videos: [], error: 'Method not allowed' });
+  }
+
+  let queries, maxResults, language;
+  try {
+    ({ queries = [], maxResults = 3, language = 'es' } = req.body || {});
+  } catch (e) {
+    return res.status(200).json({ videos: [], error: 'Invalid body' });
+  }
+
+  if (!Array.isArray(queries) || queries.length === 0) {
+    return res.status(200).json({ videos: [] });
+  }
+
+  // Limitar a máximo 3 queries
+  const limitedQueries = queries.slice(0, 3);
+
+  const apiKey = process.env.YOUTUBE_API_KEY;
+
+  // ── Sin API key: devolver URLs de búsqueda ───────────────────────────────────
+  if (!apiKey) {
+    const videos = limitedQueries.map(q => ({
+      title: `Buscar: ${q}`,
+      channel: 'YouTube',
+      description: 'Haz clic para buscar este tema en YouTube',
+      url: `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}`,
+      isSearch: true
+    }));
+    return res.status(200).json({ videos });
+  }
+
+  // ── Con API key: llamar YouTube Data API v3 ──────────────────────────────────
+  try {
+    const seenIds = new Set();
+    const allVideos = [];
+
+    for (const query of limitedQueries) {
+      if (allVideos.length >= 5) break;
+
+      const params = new URLSearchParams({
+        part: 'snippet',
+        type: 'video',
+        maxResults: '3',
+        q: query,
+        key: apiKey,
+        relevanceLanguage: 'es',
+        safeSearch: 'strict'
+      });
+
+      const ytRes = await fetch(
+        `https://www.googleapis.com/youtube/v3/search?${params}`,
+        { signal: AbortSignal.timeout(7000) }
+      );
+
+      if (!ytRes.ok) continue;
+
+      const data = await ytRes.json();
+      const items = data.items || [];
+
+      for (const item of items) {
+        const videoId = item.id?.videoId;
+        if (!videoId || seenIds.has(videoId)) continue;
+        seenIds.add(videoId);
+
+        const s = item.snippet || {};
+        allVideos.push({
+          title: s.title || '',
+          channel: s.channelTitle || '',
+          description: s.description || '',
+          videoId,
+          url: `https://www.youtube.com/watch?v=${videoId}`,
+          thumbnail: s.thumbnails?.medium?.url || s.thumbnails?.default?.url || '',
+          publishedAt: s.publishedAt || ''
+        });
+
+        if (allVideos.length >= 5) break;
+      }
+    }
+
+    return res.status(200).json({ videos: allVideos });
+  } catch (err) {
+    return res.status(200).json({ videos: [], error: String(err.message || err) });
+  }
+}
