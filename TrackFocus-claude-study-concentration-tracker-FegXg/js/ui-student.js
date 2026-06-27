@@ -699,9 +699,15 @@ const UIStudent = (() => {
       const text = (otraInput?.value || '').trim();
       if (text) {
         previousActivityOther = text;
-        const saved = Sessions.saveCustomActivity(userId, text);
-        if (saved) checked[otraIdx] = saved.id;
-        else checked.splice(otraIdx, 1);
+        const { act, error } = Sessions.saveCustomActivity(userId, text);
+        if (error) {
+          UI.flash(error, 'error');
+          checked.splice(otraIdx, 1);
+        } else if (act) {
+          checked[otraIdx] = act.id;
+        } else {
+          checked.splice(otraIdx, 1);
+        }
       } else {
         checked.splice(otraIdx, 1);
       }
@@ -725,12 +731,18 @@ const UIStudent = (() => {
     document.body.appendChild(overlay);
 
     function refresh() {
+      const count = Sessions.getCustomActivities(userId).length;
+      const counter = overlay.querySelector('.act-manage-counter');
+      if (counter) counter.textContent = count + ' de 15 · ordenadas por uso';
       overlay.querySelector('.act-manage-list').innerHTML = _buildManageListHTML(userId);
       wireList();
     }
     function wireList() {
       overlay.querySelectorAll('.act-manage-del').forEach(btn => {
         btn.addEventListener('click', () => {
+          const li = btn.closest('li');
+          const name = li.querySelector('.act-manage-name').textContent;
+          if (!confirm(`¿Eliminar "${name}"?\n\nEsto no afecta el historial ni las estadísticas.`)) return;
           Sessions.deleteCustomActivity(userId, btn.dataset.id);
           refresh();
         });
@@ -740,10 +752,10 @@ const UIStudent = (() => {
           const li = btn.closest('li');
           const current = li.querySelector('.act-manage-name').textContent;
           const newLabel = prompt('Renombrar actividad:', current);
-          if (newLabel && newLabel.trim()) {
-            Sessions.renameCustomActivity(userId, btn.dataset.id, newLabel.trim());
-            refresh();
-          }
+          if (!newLabel) return;
+          const { error } = Sessions.renameCustomActivity(userId, btn.dataset.id, newLabel);
+          if (error) { alert(error); return; }
+          refresh();
         });
       });
     }
@@ -753,13 +765,15 @@ const UIStudent = (() => {
   }
 
   function _buildManageModalHTML(userId) {
+    const count = Sessions.getCustomActivities(userId).length;
     return '<div class="act-manage-modal card">'
-      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">'
       + '<h3 style="margin:0;">Actividades personalizadas</h3>'
       + '<button type="button" class="ghost act-manage-close" style="padding:4px 10px;">✕</button>'
       + '</div>'
+      + '<p class="muted act-manage-counter" style="font-size:12px;margin-bottom:12px;">' + count + ' de 15 · ordenadas por uso</p>'
       + '<ul class="act-manage-list" style="list-style:none;padding:0;margin:0;">' + _buildManageListHTML(userId) + '</ul>'
-      + '<p class="muted" style="font-size:12px;margin-top:12px;">Las actividades predeterminadas no pueden eliminarse.</p>'
+      + '<p class="muted" style="font-size:12px;margin-top:12px;">Las actividades predeterminadas no pueden eliminarse. Eliminar no afecta el historial ni las estadísticas.</p>'
       + '</div>';
   }
 
@@ -778,11 +792,14 @@ const UIStudent = (() => {
 
   function _buildManageListHTML(userId) {
     const list = Sessions.getCustomActivities(userId);
-    if (list.length === 0) return '<li class="muted" style="padding:8px 0;font-size:14px;">No hay actividades personalizadas.</li>';
+    if (list.length === 0) return '<li class="muted" style="padding:8px 0;font-size:14px;">No hay actividades personalizadas aún.</li>';
     return list.map(a =>
-      '<li style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">'
-      + '<span class="act-manage-name">' + esc(a.label) + '</span>'
-      + '<div style="display:flex;gap:8px;">'
+      '<li style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);">'
+      + '<div style="min-width:0;">'
+      + '<span class="act-manage-name" style="display:block;font-size:14px;">' + esc(a.label) + '</span>'
+      + '<span class="muted" style="font-size:11px;">Usado ' + (a.uses || 0) + ' ' + ((a.uses || 0) === 1 ? 'vez' : 'veces') + '</span>'
+      + '</div>'
+      + '<div style="display:flex;gap:6px;flex-shrink:0;">'
       + '<button type="button" class="ghost act-manage-rename" data-id="' + esc(a.id) + '" style="font-size:12px;padding:4px 10px;">Renombrar</button>'
       + '<button type="button" class="danger act-manage-del" data-id="' + esc(a.id) + '" style="font-size:12px;padding:4px 10px;">Eliminar</button>'
       + '</div>'

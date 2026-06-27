@@ -25,8 +25,17 @@ const Sessions = (() => {
 
   function _actsKey(uid) { return 'arv-custom-acts-' + uid; }
 
+  const MAX_CUSTOM = 15;
+  const MAX_LABEL  = 40;
+  const MIN_LABEL  = 2;
+
+  function _normalize(label) {
+    return label.replace(/\s+/g, ' ').trim();
+  }
+
   function _saveCustomList(uid, list) {
-    list.sort((a, b) => (b.uses || 0) - (a.uses || 0));
+    // Orden: mayor uso primero; empate → más reciente (mayor lastUsed)
+    list.sort((a, b) => (b.uses || 0) - (a.uses || 0) || (b.lastUsed || 0) - (a.lastUsed || 0));
     try { localStorage.setItem(_actsKey(uid), JSON.stringify(list)); } catch (_) {}
   }
 
@@ -38,17 +47,28 @@ const Sessions = (() => {
     } catch (_) { return []; }
   }
 
+  // Retorna { act, error } donde error es string o null
   function saveCustomActivity(uid, label) {
-    if (!uid || !label) return null;
-    const trimmed = label.trim();
-    if (!trimmed) return null;
+    if (!uid) return { act: null, error: 'Usuario no identificado.' };
+    const norm = _normalize(label || '');
+    if (norm.length < MIN_LABEL) return { act: null, error: 'El nombre debe tener al menos 2 caracteres.' };
+    if (norm.length > MAX_LABEL) return { act: null, error: `El nombre no puede superar ${MAX_LABEL} caracteres.` };
+
     const list = getCustomActivities(uid);
-    const existing = list.find(a => a.label.toLowerCase() === trimmed.toLowerCase());
-    if (existing) return existing;
-    const act = { id: 'custom-' + Date.now(), label: trimmed, uses: 0 };
+    const existing = list.find(a => a.label.toLowerCase() === norm.toLowerCase());
+    if (existing) {
+      existing.uses = (existing.uses || 0) + 1;
+      existing.lastUsed = Date.now();
+      _saveCustomList(uid, list);
+      return { act: existing, error: null };
+    }
+    if (list.length >= MAX_CUSTOM) {
+      return { act: null, error: `Límite de ${MAX_CUSTOM} actividades personalizadas alcanzado. Elimina una desde Administrar.` };
+    }
+    const act = { id: 'custom-' + Date.now(), label: norm, uses: 1, lastUsed: Date.now() };
     list.push(act);
     _saveCustomList(uid, list);
-    return act;
+    return { act, error: null };
   }
 
   function deleteCustomActivity(uid, id) {
@@ -58,19 +78,26 @@ const Sessions = (() => {
   }
 
   function renameCustomActivity(uid, id, newLabel) {
-    if (!uid || !newLabel) return;
+    if (!uid || !newLabel) return { error: 'Nombre vacío.' };
+    const norm = _normalize(newLabel);
+    if (norm.length < MIN_LABEL) return { error: 'El nombre debe tener al menos 2 caracteres.' };
+    if (norm.length > MAX_LABEL) return { error: `El nombre no puede superar ${MAX_LABEL} caracteres.` };
     const list = getCustomActivities(uid);
+    const dup = list.find(a => a.id !== id && a.label.toLowerCase() === norm.toLowerCase());
+    if (dup) return { error: 'Ya existe una actividad con ese nombre.' };
     const act = list.find(a => a.id === id);
-    if (act) { act.label = newLabel.trim(); _saveCustomList(uid, list); }
+    if (act) { act.label = norm; _saveCustomList(uid, list); }
+    return { error: null };
   }
 
   function trackActivityUse(uid, ids) {
     if (!uid || !ids.length) return;
     const list = getCustomActivities(uid);
     let changed = false;
+    const now = Date.now();
     ids.forEach(id => {
       const act = list.find(a => a.id === id);
-      if (act) { act.uses = (act.uses || 0) + 1; changed = true; }
+      if (act) { act.uses = (act.uses || 0) + 1; act.lastUsed = now; changed = true; }
     });
     if (changed) _saveCustomList(uid, list);
   }
