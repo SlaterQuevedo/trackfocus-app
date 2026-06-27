@@ -2357,81 +2357,421 @@ const UIStudent = (() => {
   }
 
   // ---- Pantalla: Leaderboard ----
+  // ── Leaderboard helpers ──────────────────────────────
+  function _lbInitials(name) {
+    return esc((name || '??').split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase());
+  }
+
+  function _lbSortEntries(entries, sort, dir) {
+    const d = dir === 'desc' ? -1 : 1;
+    return [...entries].sort((a, b) => {
+      let va, vb;
+      switch (sort) {
+        case 'rank':        va = a.rank;             vb = b.rank;             break;
+        case 'xp':         va = a.xp;               vb = b.xp;               break;
+        case 'level':      va = a.level;             vb = b.level;            break;
+        case 'streak':     va = a.streak;            vb = b.streak;           break;
+        case 'sessions':   va = a.sessionCount;      vb = b.sessionCount;     break;
+        case 'time':       va = a.totalMin;          vb = b.totalMin;         break;
+        case 'conc':       va = parseFloat(a.avgConcentration); vb = parseFloat(b.avgConcentration); break;
+        case 'last':       va = a.lastActive || '';  vb = b.lastActive || ''; break;
+        default:           va = a.rank;              vb = b.rank;
+      }
+      if (va < vb) return -d;
+      if (va > vb) return  d;
+      return 0;
+    });
+  }
+
+  function _lbTableBody(entries, myId, sort, dir, search, filterActive) {
+    let rows = entries;
+    if (filterActive) rows = rows.filter(e => e.sessionCount > 0);
+    if (search) {
+      const q = search.toLowerCase();
+      rows = rows.filter(e => e.name.toLowerCase().includes(q));
+    }
+    rows = _lbSortEntries(rows, sort, dir);
+
+    if (!rows.length) return '<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--muted);font-size:14px;">No hay usuarios que coincidan</td></tr>';
+
+    const sortedIds = entries.map(e => e.userId); // original rank order
+    return rows.map((e, idx) => {
+      const isMe = e.userId === myId;
+      const origRank = e.rank;
+      const above = entries.find(x => x.rank === origRank - 1);
+      const xpDiff = above ? (above.xp - e.xp) : null;
+      const xpDiffHtml = xpDiff != null
+        ? `<span class="lbv2-xpdiff">-${xpDiff} XP</span>`
+        : '<span class="lbv2-xpdiff lbv2-xpdiff--top">TOP</span>';
+      const rankIcon = origRank === 1 ? '🥇' : origRank === 2 ? '🥈' : origRank === 3 ? '🥉' : `#${origRank}`;
+      const mins = e.totalMin;
+      const timeLabel = mins >= 60 ? `${Math.floor(mins/60)}h${mins%60>0?` ${mins%60}m`:''}` : `${mins}m`;
+      const lastLabel = e.lastActive ? new Date(e.lastActive).toLocaleDateString('es-PE',{day:'numeric',month:'short'}) : '—';
+      return `<tr class="lbv2-row${isMe?' lbv2-row--me':''}" data-userid="${esc(e.userId)}" id="lbrow-${esc(e.userId)}">
+        <td class="lbv2-td lbv2-td--rank">${rankIcon}</td>
+        <td class="lbv2-td lbv2-td--user">
+          <div class="lbv2-user-cell">
+            <div class="lbv2-avatar" style="background:${isMe?'var(--primary)':'var(--accent)'};">${_lbInitials(e.name)}</div>
+            <div class="lbv2-user-info">
+              <span class="lbv2-user-name">${esc(e.name)}${isMe?' <span class="lbv2-you-badge">Tú</span>':''}</span>
+              ${xpDiffHtml}
+            </div>
+          </div>
+        </td>
+        <td class="lbv2-td lbv2-td--num"><strong>${e.xp.toLocaleString()}</strong></td>
+        <td class="lbv2-td"><span class="chip">Nv.${e.level}</span></td>
+        <td class="lbv2-td">🔥 ${e.streak}</td>
+        <td class="lbv2-td lbv2-td--num">${e.sessionCount}</td>
+        <td class="lbv2-td">${timeLabel}</td>
+        <td class="lbv2-td">${e.avgConcentration}/5</td>
+        <td class="lbv2-td">${lastLabel}</td>
+      </tr>`;
+    }).join('');
+  }
+
   function screenLeaderboard() {
     const s = Storage.get();
     const user = s.users[s.currentUserId];
-    const scope = App._lbScope || 'classroom';
+    const scope  = App._lbScope  || 'classroom';
     const period = App._lbPeriod || 'week';
+    // reset sort/search only on scope/period change — keep if already set
+    if (!App._lbSort)    App._lbSort    = 'rank';
+    if (!App._lbSortDir) App._lbSortDir = 'asc';
+    if (App._lbSearch === undefined) App._lbSearch = '';
+    if (App._lbFilterActive === undefined) App._lbFilterActive = false;
 
     let scopeId = null;
-    let scopeLabel = 'Global';
-    let hasClassroom = !!user.classroomId;
-    let hasSchool = !!user.schoolId;
+    const hasClassroom = !!user.classroomId;
+    const hasSchool    = !!user.schoolId;
+    if (scope === 'classroom' && user.classroomId) { scopeId = user.classroomId; }
+    else if (scope === 'school' && user.schoolId)  { scopeId = user.schoolId; }
+    const actualScope = (scope === 'classroom' && !user.classroomId) ? 'global' : scope;
+    const scopeLabel = scope === 'classroom' ? (s.classrooms[user.classroomId]?.name || 'Mi Aula') :
+                       scope === 'school'    ? (s.schools[user.schoolId]?.name || 'Mi Colegio') : 'Global';
 
-    if (scope === 'classroom' && user.classroomId) {
-      scopeId = user.classroomId;
-      scopeLabel = s.classrooms[user.classroomId]?.name || 'Mi Aula';
-    } else if (scope === 'school' && user.schoolId) {
-      scopeId = user.schoolId;
-      scopeLabel = s.schools[user.schoolId]?.name || 'Mi Colegio';
+    const lb = Gamification.getLeaderboard(actualScope, scopeId, period);
+    const fromDate = period === 'week'  ? new Date(Date.now() - 7*86400000) :
+                     period === 'month' ? new Date(Date.now() - 30*86400000) : null;
+
+    // Enrich with totalMin, lastActive
+    const enriched = lb.map(e => {
+      const ses = s.sessions.filter(se => se.email === e.userId && (!fromDate || new Date(se.datetime) >= fromDate));
+      return { ...e, totalMin: ses.reduce((a,b)=>a+b.durationMin,0), lastActive: ses.length ? [...ses].sort((a,b)=>b.datetime.localeCompare(a.datetime))[0].datetime : null };
+    });
+    App._lbData = enriched;
+
+    const myEntry = enriched.find(e => e.userId === user.id);
+    const gam     = user.gamification || {};
+    const level   = Gamification.getLevelInfo(gam.xp || 0);
+    const streak  = gam.streak || 0;
+
+    // Weekly XP for current user
+    const w7ms = Date.now() - 7*86400000;
+    const weekSes = s.sessions.filter(se => se.email === user.id && new Date(se.datetime).getTime() >= w7ms);
+    const weeklyXp = weekSes.reduce((a,se) => a + 25 + (se.concentration >= 4 ? 10 : 0), 0);
+
+    // Average XP in leaderboard
+    const avgXp = enriched.length ? Math.round(enriched.reduce((a,e)=>a+e.xp,0)/enriched.length) : 0;
+    const myXp  = myEntry ? myEntry.xp : 0;
+    const xpVsAvg = myXp - avgXp;
+
+    // AI insight
+    let aiText = 'Registra sesiones para aparecer en el ranking.';
+    let aiExtra = [];
+    if (myEntry) {
+      if (myEntry.rank === 1) {
+        aiText = `¡Eres el #1 en ${esc(scopeLabel)}! Sigue estudiando para mantener tu posición.`;
+        const below = enriched[1];
+        if (below) aiExtra.push({ icon: '📊', text: `Ventaja sobre el 2°: ${myEntry.xp - below.xp} XP` });
+      } else {
+        const above = enriched[myEntry.rank - 2];
+        const xpNeeded = above.xp - myEntry.xp + 1;
+        const sesNeeded = Math.ceil(xpNeeded / 25);
+        aiText = `¡Solo te faltan ${xpNeeded} XP para alcanzar el puesto #${above.rank} (${esc(above.name)})! ~${sesNeeded} sesión${sesNeeded===1?'':'es'} más.`;
+        aiExtra.push({ icon: '🎯', text: `Falta: ${xpNeeded} XP` });
+        aiExtra.push({ icon: '📚', text: `~${sesNeeded} sesión${sesNeeded===1?'':'es'} necesarias` });
+      }
+      const topSubs = Stats.bySubject(s.sessions.filter(se=>se.email===user.id)).slice(0,1);
+      if (topSubs.length) aiExtra.push({ icon: '🧠', text: `Materia fuerte: ${esc(topSubs[0].subject)}` });
     }
 
-    const lb = Gamification.getLeaderboard(
-      (scope === 'classroom' && !user.classroomId) ? 'global' : scope,
-      scopeId,
-      period
-    );
+    // Top 3 podium
+    const top3 = enriched.slice(0, 3);
+    const podiumSlots = [
+      { data: top3[1], height: 70,  rank: 2, medal: '🥈', color: 'rgba(203,213,225,0.15)' },
+      { data: top3[0], height: 100, rank: 1, medal: '🥇', color: 'rgba(200,155,109,0.18)' },
+      { data: top3[2], height: 50,  rank: 3, medal: '🥉', color: 'rgba(205,127,50,0.12)'  }
+    ];
+    const podiumHtml = podiumSlots.map(slot => {
+      if (!slot.data) return `<div class="lbv2-podium-slot lbv2-podium-slot--empty"></div>`;
+      const isMe = slot.data.userId === user.id;
+      return `<div class="lbv2-podium-slot${isMe?' lbv2-podium-slot--me':''}">
+        <div class="lbv2-podium-medal">${slot.medal}</div>
+        <div class="lbv2-podium-avatar" style="border-color:${slot.rank===1?'var(--primary)':slot.rank===2?'rgba(203,213,225,.5)':'rgba(205,127,50,.5)'};">${_lbInitials(slot.data.name)}</div>
+        <div class="lbv2-podium-name">${esc(slot.data.name.split(' ')[0])}</div>
+        <div class="lbv2-podium-lvl">Nv. ${slot.data.level}</div>
+        <div class="lbv2-podium-platform" style="height:${slot.height}px;background:${slot.color};">
+          <div class="lbv2-podium-rank">${slot.rank}</div>
+          <div class="lbv2-podium-xp">${slot.data.xp.toLocaleString()} XP</div>
+        </div>
+      </div>`;
+    }).join('');
 
+    // Next 3 cards (ranks 4-6) for preview
+    const next3 = enriched.slice(3, 6);
+    const next3Html = next3.map(e => {
+      const isMe = e.userId === user.id;
+      const above = enriched[e.rank-2];
+      const xpToAbove = above ? above.xp - e.xp : 0;
+      return `<div class="lbv2-nextcard${isMe?' lbv2-nextcard--me':''}">
+        <div class="lbv2-nextcard-rank">#${e.rank}</div>
+        <div class="lbv2-nextcard-user">
+          <div class="lbv2-avatar lbv2-avatar--sm">${_lbInitials(e.name)}</div>
+          <span>${esc(e.name)}${isMe?' <span class="lbv2-you-badge">Tú</span>':''}</span>
+        </div>
+        <div class="lbv2-nextcard-meta">
+          <span>Nv.${e.level}</span>
+          <span>🔥 ${e.streak}</span>
+        </div>
+        <div class="lbv2-nextcard-bar">
+          <div style="flex:1"><div style="height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;"><div style="height:100%;border-radius:2px;background:var(--accent);width:${Math.min(100,Math.round(e.xp/(enriched[0]?.xp||1)*100))}%;"></div></div></div>
+          <span class="lbv2-nextcard-xp">${e.xp.toLocaleString()} XP</span>
+        </div>
+      </div>`;
+    }).join('') || '<p class="muted" style="font-size:13px;text-align:center;padding:12px 0">Solo hay ${enriched.length} participante(s).</p>';
+
+    // Scope + period tab options
     const scopeOptions = [
-      hasClassroom ? `<button class="tab-btn ${scope === 'classroom' ? 'active' : ''}" data-scope="classroom">Mi Aula</button>` : '',
-      hasSchool    ? `<button class="tab-btn ${scope === 'school' ? 'active' : ''}" data-scope="school">Mi Colegio</button>` : '',
-      `<button class="tab-btn ${scope === 'global' ? 'active' : ''}" data-scope="global">Global</button>`
+      hasClassroom ? `<button class="lbv2-tab${scope==='classroom'?' active':''}" data-scope="classroom">Mi Aula</button>` : '',
+      hasSchool    ? `<button class="lbv2-tab${scope==='school'?' active':''}" data-scope="school">Mi Colegio</button>` : '',
+      `<button class="lbv2-tab${scope==='global'?' active':''}" data-scope="global">Global</button>`
     ].filter(Boolean).join('');
 
-    return `
-      <h1>Ranking</h1>
-      <div class="tab-bar">${scopeOptions}</div>
-      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
-        <button class="ghost ${period === 'week' ? 'active-filter' : ''}" data-period="week">Esta semana</button>
-        <button class="ghost ${period === 'month' ? 'active-filter' : ''}" data-period="month">Este mes</button>
-        <button class="ghost ${period === 'all' ? 'active-filter' : ''}" data-period="all">Total</button>
+    const periodOptions = ['week','month','all'].map(p => {
+      const lbl = p==='week'?'Esta semana':p==='month'?'Este mes':'Total';
+      return `<button class="lbv2-period-btn${period===p?' active':''}" data-period="${p}">${lbl}</button>`;
+    }).join('');
+
+    // Sort header helper
+    const th = (col, label) => {
+      const active = App._lbSort === col;
+      const arrow  = active ? (App._lbSortDir === 'asc' ? ' ↑' : ' ↓') : '';
+      return `<th class="lbv2-th${active?' active':''}" data-sort="${col}">${label}${arrow}</th>`;
+    };
+
+    // Table body
+    const tbodyHtml = _lbTableBody(enriched, user.id, App._lbSort, App._lbSortDir, App._lbSearch, App._lbFilterActive);
+
+    // Hero card data
+    const myRank  = myEntry ? myEntry.rank : '—';
+    const myLevel = level ? `Nv.${level.current.level}` : 'Nv.1';
+    const arcPct  = level ? level.progress : 0;
+
+    return `<div class="lbv2">
+
+      <!-- ── Top bar ── -->
+      <div class="lbv2-topbar">
+        <h1 class="lbv2-heading">Ranking <span class="lbv2-scope-name">${esc(scopeLabel)}</span></h1>
+        <div class="lbv2-tabs">${scopeOptions}</div>
       </div>
 
-      <div class="card" style="padding:0;overflow:auto;">
-        ${lb.length === 0 ? '<div class="empty">No hay datos de ranking todavía.</div>' : `
-        <table class="leaderboard-table">
-          <thead><tr>
-            <th style="padding:12px 16px;">#</th>
-            <th style="padding:12px 8px;">Estudiante</th>
-            <th style="padding:12px 8px;">XP</th>
-            <th style="padding:12px 8px;">Nivel</th>
-            <th style="padding:12px 8px;">Racha</th>
-            <th style="padding:12px 8px;">Sesiones</th>
-          </tr></thead>
-          <tbody>
-            ${lb.map(e => `
-              <tr class="${e.userId === user.id ? 'self' : ''}">
-                <td style="padding:12px 16px;" class="rank-medal-${e.rank}">${e.rank === 1 ? '🥇' : e.rank === 2 ? '🥈' : e.rank === 3 ? '🥉' : e.rank}</td>
-                <td style="padding:12px 8px;"><span class="avatar-initials">${esc(e.name.slice(0,2).toUpperCase())}</span> ${esc(e.name)}</td>
-                <td style="padding:12px 8px;"><strong>${e.xp}</strong></td>
-                <td style="padding:12px 8px;"><span class="chip">Nv.${e.level}</span></td>
-                <td style="padding:12px 8px;">🔥 ${e.streak}</td>
-                <td style="padding:12px 8px;">${e.sessionCount}</td>
-              </tr>`).join('')}
-          </tbody>
-        </table>`}
-      </div>`;
+      <div class="lbv2-period-bar">${periodOptions}</div>
+
+      <!-- ── 3-col layout ── -->
+      <div class="lbv2-layout">
+
+        <!-- Left: My hero card -->
+        <div class="lbv2-hero-card">
+          <div class="lbv2-hero-label">Tu posición ${esc(scopeLabel)}</div>
+          <div class="lbv2-hero-rank">#${myRank}</div>
+          <div class="lbv2-hero-stats">
+            <div class="lbv2-hero-stat">
+              <span class="lbv2-hero-stat-val">${myXp.toLocaleString()}</span>
+              <span class="lbv2-hero-stat-lbl">XP</span>
+            </div>
+            <div class="lbv2-hero-stat">
+              <span class="lbv2-hero-stat-val">${myLevel}</span>
+              <span class="lbv2-hero-stat-lbl">Nivel</span>
+            </div>
+            <div class="lbv2-hero-stat">
+              <span class="lbv2-hero-stat-val">🔥 ${streak}</span>
+              <span class="lbv2-hero-stat-lbl">días</span>
+            </div>
+          </div>
+          ${weeklyXp > 0 ? `<div class="lbv2-hero-weekly">+${weeklyXp} XP esta semana</div>` : ''}
+          <div class="lbv2-hero-xp-row">
+            <span class="lbv2-hero-xp-lbl">${level?`${(gam.xp||0).toLocaleString()} / ${level.next?level.next.xpRequired.toLocaleString():'MAX'} XP`:''}</span>
+          </div>
+          <div class="lbv2-xpbar"><div class="lbv2-xpbar-fill" style="width:${arcPct}%"></div></div>
+          ${xpVsAvg !== 0 ? `<div class="lbv2-hero-vs">
+            <span class="${xpVsAvg>0?'lbv2-delta--up':'lbv2-delta--down'}">${xpVsAvg>0?'↑':'↓'} ${Math.abs(xpVsAvg)} XP ${xpVsAvg>0?'sobre':'bajo'} el promedio</span>
+          </div>` : ''}
+        </div>
+
+        <!-- Center: podium + next cards -->
+        <div class="lbv2-center">
+          <div class="lbv2-center-title">Top 3 Estudiantes</div>
+          ${enriched.length === 0 ? `<div class="lbv2-empty">No hay datos de ranking todavía.<br><small>Registra sesiones para aparecer aquí.</small></div>` : `
+          <div class="lbv2-podium">${podiumHtml}</div>
+          <div class="lbv2-next3">${next3Html}</div>`}
+        </div>
+
+        <!-- Right: comparatives + AI -->
+        <div class="lbv2-right">
+          <div class="lbv2-compare-card">
+            <div class="lbv2-card-title">Tu XP vs Promedio</div>
+            <div class="lbv2-compare-bars">
+              <div class="lbv2-compare-row">
+                <span class="lbv2-compare-lbl">Tú</span>
+                <div class="lbv2-compare-track">
+                  <div class="lbv2-compare-fill lbv2-compare-fill--me" style="width:${enriched[0]?.xp?Math.min(100,Math.round(myXp/enriched[0].xp*100)):0}%"></div>
+                </div>
+                <span class="lbv2-compare-val">${myXp.toLocaleString()}</span>
+              </div>
+              <div class="lbv2-compare-row">
+                <span class="lbv2-compare-lbl">Prom.</span>
+                <div class="lbv2-compare-track">
+                  <div class="lbv2-compare-fill lbv2-compare-fill--avg" style="width:${enriched[0]?.xp?Math.min(100,Math.round(avgXp/enriched[0].xp*100)):0}%"></div>
+                </div>
+                <span class="lbv2-compare-val">${avgXp.toLocaleString()}</span>
+              </div>
+            </div>
+            <div class="lbv2-compare-stats">
+              <div class="lbv2-compare-stat"><div class="lbv2-compare-stat-val">${enriched.length}</div><div class="lbv2-compare-stat-lbl">Participantes</div></div>
+              <div class="lbv2-compare-stat"><div class="lbv2-compare-stat-val">${myEntry?`#${myEntry.rank}`:'—'}</div><div class="lbv2-compare-stat-lbl">Tu posición</div></div>
+              <div class="lbv2-compare-stat"><div class="lbv2-compare-stat-val">${weeklyXp}</div><div class="lbv2-compare-stat-lbl">XP esta sem.</div></div>
+            </div>
+          </div>
+          <div class="lbv2-ai-card">
+            <div class="lbv2-ai-header">
+              <span class="lbv2-ai-badge">✦ Ariven IA</span>
+            </div>
+            <p class="lbv2-ai-text">${aiText}</p>
+            ${aiExtra.map(tip=>`<div class="lbv2-ai-tip"><span>${tip.icon}</span><span>${tip.text}</span></div>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Full ranking table ── -->
+      <div class="lbv2-table-section">
+        <div class="lbv2-table-controls">
+          <div class="lbv2-search-wrap">
+            <span class="lbv2-search-icon">🔍</span>
+            <input type="text" id="lbv2Search" class="lbv2-search" placeholder="Buscar estudiante..." value="${esc(App._lbSearch||'')}">
+          </div>
+          <div class="lbv2-filter-chips">
+            <button class="lbv2-chip${App._lbFilterActive?' active':''}" id="lbv2FilterActive">Solo activos</button>
+          </div>
+          ${myEntry ? `<button class="lbv2-goto-me" id="lbv2GotoMe">Ir a mi posición</button>` : ''}
+        </div>
+        <div class="lbv2-table-wrap">
+          <table class="lbv2-table">
+            <thead>
+              <tr>
+                ${th('rank','#')}
+                ${th('xp','Estudiante')}
+                ${th('xp','XP')}
+                ${th('level','Nivel')}
+                ${th('streak','Racha')}
+                ${th('sessions','Sesiones')}
+                ${th('time','Tiempo')}
+                ${th('conc','Concentración')}
+                ${th('last','Última actividad')}
+              </tr>
+            </thead>
+            <tbody id="lbv2TableBody">${tbodyHtml}</tbody>
+          </table>
+        </div>
+        <div class="lbv2-table-footer">
+          <span id="lbv2Count" class="lbv2-count">${enriched.length} participante${enriched.length===1?'':'s'}</span>
+        </div>
+      </div>
+    </div>`;
   }
 
   function wireLeaderboard() {
-    root().querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => { App._lbScope = btn.dataset.scope; App.go('leaderboard'); });
+    // Scope tabs
+    root().querySelectorAll('.lbv2-tab[data-scope]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        App._lbScope = btn.dataset.scope;
+        App._lbSort = 'rank'; App._lbSortDir = 'asc'; App._lbSearch = ''; App._lbFilterActive = false;
+        App.go('leaderboard');
+      });
     });
-    root().querySelectorAll('[data-period]').forEach(btn => {
-      btn.addEventListener('click', () => { App._lbPeriod = btn.dataset.period; App.go('leaderboard'); });
+    // Period tabs
+    root().querySelectorAll('.lbv2-period-btn[data-period]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        App._lbPeriod = btn.dataset.period;
+        App._lbSort = 'rank'; App._lbSortDir = 'asc'; App._lbSearch = ''; App._lbFilterActive = false;
+        App.go('leaderboard');
+      });
     });
+    // Sort columns
+    const s = Storage.get();
+    const user = s.users[s.currentUserId];
+    const seen = new Set();
+    root().querySelectorAll('.lbv2-th[data-sort]').forEach(th => {
+      if (seen.has(th.dataset.sort + th.cellIndex)) return;
+      seen.add(th.dataset.sort + th.cellIndex);
+      th.style.cursor = 'pointer';
+      th.addEventListener('click', () => {
+        const col = th.dataset.sort;
+        if (App._lbSort === col) {
+          App._lbSortDir = App._lbSortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+          App._lbSort = col;
+          App._lbSortDir = col === 'rank' ? 'asc' : 'desc';
+        }
+        _lbRefreshTable(user);
+      });
+    });
+    // Search
+    const searchEl = root().querySelector('#lbv2Search');
+    if (searchEl) {
+      searchEl.addEventListener('input', () => {
+        App._lbSearch = searchEl.value;
+        _lbRefreshTable(user);
+      });
+    }
+    // Filter active
+    const filterBtn = root().querySelector('#lbv2FilterActive');
+    if (filterBtn) {
+      filterBtn.addEventListener('click', () => {
+        App._lbFilterActive = !App._lbFilterActive;
+        filterBtn.classList.toggle('active', App._lbFilterActive);
+        _lbRefreshTable(user);
+      });
+    }
+    // Goto me
+    const gotoBtn = root().querySelector('#lbv2GotoMe');
+    if (gotoBtn) {
+      gotoBtn.addEventListener('click', () => {
+        const row = root().querySelector(`#lbrow-${CSS.escape ? CSS.escape(user.id) : user.id}`);
+        if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+    }
   }
 
+  function _lbRefreshTable(user) {
+    const tbody = document.getElementById('lbv2TableBody');
+    const countEl = document.getElementById('lbv2Count');
+    if (!tbody || !App._lbData) return;
+    // Update sort arrows in headers
+    root().querySelectorAll('.lbv2-th[data-sort]').forEach(th => {
+      const active = App._lbSort === th.dataset.sort;
+      th.classList.toggle('active', active);
+      const lbl = th.textContent.replace(/\s*[↑↓]\s*$/, '');
+      th.textContent = lbl + (active ? (App._lbSortDir === 'asc' ? ' ↑' : ' ↓') : '');
+    });
+    const html = _lbTableBody(App._lbData, user.id, App._lbSort, App._lbSortDir, App._lbSearch, App._lbFilterActive);
+    tbody.innerHTML = html;
+    if (countEl) {
+      let visible = App._lbData.length;
+      if (App._lbFilterActive) visible = App._lbData.filter(e=>e.sessionCount>0).length;
+      if (App._lbSearch) visible = App._lbData.filter(e=>e.name.toLowerCase().includes(App._lbSearch.toLowerCase())).length;
+      countEl.textContent = `${visible} participante${visible===1?'':'s'}`;
+    }
+  }
   // ---- Pantalla: Pomodoro ----
   function screenPomodoro() {
     const s = Storage.get();
