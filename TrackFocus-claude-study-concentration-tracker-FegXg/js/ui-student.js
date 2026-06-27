@@ -1713,335 +1713,457 @@ const UIStudent = (() => {
   }
 
   // ---- Pantalla: Estadísticas ----
+  // ── helpers ───────────────────────────────────────────
+  function _sv2Heatmap(sessions) {
+    const byDay = {};
+    let maxMin = 0;
+    const bestStreakByDay = {};
+    sessions.forEach(se => {
+      const d = se.datetime.slice(0, 10);
+      byDay[d] = (byDay[d] || 0) + se.durationMin;
+      if (byDay[d] > maxMin) maxMin = byDay[d];
+    });
+    // compute best streak
+    const sortedDays = Object.keys(byDay).sort();
+    let maxStreak = 0, cur = 0, bestEnd = null;
+    for (let i = 0; i < sortedDays.length; i++) {
+      if (i === 0) { cur = 1; }
+      else {
+        const prev = new Date(sortedDays[i-1]), curr = new Date(sortedDays[i]);
+        cur = (curr - prev) === 86400000 ? cur + 1 : 1;
+      }
+      if (cur > maxStreak) { maxStreak = cur; bestEnd = sortedDays[i]; }
+    }
+    const bestStreakLabel = maxStreak > 0 && bestEnd
+      ? `🔥 Mejor racha: ${maxStreak} días · ${new Date(bestEnd).toLocaleDateString('es-PE', {month:'long', year:'numeric'})}`
+      : '';
+
+    // build 52-week grid (364 cells), Monday-first, column-flow
+    const today = new Date();
+    // find start: Monday 52 weeks ago
+    const startDay = new Date(today);
+    startDay.setDate(today.getDate() - 364 + 1);
+    // align to Monday
+    const dow = startDay.getDay(); // 0=Sun
+    const offset = dow === 0 ? 1 : (dow === 1 ? 0 : -(dow - 1));
+    startDay.setDate(startDay.getDate() + offset);
+
+    const cells = [];
+    const monthPositions = {}; // col index → month label
+    for (let col = 0; col < 52; col++) {
+      for (let row = 0; row < 7; row++) {
+        const d = new Date(startDay);
+        d.setDate(startDay.getDate() + col * 7 + row);
+        const key = d.toISOString().slice(0, 10);
+        const min = byDay[key] || 0;
+        const v = min === 0 ? 0 : min < maxMin * 0.25 ? 1 : min < maxMin * 0.5 ? 2 : min < maxMin * 0.75 ? 3 : 4;
+        const label = `${d.toLocaleDateString('es-PE', {weekday:'short', day:'numeric', month:'short'})}: ${min} min`;
+        cells.push(`<div class="sv2-hm-cell" data-v="${v}" title="${label}"></div>`);
+        if (row === 0 && d.getDate() <= 7) {
+          const mk = `${d.getFullYear()}-${d.getMonth()}`;
+          if (!monthPositions[mk]) monthPositions[mk] = { col, label: d.toLocaleDateString('es-PE',{month:'short'}) };
+        }
+      }
+    }
+
+    // month row
+    let monthHtml = '';
+    let prevCol = 0;
+    Object.values(monthPositions).sort((a,b) => a.col - b.col).forEach(m => {
+      const gap = m.col - prevCol;
+      monthHtml += `<span style="flex:${Math.max(gap,1)};font-size:10px;color:var(--muted)">${m.label}</span>`;
+      prevCol = m.col + 1;
+    });
+    if (prevCol < 52) monthHtml += `<span style="flex:${52-prevCol}"></span>`;
+
+    const dayLabels = ['Lu','Ma','Mi','Ju','Vi','Sá','Do'];
+
+    return { cellsHtml: cells.join(''), monthHtml, dayLabels, bestStreakLabel };
+  }
+
   function screenStats() {
     const s = Storage.get();
     const user = s.users[s.currentUserId];
     const sessions = Sessions.listFor(user.id);
 
     if (!sessions.length) {
-      return `
-        <div class="s-empty">
-          <div class="s-empty-stars">✦ ✦ ✦</div>
-          <div class="s-empty-icon">📊</div>
-          <h2 class="s-empty-title">Tus estadísticas te esperan</h2>
-          <p class="s-empty-sub">Registra tu primera sesión de estudio y Ariven empezará a analizar tus patrones de concentración.</p>
-          <button class="primary" data-go="new-session" style="margin-top:8px;min-width:180px;">Registrar sesión</button>
-        </div>`;
+      return `<div class="sv2">
+        <div class="sv2-empty-kpis">
+          ${['Puntuación de Enfoque','Productividad','Horas Totales','Nivel XP'].map(l => `
+            <div class="sv2-empty-kpi">
+              <div class="sv2-empty-kpi-label">${l}</div>
+              <div class="sv2-empty-kpi-val">--</div>
+              <div class="sv2-empty-kpi-lock">🔒</div>
+            </div>`).join('')}
+        </div>
+        <div class="sv2-empty-center">
+          <div class="sv2-constellation">
+            <div class="sv2-cdot"></div><div class="sv2-cdot"></div><div class="sv2-cdot"></div>
+            <div class="sv2-cdot"></div><div class="sv2-cdot"></div>
+          </div>
+          <h2 class="sv2-empty-title">Tu aventura de aprendizaje empieza aquí</h2>
+          <p class="sv2-empty-sub">Completa tu primera sesión para desbloquear tus estadísticas personalizadas.</p>
+          <button class="sv2-empty-cta" data-go="new-session">Comenzar Primera Sesión →</button>
+        </div>
+        <div class="sv2-empty-ghost">
+          <div class="sv2-empty-ghost-card"></div>
+          <div class="sv2-empty-ghost-card"></div>
+          <div class="sv2-empty-ghost-card"></div>
+        </div>
+      </div>`;
     }
 
-    const sum   = Stats.summary(sessions);
-    const subs  = Stats.bySubject(sessions);
-    const buckets = Stats.byHourBucket(sessions);
-    const acts  = Stats.byPreviousActivity(sessions);
+    const sum      = Stats.summary(sessions);
+    const subs     = Stats.bySubject(sessions);
+    const buckets  = Stats.byHourBucket(sessions);
+    const acts     = Stats.byPreviousActivity(sessions);
     const liSeries = Stats.learningIndexSeries(sessions);
     const liLatest = liSeries.length ? liSeries[liSeries.length - 1].value : null;
-    const liRecent = liSeries.slice(-8);
     const patterns = Analytics.detectPatterns(sessions);
     const profile  = Analytics.classifyProfile(sessions);
     const gam      = user.gamification || {};
     const streak   = gam.streak || 0;
     const xp       = gam.xp || 0;
-    const level    = Gamification.getLevelInfo ? Gamification.getLevelInfo(xp) : null;
+    const level    = Gamification.getLevelInfo(xp);
+    const earnedBadges = new Set(gam.badges || []);
 
-    // Weekly change: concentración esta semana vs la semana pasada
-    const now = Date.now();
-    const w7  = now - 7 * 86400000;
-    const w14 = now - 14 * 86400000;
-    const thisWeek  = sessions.filter(se => new Date(se.datetime).getTime() >= w7);
-    const lastWeek  = sessions.filter(se => { const t = new Date(se.datetime).getTime(); return t >= w14 && t < w7; });
-    const avgThis   = thisWeek.length  ? (thisWeek.reduce((a,b)=>a+b.concentration,0)/thisWeek.length).toFixed(1)  : null;
-    const avgLast   = lastWeek.length  ? (lastWeek.reduce((a,b)=>a+b.concentration,0)/lastWeek.length).toFixed(1)  : null;
-    const weekDelta = avgThis && avgLast ? (Number(avgThis) - Number(avgLast)).toFixed(1) : null;
-    const deltaClass = weekDelta == null ? 's-kpi-delta--neu' : Number(weekDelta) > 0 ? 's-kpi-delta--up' : Number(weekDelta) < 0 ? 's-kpi-delta--down' : 's-kpi-delta--neu';
-    const deltaIcon  = weekDelta == null ? '–' : Number(weekDelta) > 0 ? '↑' : Number(weekDelta) < 0 ? '↓' : '→';
+    // KPI values
+    const focusScore   = liLatest != null ? liLatest : Math.round((sum.avgConc / 5) * 100);
+    const productivity = Math.round(sessions.filter(se => se.concentration >= 4).length / sessions.length * 100);
+    const totalHrs     = (sum.totalMin / 60).toFixed(1);
 
-    // Total hours
-    const totalHrs = (sum.totalMin / 60).toFixed(1);
+    // Weekly delta %
+    const nowMs  = Date.now();
+    const w7     = nowMs - 7 * 86400000;
+    const w14    = nowMs - 14 * 86400000;
+    const tw     = sessions.filter(se => new Date(se.datetime).getTime() >= w7);
+    const lw     = sessions.filter(se => { const t = new Date(se.datetime).getTime(); return t >= w14 && t < w7; });
+    const avgTw  = tw.length ? tw.reduce((a,b)=>a+b.concentration,0)/tw.length : null;
+    const avgLw  = lw.length ? lw.reduce((a,b)=>a+b.concentration,0)/lw.length : null;
+    const wDelta = avgTw && avgLw ? Math.round(((avgTw - avgLw) / avgLw) * 100) : null;
 
-    // Heatmap month labels: compute position for each month in the 52-week grid
-    const _heatmapMonthLabels = (() => {
-      const today = new Date();
-      const totalCells = 52 * 7;
-      const cellW = 14; // px per cell (12px + 2px gap)
-      const positions = {};
-      for (let i = totalCells - 1; i >= 0; i--) {
-        const d = new Date(today);
-        d.setDate(today.getDate() - i);
-        const col = Math.floor((totalCells - 1 - i) / 7);
-        const dayOfMonth = d.getDate();
-        if (dayOfMonth <= 7) {
-          const monthKey = `${d.getFullYear()}-${d.getMonth()}`;
-          if (!positions[monthKey]) {
-            positions[monthKey] = { col, label: d.toLocaleDateString('es-PE', { month: 'short' }) };
-          }
-        }
-      }
-      const cols = Object.values(positions).sort((a,b) => a.col - b.col);
-      let html = '';
-      let prevCol = 0;
-      cols.forEach(m => {
-        const gap = m.col - prevCol;
-        html += `<span class="s-hm-month-label" style="flex:${Math.max(gap,1)}">${m.label}</span>`;
-        prevCol = m.col + 1;
-      });
-      if (prevCol < 52) html += `<span style="flex:${52 - prevCol}"></span>`;
-      return html;
-    })();
+    // Personal records
+    const longestMin = Math.max(...sessions.map(se => se.durationMin), 0);
+    const longestLabel = longestMin >= 60
+      ? `${Math.floor(longestMin/60)}h ${longestMin%60}min`
+      : `${longestMin}min`;
+    const weekGroups = {};
+    sessions.forEach(se => {
+      const d = new Date(se.datetime);
+      const mo = d.getDay() || 7;
+      const mon = new Date(d); mon.setDate(d.getDate() - mo + 1);
+      const wk = mon.toISOString().slice(0,10);
+      weekGroups[wk] = (weekGroups[wk] || 0) + 1;
+    });
+    const bestWeekSessions = Math.max(...Object.values(weekGroups), 0);
 
-    // Top 3 subjects
-    const top3Subs = [...subs].slice(0, 3);
-    const ringColors = ['var(--primary)', 'var(--accent)', 'var(--blue)'];
-    const rankLabels = ['1', '2', '3'];
-    const rankClass  = ['s-rank--1','s-rank--2','s-rank--3'];
+    // Heatmap
+    const hm = _sv2Heatmap(sessions);
 
-    const subjectRingsHtml = top3Subs.length ? top3Subs.map((sub, i) => {
-      const pct = Math.round((sub.avgConcentration / 5) * 100);
-      return `
-        <div class="s-subject-row">
-          <span class="s-rank ${rankClass[i]}">${rankLabels[i]}</span>
-          <div class="s-subject-ring" style="--s-ring-color:${ringColors[i]};--s-ring-pct:${pct}">
-            <span class="s-subject-ring-val">${pct}%</span>
-          </div>
-          <div class="s-subject-info">
-            <div class="s-subject-name">${esc(sub.subject)}</div>
-            <div class="s-subject-meta">${sub.count} ses · ${sub.avgConcentration}/5</div>
-          </div>
-        </div>`;
-    }).join('') : `<p class="muted" style="font-size:13px;text-align:center;">Registra más sesiones para ver el ranking.</p>`;
+    // Weekly sessions for sparkline (last 8 ISO weeks)
+    const wkBuckets = {};
+    sessions.forEach(se => {
+      const d = new Date(se.datetime);
+      const mo = d.getDay() || 7;
+      const mon = new Date(d); mon.setDate(d.getDate() - mo + 1);
+      const wk = mon.toISOString().slice(0,10);
+      wkBuckets[wk] = (wkBuckets[wk] || 0) + 1;
+    });
+    const wkKeys = Object.keys(wkBuckets).sort().slice(-8);
+    const wkCounts = wkKeys.map(k => wkBuckets[k]);
+    const wkMax = Math.max(...wkCounts, 1);
+    const sparkWkHtml = wkCounts.map(c => {
+      const h = Math.max(8, Math.round((c / wkMax) * 100));
+      return `<div class="sv2-spark-bar" style="height:${h}%" title="${c} ses."></div>`;
+    }).join('');
 
-    // AI Insights
-    const bestHourLabel = patterns && patterns.bestHour != null
-      ? `${patterns.bestHour}:00 (${patterns.bestHour < 12 ? 'mañana' : patterns.bestHour < 18 ? 'tarde' : 'noche'})`
-      : null;
-    const insightRows = [];
-    if (bestHourLabel) insightRows.push({ icon: '⏰', label: 'Mejor hora', val: bestHourLabel, sub: `Concentración ${patterns.bestHourAvg.toFixed(1)}/5 prom.` });
-    if (subs.length) insightRows.push({ icon: '🏆', label: 'Materia top', val: esc(subs[0].subject), sub: `${subs[0].avgConcentration}/5 prom.` });
-    if (weekDelta != null) insightRows.push({ icon: Number(weekDelta) >= 0 ? '📈' : '📉', label: 'vs semana pasada', val: `${Number(weekDelta) >= 0 ? '+' : ''}${weekDelta} pts`, sub: `${avgThis}/5 esta semana` });
-    if (patterns && patterns.optimalDuration) insightRows.push({ icon: '⏱', label: 'Duración óptima', val: patterns.optimalDuration, sub: 'según tu concentración' });
-    if (!insightRows.length) insightRows.push({ icon: '💡', label: 'Consejo', val: 'Sigue registrando', sub: 'Más sesiones = mejores insights' });
+    // Monthly sessions for trend
+    const moBuckets = {};
+    sessions.forEach(se => {
+      const mk = se.datetime.slice(0,7);
+      moBuckets[mk] = (moBuckets[mk] || 0) + 1;
+    });
+    const moKeys   = Object.keys(moBuckets).sort().slice(-6);
+    const moCounts = moKeys.map(k => moBuckets[k]);
 
-    const insightHtml = insightRows.slice(0, 4).map(r => `
-      <div class="s-insight-row">
-        <span class="s-insight-icon">${r.icon}</span>
-        <div class="s-insight-body">
-          <div class="s-insight-label">${r.label}</div>
-          <div class="s-insight-val">${r.val}</div>
-          ${r.sub ? `<div class="s-insight-sub">${r.sub}</div>` : ''}
-        </div>
-      </div>`).join('');
+    // Level arc SVG (semicircle)
+    const arcPct = level ? level.progress : 0;
+    // semicircle: arc from (-π) to (0), radius 85 centered at (100,100)
+    // stroke-dasharray ≈ π*85 = 267
+    const arcStroke = 267;
+    const arcDash   = arcStroke - (arcStroke * arcPct / 100);
+    const levelSvg  = `<svg class="sv2-arc-svg" viewBox="0 0 200 100">
+      <path d="M 10 100 A 90 90 0 0 1 190 100" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="14" stroke-linecap="round"/>
+      <path d="M 10 100 A 90 90 0 0 1 190 100" fill="none" stroke="var(--primary)" stroke-width="14" stroke-linecap="round"
+        stroke-dasharray="${arcStroke}" stroke-dashoffset="${arcDash.toFixed(1)}" style="transition:stroke-dashoffset .8s cubic-bezier(.16,1,.3,1)"/>
+    </svg>`;
 
-    // Learning Index card
-    const liCardHtml = liLatest != null ? `
-      <div class="s-li-card">
-        <div class="s-li-label">📊 Índice de Aprendizaje</div>
-        <div class="s-li-ring" style="--li:${liLatest}">
-          <div style="position:relative;text-align:center;">
-            <div class="s-li-val">${liLatest}</div>
-            <div class="s-li-of100">de 100</div>
-          </div>
-        </div>
-        ${liRecent.length ? `<div class="s-li-sparkline">
-          ${liRecent.map(p => {
-            const h = Math.max(6, Math.round((p.value / 100) * 100));
-            return `<div class="s-li-bar" style="height:${h}%" title="${new Date(p.datetime).toLocaleDateString('es-PE')}: ${p.value}"></div>`;
-          }).join('')}
-        </div>` : ''}
-      </div>` : `
-      <div class="s-li-card">
-        <div class="s-li-label">📊 Índice de Aprendizaje</div>
-        <div style="text-align:center;color:var(--muted);font-size:13px;">Usa Estudio IA para obtener tu índice.</div>
-      </div>`;
-
-    // Analysis bars
-    const renderSBar = (rows, key) => rows.slice(0, 6).map(r => {
-      const pct = Math.round((r.avgConcentration / 5) * 100);
-      return `<div class="s-bar-row">
-        <div class="s-bar-meta">
-          <span class="s-bar-label">${esc(r[key])}</span>
-          <span class="s-bar-score">${r.avgConcentration}/5 · ${r.count} ses.</span>
-        </div>
-        <div class="s-bar-track"><div class="s-bar-fill" style="width:${pct}%"></div></div>
+    // Streak dots (last 7 days)
+    const daySet = new Set(sessions.map(se => se.datetime.slice(0,10)));
+    const dotDays = ['L','M','X','J','V','S','D'];
+    const streakDotsHtml = Array.from({length:7}, (_,i) => {
+      const d = new Date(); d.setDate(d.getDate() - 6 + i);
+      const key = d.toISOString().slice(0,10);
+      const active = daySet.has(key);
+      const isToday = i === 6;
+      return `<div class="sv2-s-dot ${active?(isToday?'today':'active'):''}">
+        ${active ? '<span class="sv2-s-dot-icon">🔥</span>' : `<span>${dotDays[d.getDay()===0?6:d.getDay()-1]}</span>`}
       </div>`;
     }).join('');
 
-    // Gamification
-    const levelHtml = level ? (() => {
-      const arcPct = level.progress || 0;
-      const xpToNext = level.next ? `${xp.toLocaleString()} / ${level.next.xpRequired.toLocaleString()} XP` : `${xp.toLocaleString()} XP`;
-      return `
-        <div class="s-gam-level-row">
-          <div class="s-level-arc" style="--s-arc-pct:${arcPct}">
-            <div>
-              <div class="s-level-num">${level.current.level}</div>
-              <div class="s-level-sub">nivel</div>
+    // AI Insights timeline
+    const insightItems = [];
+    if (patterns && patterns.bestHour != null) {
+      const hr = patterns.bestHour;
+      const hrEnd = (hr + 2) % 24;
+      insightItems.push({
+        icon: '⏰', label: 'Mejor hora de estudio',
+        val: `${hr}:00 – ${hrEnd}:00 ${hr < 12 ? 'AM' : 'PM'}`,
+        spark: true
+      });
+    }
+    if (subs.length) {
+      insightItems.push({
+        icon: '🧠', label: 'Materia más fuerte',
+        val: `${esc(subs[0].subject)} · ${Math.round(subs[0].avgConcentration/5*100)}% concentración`
+      });
+    }
+    if (wDelta != null) {
+      insightItems.push({
+        icon: wDelta >= 0 ? '📈' : '📉', label: 'Mejora semanal',
+        val: `${wDelta >= 0 ? '+' : ''}${wDelta}% vs semana anterior`,
+        badge: wDelta >= 0 ? `+${wDelta}%` : `${wDelta}%`,
+        badgeClass: wDelta >= 0 ? 'sv2-tl-badge--up' : 'sv2-tl-badge--down'
+      });
+    }
+    const recs = Analytics.buildRecommendations(sessions);
+    if (recs.length) {
+      insightItems.push({ icon: '💡', label: 'Recomendación IA', quote: recs[0].text || recs[0].msg || '' });
+    }
+
+    const insightHtml = insightItems.slice(0,4).map(it => `
+      <div class="sv2-tl-item">
+        <div class="sv2-tl-dot">${it.icon}</div>
+        <div class="sv2-tl-label">${it.label}${it.badge ? `<span class="sv2-tl-badge ${it.badgeClass}">${esc(it.badge)}</span>` : ''}</div>
+        ${it.quote
+          ? `<div class="sv2-tl-quote">"${esc(it.quote)}"</div>`
+          : `<div class="sv2-tl-val">${esc(it.val||'')}</div>`}
+        ${it.spark ? `<div class="sv2-tl-spark">${wkCounts.map(c=>`<div class="sv2-tl-sbar" style="height:${Math.max(10,Math.round(c/wkMax*100))}%"></div>`).join('')}</div>` : ''}
+      </div>`).join('');
+
+    // Top 3 subjects donuts
+    const donutColors = ['var(--accent)','var(--primary)','var(--blue)'];
+    const top3Html = subs.slice(0,3).map((sub,i) => {
+      const pct = Math.round((sub.avgConcentration/5)*100);
+      return `<div class="sv2-subject-col">
+        <div class="sv2-subject-donut" style="--sv2-donut-c:${donutColors[i]};--sv2-donut-p:${pct}">
+          <span class="sv2-subject-pct">${pct}%</span>
+        </div>
+        <div class="sv2-subject-name">${esc(sub.subject)}</div>
+        <div class="sv2-subject-score">${sub.avgConcentration}/5</div>
+      </div>`;
+    }).join('');
+
+    // Analysis bars
+    const renderBars = (rows, key) => rows.slice(0,5).map(r => {
+      const pct = Math.round((r.avgConcentration/5)*100);
+      return `<div class="sv2-bar-row">
+        <div class="sv2-bar-meta"><span class="sv2-bar-lbl">${esc(r[key])}</span><span class="sv2-bar-score">${r.avgConcentration}/5</span></div>
+        <div class="sv2-bar-track"><div class="sv2-bar-fill" style="width:${pct}%"></div></div>
+      </div>`;
+    }).join('');
+
+    // Badges
+    const badgesHtml = Gamification.BADGES.map(b => `
+      <div class="sv2-badge ${earnedBadges.has(b.id) ? 'earned' : 'locked'}" title="${esc(b.desc)}">
+        <span class="sv2-badge-icon">${b.icon}</span>
+        <span class="sv2-badge-name">${esc(b.label)}</span>
+      </div>`).join('');
+
+    const yearStart = new Date(); yearStart.setFullYear(yearStart.getFullYear()-1,yearStart.getMonth()+1,1);
+    const heatmapRange = `${yearStart.toLocaleDateString('es-PE',{month:'short',year:'numeric'})} — ${new Date().toLocaleDateString('es-PE',{month:'short',year:'numeric'})}`;
+
+    return `<div class="sv2">
+      <div class="sv2-hero">
+        <div class="sv2-title-col">
+          <h1 class="sv2-title">Estadísticas</h1>
+          <p class="sv2-subtitle">Tu centro de comando personal</p>
+        </div>
+        <div class="sv2-kpis">
+          <div class="sv2-kpi">
+            <span class="sv2-kpi-label">Puntuación de Enfoque</span>
+            <span class="sv2-kpi-sub">Perfil</span>
+            <div class="sv2-kpi-body">
+              <div>
+                <div class="sv2-kpi-num">${focusScore}</div>
+              </div>
+              <div class="sv2-ring" style="--sv2-ring-c:var(--accent);--sv2-ring-p:${focusScore}">
+                <span class="sv2-ring-val">${focusScore}%</span>
+              </div>
             </div>
           </div>
-          <div class="s-level-info">
-            <div class="s-level-name">${esc(level.current.title || 'Estudiante')}</div>
-            <div class="s-level-xp">${xpToNext}</div>
-            <div class="s-level-bar"><div class="s-level-bar-fill" style="width:${arcPct}%"></div></div>
+          <div class="sv2-kpi">
+            <span class="sv2-kpi-label">Productividad</span>
+            <span class="sv2-kpi-sub">${streak > 0 ? `${streak} días` : 'Sesiones enfocadas'}</span>
+            <div class="sv2-kpi-body">
+              <div>
+                <div class="sv2-kpi-num">${productivity}%</div>
+              </div>
+              <div class="sv2-ring" style="--sv2-ring-c:var(--primary);--sv2-ring-p:${productivity}">
+                <span class="sv2-ring-val">${productivity}%</span>
+              </div>
+            </div>
           </div>
-        </div>`;
-    })() : '';
-
-    // Streak dots: last 8 days
-    const streakDotsHtml = (() => {
-      const dayMap = {};
-      sessions.forEach(se => { dayMap[se.datetime.slice(0,10)] = true; });
-      const dots = [];
-      for (let i = 7; i >= 0; i--) {
-        const d = new Date(); d.setDate(d.getDate() - i);
-        const key = d.toISOString().slice(0,10);
-        const isToday = i === 0;
-        const active  = !!dayMap[key];
-        const dayLabel = d.toLocaleDateString('es-PE', { weekday: 'narrow' });
-        dots.push(`<div class="s-streak-dot ${active ? (isToday ? 'today' : 'active') : ''}">
-          <span>${active ? '🔥' : dayLabel}</span>
-        </div>`);
-      }
-      return dots.join('');
-    })();
-
-    // Profile card
-    const profileHtml = profile ? `
-      <div class="s-profile-card">
-        <div class="s-profile-head">Tu perfil de aprendizaje</div>
-        <div class="s-profile-badge-row">
-          <div class="s-profile-icon">${profile.icon}</div>
-          <div>
-            <div class="s-profile-name">${esc(profile.label)}</div>
-            <div class="s-profile-desc">${esc(profile.desc)}</div>
+          <div class="sv2-kpi">
+            <span class="sv2-kpi-label">Horas Totales</span>
+            <span class="sv2-kpi-sub">Estudio</span>
+            <div class="sv2-kpi-body">
+              <div>
+                <div class="sv2-kpi-num">${totalHrs}<span style="font-size:14px;font-weight:600"> h</span></div>
+              </div>
+              <div class="sv2-sparkline">${sparkWkHtml}</div>
+            </div>
           </div>
-        </div>
-      </div>` : `
-      <div class="s-profile-card">
-        <div class="s-profile-head">Tu perfil de aprendizaje</div>
-        <div class="s-profile-desc" style="color:var(--muted);font-size:13px;">Necesitas al menos 3 sesiones para generar tu perfil.</div>
-      </div>`;
-
-    return `
-      <div class="s-header">
-        <h1 class="s-title">Estadísticas</h1>
-        <span class="s-subtitle">${sum.total} sesión${sum.total !== 1 ? 'es' : ''} registrada${sum.total !== 1 ? 's' : ''}</span>
-      </div>
-
-      <div class="s-hero-grid">
-        <div class="s-kpi s-kpi--gold">
-          <span class="s-kpi-icon">📚</span>
-          <div class="s-kpi-val">${sum.total}</div>
-          <div class="s-kpi-lbl">Sesiones totales</div>
-        </div>
-        <div class="s-kpi s-kpi--purple">
-          <span class="s-kpi-icon">🧠</span>
-          <div class="s-kpi-val">${sum.avgConc}</div>
-          <div class="s-kpi-lbl">Concentración prom.</div>
-          ${weekDelta != null ? `<span class="s-kpi-delta ${deltaClass}">${deltaIcon} ${Math.abs(weekDelta)} vs sem. ant.</span>` : ''}
-        </div>
-        <div class="s-kpi s-kpi--blue">
-          <span class="s-kpi-icon">⏱</span>
-          <div class="s-kpi-val">${totalHrs}<span style="font-size:18px;font-weight:600"> h</span></div>
-          <div class="s-kpi-lbl">Horas de estudio</div>
-        </div>
-        <div class="s-kpi s-kpi--green">
-          <span class="s-kpi-icon">🔥</span>
-          <div class="s-kpi-val">${streak}</div>
-          <div class="s-kpi-lbl">Días de racha</div>
-        </div>
-      </div>
-
-      <div class="s-mid-grid">
-        <div class="s-insight-card">
-          <div class="s-insight-head">✦ Ariven Insights</div>
-          ${insightHtml}
-        </div>
-        <div class="s-subject-card">
-          <div class="s-subject-head">Top materias</div>
-          <div class="s-subject-list">${subjectRingsHtml}</div>
-        </div>
-        ${liCardHtml}
-      </div>
-
-      <div class="s-heatmap-wrap">
-        <div class="s-hm-head">
-          <span class="s-hm-title">Actividad semanal — últimas 52 semanas</span>
-          ${streak > 0 ? `<span class="s-hm-streak">🔥 ${streak} días seguidos</span>` : ''}
-        </div>
-        <div class="s-hm-month-labels">${_heatmapMonthLabels}</div>
-        ${Charts.heatmapGrid(sessions)}
-        <div class="s-hm-legend">
-          <span>Menos</span>
-          <div class="s-hm-legend-bar">
-            ${[0.05,0.25,0.5,0.75,1].map(v=>`<div class="s-hm-legend-cell" style="background:rgba(200,155,109,${v})"></div>`).join('')}
-          </div>
-          <span>Más actividad</span>
-        </div>
-      </div>
-
-      <div class="s-charts-grid">
-        <div class="card">
-          <h3 style="margin:0 0 14px;font-size:14px;font-weight:700;">Concentración por materia</h3>
-          <div class="chart-container">
-            <div class="chart-skeleton skeleton"></div>
-            <canvas id="chartSubject"></canvas>
-          </div>
-        </div>
-        <div class="card">
-          <h3 style="margin:0 0 14px;font-size:14px;font-weight:700;">Distribución de concentración</h3>
-          <div class="chart-container">
-            <div class="chart-skeleton skeleton"></div>
-            <canvas id="chartLikert"></canvas>
+          <div class="sv2-kpi">
+            <span class="sv2-kpi-label">Nivel XP</span>
+            <span class="sv2-kpi-sub">${level ? `Nivel ${level.current.level} · ${esc(level.current.title)}` : 'Principiante'}</span>
+            <div style="margin-top:4px">
+              <div class="sv2-kpi-num" style="font-size:22px">${xp.toLocaleString()} XP</div>
+            </div>
+            <div class="sv2-kpi-xpbar"><div style="width:${level?level.progress:0}%"></div></div>
           </div>
         </div>
       </div>
 
-      <div class="s-analysis-grid">
-        <div class="s-bar-card">
-          <div class="s-bar-head">Por franja horaria</div>
-          ${renderSBar(buckets, 'bucket')}
+      <div class="sv2-split">
+        <div class="sv2-heatmap-card">
+          <div class="sv2-hm-top">
+            <div>
+              <div class="sv2-hm-heading">Actividad Anual</div>
+              <span class="sv2-hm-range">${heatmapRange}</span>
+            </div>
+            ${streak > 0 ? `<span class="sv2-hm-streak-pill">🔥 Racha actual: ${streak} días</span>` : ''}
+          </div>
+          <div class="sv2-hm-wrap">
+            <div class="sv2-hm-days">
+              ${hm.dayLabels.map(d=>`<div class="sv2-hm-day-lbl">${d}</div>`).join('')}
+            </div>
+            <div class="sv2-hm-cols-wrap">
+              <div class="sv2-hm-month-row" style="display:flex">${hm.monthHtml}</div>
+              <div class="sv2-hm-grid">${hm.cellsHtml}</div>
+            </div>
+          </div>
+          <div class="sv2-hm-bottom">
+            <div class="sv2-hm-legend">
+              <span>Menos actividad</span>
+              <div class="sv2-hm-legend-cells">
+                ${[0,1,2,3,4].map(v=>`<div class="sv2-hm-legend-cell" style="background:${v===0?'rgba(255,255,255,.04)':`rgba(139,92,246,${0.2+v*.16})`}"></div>`).join('')}
+              </div>
+              <span>Más actividad</span>
+            </div>
+            ${hm.bestStreakLabel ? `<span class="sv2-hm-best">${hm.bestStreakLabel}</span>` : ''}
+          </div>
         </div>
-        <div class="s-bar-card">
-          <div class="s-bar-head">Por actividad previa</div>
-          ${renderSBar(acts, 'activity')}
+
+        <div class="sv2-insights-card">
+          <div class="sv2-insights-badge">
+            <span>Inteligencia Ariven</span>
+            <div class="sv2-insights-sep"></div>
+            <span>IA</span>
+          </div>
+          <div class="sv2-tl">${insightHtml}</div>
         </div>
       </div>
 
-      <div class="s-bottom-grid">
-        ${profileHtml}
-        <div class="s-gam-card">
-          <div class="s-gam-head">Progreso y racha</div>
-          ${levelHtml}
-          <div class="s-streak-row">
-            <div class="s-streak-label">Últimos 8 días</div>
-            <div class="s-streak-dots">${streakDotsHtml}</div>
+      <div class="sv2-triple">
+        <div class="sv2-card">
+          <div class="sv2-card-title">Progreso Semanal</div>
+          <div class="sv2-card-sub">Últimas ${wkKeys.length} semanas</div>
+          <div class="chart-container" style="height:160px"><div class="chart-skeleton skeleton"></div><canvas id="chartWeekly"></canvas></div>
+        </div>
+        <div class="sv2-card">
+          <div class="sv2-card-title">Tus materias principales</div>
+          <div class="sv2-card-sub">Concentración promedio</div>
+          <div class="sv2-subjects-row">${top3Html || '<p class="muted" style="font-size:13px;text-align:center;padding:20px 0">Registra más sesiones</p>'}</div>
+        </div>
+        <div class="sv2-card">
+          <div class="sv2-card-title">Tendencia Mensual</div>
+          <div class="sv2-card-sub">Sesiones por mes</div>
+          <div class="chart-container" style="height:160px"><div class="chart-skeleton skeleton"></div><canvas id="chartMonthly"></canvas></div>
+        </div>
+      </div>
+
+      <div class="sv2-analysis">
+        <div class="sv2-card">
+          <div class="sv2-card-title">Por franja horaria</div>
+          ${renderBars(buckets, 'bucket')}
+        </div>
+        <div class="sv2-card">
+          <div class="sv2-card-title">Por actividad previa</div>
+          ${renderBars(acts, 'activity')}
+        </div>
+      </div>
+
+      <div class="sv2-bottom">
+        <div class="sv2-gam-card">
+          <div class="sv2-gam-title">Logros y Progreso</div>
+          <div class="sv2-arc-wrap">
+            ${levelSvg}
+            <div class="sv2-arc-text">
+              <div class="sv2-arc-level">Nivel ${level ? level.current.level : 1}</div>
+              <div class="sv2-arc-title">${level ? esc(level.current.title) : 'Principiante'}</div>
+            </div>
+            <div class="sv2-xp-row">${xp.toLocaleString()} / ${level && level.next ? level.next.xpRequired.toLocaleString() : '500'} XP</div>
+            <div class="sv2-xp-bar" style="width:100%;margin-top:8px"><div class="sv2-xp-fill" style="width:${level?level.progress:0}%"></div></div>
+          </div>
+          <div class="sv2-streak-row">
+            <div class="sv2-streak-label">Racha actual</div>
+            <div class="sv2-streak-fire">🔥 ${streak} días seguidos</div>
+            <div class="sv2-streak-dots">${streakDotsHtml}</div>
+          </div>
+          <div class="sv2-records">
+            <div class="sv2-record"><div class="sv2-record-label">Sesión más larga</div><div class="sv2-record-val">${longestLabel}</div></div>
+            <div class="sv2-record"><div class="sv2-record-label">Mejor semana</div><div class="sv2-record-val">${bestWeekSessions} ses.</div></div>
           </div>
         </div>
-      </div>`;
+        <div class="sv2-badges-card">
+          <div class="sv2-badges-title">Logros desbloqueados · ${earnedBadges.size}/${Gamification.BADGES.length}</div>
+          <div class="sv2-badges-grid">${badgesHtml}</div>
+        </div>
+      </div>
+    </div>`;
   }
 
   function wireStats() {
     root().querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', (e) => { e.preventDefault(); App.go(b.dataset.go); }));
-
     const s = Storage.get();
     const sessions = Sessions.listFor(s.currentUserId);
     if (!sessions.length) return;
 
-    const subs = Stats.bySubject(sessions);
-    if (subs.length > 0) {
-      Charts.create('chartSubject', Charts.barConfig(
-        subs.map(r => r.subject),
-        subs.map(r => r.avgConcentration),
-        'Concentración prom.',
-        Charts.COLORS.primary
-      ));
-    }
+    // Weekly progress chart
+    const wkBuckets = {};
+    sessions.forEach(se => {
+      const d = new Date(se.datetime);
+      const mo = d.getDay() || 7;
+      const mon = new Date(d); mon.setDate(d.getDate() - mo + 1);
+      const wk = mon.toISOString().slice(0,10);
+      wkBuckets[wk] = (wkBuckets[wk] || 0) + 1;
+    });
+    const wkKeys   = Object.keys(wkBuckets).sort().slice(-8);
+    const wkLabels = wkKeys.map(k => { const d = new Date(k); return d.toLocaleDateString('es-PE',{day:'numeric',month:'short'}); });
+    Charts.create('chartWeekly', Charts.barConfig(wkLabels, wkKeys.map(k=>wkBuckets[k]), 'Sesiones', Charts.COLORS.accentLight.replace('0.15','0.8')));
 
-    const dist = Stats.likertDistribution(sessions);
-    Charts.create('chartLikert', Charts.doughnutConfig(
-      Sessions.LIKERT.map(l => l.label),
-      Sessions.LIKERT.map(l => dist[l.v] || 0)
-    ));
+    // Monthly trend chart
+    const moBuckets = {};
+    sessions.forEach(se => { const mk = se.datetime.slice(0,7); moBuckets[mk] = (moBuckets[mk]||0)+1; });
+    const moKeys   = Object.keys(moBuckets).sort().slice(-6);
+    const moLabels = moKeys.map(k => { const [y,m] = k.split('-'); return new Date(y,m-1,1).toLocaleDateString('es-PE',{month:'short'}); });
+    Charts.create('chartMonthly', {
+      type: 'line',
+      data: { labels: moLabels, datasets: [{ label: 'Sesiones', data: moKeys.map(k=>moBuckets[k]), borderColor: 'rgba(139,92,246,0.85)', backgroundColor: 'rgba(139,92,246,0.12)', tension: 0.4, fill: true, pointBackgroundColor: 'rgba(139,92,246,0.85)', pointRadius: 4 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#52525B' }, grid: { color: 'rgba(255,255,255,0.04)' } }, y: { ticks: { color: '#52525B', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true } } }
+    });
   }
-
   // ---- Pantalla: Recomendaciones ----
   function screenRecommend() {
     const s = Storage.get();
