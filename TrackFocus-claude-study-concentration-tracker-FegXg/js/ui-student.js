@@ -1809,6 +1809,90 @@ const UIStudent = (() => {
       </div>`;
     }
 
+    // ---- Badge metadata & helpers (local to screenStats) ----
+    const BADGE_META = {
+      primera_sesion:  { cat:'estudio',       rarity:'Común',       rarityClass:'comun',      xp:50,  target:1 },
+      semana_perfecta: { cat:'constancia',    rarity:'Raro',        rarityClass:'raro',       xp:150, target:7 },
+      maestro_enfoque: { cat:'concentracion', rarity:'Épico',       rarityClass:'epico',      xp:200, target:10 },
+      maratonista:     { cat:'estudio',       rarity:'Raro',        rarityClass:'raro',       xp:150, target:1000 },
+      pomodoro_master: { cat:'pomodoro',      rarity:'Raro',        rarityClass:'raro',       xp:100, target:10 },
+      racha_3:         { cat:'constancia',    rarity:'Común',       rarityClass:'comun',      xp:50,  target:3 },
+      racha_7:         { cat:'constancia',    rarity:'Raro',        rarityClass:'raro',       xp:100, target:7 },
+      racha_30:        { cat:'constancia',    rarity:'Legendario',  rarityClass:'legendario', xp:500, target:30 },
+      multimaterias:   { cat:'estudio',       rarity:'Raro',        rarityClass:'raro',       xp:100, target:5 },
+      noctambulo:      { cat:'especiales',    rarity:'Épico',       rarityClass:'epico',      xp:150, target:10 },
+      madrugador:      { cat:'especiales',    rarity:'Épico',       rarityClass:'epico',      xp:150, target:10 },
+    };
+
+    const MILESTONES = [
+      { label: 'Primera Sesión',     icon: '🎯', badgeId: 'primera_sesion' },
+      { label: 'Racha de 3 días',    icon: '🔥', badgeId: 'racha_3' },
+      { label: 'Semana Perfecta',    icon: '🏆', badgeId: 'semana_perfecta' },
+      { label: 'Maestro del Enfoque',icon: '🧠', badgeId: 'maestro_enfoque' },
+      { label: 'Mes de Diamante',    icon: '💎', badgeId: 'racha_30' },
+    ];
+
+    function _badgeProgress(b, ses, gam) {
+      const streak   = gam.streak || 0;
+      const totalMin = ses.reduce((a, se) => a + se.durationMin, 0);
+      switch (b.id) {
+        case 'primera_sesion':  return Math.min(ses.length, 1);
+        case 'semana_perfecta': return Math.min(streak, 7);
+        case 'maestro_enfoque': return Math.min(ses.filter(s => s.concentration === 5).length, 10);
+        case 'maratonista':     return Math.min(totalMin, 1000);
+        case 'pomodoro_master': return Math.min(ses.filter(s => s.comment && s.comment.includes('Pomodoro')).length, 10);
+        case 'racha_3':         return Math.min(streak, 3);
+        case 'racha_7':         return Math.min(streak, 7);
+        case 'racha_30':        return Math.min(streak, 30);
+        case 'multimaterias':   return Math.min(new Set(ses.map(s => s.subject)).size, 5);
+        case 'noctambulo':      return Math.min(ses.filter(s => new Date(s.datetime).getHours() >= 22).length, 10);
+        case 'madrugador':      return Math.min(ses.filter(s => new Date(s.datetime).getHours() < 8).length, 10);
+        default: return 0;
+      }
+    }
+
+    function _badgeProgressLabel(b, prog) {
+      const meta   = BADGE_META[b.id] || {};
+      const target = meta.target || 1;
+      if (b.id === 'maratonista') return `${prog}/${target} min`;
+      return `${prog}/${target}`;
+    }
+
+    function _buildBadgeCard(b, earned, prog) {
+      const meta        = BADGE_META[b.id] || {};
+      const pct         = meta.target ? Math.round((prog / meta.target) * 100) : (earned ? 100 : 0);
+      const clampedPct  = Math.min(pct, 100);
+      const isLegendary = meta.rarityClass === 'legendario';
+      const isAlmostDone= !earned && clampedPct >= 60;
+      let stateClass    = earned ? 'sv3-badge-earned' : (isAlmostDone ? 'sv3-badge-close' : 'sv3-badge-locked');
+      if (earned && isLegendary) stateClass += ' sv3-badge-legendary';
+      return `<div class="sv3-badge-card ${stateClass}" data-cat="${meta.cat||'estudio'}" data-earned="${earned?1:0}" data-pct="${clampedPct}" data-rarity="${meta.rarityClass||'comun'}">
+        <div class="sv3-badge-icon-wrap">
+          <span class="sv3-badge-icon">${b.icon}</span>
+          ${earned ? '<span class="sv3-badge-check">✓</span>' : ''}
+        </div>
+        <div class="sv3-badge-body">
+          <div class="sv3-badge-top">
+            <span class="sv3-badge-name">${esc(b.label)}</span>
+            <span class="sv3-badge-rarity sv3-rarity-${meta.rarityClass||'comun'}">${meta.rarity||''}</span>
+          </div>
+          <div class="sv3-badge-desc">${esc(b.desc)}</div>
+          <div class="sv3-badge-progress-row">
+            <div class="sv3-badge-bar-wrap">
+              <div class="sv3-badge-bar" style="width:${clampedPct}%"></div>
+            </div>
+            <span class="sv3-badge-prog-label">${earned ? '✓ Obtenida' : _badgeProgressLabel(b, prog)}</span>
+          </div>
+          <div class="sv3-badge-footer">
+            <span class="sv3-badge-xp">+${meta.xp||50} XP</span>
+            ${isAlmostDone && !earned ? '<span class="sv3-badge-almost">¡Casi!</span>' : ''}
+            ${earned ? `<span class="sv3-badge-status-earned">Desbloqueada</span>` : `<span class="sv3-badge-status-locked">${clampedPct}%</span>`}
+          </div>
+        </div>
+      </div>`;
+    }
+
+    // ---- Data calculations ----
     const sum      = Stats.summary(sessions);
     const subs     = Stats.bySubject(sessions);
     const buckets  = Stats.byHourBucket(sessions);
@@ -1816,79 +1900,60 @@ const UIStudent = (() => {
     const liSeries = Stats.learningIndexSeries(sessions);
     const liLatest = liSeries.length ? liSeries[liSeries.length - 1].value : null;
     const patterns = Analytics.detectPatterns(sessions);
-    const profile  = Analytics.classifyProfile(sessions);
     const gam      = user.gamification || {};
     const streak   = gam.streak || 0;
     const xp       = gam.xp || 0;
     const level    = Gamification.getLevelInfo(xp);
     const earnedBadges = new Set(gam.badges || []);
 
-    // KPI values
     const focusScore   = liLatest != null ? liLatest : Math.round((sum.avgConc / 5) * 100);
     const productivity = Math.round(sessions.filter(se => se.concentration >= 4).length / sessions.length * 100);
     const totalHrs     = (sum.totalMin / 60).toFixed(1);
 
-    // Weekly delta %
-    const nowMs  = Date.now();
-    const w7     = nowMs - 7 * 86400000;
-    const w14    = nowMs - 14 * 86400000;
-    const tw     = sessions.filter(se => new Date(se.datetime).getTime() >= w7);
-    const lw     = sessions.filter(se => { const t = new Date(se.datetime).getTime(); return t >= w14 && t < w7; });
-    const avgTw  = tw.length ? tw.reduce((a,b)=>a+b.concentration,0)/tw.length : null;
-    const avgLw  = lw.length ? lw.reduce((a,b)=>a+b.concentration,0)/lw.length : null;
-    const wDelta = avgTw && avgLw ? Math.round(((avgTw - avgLw) / avgLw) * 100) : null;
+    const nowMs = Date.now();
+    const w7    = nowMs - 7 * 86400000;
+    const w14   = nowMs - 14 * 86400000;
+    const tw    = sessions.filter(se => new Date(se.datetime).getTime() >= w7);
+    const lw    = sessions.filter(se => { const t = new Date(se.datetime).getTime(); return t >= w14 && t < w7; });
+    const avgTw = tw.length ? tw.reduce((a, b) => a + b.concentration, 0) / tw.length : null;
+    const avgLw = lw.length ? lw.reduce((a, b) => a + b.concentration, 0) / lw.length : null;
+    const wDelta= avgTw && avgLw ? Math.round(((avgTw - avgLw) / avgLw) * 100) : null;
 
-    // Personal records
-    const longestMin = Math.max(...sessions.map(se => se.durationMin), 0);
-    const longestLabel = longestMin >= 60
-      ? `${Math.floor(longestMin/60)}h ${longestMin%60}min`
-      : `${longestMin}min`;
-    const weekGroups = {};
+    const longestMin  = Math.max(...sessions.map(se => se.durationMin), 0);
+    const longestLabel= longestMin >= 60 ? `${Math.floor(longestMin/60)}h ${longestMin%60}min` : `${longestMin}min`;
+    const weekGroups  = {};
     sessions.forEach(se => {
-      const d = new Date(se.datetime);
-      const mo = d.getDay() || 7;
+      const d = new Date(se.datetime); const mo = d.getDay() || 7;
       const mon = new Date(d); mon.setDate(d.getDate() - mo + 1);
-      const wk = mon.toISOString().slice(0,10);
-      weekGroups[wk] = (weekGroups[wk] || 0) + 1;
+      weekGroups[mon.toISOString().slice(0,10)] = (weekGroups[mon.toISOString().slice(0,10)] || 0) + 1;
     });
     const bestWeekSessions = Math.max(...Object.values(weekGroups), 0);
 
-    // Heatmap
     const hm = _sv2Heatmap(sessions);
+    const yearStart = new Date(); yearStart.setFullYear(yearStart.getFullYear()-1, yearStart.getMonth()+1, 1);
+    const heatmapRange = `${yearStart.toLocaleDateString('es-PE',{month:'short',year:'numeric'})} — ${new Date().toLocaleDateString('es-PE',{month:'short',year:'numeric'})}`;
 
-    // Weekly sessions for sparkline (last 8 ISO weeks)
-    const wkBuckets = {};
+    // Sparkline bars (static, no Chart.js) for resumen KPI
+    const wkBuckets0 = {};
     sessions.forEach(se => {
-      const d = new Date(se.datetime);
-      const mo = d.getDay() || 7;
+      const d = new Date(se.datetime); const mo = d.getDay() || 7;
       const mon = new Date(d); mon.setDate(d.getDate() - mo + 1);
       const wk = mon.toISOString().slice(0,10);
-      wkBuckets[wk] = (wkBuckets[wk] || 0) + 1;
+      wkBuckets0[wk] = (wkBuckets0[wk] || 0) + 1;
     });
-    const wkKeys = Object.keys(wkBuckets).sort().slice(-8);
-    const wkCounts = wkKeys.map(k => wkBuckets[k]);
-    const wkMax = Math.max(...wkCounts, 1);
-    const sparkWkHtml = wkCounts.map(c => {
-      const h = Math.max(8, Math.round((c / wkMax) * 100));
+    const wkKeys0   = Object.keys(wkBuckets0).sort().slice(-8);
+    const wkCounts0 = wkKeys0.map(k => wkBuckets0[k]);
+    const wkMax0    = Math.max(...wkCounts0, 1);
+    const sparkWkHtml = wkCounts0.map(c => {
+      const h = Math.max(8, Math.round((c / wkMax0) * 100));
       return `<div class="sv2-spark-bar" style="height:${h}%" title="${c} ses."></div>`;
     }).join('');
 
-    // Monthly sessions for trend
-    const moBuckets = {};
-    sessions.forEach(se => {
-      const mk = se.datetime.slice(0,7);
-      moBuckets[mk] = (moBuckets[mk] || 0) + 1;
-    });
-    const moKeys   = Object.keys(moBuckets).sort().slice(-6);
-    const moCounts = moKeys.map(k => moBuckets[k]);
-
-    // Level arc SVG (semicircle)
-    const arcPct = level ? level.progress : 0;
-    // semicircle: arc from (-π) to (0), radius 85 centered at (100,100)
-    // stroke-dasharray ≈ π*85 = 267
-    const arcStroke = 267;
-    const arcDash   = arcStroke - (arcStroke * arcPct / 100);
-    const levelSvg  = `<svg class="sv2-arc-svg" viewBox="0 0 200 100">
+    // Level arc
+    const arcPct   = level ? level.progress : 0;
+    const arcStroke= 267;
+    const arcDash  = arcStroke - (arcStroke * arcPct / 100);
+    const levelSvg = `<svg class="sv2-arc-svg" viewBox="0 0 200 100">
       <path d="M 10 100 A 90 90 0 0 1 190 100" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="14" stroke-linecap="round"/>
       <path d="M 10 100 A 90 90 0 0 1 190 100" fill="none" stroke="var(--primary)" stroke-width="14" stroke-linecap="round"
         stroke-dasharray="${arcStroke}" stroke-dashoffset="${arcDash.toFixed(1)}" style="transition:stroke-dashoffset .8s cubic-bezier(.16,1,.3,1)"/>
@@ -1896,58 +1961,40 @@ const UIStudent = (() => {
 
     // Streak dots (last 7 days)
     const daySet = new Set(sessions.map(se => se.datetime.slice(0,10)));
-    const dotDays = ['L','M','X','J','V','S','D'];
+    const dotDays= ['L','M','X','J','V','S','D'];
     const streakDotsHtml = Array.from({length:7}, (_,i) => {
       const d = new Date(); d.setDate(d.getDate() - 6 + i);
       const key = d.toISOString().slice(0,10);
-      const active = daySet.has(key);
+      const active  = daySet.has(key);
       const isToday = i === 6;
       return `<div class="sv2-s-dot ${active?(isToday?'today':'active'):''}">
         ${active ? '<span class="sv2-s-dot-icon">🔥</span>' : `<span>${dotDays[d.getDay()===0?6:d.getDay()-1]}</span>`}
       </div>`;
     }).join('');
 
-    // AI Insights timeline
+    // AI Insights
     const insightItems = [];
     if (patterns && patterns.bestHour != null) {
-      const hr = patterns.bestHour;
-      const hrEnd = (hr + 2) % 24;
-      insightItems.push({
-        icon: '⏰', label: 'Mejor hora de estudio',
-        val: `${hr}:00 – ${hrEnd}:00 ${hr < 12 ? 'AM' : 'PM'}`,
-        spark: true
-      });
+      const hr = patterns.bestHour; const hrEnd = (hr + 2) % 24;
+      insightItems.push({ icon:'⏰', label:'Mejor hora de estudio', val:`${hr}:00 – ${hrEnd}:00 ${hr<12?'AM':'PM'}` });
     }
     if (subs.length) {
-      insightItems.push({
-        icon: '🧠', label: 'Materia más fuerte',
-        val: `${esc(subs[0].subject)} · ${Math.round(subs[0].avgConcentration/5*100)}% concentración`
-      });
+      insightItems.push({ icon:'🧠', label:'Materia más fuerte', val:`${esc(subs[0].subject)} · ${Math.round(subs[0].avgConcentration/5*100)}% conc.` });
     }
     if (wDelta != null) {
-      insightItems.push({
-        icon: wDelta >= 0 ? '📈' : '📉', label: 'Mejora semanal',
-        val: `${wDelta >= 0 ? '+' : ''}${wDelta}% vs semana anterior`,
-        badge: wDelta >= 0 ? `+${wDelta}%` : `${wDelta}%`,
-        badgeClass: wDelta >= 0 ? 'sv2-tl-badge--up' : 'sv2-tl-badge--down'
-      });
+      insightItems.push({ icon: wDelta>=0?'📈':'📉', label:'Mejora semanal', val:`${wDelta>=0?'+':''}${wDelta}% vs semana anterior`, badge:`${wDelta>=0?'+':''}${wDelta}%`, badgeClass: wDelta>=0?'sv2-tl-badge--up':'sv2-tl-badge--down' });
     }
     const recs = Analytics.buildRecommendations(sessions);
-    if (recs.length) {
-      insightItems.push({ icon: '💡', label: 'Recomendación IA', quote: recs[0].text || recs[0].msg || '' });
-    }
+    if (recs.length) insightItems.push({ icon:'💡', label:'Recomendación IA', quote: recs[0].text || recs[0].msg || '' });
 
     const insightHtml = insightItems.slice(0,4).map(it => `
       <div class="sv2-tl-item">
         <div class="sv2-tl-dot">${it.icon}</div>
-        <div class="sv2-tl-label">${it.label}${it.badge ? `<span class="sv2-tl-badge ${it.badgeClass}">${esc(it.badge)}</span>` : ''}</div>
-        ${it.quote
-          ? `<div class="sv2-tl-quote">"${esc(it.quote)}"</div>`
-          : `<div class="sv2-tl-val">${esc(it.val||'')}</div>`}
-        ${it.spark ? `<div class="sv2-tl-spark">${wkCounts.map(c=>`<div class="sv2-tl-sbar" style="height:${Math.max(10,Math.round(c/wkMax*100))}%"></div>`).join('')}</div>` : ''}
+        <div class="sv2-tl-label">${it.label}${it.badge?`<span class="sv2-tl-badge ${it.badgeClass}">${esc(it.badge)}</span>`:''}</div>
+        ${it.quote ? `<div class="sv2-tl-quote">"${esc(it.quote)}"</div>` : `<div class="sv2-tl-val">${esc(it.val||'')}</div>`}
       </div>`).join('');
 
-    // Top 3 subjects donuts
+    // Subject donuts
     const donutColors = ['var(--accent)','var(--primary)','var(--blue)'];
     const top3Html = subs.slice(0,3).map((sub,i) => {
       const pct = Math.round((sub.avgConcentration/5)*100);
@@ -1960,7 +2007,7 @@ const UIStudent = (() => {
       </div>`;
     }).join('');
 
-    // Analysis bars
+    // Analysis bars helper
     const renderBars = (rows, key) => rows.slice(0,5).map(r => {
       const pct = Math.round((r.avgConcentration/5)*100);
       return `<div class="sv2-bar-row">
@@ -1969,81 +2016,258 @@ const UIStudent = (() => {
       </div>`;
     }).join('');
 
-    // Badges
-    const badgesHtml = Gamification.BADGES.map(b => `
-      <div class="sv2-badge ${earnedBadges.has(b.id) ? 'earned' : 'locked'}" title="${esc(b.desc)}">
-        <span class="sv2-badge-icon">${b.icon}</span>
-        <span class="sv2-badge-name">${esc(b.label)}</span>
+    // ---- Logros tab data ----
+    const allBadges    = Gamification.BADGES;
+    const totalEarned  = allBadges.filter(b => earnedBadges.has(b.id)).length;
+    const collectionPct= Math.round((totalEarned / allBadges.length) * 100);
+
+    // Próximos desafíos: top 3 closest incomplete
+    const incompleteWithPct = allBadges
+      .filter(b => !earnedBadges.has(b.id))
+      .map(b => {
+        const meta = BADGE_META[b.id] || {};
+        const prog = _badgeProgress(b, sessions, gam);
+        const pct  = meta.target ? Math.min(Math.round((prog/meta.target)*100),99) : 0;
+        return { b, meta, prog, pct };
+      })
+      .sort((a,b2) => b2.pct - a.pct)
+      .slice(0,3);
+
+    const proximosHtml = incompleteWithPct.map(({b, meta, prog, pct}) => `
+      <div class="sv3-proximo-item">
+        <div class="sv3-proximo-left">
+          <span class="sv3-proximo-icon">${b.icon}</span>
+          <div class="sv3-proximo-info">
+            <div class="sv3-proximo-name">${esc(b.label)}</div>
+            <div class="sv3-proximo-rarity sv3-rarity-${meta.rarityClass||'comun'}">${meta.rarity||''} · +${meta.xp||50} XP</div>
+          </div>
+        </div>
+        <div class="sv3-proximo-right">
+          <div class="sv3-proximo-bar-wrap"><div class="sv3-proximo-bar" style="width:${pct}%"></div></div>
+          <span class="sv3-proximo-pct">${pct}%</span>
+        </div>
       </div>`).join('');
 
-    const yearStart = new Date(); yearStart.setFullYear(yearStart.getFullYear()-1,yearStart.getMonth()+1,1);
-    const heatmapRange = `${yearStart.toLocaleDateString('es-PE',{month:'short',year:'numeric'})} — ${new Date().toLocaleDateString('es-PE',{month:'short',year:'numeric'})}`;
-
-    return `<div class="sv2">
-      <div class="sv2-hero">
-        <div class="sv2-title-col">
-          <h1 class="sv2-title">Estadísticas</h1>
-          <p class="sv2-subtitle">Tu centro de comando personal</p>
+    // Certificates
+    const certs = _availableCertificates(user, sessions);
+    const certsHtml = certs.map(cert => `
+      <div class="sv3-cert-card ${cert.eligible ? 'sv3-cert-eligible' : 'sv3-cert-locked'}">
+        <span class="sv3-cert-icon">${cert.icon}</span>
+        <div class="sv3-cert-info">
+          <div class="sv3-cert-title">${esc(cert.title)}</div>
+          <div class="sv3-cert-sub">${esc(cert.subtitle)}</div>
         </div>
-        <div class="sv2-kpis">
-          <div class="sv2-kpi">
-            <span class="sv2-kpi-label">Puntuación de Enfoque</span>
-            <span class="sv2-kpi-sub">Perfil</span>
-            <div class="sv2-kpi-body">
-              <div>
-                <div class="sv2-kpi-num">${focusScore}</div>
-              </div>
-              <div class="sv2-ring" style="--sv2-ring-c:var(--accent);--sv2-ring-p:${focusScore}">
-                <span class="sv2-ring-val">${focusScore}%</span>
-              </div>
+        ${cert.eligible
+          ? `<button class="sv3-cert-dl" data-cert="${cert.id}" title="Descargar certificado">↓</button>`
+          : `<span class="sv3-cert-pend" title="${esc(cert.detail)}">…</span>`}
+      </div>`).join('');
+
+    // Achievement summary KPIs (7 cards)
+    const rarestEarned = allBadges
+      .filter(b => earnedBadges.has(b.id))
+      .sort((a,b2) => {
+        const order = { legendario:0, epico:1, raro:2, comun:3 };
+        return (order[BADGE_META[a.id]?.rarityClass]||3) - (order[BADGE_META[b2.id]?.rarityClass]||3);
+      })[0];
+    const nextBadge = incompleteWithPct[0];
+
+    const achKpisHtml = [
+      { label:'Colección',   val:`${collectionPct}%`,           sub:`${totalEarned}/${allBadges.length} insignias` },
+      { label:'Nivel',       val:`${level ? level.current.level : 1}`, sub: level ? esc(level.current.title) : 'Principiante' },
+      { label:'XP Total',   val:`${xp.toLocaleString()}`,       sub:'puntos de experiencia' },
+      { label:'Racha',       val:`${streak}`,                   sub:'días consecutivos' },
+      { label:'Más rara',    val: rarestEarned ? rarestEarned.icon : '—', sub: rarestEarned ? esc(rarestEarned.label) : 'Ninguna aún' },
+      { label:'Siguiente',   val: nextBadge ? nextBadge.b.icon : '✓', sub: nextBadge ? esc(nextBadge.b.label) : '¡Todo completado!' },
+      { label:'Horas',       val:`${totalHrs}`,                 sub:'horas de estudio' },
+    ].map(k => `<div class="sv3-ach-kpi">
+      <div class="sv3-ach-kpi-val">${k.val}</div>
+      <div class="sv3-ach-kpi-label">${k.label}</div>
+      <div class="sv3-ach-kpi-sub">${k.sub}</div>
+    </div>`).join('');
+
+    // Milestone timeline
+    const milestoneHtml = `<div class="sv3-milestone-line">
+      <div class="sv3-ml-track"></div>
+      <div class="sv3-ml-nodes">
+        ${MILESTONES.map(m => `
+          <div class="sv3-ml-node ${earnedBadges.has(m.badgeId)?'sv3-ml-done':'sv3-ml-pending'}">
+            <div class="sv3-ml-dot">${m.icon}</div>
+            <div class="sv3-ml-label">${m.label}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+
+    // All badge cards
+    const allBadgeCardsHtml = allBadges.map(b => {
+      const earned = earnedBadges.has(b.id);
+      const prog   = _badgeProgress(b, sessions, gam);
+      return _buildBadgeCard(b, earned, prog);
+    }).join('');
+
+    // ---- Render ----
+    return `<div class="sv3">
+      <div class="sv3-header">
+        <div class="sv3-header-left">
+          <h1 class="sv3-title">Estadísticas</h1>
+          <p class="sv3-sub">Tu centro de comando personal</p>
+        </div>
+        <nav class="sv3-tabs" id="sv3-tabs">
+          <button class="sv3-tab sv3-active" data-tab="resumen">Resumen</button>
+          <button class="sv3-tab" data-tab="graficos">Gráficos</button>
+          <button class="sv3-tab" data-tab="comparativas">Comparativas</button>
+          <button class="sv3-tab" data-tab="actividad">Actividad</button>
+          <button class="sv3-tab" data-tab="logros">Logros e Insignias 🏆</button>
+        </nav>
+      </div>
+
+      <!-- ===== RESUMEN ===== -->
+      <div class="sv3-panel sv3-active" data-panel="resumen">
+        <div class="sv3-kpi-row">
+          <div class="sv3-kpi">
+            <div class="sv3-kpi-label">Puntuación de Enfoque</div>
+            <div class="sv3-kpi-body">
+              <div class="sv3-kpi-num">${focusScore}</div>
+              <div class="sv3-ring" style="--sv2-ring-c:var(--accent);--sv2-ring-p:${focusScore}"><span class="sv2-ring-val">${focusScore}%</span></div>
             </div>
+            <div class="sv3-kpi-sub">Perfil de concentración</div>
           </div>
-          <div class="sv2-kpi">
-            <span class="sv2-kpi-label">Productividad</span>
-            <span class="sv2-kpi-sub">${streak > 0 ? `${streak} días` : 'Sesiones enfocadas'}</span>
-            <div class="sv2-kpi-body">
-              <div>
-                <div class="sv2-kpi-num">${productivity}%</div>
-              </div>
-              <div class="sv2-ring" style="--sv2-ring-c:var(--primary);--sv2-ring-p:${productivity}">
-                <span class="sv2-ring-val">${productivity}%</span>
-              </div>
+          <div class="sv3-kpi">
+            <div class="sv3-kpi-label">Productividad</div>
+            <div class="sv3-kpi-body">
+              <div class="sv3-kpi-num">${productivity}%</div>
+              <div class="sv3-ring" style="--sv2-ring-c:var(--primary);--sv2-ring-p:${productivity}"><span class="sv2-ring-val">${productivity}%</span></div>
             </div>
+            <div class="sv3-kpi-sub">${streak > 0 ? `🔥 ${streak} días de racha` : 'Sesiones de alta concentración'}</div>
           </div>
-          <div class="sv2-kpi">
-            <span class="sv2-kpi-label">Horas Totales</span>
-            <span class="sv2-kpi-sub">Estudio</span>
-            <div class="sv2-kpi-body">
-              <div>
-                <div class="sv2-kpi-num">${totalHrs}<span style="font-size:14px;font-weight:600"> h</span></div>
-              </div>
+          <div class="sv3-kpi">
+            <div class="sv3-kpi-label">Horas Totales</div>
+            <div class="sv3-kpi-body">
+              <div class="sv3-kpi-num">${totalHrs}<span class="sv3-kpi-unit">h</span></div>
               <div class="sv2-sparkline">${sparkWkHtml}</div>
             </div>
+            <div class="sv3-kpi-sub">${sessions.length} sesiones registradas</div>
           </div>
-          <div class="sv2-kpi">
-            <span class="sv2-kpi-label">Nivel XP</span>
-            <span class="sv2-kpi-sub">${level ? `Nivel ${level.current.level} · ${esc(level.current.title)}` : 'Principiante'}</span>
-            <div style="margin-top:4px">
-              <div class="sv2-kpi-num" style="font-size:22px">${xp.toLocaleString()} XP</div>
+          <div class="sv3-kpi">
+            <div class="sv3-kpi-label">Nivel XP</div>
+            <div class="sv3-kpi-body">
+              <div class="sv3-kpi-num sv3-kpi-num--sm">${xp.toLocaleString()}<span class="sv3-kpi-unit">XP</span></div>
             </div>
+            <div class="sv3-kpi-sub">${level ? `Nivel ${level.current.level} · ${esc(level.current.title)}` : 'Principiante'}</div>
             <div class="sv2-kpi-xpbar"><div style="width:${level?level.progress:0}%"></div></div>
+          </div>
+        </div>
+
+        <div class="sv3-split">
+          <div class="sv3-heatmap-card">
+            <div class="sv2-hm-top">
+              <div>
+                <div class="sv2-hm-heading">Actividad Anual</div>
+                <span class="sv2-hm-range">${heatmapRange}</span>
+              </div>
+              ${streak > 0 ? `<span class="sv2-hm-streak-pill">🔥 Racha: ${streak} días</span>` : ''}
+            </div>
+            <div class="sv2-hm-wrap">
+              <div class="sv2-hm-days">${hm.dayLabels.map(d=>`<div class="sv2-hm-day-lbl">${d}</div>`).join('')}</div>
+              <div class="sv2-hm-cols-wrap">
+                <div class="sv2-hm-month-row" style="display:flex">${hm.monthHtml}</div>
+                <div class="sv2-hm-grid">${hm.cellsHtml}</div>
+              </div>
+            </div>
+            <div class="sv2-hm-bottom">
+              <div class="sv2-hm-legend">
+                <span>Menos</span>
+                <div class="sv2-hm-legend-cells">
+                  ${[0,1,2,3,4].map(v=>`<div class="sv2-hm-legend-cell" style="background:${v===0?'rgba(255,255,255,.04)':`rgba(139,92,246,${0.2+v*.16})`}"></div>`).join('')}
+                </div>
+                <span>Más</span>
+              </div>
+              ${hm.bestStreakLabel ? `<span class="sv2-hm-best">${hm.bestStreakLabel}</span>` : ''}
+            </div>
+          </div>
+
+          <div class="sv2-insights-card">
+            <div class="sv2-insights-badge"><span>Inteligencia Ariven</span><div class="sv2-insights-sep"></div><span>IA</span></div>
+            <div class="sv2-tl">${insightHtml}</div>
+          </div>
+        </div>
+
+        <div class="sv3-bottom-row">
+          <div class="sv2-gam-card sv3-gam-compact">
+            <div class="sv2-gam-title">Nivel y Progreso</div>
+            <div class="sv2-arc-wrap">
+              ${levelSvg}
+              <div class="sv2-arc-text">
+                <div class="sv2-arc-level">Nivel ${level ? level.current.level : 1}</div>
+                <div class="sv2-arc-title">${level ? esc(level.current.title) : 'Principiante'}</div>
+              </div>
+              <div class="sv2-xp-row">${xp.toLocaleString()} / ${level && level.next ? level.next.xpRequired.toLocaleString() : '500'} XP</div>
+              <div class="sv2-xp-bar"><div class="sv2-xp-fill" style="width:${level?level.progress:0}%"></div></div>
+            </div>
+            <div class="sv2-streak-row">
+              <div class="sv2-streak-label">Racha actual</div>
+              <div class="sv2-streak-fire">🔥 ${streak} días seguidos</div>
+              <div class="sv2-streak-dots">${streakDotsHtml}</div>
+            </div>
+          </div>
+          <div class="sv3-records-card">
+            <div class="sv3-records-title">Récords Personales</div>
+            <div class="sv3-record-item"><span class="sv3-record-label">Sesión más larga</span><span class="sv3-record-val">${longestLabel}</span></div>
+            <div class="sv3-record-item"><span class="sv3-record-label">Mejor semana</span><span class="sv3-record-val">${bestWeekSessions} sesiones</span></div>
+            <div class="sv3-record-item"><span class="sv3-record-label">Total de sesiones</span><span class="sv3-record-val">${sessions.length}</span></div>
+            <div class="sv3-record-item"><span class="sv3-record-label">Insignias ganadas</span><span class="sv3-record-val">${totalEarned}/${allBadges.length}</span></div>
           </div>
         </div>
       </div>
 
-      <div class="sv2-split">
-        <div class="sv2-heatmap-card">
+      <!-- ===== GRÁFICOS ===== -->
+      <div class="sv3-panel" data-panel="graficos">
+        <div class="sv3-charts-grid">
+          <div class="sv3-chart-card">
+            <div class="sv3-chart-title">Progreso Semanal</div>
+            <div class="sv3-chart-sub">Sesiones por semana (últimas 8)</div>
+            <div class="chart-container" style="height:200px"><div class="chart-skeleton skeleton"></div><canvas id="chartWeekly"></canvas></div>
+          </div>
+          <div class="sv3-chart-card">
+            <div class="sv3-chart-title">Tendencia Mensual</div>
+            <div class="sv3-chart-sub">Sesiones por mes (últimos 6)</div>
+            <div class="chart-container" style="height:200px"><div class="chart-skeleton skeleton"></div><canvas id="chartMonthly"></canvas></div>
+          </div>
+        </div>
+        <div class="sv3-chart-card sv3-chart-wide">
+          <div class="sv3-chart-title">Materias Principales</div>
+          <div class="sv3-chart-sub">Concentración promedio por materia</div>
+          <div class="sv2-subjects-row">${top3Html || '<p class="muted" style="font-size:13px;text-align:center;padding:24px 0">Registra más sesiones con diferentes materias</p>'}</div>
+        </div>
+      </div>
+
+      <!-- ===== COMPARATIVAS ===== -->
+      <div class="sv3-panel" data-panel="comparativas">
+        <div class="sv3-comp-grid">
+          <div class="sv3-comp-card">
+            <div class="sv3-comp-title">Por franja horaria</div>
+            <div class="sv3-comp-sub">Concentración media según hora del día</div>
+            ${renderBars(buckets, 'bucket')}
+          </div>
+          <div class="sv3-comp-card">
+            <div class="sv3-comp-title">Por actividad previa</div>
+            <div class="sv3-comp-sub">Qué hiciste antes de estudiar</div>
+            ${renderBars(acts, 'activity')}
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== ACTIVIDAD ===== -->
+      <div class="sv3-panel" data-panel="actividad">
+        <div class="sv3-act-heatmap">
           <div class="sv2-hm-top">
             <div>
-              <div class="sv2-hm-heading">Actividad Anual</div>
+              <div class="sv2-hm-heading">Actividad Anual Completa</div>
               <span class="sv2-hm-range">${heatmapRange}</span>
             </div>
-            ${streak > 0 ? `<span class="sv2-hm-streak-pill">🔥 Racha actual: ${streak} días</span>` : ''}
+            ${streak > 0 ? `<span class="sv2-hm-streak-pill">🔥 Racha: ${streak} días</span>` : ''}
           </div>
           <div class="sv2-hm-wrap">
-            <div class="sv2-hm-days">
-              ${hm.dayLabels.map(d=>`<div class="sv2-hm-day-lbl">${d}</div>`).join('')}
-            </div>
+            <div class="sv2-hm-days">${hm.dayLabels.map(d=>`<div class="sv2-hm-day-lbl">${d}</div>`).join('')}</div>
             <div class="sv2-hm-cols-wrap">
               <div class="sv2-hm-month-row" style="display:flex">${hm.monthHtml}</div>
               <div class="sv2-hm-grid">${hm.cellsHtml}</div>
@@ -2060,83 +2284,153 @@ const UIStudent = (() => {
             ${hm.bestStreakLabel ? `<span class="sv2-hm-best">${hm.bestStreakLabel}</span>` : ''}
           </div>
         </div>
-
-        <div class="sv2-insights-card">
-          <div class="sv2-insights-badge">
-            <span>Inteligencia Ariven</span>
-            <div class="sv2-insights-sep"></div>
-            <span>IA</span>
-          </div>
-          <div class="sv2-tl">${insightHtml}</div>
-        </div>
-      </div>
-
-      <div class="sv2-triple">
-        <div class="sv2-card">
-          <div class="sv2-card-title">Progreso Semanal</div>
-          <div class="sv2-card-sub">Últimas ${wkKeys.length} semanas</div>
-          <div class="chart-container" style="height:160px"><div class="chart-skeleton skeleton"></div><canvas id="chartWeekly"></canvas></div>
-        </div>
-        <div class="sv2-card">
-          <div class="sv2-card-title">Tus materias principales</div>
-          <div class="sv2-card-sub">Concentración promedio</div>
-          <div class="sv2-subjects-row">${top3Html || '<p class="muted" style="font-size:13px;text-align:center;padding:20px 0">Registra más sesiones</p>'}</div>
-        </div>
-        <div class="sv2-card">
-          <div class="sv2-card-title">Tendencia Mensual</div>
-          <div class="sv2-card-sub">Sesiones por mes</div>
-          <div class="chart-container" style="height:160px"><div class="chart-skeleton skeleton"></div><canvas id="chartMonthly"></canvas></div>
-        </div>
-      </div>
-
-      <div class="sv2-analysis">
-        <div class="sv2-card">
-          <div class="sv2-card-title">Por franja horaria</div>
-          ${renderBars(buckets, 'bucket')}
-        </div>
-        <div class="sv2-card">
-          <div class="sv2-card-title">Por actividad previa</div>
-          ${renderBars(acts, 'activity')}
-        </div>
-      </div>
-
-      <div class="sv2-bottom">
-        <div class="sv2-gam-card">
-          <div class="sv2-gam-title">Logros y Progreso</div>
-          <div class="sv2-arc-wrap">
-            ${levelSvg}
-            <div class="sv2-arc-text">
-              <div class="sv2-arc-level">Nivel ${level ? level.current.level : 1}</div>
-              <div class="sv2-arc-title">${level ? esc(level.current.title) : 'Principiante'}</div>
-            </div>
-            <div class="sv2-xp-row">${xp.toLocaleString()} / ${level && level.next ? level.next.xpRequired.toLocaleString() : '500'} XP</div>
-            <div class="sv2-xp-bar" style="width:100%;margin-top:8px"><div class="sv2-xp-fill" style="width:${level?level.progress:0}%"></div></div>
-          </div>
-          <div class="sv2-streak-row">
-            <div class="sv2-streak-label">Racha actual</div>
-            <div class="sv2-streak-fire">🔥 ${streak} días seguidos</div>
+        <div class="sv3-act-row">
+          <div class="sv3-act-streak-card">
+            <div class="sv3-act-streak-title">Últimos 7 días</div>
             <div class="sv2-streak-dots">${streakDotsHtml}</div>
           </div>
-          <div class="sv2-records">
-            <div class="sv2-record"><div class="sv2-record-label">Sesión más larga</div><div class="sv2-record-val">${longestLabel}</div></div>
-            <div class="sv2-record"><div class="sv2-record-label">Mejor semana</div><div class="sv2-record-val">${bestWeekSessions} ses.</div></div>
+          <div class="sv3-records-card">
+            <div class="sv3-records-title">Récords</div>
+            <div class="sv3-record-item"><span class="sv3-record-label">Sesión más larga</span><span class="sv3-record-val">${longestLabel}</span></div>
+            <div class="sv3-record-item"><span class="sv3-record-label">Mejor semana</span><span class="sv3-record-val">${bestWeekSessions} sesiones</span></div>
+            <div class="sv3-record-item"><span class="sv3-record-label">Total sesiones</span><span class="sv3-record-val">${sessions.length}</span></div>
           </div>
         </div>
-        <div class="sv2-badges-card">
-          <div class="sv2-badges-title">Logros desbloqueados · ${earnedBadges.size}/${Gamification.BADGES.length}</div>
-          <div class="sv2-badges-grid">${badgesHtml}</div>
+      </div>
+
+      <!-- ===== LOGROS E INSIGNIAS ===== -->
+      <div class="sv3-panel" data-panel="logros">
+        <div class="sv3-ach-kpis">${achKpisHtml}</div>
+
+        ${milestoneHtml}
+
+        <div class="sv3-logros-layout">
+          <div class="sv3-logros-main">
+            <div class="sv3-badge-controls">
+              <input class="sv3-badge-search" id="sv3-badge-search" type="text" placeholder="Buscar insignia…" />
+              <div class="sv3-cat-pills">
+                <button class="sv3-cat-btn sv3-active" data-cat="todas">Todas</button>
+                <button class="sv3-cat-btn" data-cat="estudio">Estudio</button>
+                <button class="sv3-cat-btn" data-cat="constancia">Constancia</button>
+                <button class="sv3-cat-btn" data-cat="concentracion">Concentración</button>
+                <button class="sv3-cat-btn" data-cat="pomodoro">Pomodoro</button>
+                <button class="sv3-cat-btn" data-cat="especiales">Especiales</button>
+              </div>
+              <select class="sv3-sort-sel" id="sv3-sort-sel">
+                <option value="progreso">Ordenar: Progreso</option>
+                <option value="rareza">Ordenar: Rareza</option>
+                <option value="desbloqueadas">Ordenar: Desbloqueadas primero</option>
+              </select>
+            </div>
+            <div class="sv3-badges-grid" id="sv3-badges-grid">${allBadgeCardsHtml}</div>
+          </div>
+
+          <aside class="sv3-logros-sidebar">
+            <div class="sv3-sidebar-card">
+              <div class="sv3-sidebar-title">Próximos Desafíos</div>
+              <div class="sv3-proximos">${proximosHtml || '<p class="sv3-sidebar-empty">¡Has completado todos los desafíos cercanos!</p>'}</div>
+            </div>
+            <div class="sv3-sidebar-card">
+              <div class="sv3-sidebar-title">Certificados</div>
+              <div class="sv3-certs">${certsHtml}</div>
+            </div>
+            <div class="sv3-sidebar-card sv3-pdf-card">
+              <div class="sv3-sidebar-title">Informe de Progreso</div>
+              <p class="sv3-pdf-desc">Genera un informe PDF con todas tus estadísticas y logros.</p>
+              <button class="sv3-pdf-btn" id="sv3-btn-pdf">📄 Descargar Informe PDF</button>
+            </div>
+          </aside>
         </div>
       </div>
     </div>`;
   }
 
   function wireStats() {
-    root().querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', (e) => { e.preventDefault(); App.go(b.dataset.go); }));
+    root().querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', e => { e.preventDefault(); App.go(b.dataset.go); }));
+
     const s = Storage.get();
     const sessions = Sessions.listFor(s.currentUserId);
     if (!sessions.length) return;
 
-    // Weekly progress chart
+    // Tab switching
+    let _chartsInitialized = false;
+    function _activateTab(name) {
+      root().querySelectorAll('.sv3-tab').forEach(t => t.classList.toggle('sv3-active', t.dataset.tab === name));
+      root().querySelectorAll('.sv3-panel').forEach(p => p.classList.toggle('sv3-active', p.dataset.panel === name));
+      if ((name === 'graficos' || name === 'resumen') && !_chartsInitialized) {
+        _chartsInitialized = true;
+        _initCharts(s, sessions);
+      }
+    }
+    root().querySelectorAll('.sv3-tab').forEach(t => t.addEventListener('click', () => _activateTab(t.dataset.tab)));
+    // Init charts immediately for default resumen tab
+    _initCharts(s, sessions);
+    _chartsInitialized = true;
+
+    // Badge filtering and sorting
+    const badgeSearch = root().querySelector('#sv3-badge-search');
+    const catBtns     = root().querySelectorAll('.sv3-cat-btn');
+    const sortSel     = root().querySelector('#sv3-sort-sel');
+    let _activeCat  = 'todas';
+    let _sortMode   = 'progreso';
+
+    function _filterBadges() {
+      const q = (badgeSearch?.value || '').toLowerCase().trim();
+      root().querySelectorAll('.sv3-badge-card').forEach(card => {
+        const name    = (card.querySelector('.sv3-badge-name')?.textContent || '').toLowerCase();
+        const desc    = (card.querySelector('.sv3-badge-desc')?.textContent || '').toLowerCase();
+        const cat     = card.dataset.cat || '';
+        const matchCat= _activeCat === 'todas' || cat === _activeCat;
+        const matchQ  = !q || name.includes(q) || desc.includes(q);
+        card.style.display = (matchCat && matchQ) ? '' : 'none';
+      });
+      // Sort visible cards
+      const grid = root().querySelector('#sv3-badges-grid');
+      if (!grid) return;
+      const cards  = [...grid.querySelectorAll('.sv3-badge-card')].filter(c => c.style.display !== 'none');
+      const hidden = [...grid.querySelectorAll('.sv3-badge-card')].filter(c => c.style.display === 'none');
+      cards.sort((a, b) => {
+        switch (_sortMode) {
+          case 'progreso': return Number(b.dataset.pct) - Number(a.dataset.pct);
+          case 'rareza': {
+            const order = { legendario:0, epico:1, raro:2, comun:3 };
+            return (order[a.dataset.rarity]||3) - (order[b.dataset.rarity]||3);
+          }
+          case 'desbloqueadas': return Number(b.dataset.earned) - Number(a.dataset.earned);
+          default: return 0;
+        }
+      });
+      cards.concat(hidden).forEach(c => grid.appendChild(c));
+    }
+
+    badgeSearch?.addEventListener('input', _filterBadges);
+    catBtns.forEach(btn => btn.addEventListener('click', () => {
+      _activeCat = btn.dataset.cat;
+      catBtns.forEach(b => b.classList.toggle('sv3-active', b.dataset.cat === _activeCat));
+      _filterBadges();
+    }));
+    sortSel?.addEventListener('change', () => { _sortMode = sortSel.value; _filterBadges(); });
+
+    // PDF report + certificates
+    const user  = s.users[s.currentUserId];
+    const certs = _availableCertificates(user, sessions);
+    const school= user.schoolId ? s.schools[user.schoolId] : null;
+
+    root().querySelector('#sv3-btn-pdf')?.addEventListener('click', () => {
+      if (!sessions.length) { UI.flash('Registra al menos una sesión.', 'info'); return; }
+      _studentProgressReport(user, sessions);
+    });
+    root().querySelectorAll('.sv3-cert-dl').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const cert = certs.find(c => c.id === btn.dataset.cert);
+        if (!cert || !cert.eligible) return;
+        Exporter.printCertificate({ studentName: user.name, title: cert.title, subtitle: cert.subtitle, detail: cert.detail, school: school ? school.name : 'Ariven' });
+      });
+    });
+  }
+
+  function _initCharts(s, sessions) {
+    // Weekly chart
     const wkBuckets = {};
     sessions.forEach(se => {
       const d = new Date(se.datetime);
@@ -2149,7 +2443,7 @@ const UIStudent = (() => {
     const wkLabels = wkKeys.map(k => { const d = new Date(k); return d.toLocaleDateString('es-PE',{day:'numeric',month:'short'}); });
     Charts.create('chartWeekly', Charts.barConfig(wkLabels, wkKeys.map(k=>wkBuckets[k]), 'Sesiones', Charts.COLORS.accentLight.replace('0.15','0.8')));
 
-    // Monthly trend chart
+    // Monthly chart
     const moBuckets = {};
     sessions.forEach(se => { const mk = se.datetime.slice(0,7); moBuckets[mk] = (moBuckets[mk]||0)+1; });
     const moKeys   = Object.keys(moBuckets).sort().slice(-6);
@@ -2160,6 +2454,8 @@ const UIStudent = (() => {
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#52525B' }, grid: { color: 'rgba(255,255,255,0.04)' } }, y: { ticks: { color: '#52525B', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true } } }
     });
   }
+
+
   // ---- Pantalla: Recomendaciones ----
   function screenRecommend() {
     const s = Storage.get();
