@@ -11,8 +11,8 @@ const QRScanner = (() => {
 
   // ── Generación ─────────────────────────────────────────────────────────────
 
-  // Genera QR en un <canvas> o <img> dentro de un contenedor (elementId).
-  // Retorna Promise<dataUrl> para que el llamador pueda usar la imagen.
+  // Genera QR dentro de un contenedor (elementId).
+  // Retorna Promise<dataUrl> para compatibilidad con generateQRWithActions().
   function generateQR(code, elementId, opts = {}) {
     const { size = 200, dark = '#000000', light = '#ffffff' } = opts;
     const url = inviteUrl(code);
@@ -25,14 +25,17 @@ const QRScanner = (() => {
     }
 
     el.innerHTML = '';
-    const canvas = document.createElement('canvas');
-    el.appendChild(canvas);
-
-    return QRCode.toCanvas(canvas, url, {
+    new QRCode(el, {
+      text: url,
       width: size,
-      margin: 1,
-      color: { dark, light }
-    }).then(() => canvas.toDataURL('image/png'));
+      height: size,
+      colorDark: dark,
+      colorLight: light,
+      correctLevel: QRCode.CorrectLevel.H
+    });
+
+    const canvas = el.querySelector('canvas');
+    return Promise.resolve(canvas ? canvas.toDataURL('image/png') : null);
   }
 
   // Genera QR y adjunta botones de Descargar / Compartir / Imprimir en el contenedor.
@@ -124,57 +127,60 @@ const QRScanner = (() => {
 
     const url = inviteUrl(code);
     if (typeof QRCode !== 'undefined') {
-      const canvas = document.createElement('canvas');
-      document.getElementById('qr-modal-canvas-wrap').appendChild(canvas);
-      QRCode.toCanvas(canvas, url, { width: 240, margin: 1, color: { dark: '#1a1a1a', light: '#ffffff' } })
-        .then(dataUrl => {
-          // Download
-          const dlBtn = document.createElement('button');
-          dlBtn.className = 'cm-code-btn';
-          dlBtn.textContent = '⬇ Descargar';
-          dlBtn.onclick = () => {
-            const a = document.createElement('a');
-            a.href = canvas.toDataURL('image/png');
-            a.download = `ariven-qr-${(crName || code).replace(/\s+/g, '-').toLowerCase()}.png`;
-            a.click();
-          };
-          // Share
-          const shBtn = document.createElement('button');
-          shBtn.className = 'cm-code-btn';
-          shBtn.textContent = '↗ Compartir';
-          shBtn.onclick = () => {
-            const text = `Únete al aula${crName ? ' "' + crName + '"' : ''} en Ariven: ${url}`;
-            if (navigator.share) navigator.share({ title: 'Ariven — Invitación', text, url }).catch(() => {});
-            else if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => {
-              if (typeof UI !== 'undefined') UI.flash('Enlace copiado.', 'success');
-            });
-          };
-          // Print
-          const prBtn = document.createElement('button');
-          prBtn.className = 'cm-code-btn';
-          prBtn.textContent = '🖨 Imprimir';
-          prBtn.onclick = () => {
-            const dataUrl = canvas.toDataURL('image/png');
-            const win = window.open('', '_blank');
-            if (!win) return;
-            win.document.write(`<!DOCTYPE html><html><head><title>QR Ariven</title>
-              <style>body{font-family:sans-serif;text-align:center;padding:40px;}
-              h2{margin-bottom:4px;}p{color:#555;margin:4px 0;font-size:14px;}
-              img{margin:20px auto;display:block;border:1px solid #eee;border-radius:8px;padding:8px;}</style></head><body>
-              <h2>Ariven — Invitación al aula</h2>
-              ${crName ? '<p>Aula: <strong>' + crName + '</strong></p>' : ''}
-              <p>Código: <strong style="font-family:monospace;letter-spacing:2px;">${code}</strong></p>
-              <img src="${dataUrl}" width="220" height="220" />
-              <p style="font-size:12px;color:#999;margin-top:12px;">Escanea con la cámara del celular para unirte</p>
-              <script>window.onload=()=>window.print();<\/script></body></html>`);
-            win.document.close();
-          };
-          const actionsEl = document.getElementById('qr-modal-actions');
-          if (actionsEl) { actionsEl.appendChild(dlBtn); actionsEl.appendChild(shBtn); actionsEl.appendChild(prBtn); }
-        }).catch(() => {
-          document.getElementById('qr-modal-canvas-wrap').innerHTML =
-            '<div style="color:#999;font-size:12px;padding:20px;">Error al generar QR</div>';
+      const wrap = document.getElementById('qr-modal-canvas-wrap');
+      new QRCode(wrap, {
+        text: url,
+        width: 240,
+        height: 240,
+        colorDark: '#1a1a1a',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H
+      });
+      const canvas = wrap.querySelector('canvas');
+
+      const dlBtn = document.createElement('button');
+      dlBtn.className = 'cm-code-btn';
+      dlBtn.textContent = '⬇ Descargar';
+      dlBtn.onclick = () => {
+        const a = document.createElement('a');
+        a.href = canvas.toDataURL('image/png');
+        a.download = `ariven-qr-${(crName || code).replace(/\s+/g, '-').toLowerCase()}.png`;
+        a.click();
+      };
+
+      const shBtn = document.createElement('button');
+      shBtn.className = 'cm-code-btn';
+      shBtn.textContent = '↗ Compartir';
+      shBtn.onclick = () => {
+        const text = `Únete al aula${crName ? ' "' + crName + '"' : ''} en Ariven: ${url}`;
+        if (navigator.share) navigator.share({ title: 'Ariven — Invitación', text, url }).catch(() => {});
+        else if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => {
+          if (typeof UI !== 'undefined') UI.flash('Enlace copiado.', 'success');
         });
+      };
+
+      const prBtn = document.createElement('button');
+      prBtn.className = 'cm-code-btn';
+      prBtn.textContent = '🖨 Imprimir';
+      prBtn.onclick = () => {
+        const dataUrl = canvas.toDataURL('image/png');
+        const win = window.open('', '_blank');
+        if (!win) return;
+        win.document.write(`<!DOCTYPE html><html><head><title>QR Ariven</title>
+          <style>body{font-family:sans-serif;text-align:center;padding:40px;}
+          h2{margin-bottom:4px;}p{color:#555;margin:4px 0;font-size:14px;}
+          img{margin:20px auto;display:block;border:1px solid #eee;border-radius:8px;padding:8px;}</style></head><body>
+          <h2>Ariven — Invitación al aula</h2>
+          ${crName ? '<p>Aula: <strong>' + crName + '</strong></p>' : ''}
+          <p>Código: <strong style="font-family:monospace;letter-spacing:2px;">${code}</strong></p>
+          <img src="${dataUrl}" width="220" height="220" />
+          <p style="font-size:12px;color:#999;margin-top:12px;">Escanea con la cámara del celular para unirte</p>
+          <script>window.onload=()=>window.print();<\/script></body></html>`);
+        win.document.close();
+      };
+
+      const actionsEl = document.getElementById('qr-modal-actions');
+      if (actionsEl) { actionsEl.appendChild(dlBtn); actionsEl.appendChild(shBtn); actionsEl.appendChild(prBtn); }
     } else {
       document.getElementById('qr-modal-canvas-wrap').innerHTML =
         '<div style="color:#999;font-size:12px;padding:20px;">Librería QR no cargada</div>';
