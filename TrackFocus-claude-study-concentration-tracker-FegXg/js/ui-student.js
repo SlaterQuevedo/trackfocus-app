@@ -607,10 +607,8 @@ const UIStudent = (() => {
             </div>
           </div>
           <div class="field">
-            <label>Actividad previa</label>
-            <select name="previousActivity" required>
-              ${Sessions.PREVIOUS_ACTIVITIES.map(a => `<option value="${a.id}">${esc(a.label)}</option>`).join('')}
-            </select>
+            <label>Actividad previa <span class="muted" style="font-size:11px;font-weight:400;">(selecciona una o más)</span></label>
+            ${_renderActivityPicker(s.currentUserId)}
           </div>
           <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
             <button type="button" class="ghost" data-go="dashboard">Cancelar</button>
@@ -627,21 +625,169 @@ const UIStudent = (() => {
   function wireNewSession() {
     root().querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => App.go(b.dataset.go)));
     _wireSubjectOtro('subjectSelectNS', 'customSubjectWrapNS', 'customSubjectInputNS');
+    const nsForm = document.getElementById('sessionSetupForm');
+    _wireActivityPicker(nsForm, Storage.get().currentUserId);
 
-    document.getElementById('sessionSetupForm').addEventListener('submit', (e) => {
+    nsForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const fd = new FormData(e.target);
-      const subject = _resolveSubject('subjectSelectNS', 'customSubjectInputNS', Storage.get().users[Storage.get().currentUserId]?.id);
+      const userId = Storage.get().currentUserId;
+      const subject = _resolveSubject('subjectSelectNS', 'customSubjectInputNS', Storage.get().users[userId]?.id);
       if (!subject) return;
+      const actPick = _collectActivityPicker(e.target, userId);
       const metadata = {
-        datetime:         new Date(fd.get('datetime')).toISOString(),
-        durationMin:      Number(fd.get('durationMin')),
+        datetime:             new Date(fd.get('datetime')).toISOString(),
+        durationMin:          Number(fd.get('durationMin')),
         subject,
-        grade:            fd.get('grade'),
-        previousActivity: fd.get('previousActivity')
+        grade:                fd.get('grade'),
+        previousActivity:     actPick.previousActivity,
+        previousActivityOther: actPick.previousActivityOther
       };
       _startAiChat(metadata);
     });
+  }
+
+  // ---- Helpers: Activity Picker ----
+
+  function _renderActivityPicker(userId) {
+    const customs = Sessions.getCustomActivities(userId);
+    const all = [...Sessions.PREVIOUS_ACTIVITIES, ...customs];
+    const chips = all.map(a =>
+      '<label class="act-chip"><input type="checkbox" name="previousActivity" value="' + esc(a.id) + '"><span>' + esc(a.label) + '</span></label>'
+    ).join('');
+    const manageBtn = customs.length > 0
+      ? '<button type="button" class="ghost act-manage-btn" style="font-size:12px;padding:4px 10px;margin-top:8px;">Administrar actividades personalizadas</button>'
+      : '';
+    return '<div class="act-grid">'
+      + chips
+      + '<label class="act-chip act-chip--otra"><input type="checkbox" name="previousActivity" value="otra" class="act-otra-check"><span>➕ Otra...</span></label>'
+      + '</div>'
+      + '<div class="act-otra-wrap" style="display:none;margin-top:8px;">'
+      + '<input type="text" class="act-otra-input" placeholder="¿Qué actividad realizaste?"'
+      + ' style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;font-family:inherit;box-sizing:border-box;min-height:44px;" />'
+      + '</div>'
+      + manageBtn;
+  }
+
+  function _wireActivityPicker(formEl, userId) {
+    const grid = formEl.querySelector('.act-grid');
+    if (!grid) return;
+    grid.querySelectorAll('.act-chip input[type=checkbox]').forEach(cb => {
+      cb.addEventListener('change', () => cb.closest('.act-chip').classList.toggle('checked', cb.checked));
+    });
+    const otraCheck = formEl.querySelector('.act-otra-check');
+    const otraWrap = formEl.querySelector('.act-otra-wrap');
+    if (otraCheck && otraWrap) {
+      otraCheck.addEventListener('change', () => {
+        otraWrap.style.display = otraCheck.checked ? '' : 'none';
+        if (!otraCheck.checked) {
+          const inp = formEl.querySelector('.act-otra-input');
+          if (inp) inp.value = '';
+        }
+      });
+    }
+    const manageBtn = formEl.querySelector('.act-manage-btn');
+    if (manageBtn) manageBtn.addEventListener('click', () => _showManageActivitiesModal(userId, formEl));
+  }
+
+  function _collectActivityPicker(formEl, userId) {
+    const checked = [...formEl.querySelectorAll('input[name="previousActivity"]:checked')].map(i => i.value);
+    let previousActivityOther = '';
+    const otraIdx = checked.indexOf('otra');
+    if (otraIdx !== -1) {
+      const otraInput = formEl.querySelector('.act-otra-input');
+      const text = (otraInput?.value || '').trim();
+      if (text) {
+        previousActivityOther = text;
+        const saved = Sessions.saveCustomActivity(userId, text);
+        if (saved) checked[otraIdx] = saved.id;
+        else checked.splice(otraIdx, 1);
+      } else {
+        checked.splice(otraIdx, 1);
+      }
+    }
+    if (checked.length > 0) Sessions.trackActivityUse(userId, checked);
+    return { previousActivity: checked.join(',') || 'descanso', previousActivityOther };
+  }
+
+  function _setActivityPickerValue(formEl, value) {
+    if (!value || !formEl) return;
+    value.split(',').forEach(id => {
+      const cb = formEl.querySelector('input[name="previousActivity"][value="' + id + '"]');
+      if (cb) { cb.checked = true; cb.closest('.act-chip').classList.add('checked'); }
+    });
+  }
+
+  function _showManageActivitiesModal(userId, triggerFormEl) {
+    const overlay = document.createElement('div');
+    overlay.className = 'act-manage-overlay';
+    overlay.innerHTML = _buildManageModalHTML(userId);
+    document.body.appendChild(overlay);
+
+    function refresh() {
+      overlay.querySelector('.act-manage-list').innerHTML = _buildManageListHTML(userId);
+      wireList();
+    }
+    function wireList() {
+      overlay.querySelectorAll('.act-manage-del').forEach(btn => {
+        btn.addEventListener('click', () => {
+          Sessions.deleteCustomActivity(userId, btn.dataset.id);
+          refresh();
+        });
+      });
+      overlay.querySelectorAll('.act-manage-rename').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const li = btn.closest('li');
+          const current = li.querySelector('.act-manage-name').textContent;
+          const newLabel = prompt('Renombrar actividad:', current);
+          if (newLabel && newLabel.trim()) {
+            Sessions.renameCustomActivity(userId, btn.dataset.id, newLabel.trim());
+            refresh();
+          }
+        });
+      });
+    }
+    wireList();
+    overlay.querySelector('.act-manage-close').addEventListener('click', () => document.body.removeChild(overlay));
+    overlay.addEventListener('click', e => { if (e.target === overlay) document.body.removeChild(overlay); });
+  }
+
+  function _buildManageModalHTML(userId) {
+    return '<div class="act-manage-modal card">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">'
+      + '<h3 style="margin:0;">Actividades personalizadas</h3>'
+      + '<button type="button" class="ghost act-manage-close" style="padding:4px 10px;">✕</button>'
+      + '</div>'
+      + '<ul class="act-manage-list" style="list-style:none;padding:0;margin:0;">' + _buildManageListHTML(userId) + '</ul>'
+      + '<p class="muted" style="font-size:12px;margin-top:12px;">Las actividades predeterminadas no pueden eliminarse.</p>'
+      + '</div>';
+  }
+
+  function _activityLabel(previousActivity, previousActivityOther, userId) {
+    if (!previousActivity) return '';
+    const ALL_PRESETS = Sessions.PREVIOUS_ACTIVITIES;
+    const customs = Sessions.getCustomActivities(userId);
+    const allMap = {};
+    [...ALL_PRESETS, ...customs].forEach(a => { allMap[a.id] = a.label; });
+    const labels = previousActivity.split(',').map(id => {
+      if (id === 'otra') return previousActivityOther || 'Otra';
+      return allMap[id] || id;
+    });
+    return labels.join(', ');
+  }
+
+  function _buildManageListHTML(userId) {
+    const list = Sessions.getCustomActivities(userId);
+    if (list.length === 0) return '<li class="muted" style="padding:8px 0;font-size:14px;">No hay actividades personalizadas.</li>';
+    return list.map(a =>
+      '<li style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">'
+      + '<span class="act-manage-name">' + esc(a.label) + '</span>'
+      + '<div style="display:flex;gap:8px;">'
+      + '<button type="button" class="ghost act-manage-rename" data-id="' + esc(a.id) + '" style="font-size:12px;padding:4px 10px;">Renombrar</button>'
+      + '<button type="button" class="danger act-manage-del" data-id="' + esc(a.id) + '" style="font-size:12px;padding:4px 10px;">Eliminar</button>'
+      + '</div>'
+      + '</li>'
+    ).join('');
   }
 
   // ---- Helpers: selector "Otro curso" ----
@@ -1502,7 +1648,7 @@ const UIStudent = (() => {
                 <td>${esc(x.subject)}</td>
                 <td><strong>${x.concentration}</strong>/5</td>
                 <td>${x.durationMin}</td>
-                <td>${esc(x.previousActivity)}${x.previousActivityOther ? ' — '+esc(x.previousActivityOther) : ''}</td>
+                <td>${esc(_activityLabel(x.previousActivity, x.previousActivityOther, user.id))}</td>
                 <td>${_formatComment(x.comment)}</td>
                 <td><button class="danger" data-rm="${x.id}">Eliminar</button></td>
               </tr>`).join('')}
@@ -3168,12 +3314,10 @@ const UIStudent = (() => {
                 <label>Duración (minutos)</label>
                 <input type="number" name="durationMin" min="5" max="240" value="30" required />
               </div>
-              <div class="field">
-                <label>Actividad previa</label>
-                <select name="previousActivity" required>
-                  ${Sessions.PREVIOUS_ACTIVITIES.map(a => `<option value="${a.id}">${esc(a.label)}</option>`).join('')}
-                </select>
-              </div>
+            </div>
+            <div class="field">
+              <label>Actividad previa <span class="muted" style="font-size:11px;font-weight:400;">(selecciona una o más)</span></label>
+              ${_renderActivityPicker(s.currentUserId)}
             </div>
             <div class="row">
               <div class="field" style="flex:1;">
@@ -3250,7 +3394,9 @@ const UIStudent = (() => {
     // del tutor, que ya integra archivos (multimodal) y voz en una sola conversación.
     const setupForm = document.getElementById('sessionSetupForm');
     if (setupForm) {
+      const aiUserId = Storage.get().currentUserId;
       _wireSubjectOtro('subjectSelectAI', 'customSubjectWrapAI', 'customSubjectInputAI');
+      _wireActivityPicker(setupForm, aiUserId);
 
       // Mostrar/ocultar campos extra según el modo de estudio seleccionado
       const modeSelAI     = document.getElementById('studyModeSelectAI');
@@ -3271,7 +3417,7 @@ const UIStudent = (() => {
         if (sel) sel.value = meta.subject;
         setupForm.querySelector('[name="grade"]').value = meta.grade;
         setupForm.querySelector('[name="durationMin"]').value = meta.durationMin;
-        setupForm.querySelector('[name="previousActivity"]').value = meta.previousActivity;
+        _setActivityPickerValue(setupForm, meta.previousActivity);
 
         // Auto-submitear después de un pequeño delay visual
         setTimeout(() => setupForm.dispatchEvent(new Event('submit')), 800);
@@ -3284,15 +3430,17 @@ const UIStudent = (() => {
         const subject = _resolveSubject('subjectSelectAI', 'customSubjectInputAI', userId);
         if (!subject) return;
         const studyMode = fd.get('studyMode') || 'tutor';
+        const actPick = _collectActivityPicker(e.target, userId);
         const metadata = {
-          datetime:         new Date(fd.get('datetime')).toISOString(),
-          durationMin:      Number(fd.get('durationMin')),
+          datetime:              new Date(fd.get('datetime')).toISOString(),
+          durationMin:           Number(fd.get('durationMin')),
           subject,
-          grade:            fd.get('grade'),
-          previousActivity: fd.get('previousActivity'),
+          grade:                 fd.get('grade'),
+          previousActivity:      actPick.previousActivity,
+          previousActivityOther: actPick.previousActivityOther,
           studyMode,
-          examDate:         studyMode === 'exam-prep'      ? (fd.get('examDate') || null)    : null,
-          topicGoal:        studyMode === 'topic-mastery'  ? (fd.get('topicGoal') || null)   : null
+          examDate:              studyMode === 'exam-prep'     ? (fd.get('examDate') || null)  : null,
+          topicGoal:             studyMode === 'topic-mastery' ? (fd.get('topicGoal') || null) : null
         };
         _startAiChat(metadata);
       });

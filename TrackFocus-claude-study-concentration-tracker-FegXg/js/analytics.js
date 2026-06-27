@@ -205,16 +205,18 @@ const Analytics = (() => {
         if (avg > bestActAvg) { bestActAvg = avg; bestAct = act; }
       }
     }
-    const ACTIVITY_LABELS = { comer:'Comer', dormir:'Dormir', ejercicio:'Ejercicio', cafe:'Café', redes:'Redes sociales', videojuegos:'Videojuegos', descanso:'Descanso', otra:'Otra' };
+    const ACTIVITY_LABELS = {
+      redes:'Redes sociales', videojuegos:'Videojuegos', comer:'Comer', dormir:'Dormir / Siesta',
+      cafe:'Café / Bebida energética', youtube:'YouTube / Netflix', 'repaso-previo':'Estudiar otra materia',
+      descanso:'Descanso / Caminata', trabajo:'Trabajo / Quehaceres',
+      ejercicio:'Ejercicio', otra:'Otra'  // IDs legacy para sesiones anteriores
+    };
     if (bestAct && bestActAvg > 3) {
-      tips.push({ type: 'success', text: `✅ Estudiar después de "${ACTIVITY_LABELS[bestAct] || bestAct}" te da mayor concentración (${bestActAvg.toFixed(1)}/5).` });
+      const bestLabel = ACTIVITY_LABELS[bestAct] || bestAct;
+      tips.push({ type: 'success', text: `✅ Estudiar después de "${bestLabel}" te da mayor concentración (${bestActAvg.toFixed(1)}/5).` });
     }
     if (byAct['redes']?.count >= 3 && byAct['redes'].sum / byAct['redes'].count < 3) {
       tips.push({ type: 'error', text: `📱 Las redes sociales antes de estudiar reducen tu concentración. Intenta evitarlas 30 min antes.` });
-    }
-    if (byAct['ejercicio']?.count >= 2) {
-      const avgEj = byAct['ejercicio'].sum / byAct['ejercicio'].count;
-      if (avgEj >= 3.5) tips.push({ type: 'success', text: `🏃 El ejercicio previo mejora tu concentración (${avgEj.toFixed(1)}/5). ¡Sigue moviéndote antes de estudiar!` });
     }
 
     // Materias sin práctica reciente (repaso breve para no perder lo avanzado)
