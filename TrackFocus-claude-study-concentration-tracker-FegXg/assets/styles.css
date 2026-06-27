@@ -3309,6 +3309,12 @@ html[data-theme="light"] .dp-prep-bar-wrap, html[data-theme="light"] .dp-route-b
 .pp-inst-chip-name { font-size: 13px; font-weight: 600; color: var(--text); }
 .pp-inst-chip-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
 .pp-inst-chip-change { font-size: 12px; padding: 4px 10px; flex-shrink: 0; }
+.pp-prog-wrap { position: relative; }
+.pp-prog-chip {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 12px;
+}
 .pp-career-inp {
   padding: 10px; border-radius: var(--radius-sm);
   background: var(--panel); border: 1px solid var(--border);

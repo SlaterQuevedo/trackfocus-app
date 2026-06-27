@@ -2984,7 +2984,16 @@ const UIStudent = (() => {
                 <div class="pp-inst-dropdown" id="pp-inst-dropdown" role="listbox" style="display:none;"></div>
                 <div class="pp-inst-chip" id="pp-inst-chip" style="display:none;"></div>
               </div>
-              <input type="text" id="pp-career-input" class="pp-career-inp"
+              <div class="pp-prog-wrap" id="pp-prog-wrap" style="display:none;">
+                <div class="pp-inst-row">
+                  <span class="pp-inst-icon">🎓</span>
+                  <input type="text" id="pp-prog-search" class="pp-inst-input" autocomplete="off"
+                    spellcheck="false" placeholder="Busca tu carrera o especialidad…" />
+                </div>
+                <div class="pp-inst-dropdown" id="pp-prog-dropdown" role="listbox" style="display:none;"></div>
+                <div class="pp-prog-chip" id="pp-prog-chip" style="display:none;"></div>
+              </div>
+              <input type="text" id="pp-career-input" class="pp-career-inp" style="display:none;"
                 placeholder="¿Qué carrera o especialidad quieres estudiar?"
                 value="${esc(acadProfile.career || '')}" />
               <button class="primary" id="pp-save-meta" style="width:100%;">Guardar mi meta 🎯</button>
@@ -3688,11 +3697,9 @@ const UIStudent = (() => {
         if (!searchInp.value.trim()) _showRecent();
         else _runSearch(searchInp.value);
       });
-      document.addEventListener('click', (e) => {
-        if (!r().querySelector('#pp-inst-wrap')?.contains(e.target)) {
-          dropdown.style.display = 'none';
-        }
-      }, { capture: false });
+      searchInp.addEventListener('blur', () => {
+        setTimeout(() => { if (dropdown) dropdown.style.display = 'none'; }, 200);
+      });
     }
 
     function _esc_attr(s) { return String(s || '').replace(/"/g, '&quot;'); }
@@ -3768,7 +3775,107 @@ const UIStudent = (() => {
         _selInst = null;
         chip.style.display = 'none';
         searchInp.value = '';
+        // Hide programs widget too
+        const pw = r().querySelector('#pp-prog-wrap');
+        if (pw) pw.style.display = 'none';
+        const pc = r().querySelector('#pp-prog-chip');
+        if (pc) pc.style.display = 'none';
+        const ci = r().querySelector('#pp-career-input');
+        if (ci) { ci.value = ''; ci.style.display = 'none'; }
         searchInp.focus();
+      });
+      _renderPrograms(inst);
+    }
+
+    function _renderPrograms(inst) {
+      const progWrap    = r().querySelector('#pp-prog-wrap');
+      const progSearch  = r().querySelector('#pp-prog-search');
+      const progDrop    = r().querySelector('#pp-prog-dropdown');
+      const progChip    = r().querySelector('#pp-prog-chip');
+      const careerInp   = r().querySelector('#pp-career-input');
+      if (!progWrap || !progSearch || !progDrop || !progChip || !careerInp) return;
+
+      const programs = (inst && inst.programs) ? inst.programs : [];
+
+      progWrap.style.display = 'block';
+
+      // If career already set from saved profile, pre-select
+      const existingCareer = careerInp.value.trim();
+      if (existingCareer) {
+        _selectProg(existingCareer);
+        return;
+      }
+
+      let _progTimer = null;
+
+      function _filterProgs(q) {
+        const qq = q.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim();
+        let filtered = qq
+          ? programs.filter(p => p.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').includes(qq))
+          : programs;
+
+        if (!filtered.length && !qq) { progDrop.style.display = 'none'; return; }
+
+        let html = filtered.slice(0, 12).map(p =>
+          `<div class="pp-inst-item pp-prog-item" data-prog="${_esc_attr(p)}" role="option">
+            <span class="pp-inst-item-icon">📖</span>
+            <div class="pp-inst-item-body">
+              <div class="pp-inst-item-name">${esc(p)}</div>
+            </div>
+          </div>`
+        ).join('');
+        // Always show "Otra carrera" at bottom
+        html += `<div class="pp-inst-item pp-prog-item pp-prog-custom" data-prog="__custom__" role="option">
+          <span class="pp-inst-item-icon">✏️</span>
+          <div class="pp-inst-item-body">
+            <div class="pp-inst-item-name">Otra carrera / Personalizada</div>
+            <div class="pp-inst-item-meta">Escribe manualmente tu carrera</div>
+          </div>
+        </div>`;
+
+        progDrop.innerHTML = html;
+        progDrop.querySelectorAll('.pp-prog-item').forEach(el => {
+          el.addEventListener('click', () => _selectProg(el.dataset.prog));
+        });
+        progDrop.style.display = 'block';
+      }
+
+      function _selectProg(val) {
+        progDrop.style.display = 'none';
+        if (val === '__custom__') {
+          // Show the text input for custom entry
+          careerInp.style.display = 'block';
+          careerInp.value = '';
+          careerInp.placeholder = 'Escribe tu carrera o especialidad';
+          careerInp.focus();
+          progChip.style.display = 'none';
+          progSearch.value = '';
+          return;
+        }
+        careerInp.value = val;
+        progSearch.value = '';
+        progChip.innerHTML = `
+          <span style="font-size:15px;">📖</span>
+          <span style="flex:1;font-size:13px;font-weight:600;color:var(--text);">${esc(val)}</span>
+          <button class="pp-inst-chip-change ghost" type="button">Cambiar</button>
+        `;
+        progChip.style.display = 'flex';
+        progChip.querySelector('.pp-inst-chip-change')?.addEventListener('click', () => {
+          careerInp.value = '';
+          careerInp.style.display = 'none';
+          progChip.style.display = 'none';
+          progSearch.value = '';
+          progSearch.focus();
+        });
+      }
+
+      progSearch.addEventListener('input', () => {
+        clearTimeout(_progTimer);
+        _progTimer = setTimeout(() => _filterProgs(progSearch.value), 100);
+      });
+      progSearch.addEventListener('focus', () => _filterProgs(progSearch.value));
+      progSearch.addEventListener('blur', () => {
+        setTimeout(() => { if (progDrop) progDrop.style.display = 'none'; }, 200);
       });
     }
 
