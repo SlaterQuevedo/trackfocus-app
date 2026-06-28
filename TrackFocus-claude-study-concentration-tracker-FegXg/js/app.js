@@ -607,6 +607,12 @@ const App = (() => {
     }
     console.log('[App] Current user:', { role: user.role });
 
+    // Snapshot de ruta a restaurar: solo en recarga normal con SW activo.
+    // null cuando el SW fue bypassed (Ctrl+Shift+R) → flujo normal sin restaurar.
+    const _swLastRoute = navigator.serviceWorker?.controller
+      ? sessionStorage.getItem('arv_last_route')
+      : null;
+
     // Auto-login: sesión restaurada automáticamente → saludo de bienvenida
     if (_isAutoLogin) {
       const firstName = (user.name || '').split(' ')[0] || 'de nuevo';
@@ -625,7 +631,8 @@ const App = (() => {
         });
       }
       if (!user.parentalConsent) return go('consent');
-      return go('dashboard');
+      if (_swLastRoute === 'classroom') { const _c = sessionStorage.getItem('arv_last_classroom'); if (_c) App._classroomId = _c; }
+      return go(_swLastRoute || 'dashboard');
     }
 
     // Director pendiente de validar código de colegio
@@ -633,20 +640,6 @@ const App = (() => {
     // Director ya validado → ir directo al panel docente
     if (intent === 'admin' && user.role === 'teacher') return go('teacher-dashboard');
     if (intent === 'teacher' && user.role === 'student' && !user.schoolId) return go('teacher-promote');
-
-    // Restaurar última ruta en recarga normal.
-    // navigator.serviceWorker.controller es null cuando el SW fue bypassed (Ctrl+Shift+R),
-    // por lo que esta restauración solo ocurre en recargas normales donde el SW está activo.
-    if (navigator.serviceWorker?.controller) {
-      const _lastRoute = sessionStorage.getItem('arv_last_route');
-      if (_lastRoute) {
-        if (_lastRoute === 'classroom') {
-          const _cid = sessionStorage.getItem('arv_last_classroom');
-          if (_cid) App._classroomId = _cid;
-        }
-        return go(_lastRoute);
-      }
-    }
 
     // 4. Rutado por rol
     if (user.role === 'super_admin') return go('admin-dashboard');
@@ -670,7 +663,8 @@ const App = (() => {
       }
     }
 
-    return go('dashboard');
+    if (_swLastRoute === 'classroom') { const _c = sessionStorage.getItem('arv_last_classroom'); if (_c) App._classroomId = _c; }
+    return go(_swLastRoute || 'dashboard');
   }
 
   // ---- Pantalla de bienvenida rediseñada (institucional) ----

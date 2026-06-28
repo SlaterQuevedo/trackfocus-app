@@ -5,7 +5,7 @@
 //
 // IMPORTANTE: Actualizar CACHE_VERSION en cada deploy para invalidar caché.
 
-const CACHE_VERSION = 'ariven-v33';
+const CACHE_VERSION = 'ariven-v34';
 
 // Extensiones estáticas que se almacenan en caché
 const STATIC_EXTS = /\.(js|css|svg|png|ico|webmanifest|woff|woff2|ttf)(\?.*)?$/;
