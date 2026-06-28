@@ -234,9 +234,8 @@ const UITeacher = (() => {
       </div>
     </div>
 
-    <div class="td-main-grid" style="grid-template-columns:1.1fr 1fr;">
+    <div class="td-main-grid">
 
-      <div class="td-right-col">
       <div class="td-card td-estado">
         <div class="td-sh"><div class="td-sh-l"><span class="td-sh-ico">🏫</span><span class="td-sh-ttl">Estado del Aula</span></div>${primaryCr ? `<span class="td-sh-badge">${esc(primaryCr.name)}</span>` : ''}</div>
         <div class="td-estado-body">
@@ -291,32 +290,33 @@ const UITeacher = (() => {
           </div>`;
         }).join('')}
       </div>
-      </div>
 
-      <div class="td-right-col">
-        <div class="td-card td-top-stud">
-          <div class="td-sh"><div class="td-sh-l"><span class="td-sh-ico">🏆</span><span class="td-sh-ttl">Top Estudiantes</span></div><span class="td-sh-meta">esta semana</span></div>
-          ${top5.length === 0 ? `<div class="td-empty"><span>Sin sesiones esta semana</span></div>` :
-          top5.map((e, i) => `<div class="td-top-row${i === 0 ? ' td-top-1st' : ''}">
-            <span class="td-top-rnk">${['🥇','🥈','🥉'][i] || '#'+(i+1)}</span>
-            <div class="td-top-av" style="background:${_clr(e.name)};">${esc(_ini(e.name))}</div>
-            <div class="td-top-inf"><div class="td-top-nm">${esc(e.name)}</div><div class="td-top-mt">${e.xp} XP · 🔥 ${e.streak}d</div></div>
-            <div class="td-top-conc">${e.avgConcentration}/5</div>
-          </div>`).join('')}
-        </div>
-        <div class="td-card td-activity">
-          <div class="td-sh"><div class="td-sh-l"><span class="td-sh-ico">⚡</span><span class="td-sh-ttl">Actividad Reciente</span></div></div>
-          ${recentSessions.length === 0 ? `<div class="td-empty"><span>Sin actividad reciente</span></div>` :
-          recentSessions.map(se => {
-            const st = students.find(x => x.id === se.email);
-            const nm = st ? st.name.split(' ')[0] : 'Alumno';
-            return `<div class="td-tl-item">
-              <div class="td-tl-dot" style="background:${_clr(nm)};"></div>
-              <div class="td-tl-body"><span class="td-tl-nm">${esc(nm)}</span><span class="td-tl-txt"> · ${esc(se.subject)}</span><div class="td-tl-mt">${_ago(se.datetime)} · ${se.concentration}/5 ⭐</div></div>
-            </div>`;
-          }).join('')}
-        </div>
+      <div class="td-card td-top-stud">
+        <div class="td-sh"><div class="td-sh-l"><span class="td-sh-ico">🏆</span><span class="td-sh-ttl">Top Estudiantes</span></div><span class="td-sh-meta">esta semana</span></div>
+        ${top5.length === 0 ? `<div class="td-empty"><span>Sin sesiones esta semana</span></div>` :
+        top5.map((e, i) => `<div class="td-top-row${i === 0 ? ' td-top-1st' : ''}">
+          <span class="td-top-rnk">${['🥇','🥈','🥉'][i] || '#'+(i+1)}</span>
+          <div class="td-top-av" style="background:${_clr(e.name)};">${esc(_ini(e.name))}</div>
+          <div class="td-top-inf"><div class="td-top-nm">${esc(e.name)}</div><div class="td-top-mt">${e.xp} XP · 🔥 ${e.streak}d</div></div>
+          <div class="td-top-conc">${e.avgConcentration}/5</div>
+        </div>`).join('')}
       </div>
+    </div>
+
+    <div class="td-card td-activity" style="margin-bottom:14px;">
+      <div class="td-sh" style="margin-bottom:10px;"><div class="td-sh-l"><span class="td-sh-ico">⚡</span><span class="td-sh-ttl">Actividad Reciente</span></div></div>
+      ${recentSessions.length === 0
+        ? `<div class="td-empty"><span>Sin actividad reciente</span></div>`
+        : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px 20px;">
+            ${recentSessions.map(se => {
+              const st = students.find(x => x.id === se.email);
+              const nm = st ? st.name.split(' ')[0] : 'Alumno';
+              return `<div class="td-tl-item" style="margin:0;">
+                <div class="td-tl-dot" style="background:${_clr(nm)};"></div>
+                <div class="td-tl-body"><span class="td-tl-nm">${esc(nm)}</span><span class="td-tl-txt"> · ${esc(se.subject)}</span><div class="td-tl-mt">${_ago(se.datetime)} · ${se.concentration}/5 ⭐</div></div>
+              </div>`;
+            }).join('')}
+          </div>`}
     </div>
 
     <div class="td-sec-grid">
