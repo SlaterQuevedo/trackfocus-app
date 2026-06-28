@@ -270,6 +270,10 @@ const GradeUI = (() => {
     const school = student ? s.schools[student.schoolId] : null;
     if (!school) return '<p class="muted">Sin datos de colegio.</p>';
 
+    const isDemo = !!(typeof window !== 'undefined' && window.__TF_DEMO);
+    const currentUser = s.users[currentUserId];
+    const viewerRole = currentUser ? currentUser.role : 'student';
+    const viewerIsStudent = viewerRole === 'student';
     const isDirector = Grades.isDirector(currentUserId);
     const assignedSubjects = Grades.getAssignedSubjects(currentUserId, classroomId);
 
@@ -281,7 +285,7 @@ const GradeUI = (() => {
     ).join('');
 
     const activeBimester = bimesters.find(b => b.id === activeBimesterId);
-    const bimOpen = activeBimester?.status === 'open';
+    const bimOpen = !!(activeBimester && activeBimester.status === 'open');
 
     // Si no hay bimestres
     if (!bimesters.length) {
@@ -294,7 +298,7 @@ const GradeUI = (() => {
     // Calificaciones del estudiante en el bimestre activo
     const allGrades = Grades.listForStudent(studentId, activeBimesterId);
 
-    // Todas las materias con calificaciones o asignadas al docente
+    // Materias a mostrar: asignadas al docente viewer + materias con notas existentes
     const subjectsToShow = new Set([
       ...assignedSubjects,
       ...allGrades.map(g => g.subject)
@@ -303,7 +307,9 @@ const GradeUI = (() => {
     const subjectSections = [...subjectsToShow].sort().map(sub => {
       const subGrades = allGrades.filter(g => g.subject === sub);
       const isAssigned = assignedSubjects.includes(sub);
-      const canEdit = isAssigned && bimOpen;
+      // Estudiantes: solo lectura. Demo: editar siempre. Normal: solo bimestre abierto y asignado.
+      const canEdit = !viewerIsStudent && (isDemo ? isAssigned : (isAssigned && bimOpen));
+      const showLocked = !bimOpen && activeBimester && !isDemo;
 
       return `
         <div class="grade-subject-section" data-subject="${_esc(sub)}">
@@ -311,7 +317,8 @@ const GradeUI = (() => {
             <h4 style="margin:0;">${_esc(sub)}</h4>
             ${canEdit ? `<button class="ghost grade-add-btn" data-subject="${_esc(sub)}"
               style="font-size:12px;padding:4px 12px;">+ Agregar</button>` : ''}
-            ${!bimOpen && activeBimester ? '<span class="grade-locked-badge">🔒 Cerrado</span>' : ''}
+            ${showLocked ? '<span class="grade-locked-badge">🔒 Cerrado</span>' : ''}
+            ${isDemo && !bimOpen && activeBimester ? '<span class="grade-locked-badge" style="background:rgba(99,102,241,.2);color:#a5b4fc;">✏️ Demo</span>' : ''}
           </div>
           <div class="grade-form-area" id="gradeFormArea-${_esc(sub)}" style="display:none;"></div>
           ${renderGradeTable(subGrades, { editable: canEdit })}

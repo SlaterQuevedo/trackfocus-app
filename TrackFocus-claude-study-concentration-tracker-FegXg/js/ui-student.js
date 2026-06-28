@@ -443,6 +443,14 @@ const UIStudent = (() => {
             </div>
             <div class="ds-hub-arrow">→</div>
           </div>
+          <div class="ds-hub-card" data-go="student-grades">
+            <div class="ds-hub-icon">📝</div>
+            <div class="ds-hub-body">
+              <div class="ds-hub-title">Mis Notas</div>
+              <div class="ds-hub-sub">Calificaciones por bimestre</div>
+            </div>
+            <div class="ds-hub-arrow">→</div>
+          </div>
         </div>
         <div id="ds-alerts-placeholder"></div>
       </div>`;
@@ -5245,6 +5253,81 @@ const UIStudent = (() => {
     });
   }
 
+  // ── Mis Calificaciones (solo lectura para el estudiante) ─────────────────────
+
+  function screenStudentGrades() {
+    const s = Storage.get();
+    const studentId = s.currentUserId;
+    const student = s.users[studentId];
+    const school = student?.schoolId ? s.schools[student.schoolId] : null;
+    const bimesters = school ? Grades.listBimesters(school.id) : [];
+    const activeBim = school ? (Grades.getCurrentBimester(school.id) || bimesters[0] || null) : null;
+
+    if (!school) {
+      return `
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+          <button class="ghost" data-go="dashboard">← Volver</button>
+          <h1 style="margin:0;">📝 Mis Calificaciones</h1>
+        </div>
+        <div style="text-align:center;padding:48px 24px;color:rgba(255,255,255,.45);font-size:14px;">
+          Aún no estás asignado a un colegio.<br>Únete a un aula para ver tus calificaciones.
+        </div>`;
+    }
+
+    if (!bimesters.length) {
+      return `
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+          <button class="ghost" data-go="dashboard">← Volver</button>
+          <h1 style="margin:0;">📝 Mis Calificaciones</h1>
+        </div>
+        <div style="text-align:center;padding:48px 24px;color:rgba(255,255,255,.45);font-size:14px;">
+          Tu docente aún no ha configurado los bimestres.
+        </div>`;
+    }
+
+    return `
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+        <button class="ghost" data-go="dashboard">← Volver</button>
+        <h1 style="margin:0;">📝 Mis Calificaciones</h1>
+      </div>
+      <div id="studentGradesPanel">
+        ${GradeUI.renderGradesTab({
+          studentId,
+          classroomId: student.classroomId || '',
+          currentUserId: studentId,
+          bimesters,
+          activeBimesterId: activeBim ? activeBim.id : null
+        })}
+      </div>`;
+  }
+
+  function wireStudentGrades() {
+    root().querySelectorAll('[data-go]').forEach(btn =>
+      btn.addEventListener('click', () => App.go(btn.dataset.go)));
+
+    const panel = document.getElementById('studentGradesPanel');
+    if (!panel) return;
+
+    function _rewireBimesterSelect() {
+      panel.querySelector('#gradesBimesterSelect')?.addEventListener('change', function() {
+        const s = Storage.get();
+        const studentId = s.currentUserId;
+        const student = s.users[studentId];
+        const school = student?.schoolId ? s.schools[student.schoolId] : null;
+        const bimesters = school ? Grades.listBimesters(school.id) : [];
+        panel.innerHTML = GradeUI.renderGradesTab({
+          studentId,
+          classroomId: student?.classroomId || '',
+          currentUserId: studentId,
+          bimesters,
+          activeBimesterId: this.value
+        });
+        _rewireBimesterSelect();
+      });
+    }
+    _rewireBimesterSelect();
+  }
+
   const _wrap = (typeof window !== 'undefined' && window.__tfSafeScreens) || ((n, s) => s);
   return {
     screens: _wrap('student', {
@@ -5261,7 +5344,8 @@ const UIStudent = (() => {
       pomodoro:     { render: screenPomodoro,     wire: wirePomodoro },
       profile:      { render: screenProfile,      wire: wireProfile },
       'ai-study':   { render: screenAIStudy,      wire: wireAIStudy },
-      'join-classroom': { render: screenJoinClassroom, wire: wireJoinClassroom }
+      'join-classroom': { render: screenJoinClassroom, wire: wireJoinClassroom },
+      'student-grades': { render: screenStudentGrades, wire: wireStudentGrades }
     })
   };
 })();

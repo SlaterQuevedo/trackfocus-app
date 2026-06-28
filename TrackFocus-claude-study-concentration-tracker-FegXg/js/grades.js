@@ -62,6 +62,9 @@ const Grades = (() => {
     ]
   };
 
+  // Demo mode: omite validaciones para permitir exploración libre en la feria
+  function _isDemo() { return !!(typeof window !== 'undefined' && window.__TF_DEMO); }
+
   // ── Helpers escala ────────────────────────────────────────────────────────────
 
   function scaleToScore(scale) {
@@ -107,9 +110,9 @@ const Grades = (() => {
     const year = academicYear || new Date().getFullYear().toString();
     const s = Storage.get();
 
-    // Solo director puede asignar
+    // Solo director puede asignar (o modo demo)
     const actor = s.currentUserId;
-    if (!isDirector(actor)) {
+    if (!_isDemo() && !isDirector(actor)) {
       console.warn('[Grades] assignSubject: solo el director puede asignar materias');
       return null;
     }
@@ -139,7 +142,7 @@ const Grades = (() => {
   function removeAssignment(id) {
     const s = Storage.get();
     const actor = s.currentUserId;
-    if (!isDirector(actor)) {
+    if (!_isDemo() && !isDirector(actor)) {
       console.warn('[Grades] removeAssignment: solo el director puede quitar asignaciones');
       return;
     }
@@ -165,7 +168,7 @@ const Grades = (() => {
   function createBimester(schoolId, number, academicYear) {
     const s = Storage.get();
     const actor = s.currentUserId;
-    if (!isDirector(actor)) {
+    if (!_isDemo() && !isDirector(actor)) {
       console.warn('[Grades] createBimester: solo el director puede crear bimestres');
       return null;
     }
@@ -201,7 +204,7 @@ const Grades = (() => {
   function closeBimester(bimesterId, userId) {
     const s = Storage.get();
     const actor = userId || s.currentUserId;
-    if (!isDirector(actor)) {
+    if (!_isDemo() && !isDirector(actor)) {
       console.warn('[Grades] closeBimester: solo el director puede cerrar bimestres');
       return false;
     }
@@ -245,11 +248,11 @@ const Grades = (() => {
     const actor = s.currentUserId;
     const { studentId, classroomId, bimesterId, subject } = gradeData;
 
-    if (!isAssigned(actor, classroomId, subject)) {
+    if (!_isDemo() && !isAssigned(actor, classroomId, subject)) {
       UI?.flash?.('No tienes permiso para calificar esta materia.', 'error');
       return null;
     }
-    if (!isBimesterOpen(bimesterId)) {
+    if (!_isDemo() && !isBimesterOpen(bimesterId)) {
       UI?.flash?.('El bimestre está cerrado. No se pueden agregar calificaciones.', 'error');
       return null;
     }
@@ -293,11 +296,11 @@ const Grades = (() => {
     const grade = s.grades?.[gradeId];
     if (!grade) return false;
 
-    if (grade.teacherId !== actor && !isDirector(actor)) {
+    if (!_isDemo() && grade.teacherId !== actor && !isDirector(actor)) {
       UI?.flash?.('Solo el docente responsable puede editar esta calificación.', 'error');
       return false;
     }
-    if (!isBimesterOpen(grade.bimesterId)) {
+    if (!_isDemo() && !isBimesterOpen(grade.bimesterId)) {
       UI?.flash?.('El bimestre está cerrado. No se pueden editar calificaciones.', 'error');
       return false;
     }
@@ -323,11 +326,11 @@ const Grades = (() => {
     const grade = s.grades?.[gradeId];
     if (!grade) return false;
 
-    if (grade.teacherId !== actor && !isDirector(actor)) {
+    if (!_isDemo() && grade.teacherId !== actor && !isDirector(actor)) {
       UI?.flash?.('Solo el docente responsable puede eliminar esta calificación.', 'error');
       return false;
     }
-    if (!isBimesterOpen(grade.bimesterId)) {
+    if (!_isDemo() && !isBimesterOpen(grade.bimesterId)) {
       UI?.flash?.('El bimestre está cerrado. No se pueden eliminar calificaciones.', 'error');
       return false;
     }
