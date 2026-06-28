@@ -1795,6 +1795,27 @@ const UITeacher = (() => {
 
   // ── Vista de calificaciones por bimestre ─────────────────────────────────────
 
+  // Calcula el promedio de scores de un estudiante en el bimestre
+  function _studentAvg(studentId, subjects, gradeMap) {
+    var scores = [];
+    subjects.forEach(function(sub) {
+      var gs = gradeMap[studentId]?.[sub] || [];
+      if (gs.length) {
+        var latest = gs.slice().sort(function(a, b) { return b.evaluationDate > a.evaluationDate ? 1 : -1; })[0];
+        scores.push(latest.score);
+      }
+    });
+    if (!scores.length) return 0;
+    return scores.reduce(function(a, b) { return a + b; }, 0) / scores.length;
+  }
+
+  function _scaleFromAvg(avg) {
+    if (avg >= 18) return 'AD';
+    if (avg >= 14) return 'A';
+    if (avg >= 11) return 'B';
+    return 'C';
+  }
+
   function screenBimesterGrades() {
     const s = Storage.get();
     const bimesterId = App._bimesterId;
@@ -1810,13 +1831,13 @@ const UITeacher = (() => {
     const user = s.users[currentUserId];
     const isDir = Grades.isDirector(currentUserId);
     const isDemo = !!(typeof window !== 'undefined' && window.__TF_DEMO);
+    const sortMode = App._bimGradeSort || 'name';
 
     // Aulas de esta escuela
     const schoolClassrooms = Object.values(s.classrooms)
       .filter(c => c.schoolId === bimester.schoolId)
       .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
-    // Aula seleccionada
     const selectedCrId = App._bimGradeClassroomId ||
       (user?.classroomIds?.[0] || user?.classroomId || schoolClassrooms[0]?.id);
     const classroom = s.classrooms[selectedCrId] || schoolClassrooms[0];
@@ -1839,16 +1860,9 @@ const UITeacher = (() => {
         ).join('')}
       </select>` : `<span style="font-size:14px;font-weight:600;">${classroom.name}</span>`;
 
-    // Materias con asignación en el aula
     const assignments = Grades.getAssignmentsForClassroom(classroom.id);
     const subjects = [...new Set(assignments.map(a => a.subject))].sort();
 
-    // Estudiantes del aula
-    const students = (classroom.studentIds || [])
-      .map(id => s.users[id]).filter(Boolean)
-      .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-
-    // Mapa: studentId → subject → grades[]
     const allGrades = Grades.listForClassroom(classroom.id, bimesterId);
     const gradeMap = {};
     allGrades.forEach(g => {
@@ -1857,55 +1871,120 @@ const UITeacher = (() => {
       gradeMap[g.studentId][g.subject].push(g);
     });
 
+    // Base de estudiantes con su promedio
+    let students = (classroom.studentIds || [])
+      .map(id => s.users[id]).filter(Boolean)
+      .map(st => ({ ...st, _avg: _studentAvg(st.id, subjects, gradeMap) }));
+
+    // Ordenar según modo
+    if (sortMode === 'avg-desc' || sortMode === 'tercio' || sortMode === 'decimo') {
+      students = students.slice().sort((a, b) => b._avg - a._avg);
+    } else if (sortMode === 'avg-asc') {
+      students = students.slice().sort((a, b) => a._avg - b._avg);
+    } else {
+      students = students.slice().sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    }
+
+    // Etiquetas de grupo para tercio/décimo
+    function _groupLabel(idx, total) {
+      if (sortMode === 'decimo') {
+        const top = Math.max(1, Math.ceil(total * 0.1));
+        if (idx === 0) return `<tr><td colspan="99" style="padding:6px 14px;font-size:11px;font-weight:700;color:#a5b4fc;background:rgba(99,102,241,.1);text-transform:uppercase;letter-spacing:.05em;">Décimo Superior (top 10%)</td></tr>`;
+        if (idx === top) return `<tr><td colspan="99" style="padding:6px 14px;font-size:11px;font-weight:600;color:rgba(255,255,255,.4);background:rgba(255,255,255,.03);text-transform:uppercase;letter-spacing:.05em;">Resto del aula</td></tr>`;
+      }
+      if (sortMode === 'tercio') {
+        const t = Math.ceil(total / 3);
+        if (idx === 0) return `<tr><td colspan="99" style="padding:6px 14px;font-size:11px;font-weight:700;color:#4ade80;background:rgba(34,197,94,.08);text-transform:uppercase;letter-spacing:.05em;">Tercio Superior</td></tr>`;
+        if (idx === t) return `<tr><td colspan="99" style="padding:6px 14px;font-size:11px;font-weight:700;color:#fbbf24;background:rgba(245,158,11,.08);text-transform:uppercase;letter-spacing:.05em;">Tercio Medio</td></tr>`;
+        if (idx === t * 2) return `<tr><td colspan="99" style="padding:6px 14px;font-size:11px;font-weight:700;color:#f87171;background:rgba(239,68,68,.08);text-transform:uppercase;letter-spacing:.05em;">Tercio Inferior</td></tr>`;
+      }
+      return '';
+    }
+
     let tableHtml = '';
     if (!students.length) {
       tableHtml = '<p class="muted" style="padding:20px;">Sin estudiantes en esta aula.</p>';
     } else if (!subjects.length) {
       tableHtml = '<p class="muted" style="padding:20px;">Sin materias asignadas. Configura las asignaciones en "Gestionar Aula".</p>';
     } else {
-      const shortName = s => s.length > 14 ? s.slice(0, 12) + '…' : s;
+      const shortName = n => n.length > 14 ? n.slice(0, 12) + '…' : n;
+      const stickyBg = 'rgba(22,22,38,.98)';
       const thead = `<tr>
-        <th style="min-width:130px;position:sticky;left:0;background:rgba(30,30,46,.95);">Estudiante</th>
+        <th style="min-width:140px;position:sticky;left:0;z-index:2;background:${stickyBg};">Estudiante</th>
         ${subjects.map(sub => `<th style="font-size:11px;min-width:72px;text-align:center;">${shortName(sub)}</th>`).join('')}
-        <th style="font-size:11px;min-width:60px;text-align:center;">Total</th>
+        <th style="font-size:11px;min-width:72px;text-align:center;">Promedio</th>
+        <th style="font-size:11px;min-width:48px;text-align:center;">#</th>
       </tr>`;
 
-      const tbody = students.map(st => {
+      const tbody = students.map((st, idx) => {
+        const groupRow = _groupLabel(idx, students.length);
         const cells = subjects.map(sub => {
           const grades = (gradeMap[st.id]?.[sub] || [])
             .sort((a, b) => b.evaluationDate > a.evaluationDate ? 1 : -1);
           if (!grades.length) return `<td style="text-align:center;color:rgba(255,255,255,.2);">—</td>`;
-          const latest = grades[0];
-          return `<td style="text-align:center;">${GradeUI.renderScaleBadge(latest.scale)}</td>`;
+          return `<td style="text-align:center;">${GradeUI.renderScaleBadge(grades[0].scale)}</td>`;
         }).join('');
         const total = subjects.reduce((n, sub) => n + (gradeMap[st.id]?.[sub]?.length || 0), 0);
-        return `<tr>
-          <td style="position:sticky;left:0;background:rgba(30,30,46,.95);">
-            <a class="bim-student-link" data-student-id="${st.id}"
-              style="cursor:pointer;font-weight:500;color:var(--text,#f0f0f0);text-decoration:none;font-size:13px;">
-              ${st.name}
-            </a>
+        const avgDisplay = st._avg > 0
+          ? `<span style="font-weight:700;">${st._avg.toFixed(1)}</span>
+             <span style="font-size:10px;margin-left:3px;">${GradeUI.renderScaleBadge(_scaleFromAvg(st._avg))}</span>`
+          : '<span style="color:rgba(255,255,255,.2);">—</span>';
+        const rankBadge = (sortMode === 'avg-desc' || sortMode === 'tercio' || sortMode === 'decimo')
+          ? `<span style="font-size:10px;color:rgba(255,255,255,.3);margin-right:4px;">#${idx+1}</span>` : '';
+        return `${groupRow}<tr>
+          <td style="position:sticky;left:0;z-index:1;background:${stickyBg};">
+            ${rankBadge}<a class="bim-student-link" data-student-id="${st.id}"
+              style="cursor:pointer;font-weight:500;color:var(--text,#f0f0f0);font-size:13px;">${st.name}</a>
           </td>
           ${cells}
-          <td style="text-align:center;font-size:12px;color:rgba(255,255,255,.45);">${total}</td>
+          <td style="text-align:center;">${avgDisplay}</td>
+          <td style="text-align:center;font-size:12px;color:rgba(255,255,255,.4);">${total}</td>
         </tr>`;
       }).join('');
 
-      tableHtml = `<div class="grade-table-wrap"><table class="grade-table">
+      tableHtml = `<div class="grade-table-wrap" id="bimGradeTable"><table class="grade-table">
         <thead>${thead}</thead><tbody>${tbody}</tbody>
       </table></div>`;
     }
 
+    const sortOpts = [
+      ['name',     'Nombre A–Z'],
+      ['avg-desc', 'Promedio ↓ (mayor a menor)'],
+      ['avg-asc',  'Promedio ↑ (menor a mayor)'],
+      ['tercio',   'Por tercio (superior / medio / inferior)'],
+      ['decimo',   'Décimo superior (top 10%)'],
+    ].map(([v, l]) =>
+      `<option value="${v}" ${sortMode === v ? 'selected' : ''}>${l}</option>`
+    ).join('');
+
     return `
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
         ${backBtn}
         <h1 style="margin:0;font-size:20px;">${bimester.name}</h1>
         ${statusBadge}
         ${crSelector}
       </div>
+
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+        <label style="font-size:12px;font-weight:600;color:rgba(255,255,255,.5);">Distribución:</label>
+        <select id="bimGradeSortSel"
+          style="font-size:13px;padding:5px 10px;background:rgba(255,255,255,.07);
+                 border:1px solid rgba(255,255,255,.14);color:var(--text,#f0f0f0);border-radius:8px;">
+          ${sortOpts}
+        </select>
+        <div style="margin-left:auto;display:flex;gap:6px;">
+          <button class="ghost" id="bgExportCSV"
+            style="font-size:12px;padding:5px 12px;" title="Exportar CSV">CSV</button>
+          <button class="ghost" id="bgExportXLS"
+            style="font-size:12px;padding:5px 12px;" title="Exportar Excel">Excel</button>
+          <button class="ghost" id="bgExportPDF"
+            style="font-size:12px;padding:5px 12px;" title="Imprimir / PDF">PDF</button>
+        </div>
+      </div>
+
       <div class="card" style="padding:0;overflow:hidden;">${tableHtml}</div>
       <p class="muted" style="margin-top:10px;font-size:12px;">
-        Haz clic en un estudiante para ver sus calificaciones detalladas.
+        Haz clic en el nombre de un estudiante para ver sus calificaciones detalladas.
         ${!isOpen && !isDemo ? ' · Bimestre cerrado — solo lectura.' : ''}
       </p>`;
   }
@@ -1919,12 +1998,102 @@ const UITeacher = (() => {
       App.go('bimester-grades');
     });
 
+    document.getElementById('bimGradeSortSel')?.addEventListener('change', function() {
+      App._bimGradeSort = this.value;
+      App.go('bimester-grades');
+    });
+
+    // Exportar CSV
+    document.getElementById('bgExportCSV')?.addEventListener('click', function() {
+      _exportBimesterCSV(false);
+    });
+
+    // Exportar Excel (.xls)
+    document.getElementById('bgExportXLS')?.addEventListener('click', function() {
+      _exportBimesterCSV(true);
+    });
+
+    // Exportar PDF (print)
+    document.getElementById('bgExportPDF')?.addEventListener('click', function() {
+      window.print();
+    });
+
     root().querySelectorAll('.bim-student-link').forEach(a => {
       a.addEventListener('click', () => {
-        App._detailStudentId = a.dataset.studentId;
+        App._studentDetailId = a.dataset.studentId;
         App.go('student-detail');
       });
     });
+  }
+
+  function _exportBimesterCSV(asExcel) {
+    const s = Storage.get();
+    const bimester = (s.bimesters || {})[App._bimesterId];
+    if (!bimester) return;
+    const user = s.users[s.currentUserId];
+    const crId = App._bimGradeClassroomId ||
+      (user?.classroomIds?.[0] || user?.classroomId);
+    const classroom = s.classrooms[crId] || Object.values(s.classrooms)
+      .find(c => c.schoolId === bimester.schoolId);
+    if (!classroom) return;
+
+    const subjects = [...new Set(
+      Grades.getAssignmentsForClassroom(classroom.id).map(a => a.subject)
+    )].sort();
+    const allGrades = Grades.listForClassroom(classroom.id, bimester.id);
+    const gradeMap = {};
+    allGrades.forEach(g => {
+      if (!gradeMap[g.studentId]) gradeMap[g.studentId] = {};
+      if (!gradeMap[g.studentId][g.subject]) gradeMap[g.studentId][g.subject] = [];
+      gradeMap[g.studentId][g.subject].push(g);
+    });
+
+    const students = (classroom.studentIds || []).map(id => s.users[id]).filter(Boolean)
+      .map(st => ({ ...st, _avg: _studentAvg(st.id, subjects, gradeMap) }))
+      .sort((a, b) => b._avg - a._avg);
+
+    const header = ['N°', 'Estudiante', ...subjects, 'Promedio', 'Escala', 'Total notas'];
+    const rows = students.map((st, i) => {
+      const subCols = subjects.map(sub => {
+        const gs = (gradeMap[st.id]?.[sub] || [])
+          .sort((a, b) => b.evaluationDate > a.evaluationDate ? 1 : -1);
+        return gs.length ? gs[0].scale + ' (' + gs[0].score + ')' : '—';
+      });
+      const total = subjects.reduce((n, sub) => n + (gradeMap[st.id]?.[sub]?.length || 0), 0);
+      return [i + 1, st.name, ...subCols,
+        st._avg > 0 ? st._avg.toFixed(2) : '—',
+        st._avg > 0 ? _scaleFromAvg(st._avg) : '—',
+        total];
+    });
+
+    const title = [bimester.name + ' — ' + classroom.name + ' — ' + new Date().toLocaleDateString('es-PE')];
+    const allRows = [title, [], header, ...rows];
+
+    if (asExcel) {
+      // HTML table → Excel interpreta correctamente
+      const thCells = header.map(h => `<th>${h}</th>`).join('');
+      const trRows  = rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
+      const html = `<html><head><meta charset="utf-8"/></head><body>
+        <h2>${title[0]}</h2>
+        <table border="1"><thead><tr>${thCells}</tr></thead><tbody>${trRows}</tbody></table>
+        </body></html>`;
+      const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+      _downloadBlob(blob, bimester.name.replace(/\s/g, '_') + '_' + classroom.name.replace(/\s/g, '_') + '.xls');
+    } else {
+      const csv = allRows.map(row =>
+        row.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')
+      ).join('\r\n');
+      const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+      _downloadBlob(blob, bimester.name.replace(/\s/g, '_') + '_' + classroom.name.replace(/\s/g, '_') + '.csv');
+    }
+  }
+
+  function _downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
   }
 
   const _wrap = (typeof window !== 'undefined' && window.__tfSafeScreens) || ((n, s) => s);
