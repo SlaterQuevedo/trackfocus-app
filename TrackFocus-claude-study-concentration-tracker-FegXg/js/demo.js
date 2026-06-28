@@ -140,6 +140,76 @@ const Demo = (() => {
       }
     });
 
+    // ── Calificaciones demo ────────────────────────────────────────────────────
+    const YEAR  = String(today.getFullYear());
+    const BIM1  = 'demo-bim-1';
+    const BIM2  = 'demo-bim-2';
+
+    // Bimestre I: cerrado hace ~60 días
+    state.bimesters[BIM1] = {
+      id: BIM1, schoolId: SCHOOL, academicYear: YEAR, number: 1,
+      name: 'I Bimestre', startDate: null, endDate: null,
+      status: 'closed',
+      closedAt: new Date(today.getTime() - 60 * 86400000).toISOString(),
+      closedBy: TEACHER,
+      createdAt: new Date(today.getTime() - 90 * 86400000).toISOString()
+    };
+    // Bimestre II: abierto (en curso)
+    state.bimesters[BIM2] = {
+      id: BIM2, schoolId: SCHOOL, academicYear: YEAR, number: 2,
+      name: 'II Bimestre', startDate: null, endDate: null,
+      status: 'open', closedAt: null, closedBy: null,
+      createdAt: new Date(today.getTime() - 58 * 86400000).toISOString()
+    };
+
+    // Asignaciones: la docente demo cubre todas las materias del aula
+    SUBJECTS.forEach(function(sub) {
+      const aId = 'demo-asgn-' + sub.toLowerCase().replace(/[^a-z]/g, '');
+      state.subjectAssignments[aId] = {
+        id: aId, teacherId: TEACHER, classroomId: CR, schoolId: SCHOOL,
+        subject: sub, academicYear: YEAR, createdAt: today.toISOString()
+      };
+    });
+
+    // Calificaciones: 2 evaluaciones por materia × 2 bimestres × 6 estudiantes
+    const EVAL_NAMES = ['Prueba escrita', 'Trabajo grupal'];
+    STUDENTS.forEach(function(st, si) {
+      [[BIM1, 70, 90], [BIM2, 1, 30]].forEach(function(bimDef) {
+        var bimId = bimDef[0], daysMin = bimDef[1], daysMax = bimDef[2];
+        SUBJECTS.forEach(function(sub, subIdx) {
+          var comps = (typeof Grades !== 'undefined' && Grades.COMPETENCIES[sub]) || ['Competencia general'];
+          for (var e = 0; e < 2; e++) {
+            // Scores variados pero realistas: dist. normal aproximada entre 8-20
+            var base = range(10, 19) + (si < 3 ? 1 : 0); // top 3 estudiantes ligeramente mejores
+            var score = Math.max(0, Math.min(20, base));
+            var scale = (typeof Grades !== 'undefined') ? Grades.scoreToScale(score) : (score >= 18 ? 'AD' : score >= 14 ? 'A' : score >= 11 ? 'B' : 'C');
+            var evalDate = new Date(today);
+            evalDate.setDate(today.getDate() - range(daysMin, daysMax));
+            var gId = 'demo-g-' + si + '-' + bimId.slice(-1) + '-' + subIdx + '-' + e;
+            var obs = '';
+            if (scale === 'AD') obs = 'Excelente dominio de la competencia.';
+            else if (scale === 'C') obs = 'Requiere refuerzo y seguimiento.';
+            state.grades[gId] = {
+              id: gId,
+              studentId: st.id,
+              teacherId: TEACHER,
+              classroomId: CR,
+              bimesterId: bimId,
+              subject: sub,
+              competency: comps[e % comps.length],
+              evaluationName: EVAL_NAMES[e] + ' ' + (bimId === BIM1 ? 'I' : 'II'),
+              evaluationDate: evalDate.toISOString().slice(0, 10),
+              scale: scale,
+              score: score,
+              observations: obs,
+              createdAt: evalDate.toISOString(),
+              updatedAt: evalDate.toISOString()
+            };
+          }
+        });
+      });
+    });
+
     return state;
   }
 
