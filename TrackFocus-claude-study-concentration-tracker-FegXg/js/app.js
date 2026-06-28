@@ -132,6 +132,17 @@ const App = (() => {
     if (typeof Tracky !== 'undefined') _ric(() => Tracky.checkContext(_current, Roles.current()));
     window.scrollTo({ top: 0, behavior: 'instant' });
     performance.measure?.('go:' + route, 'go:' + route + ':start');
+
+    // Persistir ruta para restaurar en recarga normal (no en hard refresh)
+    const _RESTORABLE = new Set(['dashboard','history','leaderboard','stats','profile','ai-study','teacher-dashboard','admin-dashboard','classroom']);
+    if (_RESTORABLE.has(route)) {
+      sessionStorage.setItem('arv_last_route', route);
+      if (route === 'classroom' && App._classroomId) {
+        sessionStorage.setItem('arv_last_classroom', App._classroomId);
+      } else {
+        sessionStorage.removeItem('arv_last_classroom');
+      }
+    }
   }
 
   function updateChrome() {
@@ -622,6 +633,20 @@ const App = (() => {
     // Director ya validado → ir directo al panel docente
     if (intent === 'admin' && user.role === 'teacher') return go('teacher-dashboard');
     if (intent === 'teacher' && user.role === 'student' && !user.schoolId) return go('teacher-promote');
+
+    // Restaurar última ruta en recarga normal.
+    // navigator.serviceWorker.controller es null cuando el SW fue bypassed (Ctrl+Shift+R),
+    // por lo que esta restauración solo ocurre en recargas normales donde el SW está activo.
+    if (navigator.serviceWorker?.controller) {
+      const _lastRoute = sessionStorage.getItem('arv_last_route');
+      if (_lastRoute) {
+        if (_lastRoute === 'classroom') {
+          const _cid = sessionStorage.getItem('arv_last_classroom');
+          if (_cid) App._classroomId = _cid;
+        }
+        return go(_lastRoute);
+      }
+    }
 
     // 4. Rutado por rol
     if (user.role === 'super_admin') return go('admin-dashboard');
