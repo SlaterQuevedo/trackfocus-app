@@ -12,13 +12,46 @@ const Demo = (() => {
   const SCHOOL = 'demo-school';
   const CR = 'demo-cr';
 
+  // 32 estudiantes con perfiles académicos diferenciados (AD / A / B / C)
+  // scoreRange: [min, max] para generación de calificaciones en el bimestre
   const STUDENTS = [
-    { id: 'demo.lucia@trackfocus.demo',     name: 'Lucía Ramírez',   xp: 1240, level: 8, streak: 12, badges: ['primera_sesion','racha_3','racha_7','maestro_enfoque','madrugador'], studentCode: 'ARV-STU-DEMO0001' },
-    { id: 'demo.mateo@trackfocus.demo',     name: 'Mateo Flores',    xp: 980,  level: 7, streak: 5,  badges: ['primera_sesion','racha_3','multimaterias'],                         studentCode: 'ARV-STU-DEMO0002' },
-    { id: 'demo.sofia@trackfocus.demo',     name: 'Sofía Castro',    xp: 1520, level: 9, streak: 21, badges: ['primera_sesion','racha_3','racha_7','racha_30','maratonista'],      studentCode: 'ARV-STU-DEMO0003' },
-    { id: 'demo.diego@trackfocus.demo',     name: 'Diego Huamán',    xp: 460,  level: 4, streak: 3,  badges: ['primera_sesion','racha_3'],                                        studentCode: 'ARV-STU-DEMO0004' },
-    { id: 'demo.valentina@trackfocus.demo', name: 'Valentina Ríos',  xp: 760,  level: 6, streak: 7,  badges: ['primera_sesion','racha_3','racha_7','noctambulo'],                 studentCode: 'ARV-STU-DEMO0005' },
-    { id: 'demo.joaquin@trackfocus.demo',   name: 'Joaquín Mendoza', xp: 300,  level: 3, streak: 1,  badges: ['primera_sesion'],                                                  studentCode: 'ARV-STU-DEMO0006' }
+    // ── Logro Destacado AD (18-20) ─────────────────────────────────────────
+    { id: 'demo.lucia@trackfocus.demo',       name: 'Lucía Ramírez',      xp: 1240, level: 8,  streak: 12, badges: ['primera_sesion','racha_3','racha_7','maestro_enfoque','madrugador'],  studentCode: 'ARV-STU-DEMO0001', scoreRange: [17,20] },
+    { id: 'demo.sofia@trackfocus.demo',       name: 'Sofía Castro',       xp: 1520, level: 9,  streak: 21, badges: ['primera_sesion','racha_3','racha_7','racha_30','maratonista'],        studentCode: 'ARV-STU-DEMO0003', scoreRange: [18,20] },
+    { id: 'demo.camila@trackfocus.demo',      name: 'Camila Torres',      xp: 1380, level: 9,  streak: 18, badges: ['primera_sesion','racha_3','racha_7','maestro_enfoque'],               studentCode: 'ARV-STU-DEMO0007', scoreRange: [17,20] },
+    { id: 'demo.andrea@trackfocus.demo',      name: 'Andrea Paredes',     xp: 1190, level: 8,  streak: 15, badges: ['primera_sesion','racha_3','racha_7','multimaterias','madrugador'],    studentCode: 'ARV-STU-DEMO0008', scoreRange: [17,19] },
+    { id: 'demo.valcruz@trackfocus.demo',     name: 'Valentina Cruz',     xp: 1060, level: 7,  streak: 14, badges: ['primera_sesion','racha_3','racha_7','noctambulo'],                   studentCode: 'ARV-STU-DEMO0009', scoreRange: [17,20] },
+    // ── Logro Previsto A (14-17) ───────────────────────────────────────────
+    { id: 'demo.mateo@trackfocus.demo',       name: 'Mateo Flores',       xp: 980,  level: 7,  streak: 5,  badges: ['primera_sesion','racha_3','multimaterias'],                          studentCode: 'ARV-STU-DEMO0002', scoreRange: [14,17] },
+    { id: 'demo.valentina@trackfocus.demo',   name: 'Valentina Ríos',     xp: 760,  level: 6,  streak: 7,  badges: ['primera_sesion','racha_3','racha_7','noctambulo'],                   studentCode: 'ARV-STU-DEMO0005', scoreRange: [14,17] },
+    { id: 'demo.sebastian@trackfocus.demo',   name: 'Sebastián Rojas',    xp: 870,  level: 6,  streak: 8,  badges: ['primera_sesion','racha_3','racha_7'],                               studentCode: 'ARV-STU-DEMO0010', scoreRange: [14,16] },
+    { id: 'demo.mariana@trackfocus.demo',     name: 'Mariana López',      xp: 820,  level: 6,  streak: 6,  badges: ['primera_sesion','racha_3','multimaterias'],                          studentCode: 'ARV-STU-DEMO0011', scoreRange: [14,17] },
+    { id: 'demo.carlos@trackfocus.demo',      name: 'Carlos Mendoza',     xp: 790,  level: 6,  streak: 4,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0012', scoreRange: [14,16] },
+    { id: 'demo.gabriela@trackfocus.demo',    name: 'Gabriela Soto',      xp: 940,  level: 7,  streak: 9,  badges: ['primera_sesion','racha_3','racha_7','madrugador'],                   studentCode: 'ARV-STU-DEMO0013', scoreRange: [15,17] },
+    { id: 'demo.eduardo@trackfocus.demo',     name: 'Eduardo Rivera',     xp: 710,  level: 5,  streak: 5,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0014', scoreRange: [14,17] },
+    { id: 'demo.paula@trackfocus.demo',       name: 'Paula Villanueva',   xp: 850,  level: 6,  streak: 7,  badges: ['primera_sesion','racha_3','racha_7'],                               studentCode: 'ARV-STU-DEMO0015', scoreRange: [14,16] },
+    { id: 'demo.rodrigo@trackfocus.demo',     name: 'Rodrigo Díaz',       xp: 680,  level: 5,  streak: 4,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0016', scoreRange: [14,17] },
+    { id: 'demo.isabella@trackfocus.demo',    name: 'Isabella Vargas',    xp: 910,  level: 7,  streak: 10, badges: ['primera_sesion','racha_3','racha_7','multimaterias'],                studentCode: 'ARV-STU-DEMO0017', scoreRange: [15,17] },
+    { id: 'demo.fernando@trackfocus.demo',    name: 'Fernando Quispe',    xp: 730,  level: 5,  streak: 6,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0018', scoreRange: [14,16] },
+    { id: 'demo.alejandra@trackfocus.demo',   name: 'Alejandra Ramos',    xp: 800,  level: 6,  streak: 5,  badges: ['primera_sesion','racha_3','racha_7'],                               studentCode: 'ARV-STU-DEMO0019', scoreRange: [14,17] },
+    { id: 'demo.natalia@trackfocus.demo',     name: 'Natalia Cárdenas',   xp: 860,  level: 6,  streak: 8,  badges: ['primera_sesion','racha_3','madrugador'],                             studentCode: 'ARV-STU-DEMO0020', scoreRange: [15,17] },
+    // ── En Proceso B (11-13) ──────────────────────────────────────────────
+    { id: 'demo.diego@trackfocus.demo',       name: 'Diego Huamán',       xp: 460,  level: 4,  streak: 3,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0004', scoreRange: [11,14] },
+    { id: 'demo.miguelangel@trackfocus.demo', name: 'Miguel Ángel Castro', xp: 410, level: 4,  streak: 2,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0021', scoreRange: [11,13] },
+    { id: 'demo.kevin@trackfocus.demo',       name: 'Kevin Huanca',       xp: 380,  level: 3,  streak: 2,  badges: ['primera_sesion'],                                                    studentCode: 'ARV-STU-DEMO0022', scoreRange: [11,13] },
+    { id: 'demo.daniela@trackfocus.demo',     name: 'Daniela Morales',    xp: 490,  level: 4,  streak: 3,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0023', scoreRange: [11,13] },
+    { id: 'demo.christian@trackfocus.demo',   name: 'Christian Paucar',   xp: 350,  level: 3,  streak: 1,  badges: ['primera_sesion'],                                                    studentCode: 'ARV-STU-DEMO0024', scoreRange: [10,13] },
+    { id: 'demo.rocio@trackfocus.demo',       name: 'Rocío Mamani',       xp: 430,  level: 4,  streak: 3,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0025', scoreRange: [11,13] },
+    { id: 'demo.marco@trackfocus.demo',       name: 'Marco Gutierrez',    xp: 400,  level: 4,  streak: 2,  badges: ['primera_sesion'],                                                    studentCode: 'ARV-STU-DEMO0026', scoreRange: [11,13] },
+    { id: 'demo.melissa@trackfocus.demo',     name: 'Melissa Condori',    xp: 470,  level: 4,  streak: 4,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0027', scoreRange: [12,14] },
+    { id: 'demo.jhon@trackfocus.demo',        name: 'Jhon Ccallo',        xp: 320,  level: 3,  streak: 2,  badges: ['primera_sesion'],                                                    studentCode: 'ARV-STU-DEMO0028', scoreRange: [11,13] },
+    { id: 'demo.milagros@trackfocus.demo',    name: 'Milagros Quispe',    xp: 510,  level: 4,  streak: 3,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0029', scoreRange: [12,14] },
+    // ── En Inicio C (7-11) ────────────────────────────────────────────────
+    { id: 'demo.joaquin@trackfocus.demo',     name: 'Joaquín Mendoza',    xp: 300,  level: 3,  streak: 1,  badges: ['primera_sesion'],                                                    studentCode: 'ARV-STU-DEMO0006', scoreRange: [7,12]  },
+    { id: 'demo.angel@trackfocus.demo',       name: 'Ángel Huaylla',      xp: 210,  level: 2,  streak: 1,  badges: ['primera_sesion'],                                                    studentCode: 'ARV-STU-DEMO0030', scoreRange: [7,11]  },
+    { id: 'demo.luis@trackfocus.demo',        name: 'Luis Ccorimanya',    xp: 180,  level: 2,  streak: 0,  badges: ['primera_sesion'],                                                    studentCode: 'ARV-STU-DEMO0031', scoreRange: [7,10]  },
+    { id: 'demo.rafael@trackfocus.demo',      name: 'Rafael Ticona',      xp: 240,  level: 2,  streak: 1,  badges: ['primera_sesion'],                                                    studentCode: 'ARV-STU-DEMO0032', scoreRange: [8,11]  },
+    { id: 'demo.xiomara@trackfocus.demo',     name: 'Xiomara Apaza',      xp: 270,  level: 3,  streak: 2,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0033', scoreRange: [8,12]  },
   ];
 
   // PRNG simple y determinista (demo reproducible).
@@ -86,8 +119,14 @@ const Demo = (() => {
         const d = new Date(today);
         d.setDate(today.getDate() - daysAgo);
         d.setHours(range(7, 22), range(0, 59), 0, 0);
-        // Concentración tiende a subir con el tiempo (efecto del piloto).
-        const baseConc = daysAgo > 28 ? range(2, 3) : daysAgo > 14 ? range(2, 4) : range(3, 5);
+        // Concentración según perfil académico + tendencia temporal (efecto Ariven).
+        const _sr = st.scoreRange || [10, 16];
+        const _concMin = _sr[0] >= 17 ? 3 : _sr[0] >= 14 ? 2 : _sr[0] >= 11 ? 2 : 1;
+        const _concMax = _sr[0] >= 17 ? 5 : _sr[0] >= 14 ? 4 : _sr[0] >= 11 ? 3 : 3;
+        const baseConc = daysAgo > 28
+          ? range(_concMin, Math.min(_concMax, _concMin + 1))
+          : daysAgo > 14 ? range(_concMin, _concMax)
+          : range(Math.min(_concMin + 1, _concMax), _concMax);
 
         // V2 (Fase 13): la mayoría de sesiones son de Estudio IA y registran
         // métricas (Índice de Aprendizaje + DECO) en el comment para poblar las
@@ -171,19 +210,7 @@ const Demo = (() => {
       };
     });
 
-    // Calificaciones demo: perfiles académicos diferenciados por estudiante
-    // para mostrar variedad AD/A/B/C en la feria científica.
-    // si=0 Lucía: excelente (AD/A), si=1 Mateo: bueno (A/B),
-    // si=2 Sofía: muy bueno (AD), si=3 Diego: en proceso (B/C),
-    // si=4 Valentina: bueno (A), si=5 Joaquín: en inicio (C/B)
-    var SCORE_PROFILES = [
-      [17, 20], // Lucía — AD/A
-      [14, 17], // Mateo — A
-      [18, 20], // Sofía — AD
-      [9,  13], // Diego — B/C
-      [14, 17], // Valentina — A
-      [7,  12]  // Joaquín — C/B
-    ];
+    // Calificaciones demo: cada estudiante usa su scoreRange del perfil STUDENTS.
     var EVAL_NAMES = [
       ['Prueba escrita', 'Trabajo grupal', 'Exposición oral', 'Práctica de laboratorio'],
       ['Evaluación formativa', 'Proyecto integrador', 'Prueba de salida', 'Rúbrica de desempeño']
@@ -199,7 +226,7 @@ const Demo = (() => {
     }
 
     STUDENTS.forEach(function(st, si) {
-      var profile = SCORE_PROFILES[si] || [10, 16];
+      var profile = st.scoreRange || [10, 16];
       [[BIM1, 70, 90], [BIM2, 1, 30]].forEach(function(bimDef) {
         var bimId = bimDef[0], daysMin = bimDef[1], daysMax = bimDef[2];
         var evalSet = EVAL_NAMES[bimId === BIM1 ? 0 : 1];
