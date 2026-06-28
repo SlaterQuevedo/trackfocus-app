@@ -65,3 +65,31 @@ export function applyCors(req, res) {
 
   return false; // continuar con el handler normal
 }
+
+// ── Rate limiting ─────────────────────────────────────────────────────────────
+// In-memory, por IP. Serverless: cada instancia tiene su propio mapa;
+// suficiente para limitar abuso por usuario en la misma instancia.
+const _rlMap = new Map(); // ip → { count, resetAt }
+
+/**
+ * Retorna true si la petición supera el límite (y ya respondió con 429).
+ * Usar: if (checkRateLimit(req, res, { maxRequests: 10, windowMs: 60_000 })) return;
+ */
+export function checkRateLimit(req, res, { maxRequests = 20, windowMs = 60_000 } = {}) {
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
+  const now = Date.now();
+  const entry = _rlMap.get(ip);
+
+  if (!entry || now >= entry.resetAt) {
+    _rlMap.set(ip, { count: 1, resetAt: now + windowMs });
+    return false;
+  }
+
+  entry.count++;
+  if (entry.count > maxRequests) {
+    res.status(429).json({ error: 'Demasiadas solicitudes. Intenta más tarde.' });
+    return true;
+  }
+
+  return false;
+}
