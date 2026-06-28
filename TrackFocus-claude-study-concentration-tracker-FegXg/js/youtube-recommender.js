@@ -2,7 +2,7 @@
 // Detecta burbujas IA terminadas y sugiere videos de YouTube relevantes.
 // Se autoregistra en window.YoutubeRecommender.
 
-const YoutubeRecommender = (() => {
+window.YoutubeRecommender = (() => {
 
   // ── Estado del módulo ─────────────────────────────────────────────────────────
   const _shownVideoIds    = new Set();    // deduplicación en sesión
@@ -326,7 +326,7 @@ const YoutubeRecommender = (() => {
 
 // Auto-arranque
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => YoutubeRecommender.init());
+  document.addEventListener('DOMContentLoaded', () => window.YoutubeRecommender.init());
 } else {
-  YoutubeRecommender.init();
+  window.YoutubeRecommender.init();
 }
