@@ -28,8 +28,6 @@ const App = (() => {
     'leaderboard':        ['student'],
     'profile':            ['student'],
     'ai-study':           ['student'],
-    'diagnosis':          ['student'],
-    'study-plan':         ['student'],
 
     // Docente
     'teacher-dashboard':  ['teacher'],
