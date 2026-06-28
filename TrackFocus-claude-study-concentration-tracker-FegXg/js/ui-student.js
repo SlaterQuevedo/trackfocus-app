@@ -510,17 +510,38 @@ const UIStudent = (() => {
           + alerts.slice(0, 2).map(function(a) { return '<div class="ds-alert-item">⚡ ' + esc(a.msg) + '</div>'; }).join('')
           + '</div>';
       }
-      // Ruta personal
+      // Ruta personal — usar LearningEngine para insights enriquecidos
       var dpPlaceholder = root().querySelector('#dpv-mentor-placeholder');
       if (dpPlaceholder) {
-        var successAlert = alerts.find(function(a) { return a.type === 'success'; });
-        var infoAlert    = alerts.find(function(a) { return a.type === 'info'; });
-        var tip = successAlert ? successAlert.msg : (infoAlert ? infoAlert.msg : '');
-        if (tip) {
+        var _leInsights = [];
+        if (typeof LearningEngine !== 'undefined') {
+          var _leSessions = (typeof Sessions !== 'undefined') ? Sessions.listFor(uid) : [];
+          var _leDiag = LearningEngine.getDiagnosis(uid);
+          var _leGam  = (typeof Storage !== 'undefined') ? (Storage.get().users[uid]?.gamification || {}) : {};
+          _leInsights  = LearningEngine.getSmartInsights(_leSessions, _leDiag, _leGam);
+        }
+        if (!_leInsights.length) {
+          var successAlert = alerts.find(function(a) { return a.type === 'success'; });
+          var infoAlert    = alerts.find(function(a) { return a.type === 'info'; });
+          var tip = successAlert ? successAlert.msg : (infoAlert ? infoAlert.msg : '');
+          if (tip) _leInsights = [{ icon: '✦', text: tip }];
+        }
+        if (_leInsights.length) {
+          var insightRows = _leInsights.map(function(ins) {
+            return '<div class="dpv-mentor-insight"><span class="dpv-mentor-ins-icon">' + esc(ins.icon || '✦') + '</span><span>' + esc(ins.text) + '</span></div>';
+          }).join('');
           dpPlaceholder.innerHTML = '<div class="dpv-mentor-card">'
-            + '<div class="dpv-mentor-header"><span class="dpv-mentor-badge">✦ Ariven Intelligence</span></div>'
-            + '<div class="dpv-mentor-text">' + esc(tip) + '</div>'
+            + '<div class="dpv-mentor-header">'
+            + '<span class="dpv-mentor-badge">✦ Ariven Intelligence</span>'
+            + '<button class="ghost dpv-mentor-plan-btn" style="font-size:11px;padding:2px 8px;" onclick="App.go(\'study-plan\')">Ver plan →</button>'
+            + '</div>'
+            + '<div class="dpv-mentor-insights">' + insightRows + '</div>'
             + '</div>';
+        }
+        // Recordatorio inteligente (browser notifications)
+        if (typeof LearningEngine !== 'undefined') {
+          var _user2 = (typeof Storage !== 'undefined') ? Storage.get().users[uid] : null;
+          LearningEngine.checkAndShowReminder(uid, _user2?.name || '');
         }
       }
     });
@@ -2459,8 +2480,32 @@ const UIStudent = (() => {
   // ---- Pantalla: Recomendaciones ----
   function screenRecommend() {
     const s = Storage.get();
-    const sessions = Sessions.listFor(s.currentUserId);
+    const uid = s.currentUserId;
+    const sessions = Sessions.listFor(uid);
     const allTips = Analytics.buildRecommendations(sessions);
+
+    // Prioridades de la semana (LearningEngine)
+    let prioritiesHtml = '';
+    if (typeof LearningEngine !== 'undefined' && sessions.length >= 2) {
+      const prios = LearningEngine.getWeekPriorities(sessions);
+      const urgencyIcon = { high: '🔴', medium: '🟡', low: '🟢' };
+      if (prios.length) {
+        prioritiesHtml = `
+          <div class="card" style="margin-bottom:18px;">
+            <h3 style="margin:0 0 4px;">🎯 Prioridades esta semana</h3>
+            <p class="muted" style="margin:0 0 12px;font-size:13px;">Materias ordenadas por urgencia de práctica.</p>
+            ${prios.slice(0, 5).map(p => `
+              <div class="le-prio-row">
+                <span class="le-prio-urg">${urgencyIcon[p.urgency]}</span>
+                <span class="le-prio-name">${esc(p.name)}</span>
+                <span class="le-prio-detail muted">${p.daysSince < 999 ? p.daysSince + ' días sin estudiar' : 'nueva'} · conc. ${p.avgConc}/5</span>
+              </div>`).join('')}
+            <div style="margin-top:12px;">
+              <button class="ghost" style="font-size:13px;" data-go="study-plan">Ver plan de estudio semanal →</button>
+            </div>
+          </div>`;
+      }
+    }
 
     // Recomendaciones de la última sesión IA (Fase 10), si existen (sessionStorage).
     let lastRecHtml = '';
@@ -2479,10 +2524,19 @@ const UIStudent = (() => {
     return `
       <h1>¿Qué deberías cambiar para aprender mejor?</h1>
       <p class="muted">Basado en tus ${sessions.length} sesión${sessions.length === 1 ? '' : 'es'} registrada${sessions.length === 1 ? '' : 's'}.</p>
+      ${prioritiesHtml}
       ${lastRecHtml}
       <div style="margin-top:14px;">
         ${allTips.map(t => `<div class="alert ${t.type}">${esc(t.text || t.msg || '')}</div>`).join('')}
-      </div>`;
+      </div>
+      ${sessions.length > 0 ? `<div style="margin-top:18px;">
+        <button class="primary" data-go="study-plan">📅 Ver mi plan de estudio adaptativo</button>
+      </div>` : ''}`;
+  }
+
+  function _wireRecommend() {
+    root().querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => App.go(b.dataset.go)));
+  }
   }
 
   // ---- Pantalla: Logros ----
@@ -3202,6 +3256,8 @@ const UIStudent = (() => {
     const acadProfile = JSON.parse(localStorage.getItem('arv-academic-profile-v3') || '{}');
     const schedule = JSON.parse(localStorage.getItem('arv-weekly-schedule') || '{}');
     const prefs = JSON.parse(localStorage.getItem('arv-prefs') || '{}');
+    const notifEnabled = (typeof LearningEngine !== 'undefined') ? LearningEngine.getReminderPrefs(user.id).enabled : false;
+    const hasDiag = (typeof LearningEngine !== 'undefined') ? LearningEngine.hasDiagnosis(user.id) : false;
     const initials = user.name.split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase();
     const avatarColor = acadProfile.avatarColor || '#C89B6D';
     const message = acadProfile.message || 'Cada sesión te acerca a tu objetivo.';
@@ -3439,9 +3495,13 @@ const UIStudent = (() => {
                   <span class="ph2-setting-lbl">Tema Claro</span>
                   <button class="pp-theme-btn ph2-theme-mini${currentTheme==='light'?' ph2-theme-on':''}" data-theme="light">☀️</button>
                 </label>
+                <label class="ph2-setting-row">
+                  <span class="ph2-setting-lbl">Recordatorios</span>
+                  <input type="checkbox" class="pp-toggle" id="ppNotifToggle"${notifEnabled ? ' checked' : ''} />
+                </label>
                 <div class="ph2-setting-row">
-                  <span class="ph2-setting-lbl">Diagnóstico</span>
-                  <button class="ghost ph2-diag-btn" id="ppDiagBtn">🩺</button>
+                  <span class="ph2-setting-lbl">Diagnóstico${hasDiag ? ' ✓' : ''}</span>
+                  <button class="ghost ph2-diag-btn" id="ppOpenDiagnosisBtn">🩺</button>
                 </div>
               </div>
             </div>
@@ -4586,6 +4646,38 @@ const UIStudent = (() => {
     _wirePreferences();
     _wireAccountPanel(user);
 
+    // ── Diagnóstico y Plan de Estudio (LearningEngine) ──
+    r().querySelector('#ppOpenDiagnosisBtn')?.addEventListener('click', () => App.go('diagnosis'));
+
+    // ── Recordatorios inteligentes ──
+    const _notifToggle = r().querySelector('#ppNotifToggle');
+    if (_notifToggle && typeof LearningEngine !== 'undefined') {
+      _notifToggle.addEventListener('change', async () => {
+        const uid = Storage.get().currentUserId;
+        if (_notifToggle.checked) {
+          const perm = await LearningEngine.requestNotifications();
+          if (perm === 'granted') {
+            const prefs = LearningEngine.getReminderPrefs(uid);
+            prefs.enabled = true;
+            LearningEngine.setReminderPrefs(uid, prefs);
+            if (typeof UI !== 'undefined') UI.flash?.('Recordatorios activados 🔔', 'success');
+          } else if (perm === 'unavailable') {
+            _notifToggle.checked = false;
+            if (typeof UI !== 'undefined') UI.flash?.('Tu navegador no soporta notificaciones.', 'info');
+          } else {
+            _notifToggle.checked = false;
+            if (typeof UI !== 'undefined') UI.flash?.('Permiso denegado. Habilita notificaciones en tu navegador.', 'error');
+          }
+        } else {
+          const uid2 = Storage.get().currentUserId;
+          const prefs2 = LearningEngine.getReminderPrefs(uid2);
+          prefs2.enabled = false;
+          LearningEngine.setReminderPrefs(uid2, prefs2);
+          if (typeof UI !== 'undefined') UI.flash?.('Recordatorios desactivados.', 'info');
+        }
+      });
+    }
+
     // Institución: mostrar/ocultar formulario de vinculación mediante código
     r().querySelector('#ppJoinInstBtn')?.addEventListener('click', () => {
       r().querySelector('#ppJoinInstForm').style.display = '';
@@ -5245,6 +5337,223 @@ const UIStudent = (() => {
     });
   }
 
+  // ── Prioridad 1: Diagnóstico Inicial del Estudiante ────────────────────────
+
+  function screenDiagnosis() {
+    const s   = Storage.get();
+    const user = s.users[s.currentUserId];
+    const ex = (typeof LearningEngine !== 'undefined') ? LearningEngine.getDiagnosis(user.id) : null;
+    const subjects = (typeof Subjects !== 'undefined') ? Subjects.listSubjects(user.institutionType || 'colegio', user.id) : [];
+
+    const sel = (val, cur) => cur === val ? ' le-diag-selected' : '';
+    const hrs = String(ex?.weeklyHours || 8);
+    const ch  = ex?.challenge || '';
+    const lv  = ex?.level || '';
+    const tp  = ex?.timePreference || '';
+    const ss  = ex?.subjects || [];
+
+    return `
+      <div class="le-diag-wrap">
+        <div class="le-diag-header">
+          <div class="le-diag-icon">🧭</div>
+          <div class="le-diag-title">Diagnóstico de Aprendizaje</div>
+          <div class="le-diag-subtitle">Ayuda a Ariven a conocerte mejor. Solo 2 minutos.</div>
+        </div>
+        <div class="le-diag-form">
+
+          <div class="le-diag-section">
+            <div class="le-diag-q">1. ¿Cuál es tu nivel de estudios?</div>
+            <div class="le-diag-options" id="diagLevelOpts">
+              ${[['secundaria','📚 Secundaria'],['preuniversitario','🎯 Pre-universitario'],['universidad','🎓 Universidad'],['tecnico','🔧 Técnico'],['autodidacta','🌐 Autodidacta']].map(([v,l])=>
+                `<button class="le-diag-chip${sel(v,lv)}" data-group="level" data-val="${v}">${l}</button>`
+              ).join('')}
+            </div>
+          </div>
+
+          <div class="le-diag-section">
+            <div class="le-diag-q">2. ¿Cuántas horas puedes dedicar al estudio por semana?</div>
+            <div class="le-diag-options" id="diagHoursOpts">
+              ${[['3','1–3 horas'],['7','4–7 horas'],['12','8–12 horas'],['20','Más de 12 horas']].map(([v,l])=>
+                `<button class="le-diag-chip${hrs===v?' le-diag-selected':''}" data-group="hours" data-val="${v}">${l}</button>`
+              ).join('')}
+            </div>
+          </div>
+
+          <div class="le-diag-section">
+            <div class="le-diag-q">3. ¿Cuál es tu mayor desafío al estudiar?</div>
+            <div class="le-diag-options" id="diagChallengeOpts">
+              ${[['concentracion','🧠 Concentración'],['tiempo','⏰ Falta de tiempo'],['motivacion','⚡ Motivación'],['comprension','📖 Comprensión'],['organizacion','📋 Organización']].map(([v,l])=>
+                `<button class="le-diag-chip${sel(v,ch)}" data-group="challenge" data-val="${v}">${l}</button>`
+              ).join('')}
+            </div>
+          </div>
+
+          <div class="le-diag-section">
+            <div class="le-diag-q">4. ¿En qué momento del día prefieres estudiar?</div>
+            <div class="le-diag-options" id="diagTimeOpts">
+              ${[['manana','🌅 Mañana (6–12h)'],['tarde','☀️ Tarde (12–18h)'],['noche','🌙 Noche (18–24h)'],['variable','🔄 Variable']].map(([v,l])=>
+                `<button class="le-diag-chip${sel(v,tp)}" data-group="time" data-val="${v}">${l}</button>`
+              ).join('')}
+            </div>
+          </div>
+
+          <div class="le-diag-section">
+            <div class="le-diag-q">5. ¿Cuáles son tus materias más importantes? <span class="le-diag-hint">(elige hasta 3)</span></div>
+            <div class="le-diag-options" id="diagSubjectOpts">
+              ${subjects.slice(0, 10).map(subj =>
+                `<button class="le-diag-chip${ss.includes(subj)?' le-diag-selected':''}" data-group="subject" data-val="${esc(subj)}">${esc(subj)}</button>`
+              ).join('')}
+            </div>
+          </div>
+
+          <div class="le-diag-actions">
+            <button class="primary" id="diagSaveBtn">✓ Guardar y ver mi plan</button>
+            <button class="ghost" data-go="dashboard">Saltar por ahora</button>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function wireDiagnosis() {
+    const sel = { level: '', hours: '8', challenge: '', time: '', subject: [] };
+
+    // Pre-load existing diagnosis
+    const uid = Storage.get().currentUserId;
+    if (typeof LearningEngine !== 'undefined') {
+      const ex = LearningEngine.getDiagnosis(uid);
+      if (ex) {
+        sel.level     = ex.level || '';
+        sel.hours     = String(ex.weeklyHours || 8);
+        sel.challenge = ex.challenge || '';
+        sel.time      = ex.timePreference || '';
+        sel.subject   = Array.isArray(ex.subjects) ? [...ex.subjects] : [];
+      }
+    }
+
+    root().querySelectorAll('.le-diag-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const group = chip.dataset.group;
+        const val   = chip.dataset.val;
+        if (group === 'subject') {
+          const idx = sel.subject.indexOf(val);
+          if (idx >= 0) { sel.subject.splice(idx, 1); chip.classList.remove('le-diag-selected'); }
+          else if (sel.subject.length < 3) { sel.subject.push(val); chip.classList.add('le-diag-selected'); }
+          else if (typeof UI !== 'undefined') UI.flash?.('Máximo 3 materias.', 'info');
+        } else {
+          root().querySelectorAll(`.le-diag-chip[data-group="${group}"]`).forEach(c => c.classList.remove('le-diag-selected'));
+          chip.classList.add('le-diag-selected');
+          if (group === 'level') sel.level = val;
+          else if (group === 'hours') sel.hours = val;
+          else if (group === 'challenge') sel.challenge = val;
+          else if (group === 'time') sel.time = val;
+        }
+      });
+    });
+
+    root().querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => App.go(b.dataset.go)));
+
+    root().getElementById('diagSaveBtn')?.addEventListener('click', () => {
+      if (typeof LearningEngine !== 'undefined') {
+        LearningEngine.setDiagnosis(uid, {
+          level:          sel.level,
+          weeklyHours:    Number(sel.hours) || 8,
+          challenge:      sel.challenge,
+          timePreference: sel.time,
+          subjects:       sel.subject
+        });
+      }
+      if (typeof UI !== 'undefined') UI.flash?.('¡Diagnóstico guardado! Plan de estudio listo.', 'success');
+      App.go('study-plan');
+    });
+  }
+
+  // ── Prioridad 1: Plan de Estudio Adaptativo ────────────────────────────────
+
+  function screenStudyPlan() {
+    const s     = Storage.get();
+    const user   = s.users[s.currentUserId];
+    const sessions = (typeof Sessions !== 'undefined') ? Sessions.listFor(user.id) : [];
+    if (typeof LearningEngine === 'undefined') {
+      return '<div class="alert info" style="margin:24px auto;max-width:480px;">Plan de estudio no disponible en este navegador.</div>';
+    }
+
+    const diag = LearningEngine.getDiagnosis(user.id);
+    const plan = LearningEngine.getStudyPlan(sessions, diag);
+    const prios = LearningEngine.getWeekPriorities(sessions);
+    const uIcon = { high: '🔴', medium: '🟡', low: '🟢' };
+    const uLabel = { high: 'Alta prioridad', medium: 'Media', low: 'Al día' };
+
+    const schedHtml = plan.schedule.map(day => `
+      <div class="le-plan-day le-plan-urgency-${day.urgency}">
+        <div class="le-plan-day-label">${esc(day.name)}</div>
+        <div class="le-plan-day-body">
+          <div class="le-plan-subject">${day.subject ? esc(day.subject) : '<span class="le-muted">Sin materia aún</span>'}</div>
+          <div class="le-plan-meta-row">
+            <span class="le-plan-tag">⏱ ${day.hours}h</span>
+            ${plan.timeLabel ? `<span class="le-plan-tag">⏰ ${esc(plan.timeLabel)}</span>` : ''}
+            <span class="le-plan-tag le-tag-${day.urgency}">${uIcon[day.urgency]} ${uLabel[day.urgency]}</span>
+          </div>
+          <div class="le-plan-reason">${esc(day.reason)}</div>
+        </div>
+      </div>`).join('');
+
+    const priosHtml = prios.length ? `
+      <div class="card" style="margin-top:18px;">
+        <h2 style="margin:0 0 12px;">🎯 Prioridades esta semana</h2>
+        ${prios.slice(0, 5).map(p => `
+          <div class="le-prio-row">
+            <span class="le-prio-urg">${uIcon[p.urgency]}</span>
+            <div class="le-prio-info">
+              <span class="le-prio-name">${esc(p.name)}</span>
+              <span class="le-prio-meta">${p.daysSince < 999 ? p.daysSince + 'd sin estudiar' : 'nueva materia'} · ${p.avgConc}/5 conc.</span>
+            </div>
+          </div>`).join('')}
+      </div>` : '';
+
+    const noDiagBanner = !diag ? `
+      <div class="alert info" style="margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span>Completa tu diagnóstico para obtener un plan aún más preciso.</span>
+        <button class="ghost" style="font-size:12px;padding:4px 12px;" data-go="diagnosis">Completar →</button>
+      </div>` : '';
+
+    const insightsHtml = plan.insights.length ? `
+      <div class="card" style="margin-top:18px;">
+        <div class="le-plan-insights-hdr">✦ Insights de tu plan</div>
+        ${plan.insights.map(i => `<div class="le-plan-insight-row">• ${esc(i)}</div>`).join('')}
+      </div>` : '';
+
+    return `
+      <div class="le-plan-wrap">
+        <h1>📅 Tu Plan de Estudio</h1>
+        <p class="muted">Personalizado según tus sesiones${diag ? ' y diagnóstico' : ''}.</p>
+        ${noDiagBanner}
+
+        <div class="card le-plan-summary">
+          <div class="le-plan-stat-row">
+            <div class="le-plan-stat"><div class="le-plan-stat-val">${plan.weeklyHours}h</div><div class="le-plan-stat-lbl">Meta semanal</div></div>
+            <div class="le-plan-stat"><div class="le-plan-stat-val">${plan.dailyHours}h</div><div class="le-plan-stat-lbl">Por sesión</div></div>
+            ${plan.timeLabel ? `<div class="le-plan-stat"><div class="le-plan-stat-val">${esc(plan.timeLabel)}</div><div class="le-plan-stat-lbl">Mejor hora</div></div>` : ''}
+          </div>
+        </div>
+
+        <div class="le-plan-schedule">${schedHtml}</div>
+        ${priosHtml}
+        ${insightsHtml}
+
+        <div class="le-plan-actions">
+          <button class="primary" data-go="new-session">Comenzar sesión →</button>
+          <button class="ghost" data-go="diagnosis">Actualizar diagnóstico</button>
+          <button class="ghost" data-go="dashboard">← Inicio</button>
+        </div>
+      </div>`;
+  }
+
+  function wireStudyPlan() {
+    root().querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => App.go(b.dataset.go)));
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+
   const _wrap = (typeof window !== 'undefined' && window.__tfSafeScreens) || ((n, s) => s);
   return {
     screens: _wrap('student', {
@@ -5255,13 +5564,15 @@ const UIStudent = (() => {
       subjects:     { render: screenSubjects,     wire: wireSubjects },
       history:      { render: () => screenHistory(App._historyFilters || {}), wire: wireHistory },
       stats:        { render: screenStats,        wire: wireStats },
-      recommend:    { render: screenRecommend,    wire: () => {} },
+      recommend:    { render: screenRecommend,    wire: _wireRecommend },
       achievements: { render: screenAchievements, wire: wireAchievements },
       leaderboard:  { render: screenLeaderboard,  wire: wireLeaderboard },
       pomodoro:     { render: screenPomodoro,     wire: wirePomodoro },
       profile:      { render: screenProfile,      wire: wireProfile },
       'ai-study':   { render: screenAIStudy,      wire: wireAIStudy },
-      'join-classroom': { render: screenJoinClassroom, wire: wireJoinClassroom }
+      'join-classroom': { render: screenJoinClassroom, wire: wireJoinClassroom },
+      'diagnosis':  { render: screenDiagnosis,    wire: wireDiagnosis },
+      'study-plan': { render: screenStudyPlan,    wire: wireStudyPlan }
     })
   };
 })();

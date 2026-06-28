@@ -6195,3 +6195,79 @@ html[data-theme="light"] .ph-sidebar .pp-nav-item.active {
 .arv-toggle-thumb { position: absolute; width: 20px; height: 20px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform .2s; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
 .arv-toggle input:checked + .arv-toggle-track { background: var(--primary); }
 .arv-toggle input:checked + .arv-toggle-track .arv-toggle-thumb { transform: translateX(20px); }
+
+/* ── LearningEngine — Priority 1: Motor de Aprendizaje Personalizado ── */
+
+/* Dashboard: mentor insights multi-line */
+.dpv-mentor-insights { display: flex; flex-direction: column; gap: 6px; }
+.dpv-mentor-insight { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 1.5; color: var(--text); }
+.dpv-mentor-ins-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+.dpv-mentor-plan-btn { font-size: 11px !important; padding: 2px 8px !important; opacity: .7; }
+.dpv-mentor-plan-btn:hover { opacity: 1; }
+
+/* ── Diagnóstico: le-diag-* ── */
+.le-diag-wrap { max-width: 560px; margin: 0 auto; padding: 8px 0 40px; }
+.le-diag-header { text-align: center; margin-bottom: 28px; }
+.le-diag-icon { font-size: 40px; margin-bottom: 8px; }
+.le-diag-title { font-size: 22px; font-weight: 700; color: var(--text); }
+.le-diag-subtitle { font-size: 14px; color: var(--muted); margin-top: 4px; }
+.le-diag-form { display: flex; flex-direction: column; gap: 20px; }
+.le-diag-section { background: var(--card); border-radius: 14px; padding: 18px; border: 1px solid var(--border); }
+.le-diag-q { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 12px; }
+.le-diag-hint { font-weight: 400; color: var(--muted); font-size: 12px; }
+.le-diag-options { display: flex; flex-wrap: wrap; gap: 8px; }
+.le-diag-chip { background: rgba(255,255,255,.06); border: 1.5px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 13px; cursor: pointer; color: var(--text); transition: all .15s; font-family: inherit; }
+.le-diag-chip:hover { border-color: var(--primary); background: rgba(200,160,110,.12); }
+.le-diag-chip.le-diag-selected { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; }
+[data-theme="light"] .le-diag-chip { background: rgba(0,0,0,.04); }
+[data-theme="light"] .le-diag-chip:hover { background: rgba(200,160,110,.15); }
+.le-diag-actions { display: flex; gap: 12px; flex-wrap: wrap; padding-top: 4px; }
+.le-diag-actions .primary { flex: 1; }
+
+/* ── Plan de Estudio: le-plan-* ── */
+.le-plan-wrap { max-width: 600px; margin: 0 auto; padding: 8px 0 48px; }
+.le-plan-summary { margin-bottom: 18px !important; }
+.le-plan-stat-row { display: flex; gap: 20px; flex-wrap: wrap; }
+.le-plan-stat { display: flex; flex-direction: column; gap: 2px; }
+.le-plan-stat-val { font-size: 22px; font-weight: 700; color: var(--primary); }
+.le-plan-stat-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+
+.le-plan-schedule { display: flex; flex-direction: column; gap: 10px; }
+.le-plan-day { background: var(--card); border-radius: 12px; border: 1.5px solid var(--border); display: flex; overflow: hidden; }
+.le-plan-day-label { writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); padding: 12px 8px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; min-width: 36px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.04); color: var(--muted); border-right: 1px solid var(--border); }
+.le-plan-day-body { padding: 12px 16px; flex: 1; }
+.le-plan-subject { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.le-plan-meta-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+.le-plan-tag { background: rgba(255,255,255,.07); border-radius: 10px; padding: 2px 8px; font-size: 11px; color: var(--muted); }
+.le-plan-tag.le-tag-high { background: rgba(239,83,80,.15); color: #ef5350; }
+.le-plan-tag.le-tag-medium { background: rgba(255,180,0,.12); color: #c8a06e; }
+.le-plan-tag.le-tag-low { background: rgba(76,175,80,.12); color: #66bb6a; }
+.le-plan-reason { font-size: 12px; color: var(--muted); }
+
+.le-plan-urgency-high { border-color: rgba(239,83,80,.35); }
+.le-plan-urgency-high .le-plan-day-label { background: rgba(239,83,80,.1); color: #ef5350; }
+.le-plan-urgency-medium { border-color: rgba(200,160,110,.3); }
+
+[data-theme="light"] .le-plan-day { background: var(--card); }
+[data-theme="light"] .le-plan-tag { background: rgba(0,0,0,.06); }
+
+/* Prioridades */
+.le-prio-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.le-prio-row:last-child { border-bottom: none; }
+.le-prio-urg { font-size: 16px; flex-shrink: 0; }
+.le-prio-info { display: flex; flex-direction: column; gap: 1px; flex: 1; }
+.le-prio-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.le-prio-meta { font-size: 11px; color: var(--muted); }
+.le-prio-detail { font-size: 12px; flex-shrink: 0; }
+.le-muted { color: var(--muted); font-style: italic; }
+
+/* Recommend: priority row inline */
+.le-prio-row .le-prio-name ~ .le-prio-detail { margin-left: auto; }
+
+/* Plan insights */
+.le-plan-insights-hdr { font-size: 13px; font-weight: 600; color: var(--primary); margin-bottom: 8px; }
+.le-plan-insight-row { font-size: 13px; color: var(--muted); padding: 3px 0; }
+
+/* Plan actions */
+.le-plan-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
+.le-plan-actions .primary { flex: 1; min-width: 160px; }
