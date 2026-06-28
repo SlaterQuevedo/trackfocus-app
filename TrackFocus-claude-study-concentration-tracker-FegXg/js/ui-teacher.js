@@ -234,8 +234,9 @@ const UITeacher = (() => {
       </div>
     </div>
 
-    <div class="td-main-grid">
+    <div class="td-main-grid" style="grid-template-columns:1.1fr 1fr;">
 
+      <div class="td-right-col">
       <div class="td-card td-estado">
         <div class="td-sh"><div class="td-sh-l"><span class="td-sh-ico">🏫</span><span class="td-sh-ttl">Estado del Aula</span></div>${primaryCr ? `<span class="td-sh-badge">${esc(primaryCr.name)}</span>` : ''}</div>
         <div class="td-estado-body">
@@ -289,6 +290,7 @@ const UITeacher = (() => {
             <button class="ghost td-stbtn" data-go="student-detail" data-sid="${esc(st.id)}">Ver</button>
           </div>`;
         }).join('')}
+      </div>
       </div>
 
       <div class="td-right-col">
