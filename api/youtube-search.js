@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ videos: [], error: 'Method not allowed' });
   }
 
-  if (checkRateLimit(req, res, { maxRequests: 10, windowMs: 60_000 })) return;
+  if (checkRateLimit(req, res, { maxRequests: 60, windowMs: 60_000 })) return;
 
   let queries, maxResults, language;
   try {

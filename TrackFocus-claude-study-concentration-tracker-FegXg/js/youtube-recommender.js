@@ -121,13 +121,22 @@ window.YoutubeRecommender = (() => {
         signal: controller.signal
       });
       clearTimeout(timer);
-      if (!res.ok) return [];
-      const data = await res.json();
-      return Array.isArray(data.videos) ? data.videos : [];
+      if (res.ok) {
+        const data = await res.json();
+        const videos = Array.isArray(data.videos) ? data.videos : [];
+        if (videos.length > 0) return videos;
+      }
     } catch (_) {
       clearTimeout(timer);
-      return [];
     }
+    // Fallback local: siempre retorna búsquedas de YouTube aunque el API falle o dé 429
+    return queries.slice(0, 3).map(q => ({
+      title: `Buscar en YouTube: ${q}`,
+      channel: 'YouTube',
+      description: 'Haz clic para buscar este tema en YouTube',
+      url: `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}`,
+      isSearch: true
+    }));
   }
 
   // ── Render de recomendaciones ─────────────────────────────────────────────────
