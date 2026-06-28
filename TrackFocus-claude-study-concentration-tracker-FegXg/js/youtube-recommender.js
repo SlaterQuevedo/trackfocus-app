@@ -132,18 +132,32 @@ window.YoutubeRecommender = (() => {
 
   // ── Render de recomendaciones ─────────────────────────────────────────────────
 
-  function _renderRecommendations(bubble, videos) {
-    // Filtrar videos ya mostrados esta sesión
-    const fresh = videos.filter(v => {
-      const key = v.videoId || v.url;
-      if (_shownVideoIds.has(key)) return false;
-      _shownVideoIds.add(key);
-      return true;
-    });
-
-    if (fresh.length === 0) return;
+  function _renderRecommendations(bubble, videos, isExplicit) {
+    let fresh;
+    if (isExplicit) {
+      fresh = videos; // click explícito: mostrar sin deduplicar
+    } else {
+      fresh = videos.filter(v => {
+        const key = v.videoId || v.url;
+        if (_shownVideoIds.has(key)) return false;
+        _shownVideoIds.add(key);
+        return true;
+      });
+    }
 
     const msgs = _lastChatMessages || document.getElementById('chatMessages');
+
+    if (fresh.length === 0) {
+      if (isExplicit) {
+        const notice = document.createElement('div');
+        notice.className = 'yt-rec-empty';
+        notice.textContent = 'No se encontraron videos para este tema. Intenta preguntar sobre un concepto específico.';
+        const wrap = bubble.closest('.chat-bubble-wrap');
+        if (wrap) wrap.appendChild(notice);
+        if (msgs) setTimeout(() => { msgs.scrollTop = msgs.scrollHeight; }, 100);
+      }
+      return;
+    }
 
     // Construir sección
     const section = document.createElement('div');
@@ -233,8 +247,8 @@ window.YoutubeRecommender = (() => {
     const queries = _buildQueries(ctx, topic);
     const videos  = await _fetchVideos(queries);
 
-    if (videos.length > 0) {
-      _renderRecommendations(bubble, videos);
+    if (videos.length > 0 || isExplicit) {
+      _renderRecommendations(bubble, videos, isExplicit);
     }
   }
 
@@ -316,8 +330,13 @@ window.YoutubeRecommender = (() => {
     const iaBubbles = document.querySelectorAll('.chat-bubble.ia');
     const lastBubble = iaBubbles[iaBubbles.length - 1];
     if (!lastBubble) return;
+
+    const btn = document.getElementById('chatVideosBtn');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Buscando...'; }
+    const restore = () => { if (btn) { btn.disabled = false; btn.textContent = '📹 Videos'; } };
+
     _processedBubbles.delete(lastBubble);
-    _processBubble(lastBubble, true);
+    _processBubble(lastBubble, true).finally(restore);
   }
 
   return { init, requestVideos };
