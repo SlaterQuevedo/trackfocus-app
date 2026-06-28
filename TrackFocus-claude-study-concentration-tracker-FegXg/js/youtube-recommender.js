@@ -249,9 +249,9 @@ window.YoutubeRecommender = (() => {
 
     if (!isExplicit && !_shouldRecommend(iaText, lastUserMsg)) return;
 
-    // Para solicitudes explícitas, el tema viene del contexto; para automáticas, del mensaje del usuario
-    const topic   = isExplicit
-      ? _extractTopicFromCtx(ctx, iaText)
+    // Tema: topicGoal si el usuario lo especificó, si no extraer del último mensaje del usuario
+    const topic = (ctx.topicGoal && ctx.topicGoal.trim().length > 3)
+      ? ctx.topicGoal.trim().slice(0, 80)
       : _extractTopic(lastUserMsg, iaText);
     const queries = _buildQueries(ctx, topic);
     const videos  = await _fetchVideos(queries);
