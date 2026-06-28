@@ -101,7 +101,7 @@ const UITeacher = (() => {
     }
 
     const lb = primaryCr ? Gamification.getLeaderboard('classroom', primaryCr.id, 'week') : [];
-    const top5 = lb.slice(0, 5);
+    const top5 = lb.slice(0, 3);
     const recentSessions = allCrSessions.slice().sort((a, b) => b.datetime.localeCompare(a.datetime)).slice(0, 6);
     const pendingCount = school ? Schools.getPendingCount(school.id) : 0;
     const weeklyGoalSessions = Math.max(1, students.length * 3);
@@ -236,6 +236,7 @@ const UITeacher = (() => {
 
     <div class="td-main-grid">
 
+      <div class="td-left-col">
       <div class="td-card td-estado">
         <div class="td-sh"><div class="td-sh-l"><span class="td-sh-ico">🏫</span><span class="td-sh-ttl">Estado del Aula</span></div>${primaryCr ? `<span class="td-sh-badge">${esc(primaryCr.name)}</span>` : ''}</div>
         <div class="td-estado-body">
@@ -261,10 +262,39 @@ const UITeacher = (() => {
         ${allCrSessions.length >= 3 ? `<div class="td-spark-row"><span class="td-spark-lbl">Concentración · 6 semanas</span><div class="td-sp-gold">${_spark(weeklyConc, 180, 30, '#C89B6D')}</div></div>` : ''}
       </div>
 
+      <div class="td-card td-top-stud">
+        <div class="td-sh"><div class="td-sh-l"><span class="td-sh-ico">🏆</span><span class="td-sh-ttl">Top Estudiantes</span></div><span class="td-sh-meta">esta semana</span></div>
+        ${top5.length === 0 ? `<div class="td-empty"><span>Sin sesiones esta semana</span></div>` :
+        top5.map((e, i) => `<div class="td-top-row${i === 0 ? ' td-top-1st' : ''}">
+          <span class="td-top-rnk">${['🥇','🥈','🥉'][i] || '#'+(i+1)}</span>
+          <div class="td-top-av" style="background:${_clr(e.name)};">${esc(_ini(e.name))}</div>
+          <div class="td-top-inf"><div class="td-top-nm">${esc(e.name)}</div><div class="td-top-mt">${e.xp} XP · 🔥 ${e.streak}d</div></div>
+          <div class="td-top-conc">${e.avgConcentration}/5</div>
+        </div>`).join('')}
+      </div>
+      </div>
+
+      <div class="td-card td-activity">
+        <div class="td-sh" style="margin-bottom:10px;"><div class="td-sh-l"><span class="td-sh-ico">⚡</span><span class="td-sh-ttl">Actividad Reciente</span></div></div>
+        ${recentSessions.length === 0
+          ? `<div class="td-empty"><span>Sin actividad reciente</span></div>`
+          : `<div class="td-activity-list">
+              ${recentSessions.map(se => {
+                const st = students.find(x => x.id === se.email);
+                const nm = st ? st.name.split(' ')[0] : 'Alumno';
+                return `<div class="td-tl-item" style="margin:0;">
+                  <div class="td-tl-dot" style="background:${_clr(nm)};"></div>
+                  <div class="td-tl-body"><span class="td-tl-nm">${esc(nm)}</span><span class="td-tl-txt"> · ${esc(se.subject)}</span><div class="td-tl-mt">${_ago(se.datetime)} · ${se.concentration}/5 ⭐</div></div>
+                </div>`;
+              }).join('')}
+            </div>`}
+      </div>
+
       <div class="td-card td-attention">
         <div class="td-sh"><div class="td-sh-l"><span class="td-sh-ico">🎯</span><span class="td-sh-ttl">Atención del Docente</span></div>${atRiskList.length + inactiveStudents.length > 0 ? `<span class="td-sh-warn">${atRiskList.length + inactiveStudents.filter(x => !atRiskList.find(r => r.id === x.id)).length}</span>` : ''}</div>
         ${atRiskList.length === 0 && inactiveStudents.length === 0 ? `<div class="td-empty"><span class="td-empty-ico">🎉</span><span>Todos los alumnos están al día</span></div>` : ''}
-        ${atRiskList.slice(0, 3).map(st => {
+        <div class="td-attention-scroll">
+        ${atRiskList.map(st => {
           const stSess = s.sessions.filter(se => se.email === st.id).sort((a, b) => b.datetime.localeCompare(a.datetime));
           const gam = st.gamification || {};
           return `<div class="td-stcard td-stc-risk">
@@ -277,7 +307,7 @@ const UITeacher = (() => {
             <button class="ghost td-stbtn" data-go="student-detail" data-sid="${esc(st.id)}">Ver</button>
           </div>`;
         }).join('')}
-        ${inactiveStudents.filter(st => !atRiskList.find(r => r.id === st.id)).slice(0, 2).map(st => {
+        ${inactiveStudents.filter(st => !atRiskList.find(r => r.id === st.id)).map(st => {
           const stSess = s.sessions.filter(se => se.email === st.id).sort((a, b) => b.datetime.localeCompare(a.datetime));
           return `<div class="td-stcard td-stc-inactive">
             <div class="td-stav" style="background:${_clr(st.name)};">${esc(_ini(st.name))}</div>
@@ -289,34 +319,8 @@ const UITeacher = (() => {
             <button class="ghost td-stbtn" data-go="student-detail" data-sid="${esc(st.id)}">Ver</button>
           </div>`;
         }).join('')}
+        </div>
       </div>
-
-      <div class="td-card td-top-stud">
-        <div class="td-sh"><div class="td-sh-l"><span class="td-sh-ico">🏆</span><span class="td-sh-ttl">Top Estudiantes</span></div><span class="td-sh-meta">esta semana</span></div>
-        ${top5.length === 0 ? `<div class="td-empty"><span>Sin sesiones esta semana</span></div>` :
-        top5.map((e, i) => `<div class="td-top-row${i === 0 ? ' td-top-1st' : ''}">
-          <span class="td-top-rnk">${['🥇','🥈','🥉'][i] || '#'+(i+1)}</span>
-          <div class="td-top-av" style="background:${_clr(e.name)};">${esc(_ini(e.name))}</div>
-          <div class="td-top-inf"><div class="td-top-nm">${esc(e.name)}</div><div class="td-top-mt">${e.xp} XP · 🔥 ${e.streak}d</div></div>
-          <div class="td-top-conc">${e.avgConcentration}/5</div>
-        </div>`).join('')}
-      </div>
-    </div>
-
-    <div class="td-card td-activity" style="margin-bottom:14px;">
-      <div class="td-sh" style="margin-bottom:10px;"><div class="td-sh-l"><span class="td-sh-ico">⚡</span><span class="td-sh-ttl">Actividad Reciente</span></div></div>
-      ${recentSessions.length === 0
-        ? `<div class="td-empty"><span>Sin actividad reciente</span></div>`
-        : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px 20px;">
-            ${recentSessions.map(se => {
-              const st = students.find(x => x.id === se.email);
-              const nm = st ? st.name.split(' ')[0] : 'Alumno';
-              return `<div class="td-tl-item" style="margin:0;">
-                <div class="td-tl-dot" style="background:${_clr(nm)};"></div>
-                <div class="td-tl-body"><span class="td-tl-nm">${esc(nm)}</span><span class="td-tl-txt"> · ${esc(se.subject)}</span><div class="td-tl-mt">${_ago(se.datetime)} · ${se.concentration}/5 ⭐</div></div>
-              </div>`;
-            }).join('')}
-          </div>`}
     </div>
 
     <div class="td-sec-grid">
@@ -1571,17 +1575,80 @@ const UITeacher = (() => {
       [{ label: 'Concentración promedio', data: weekAvgs }]
     ));
 
-    // Gráfica por materia
+    // Gráfica por materia — todas las materias asignadas
     const bySub = {};
     allCrSessions.forEach(se => {
       if (!bySub[se.subject]) bySub[se.subject] = { sum: 0, count: 0 };
       bySub[se.subject].sum += se.concentration;
       bySub[se.subject].count++;
     });
-    const subLabels = Object.keys(bySub);
-    const subAvgs = subLabels.map(k => parseFloat((bySub[k].sum / bySub[k].count).toFixed(2)));
-    if (subLabels.length > 0) {
-      Charts.create('chartSubject', Charts.barConfig(subLabels, subAvgs, 'Conc. prom.', Charts.COLORS.primary));
+
+    const _st2 = Storage.get();
+    const _assignments = Grades.getAssignmentsForClassroom(classroomId);
+    const _allSubjects = _assignments.length > 0
+      ? [...new Set(_assignments.map(a => a.subject))]
+      : (_st2.subjectsByInstitution?.colegio || Object.keys(bySub));
+
+    const ABBREV = {
+      'Desarrollo Personal, Ciudadanía y Cívica': 'D. Personal',
+      'Ciencia y Tecnología': 'C. Tecnología',
+      'Educación para el Trabajo': 'Ed. Trabajo',
+      'Educación Física': 'Ed. Física',
+      'Educación Religiosa': 'Ed. Religiosa',
+      'Ciencias Sociales': 'Cs. Sociales',
+      'Arte y Cultura': 'Arte',
+    };
+
+    const subData = _allSubjects
+      .map(sub => ({
+        label: ABBREV[sub] || sub,
+        avg: bySub[sub] ? parseFloat((bySub[sub].sum / bySub[sub].count).toFixed(2)) : 0,
+        has: !!bySub[sub]
+      }))
+      .sort((a, b) => b.avg - a.avg);
+
+    const subColors = subData.map(x => {
+      if (!x.has) return 'rgba(113,113,122,0.35)';
+      if (x.avg >= 4.0) return 'rgba(34,197,94,0.85)';
+      if (x.avg >= 3.0) return 'rgba(200,155,109,0.85)';
+      if (x.avg >= 2.0) return 'rgba(245,158,11,0.85)';
+      return 'rgba(239,68,68,0.82)';
+    });
+
+    if (subData.length > 0) {
+      const subCont = document.getElementById('chartSubject')?.parentElement;
+      if (subCont) subCont.style.height = '310px';
+      Charts.create('chartSubject', {
+        type: 'bar',
+        data: {
+          labels: subData.map(x => x.label),
+          datasets: [{
+            label: 'Conc. prom.',
+            data: subData.map(x => x.avg),
+            backgroundColor: subColors,
+            borderRadius: 7,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: {
+            callbacks: { label: ctx => ` ${ctx.parsed.y.toFixed(2)} / 5` }
+          }},
+          scales: {
+            x: {
+              ticks: { color: '#71717A', maxRotation: 42, minRotation: 42, font: { size: 11, family: 'Inter, sans-serif' } },
+              grid: { color: 'rgba(255,255,255,0.04)' }
+            },
+            y: {
+              min: 0, max: 5,
+              ticks: { color: '#52525B', stepSize: 1, font: { size: 11 } },
+              grid: { color: 'rgba(255,255,255,0.05)' }
+            }
+          }
+        }
+      });
     }
   }
 
@@ -1833,7 +1900,7 @@ const UITeacher = (() => {
     const user = s.users[currentUserId];
     const isDir = Grades.isDirector(currentUserId);
     const isDemo = !!(typeof window !== 'undefined' && window.__TF_DEMO);
-    const sortMode = App._bimGradeSort || 'name';
+    const sortMode = App._bimGradeSort || 'avg-desc';
 
     // Aulas de esta escuela
     const schoolClassrooms = Object.values(s.classrooms)
@@ -1909,13 +1976,12 @@ const UITeacher = (() => {
     } else if (!subjects.length) {
       tableHtml = '<p class="muted" style="padding:20px;">Sin materias asignadas. Configura las asignaciones en "Gestionar Aula".</p>';
     } else {
-      const shortName = n => n.length > 14 ? n.slice(0, 12) + '…' : n;
+      const shortName = n => n.length > 10 ? n.slice(0, 9) + '…' : n;
       const stickyBg = 'rgba(22,22,38,.98)';
       const thead = `<tr>
-        <th style="min-width:140px;position:sticky;left:0;z-index:2;background:${stickyBg};">Estudiante</th>
-        ${subjects.map(sub => `<th style="font-size:11px;min-width:72px;text-align:center;">${shortName(sub)}</th>`).join('')}
-        <th style="font-size:11px;min-width:72px;text-align:center;">Promedio</th>
-        <th style="font-size:11px;min-width:48px;text-align:center;">#</th>
+        <th style="min-width:120px;position:sticky;left:0;z-index:2;background:${stickyBg};">Estudiante</th>
+        ${subjects.map(sub => `<th style="font-size:11px;min-width:56px;text-align:center;" title="${sub}">${shortName(sub)}</th>`).join('')}
+        <th style="font-size:11px;min-width:80px;text-align:center;">Promedio</th>
       </tr>`;
 
       const tbody = students.map((st, idx) => {
@@ -1926,7 +1992,6 @@ const UITeacher = (() => {
           if (!grades.length) return `<td style="text-align:center;color:rgba(255,255,255,.2);">—</td>`;
           return `<td style="text-align:center;">${GradeUI.renderScaleBadge(grades[0].scale)}</td>`;
         }).join('');
-        const total = subjects.reduce((n, sub) => n + (gradeMap[st.id]?.[sub]?.length || 0), 0);
         const avgDisplay = st._avg > 0
           ? `<span style="font-weight:700;">${st._avg.toFixed(1)}</span>
              <span style="font-size:10px;margin-left:3px;">${GradeUI.renderScaleBadge(_scaleFromAvg(st._avg))}</span>`
@@ -1940,7 +2005,6 @@ const UITeacher = (() => {
           </td>
           ${cells}
           <td style="text-align:center;">${avgDisplay}</td>
-          <td style="text-align:center;font-size:12px;color:rgba(255,255,255,.4);">${total}</td>
         </tr>`;
       }).join('');
 
@@ -1991,6 +2055,141 @@ const UITeacher = (() => {
       </p>`;
   }
 
+  // ── Boleta de notas del estudiante (formato SIAGIE) ─────────────────────────
+  function screenStudentBoleta() {
+    const s = Storage.get();
+    const studentId = App._studentDetailId;
+    const student = s.users[studentId];
+    const backBtn = '<button class="ghost" data-go="bimester-grades" style="flex-shrink:0;">← Volver</button>';
+    if (!student) return `<div style="padding:24px;">${backBtn}<p class="muted" style="margin-top:16px;">Estudiante no encontrado.</p></div>`;
+
+    const classroomId = App._bimGradeClassroomId || student.classroomIds?.[0] || student.classroomId;
+    const classroom = s.classrooms[classroomId];
+    const schoolId = classroom?.schoolId || student.schoolId;
+    const school = s.schools[schoolId];
+
+    // Bimestres ordenados del colegio (todos los 4, existentes o no)
+    const allBimesters = Grades.listBimesters(schoolId).sort((a, b) => a.number - b.number);
+    const bimCols = [1, 2, 3, 4].map(n => allBimesters.find(b => b.number === n) || null);
+
+    // Construir mapa de notas: materia → competencia → número_bimestre → grade
+    const gradeMap = {};
+    allBimesters.forEach(bim => {
+      Grades.listForStudent(studentId, bim.id).forEach(g => {
+        if (!gradeMap[g.subject]) gradeMap[g.subject] = {};
+        if (!gradeMap[g.subject][g.competency]) gradeMap[g.subject][g.competency] = {};
+        const prev = gradeMap[g.subject][g.competency][bim.number];
+        if (!prev || g.evaluationDate >= prev.evaluationDate) {
+          gradeMap[g.subject][g.competency][bim.number] = g;
+        }
+      });
+    });
+
+    // Orden oficial MINEDU
+    const SUBJECT_ORDER = [
+      'Desarrollo Personal, Ciudadanía y Cívica', 'Ciencias Sociales',
+      'Educación para el Trabajo', 'Educación Física', 'Comunicación',
+      'Arte y Cultura', 'Inglés', 'Matemática', 'Ciencia y Tecnología',
+      'Educación Religiosa', 'Tutoría'
+    ];
+    const assigned = classroom
+      ? [...new Set(Grades.getAssignmentsForClassroom(classroom.id).map(a => a.subject))]
+      : Object.keys(Grades.COMPETENCIES);
+    const subjects = [
+      ...SUBJECT_ORDER.filter(x => assigned.includes(x)),
+      ...assigned.filter(x => !SUBJECT_ORDER.includes(x))
+    ];
+
+    const AREA_COLORS = ['#a78bfa','#34d399','#fb923c','#60a5fa','#f472b6',
+                         '#fbbf24','#4ade80','#c084fc','#38bdf8','#f87171','#94a3b8'];
+    const SC = { AD:'#4ade80', A:'#60a5fa', B:'#fbbf24', C:'#f87171' };
+    const SB = { AD:'rgba(34,197,94,.18)', A:'rgba(59,130,246,.18)', B:'rgba(245,158,11,.18)', C:'rgba(239,68,68,.18)' };
+
+    function badge(scale) {
+      if (!scale) return '<span style="color:rgba(255,255,255,.2);">—</span>';
+      return `<span style="display:inline-flex;align-items:center;justify-content:center;min-width:30px;padding:2px 6px;border-radius:5px;font-size:11px;font-weight:700;background:${SB[scale]};color:${SC[scale]};">${scale}</span>`;
+    }
+
+    function compAnnual(subj, comp) {
+      const scores = [1,2,3,4].flatMap(n => { const g = gradeMap[subj]?.[comp]?.[n]; return g ? [g.score] : []; });
+      if (!scores.length) return null;
+      return _scaleFromAvg(scores.reduce((a,b) => a+b,0) / scores.length);
+    }
+
+    function areaAnnual(subj) {
+      const vals = { AD:4, A:3, B:2, C:1 };
+      const comps = (Grades.COMPETENCIES[subj] || []).map(c => compAnnual(subj, c)).filter(Boolean);
+      if (!comps.length) return null;
+      const avg = comps.reduce((a, sc) => a + vals[sc], 0) / comps.length;
+      if (avg >= 3.5) return 'AD'; if (avg >= 2.5) return 'A'; if (avg >= 1.5) return 'B'; return 'C';
+    }
+
+    let totalComps = 0;
+    const rows = subjects.map((subj, si) => {
+      const comps = Grades.COMPETENCIES[subj] || ['(Sin competencias definidas)'];
+      totalComps += comps.length;
+      const color = AREA_COLORS[si % AREA_COLORS.length];
+      const annual = areaAnnual(subj);
+      return comps.map((comp, ci) => {
+        const bimCells = [1,2,3,4].map(n => {
+          const g = gradeMap[subj]?.[comp]?.[n];
+          return `<td style="text-align:center;padding:7px 6px;border-bottom:1px solid rgba(255,255,255,.05);">${badge(g?.scale)}</td>`;
+        }).join('');
+        return `<tr>
+          ${ci === 0 ? `<td rowspan="${comps.length}" style="vertical-align:middle;text-align:center;font-weight:600;font-size:11px;padding:8px 6px;border-right:3px solid ${color};border-left:3px solid ${color};border-bottom:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025);min-width:100px;line-height:1.5;">${esc(subj)}</td>` : ''}
+          <td style="font-size:12px;padding:7px 10px;color:rgba(255,255,255,.82);border-bottom:1px solid rgba(255,255,255,.05);">${esc(comp)}</td>
+          ${bimCells}
+          <td style="text-align:center;padding:7px 6px;border-bottom:1px solid rgba(255,255,255,.05);border-left:1px solid rgba(255,255,255,.08);">${badge(compAnnual(subj, comp))}</td>
+        </tr>`;
+      }).join('');
+    }).join('');
+
+    const legendItems = Object.entries(Grades.SCALE_MAP).map(([k, v]) =>
+      `<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:rgba(255,255,255,.5);">
+        <span style="background:${SB[k]};color:${SC[k]};padding:1px 7px;border-radius:4px;font-weight:700;">${k}</span>
+        ${v.desc} (${v.min}–${v.max})
+      </span>`
+    ).join('');
+
+    return `<div style="padding:16px 20px;max-width:980px;margin:0 auto;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap;">
+        ${backBtn}
+        <div style="flex:1;min-width:0;">
+          <h2 style="margin:0;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(student.name)}</h2>
+          <div style="font-size:12px;color:rgba(255,255,255,.45);margin-top:3px;">
+            ${school ? esc(school.name) + ' &nbsp;·&nbsp; ' : ''}${classroom ? esc(classroom.name) + ' &nbsp;·&nbsp; ' : ''}Código: <strong>${student.studentCode || '—'}</strong>
+          </div>
+        </div>
+        <button class="ghost" id="boletaPrintBtn" style="flex-shrink:0;">🖨️ Imprimir</button>
+      </div>
+
+      <div style="overflow-x:auto;border-radius:10px;border:1px solid rgba(255,255,255,.09);">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead>
+            <tr style="background:rgba(255,255,255,.07);">
+              <th style="padding:10px 8px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.04em;min-width:100px;">Área Curricular</th>
+              <th style="padding:10px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;">Competencias</th>
+              ${bimCols.map((b, i) => `<th style="padding:10px 6px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.04em;min-width:50px;">${b ? esc(b.name) : 'B' + (i+1)}</th>`).join('')}
+              <th style="padding:10px 6px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.04em;min-width:58px;border-left:1px solid rgba(255,255,255,.08);">Anual</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;flex-wrap:wrap;gap:8px;">
+        <div style="font-size:11px;color:rgba(255,255,255,.3);">${subjects.length} áreas &nbsp;·&nbsp; ${totalComps} competencias</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">${legendItems}</div>
+      </div>
+    </div>`;
+  }
+
+  function wireStudentBoleta() {
+    root().querySelectorAll('[data-go]').forEach(btn =>
+      btn.addEventListener('click', () => App.go(btn.dataset.go)));
+    document.getElementById('boletaPrintBtn')?.addEventListener('click', () => window.print());
+  }
+
   function wireBimesterGrades() {
     root().querySelectorAll('[data-go]').forEach(btn =>
       btn.addEventListener('click', () => App.go(btn.dataset.go)));
@@ -2023,7 +2222,7 @@ const UITeacher = (() => {
     root().querySelectorAll('.bim-student-link').forEach(a => {
       a.addEventListener('click', () => {
         App._studentDetailId = a.dataset.studentId;
-        App.go('student-detail');
+        App.go('student-boleta');
       });
     });
   }
@@ -2105,7 +2304,8 @@ const UITeacher = (() => {
       'classroom-manage':  { render: screenClassroomManage,  wire: wireClassroomManage },
       'classroom-stats':   { render: screenClassroomStats,   wire: wireClassroomStats },
       'student-detail':    { render: screenStudentDetail,    wire: wireStudentDetail },
-      'bimester-grades':   { render: screenBimesterGrades,   wire: wireBimesterGrades }
+      'bimester-grades':   { render: screenBimesterGrades,   wire: wireBimesterGrades },
+      'student-boleta':    { render: screenStudentBoleta,    wire: wireStudentBoleta }
     })
   };
 })();

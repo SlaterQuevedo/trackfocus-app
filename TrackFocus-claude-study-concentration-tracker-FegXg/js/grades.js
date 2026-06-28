@@ -59,6 +59,10 @@ const Grades = (() => {
       'Se comunica oralmente en inglés como lengua extranjera',
       'Lee diversos tipos de textos en inglés',
       'Escribe diversos tipos de textos en inglés'
+    ],
+    'Educación para el Trabajo': [
+      'Gestiona proyectos de emprendimiento económico y social',
+      'Crea prototipos tecnológicos para resolver problemas del contexto'
     ]
   };
 

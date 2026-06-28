@@ -26,7 +26,8 @@ const Storage = (() => {
         'Tutoría',
         'Educación Física',
         'Arte y Cultura',
-        'Inglés'
+        'Inglés',
+        'Educación para el Trabajo'
       ]
     },
     customSubjects: {},

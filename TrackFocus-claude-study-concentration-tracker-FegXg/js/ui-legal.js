@@ -532,7 +532,7 @@ const LegalUI = (() => {
     document.getElementById('legalDeclineBtn')?.addEventListener('click', async () => {
       if (window.confirm('Si rechazas los documentos legales, no podrás usar Ariven. ¿Deseas salir?')) {
         await Auth.logout();
-        App.go('welcome');
+        App.goWelcomeToRoles();
       }
     });
 

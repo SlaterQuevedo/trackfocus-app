@@ -35,6 +35,7 @@ const App = (() => {
     'classroom-stats':    ['teacher'],
     'student-detail':     ['teacher', 'super_admin'],
     'bimester-grades':    ['teacher', 'super_admin'],
+    'student-boleta':     ['teacher', 'super_admin'],
 
     // Estudiante — calificaciones
     'student-grades':     ['student'],
@@ -240,21 +241,21 @@ const App = (() => {
       ];
     } else if (user.role === 'teacher') {
       navButtons = `
-        <button data-route="teacher-dashboard">Mi Panel</button>
+        <button data-route="teacher-dashboard">Dashboard</button>
         <button data-route="classroom-manage">Aula</button>
         <button data-route="classroom-stats">Estadísticas</button>`;
       bottomItems = [
-        { route: 'teacher-dashboard', icon: '🏠', label: 'Panel' },
+        { route: 'teacher-dashboard', icon: '🏠', label: 'Dashboard' },
         { route: 'classroom-manage',  icon: '🏫', label: 'Aula' },
         { route: 'classroom-stats',   icon: '📊', label: 'Stats' }
       ];
     } else if (user.role === 'super_admin') {
       navButtons = `
-        <button data-route="admin-dashboard">Panel Global</button>
+        <button data-route="admin-dashboard">Dashboard</button>
         <button data-route="manage-schools">Colegios</button>
         <button data-route="manage-users">Usuarios</button>`;
       bottomItems = [
-        { route: 'admin-dashboard', icon: '🏠', label: 'Global' },
+        { route: 'admin-dashboard', icon: '🏠', label: 'Dashboard' },
         { route: 'manage-schools',  icon: '🏫', label: 'Colegios' },
         { route: 'manage-users',    icon: '👥', label: 'Usuarios' }
       ];
@@ -292,6 +293,13 @@ const App = (() => {
     if (_snb) _snb.classList.toggle('hidden', user.role === 'student');
   }
 
+  function _goWelcomeToRoles() {
+    go('welcome');
+    setTimeout(() => {
+      document.getElementById('lpRolesSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
+  }
+
   function bindGlobal() {
     document.getElementById('topnav').addEventListener('click', (e) => {
       const r = e.target.closest('button')?.dataset.route;
@@ -313,7 +321,7 @@ const App = (() => {
       localStorage.removeItem('arv_al');
       await Auth.logout();
       sessionStorage.clear(); // limpia preferencias de sesión para no auto-loguear
-      go('welcome');
+      _goWelcomeToRoles();
     });
   }
 
@@ -549,9 +557,18 @@ const App = (() => {
       }
     }
 
-    // Auto-seleccionar el primer rol disponible (sin mostrar selector)
+    // Auto-seleccionar rol activo. Docentes, directores y admins tienen cuentas dedicadas:
+    // aunque exista una entrada 'student' en user_roles (de antes de la promoción),
+    // siempre se fuerza el rol institucional. Solo student/autodidact pueden compartir cuenta.
     if (authSession.availableRoles?.length && !Auth.getActiveRole()) {
-      Auth.setActiveRole(authSession.availableRoles[0]);
+      const primaryRole = authSession.user?.role;
+      if (primaryRole === 'teacher') {
+        const forced = authSession.availableRoles.find(r => r.role === primaryRole)
+          || { role: primaryRole, email: authSession.user?.email, user_id: authSession.user?.email };
+        Auth.setActiveRole(forced);
+      } else {
+        Auth.setActiveRole(authSession.availableRoles[0]);
+      }
     }
 
     // 3. Trae todo el estado desde Supabase y monta cache local
@@ -878,10 +895,7 @@ const App = (() => {
           <a class="lp-nav-link" href="#lpHow">Cómo funciona</a>
           <a class="lp-nav-link" href="#lpEcosystem">Instituciones</a>
         </nav>
-        <div class="lp-header-actions">
-          <button class="lp-header-btn" id="lpScrollCards">Iniciar sesión</button>
-          <button class="lp-header-btn lp-header-btn--primary" id="lpScrollCards2">Probar Ariven</button>
-        </div>
+        <div class="lp-header-actions"></div>
       </header>
 
       <!-- ── HERO ── -->
@@ -891,11 +905,11 @@ const App = (() => {
             <span class="lp-pill-dot"></span>
             Plataforma educativa con IA · Perú
           </div>
-          <h1 class="lp-hero-title">No estudies más.<br><span class="lp-hero-title-accent">Estudia mejor.</span></h1>
+          <h1 class="lp-hero-title">No estudies de más.<br><span class="lp-hero-title-accent">Estudia mejor.</span></h1>
           <p class="lp-hero-sub">Ariven convierte cada hora de estudio en evidencia real de aprendizaje mediante inteligencia artificial, ayudándote a demostrar que realmente estás avanzando.</p>
           <div class="lp-hero-actions">
-            <button class="lp-btn-main" id="lpHeroCta">Probar Ariven</button>
-            <a href="?demo=1" class="lp-btn-ghost-main">🎯 Ver demostración</a>
+            <button class="lp-btn-main" id="lpHeroCta">Comenzar</button>
+            <a href="?demo=1" class="lp-btn-ghost-main">Demo en vivo</a>
           </div>
         </div>
         <div class="lp-hero-right" aria-hidden="true">
@@ -1185,7 +1199,7 @@ const App = (() => {
     renderStep(_wizardStep0());
 
     // Botones del hero que scrollean a la sección de acceso
-    ['lpScrollCards', 'lpScrollCards2', 'lpHeroCta', 'lpHeroHow', 'lpCtaFinal'].forEach(id => {
+    ['lpHeroCta', 'lpHeroHow', 'lpCtaFinal'].forEach(id => {
       document.getElementById(id)?.addEventListener('click', () => {
         root().querySelector('#lpRolesSection')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       });
@@ -1563,7 +1577,7 @@ const App = (() => {
     });
     document.getElementById('consentDecline')?.addEventListener('click', async () => {
       await Auth.logout();
-      go('welcome');
+      _goWelcomeToRoles();
     });
   }
 
@@ -1700,6 +1714,9 @@ const App = (() => {
           }
         }
         await Storage.flush();
+        // Activar el rol docente en sesión para que el guard ROUTE_ROLES lo permita
+        const promotedUser = Storage.get().users[u.id];
+        Auth.setActiveRole({ role: 'teacher', email: u.id, user_id: u.id, school_id: promotedUser?.schoolId || null });
         go('teacher-dashboard');
       } catch (err) { UI.flash(err.message, 'error'); }
     });
@@ -1734,6 +1751,8 @@ const App = (() => {
         const u = Roles.current();
         await Auth.promoteToDirector(u.id, fd.get('schoolCode'));
         await Storage.flush();
+        const dirUser = Storage.get().users[u.id];
+        Auth.setActiveRole({ role: 'teacher', email: u.id, user_id: u.id, school_id: dirUser?.schoolId || null });
         go('teacher-dashboard');
       } catch (err) { UI.flash(err.message, 'error'); }
     });
@@ -1921,6 +1940,7 @@ const App = (() => {
   return {
     go,
     start,
+    goWelcomeToRoles: _goWelcomeToRoles,
     openSecurityModal: _openSecurityModal,
     _historyFilters: {},
     _lbScope: 'classroom',
