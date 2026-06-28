@@ -34,6 +34,10 @@ const App = (() => {
     'classroom-manage':   ['teacher'],
     'classroom-stats':    ['teacher'],
     'student-detail':     ['teacher', 'super_admin'],
+    'bimester-grades':    ['teacher', 'super_admin'],
+
+    // Estudiante — calificaciones
+    'student-grades':     ['student'],
 
     // Vista de exposición (Eureka)
     'eureka':             ['teacher', 'super_admin'],

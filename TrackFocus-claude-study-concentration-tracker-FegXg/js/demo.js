@@ -171,24 +171,51 @@ const Demo = (() => {
       };
     });
 
-    // Calificaciones: 2 evaluaciones por materia × 2 bimestres × 6 estudiantes
-    const EVAL_NAMES = ['Prueba escrita', 'Trabajo grupal'];
+    // Calificaciones demo: perfiles académicos diferenciados por estudiante
+    // para mostrar variedad AD/A/B/C en la feria científica.
+    // si=0 Lucía: excelente (AD/A), si=1 Mateo: bueno (A/B),
+    // si=2 Sofía: muy bueno (AD), si=3 Diego: en proceso (B/C),
+    // si=4 Valentina: bueno (A), si=5 Joaquín: en inicio (C/B)
+    var SCORE_PROFILES = [
+      [17, 20], // Lucía — AD/A
+      [14, 17], // Mateo — A
+      [18, 20], // Sofía — AD
+      [9,  13], // Diego — B/C
+      [14, 17], // Valentina — A
+      [7,  12]  // Joaquín — C/B
+    ];
+    var EVAL_NAMES = [
+      ['Prueba escrita', 'Trabajo grupal', 'Exposición oral', 'Práctica de laboratorio'],
+      ['Evaluación formativa', 'Proyecto integrador', 'Prueba de salida', 'Rúbrica de desempeño']
+    ];
+    var OBS_AD = ['Excelente dominio. Supera los aprendizajes esperados.', 'Demuestra pensamiento crítico sobresaliente.', 'Rendimiento destacado en todas las competencias.'];
+    var OBS_A  = ['Logro previsto alcanzado satisfactoriamente.', 'Buen desempeño. Cumple los estándares del ciclo.', 'Aplica correctamente los conocimientos adquiridos.'];
+    var OBS_B  = ['En proceso de consolidar los aprendizajes.', 'Avance progresivo. Requiere refuerzo en algunos indicadores.', 'Muestra mejora sostenida con acompañamiento docente.'];
+    var OBS_C  = ['Requiere mayor acompañamiento y refuerzo.', 'En inicio. Se recomienda trabajo con el tutor.', 'Dificultades en la comprensión de competencias básicas.'];
+
+    function _obs(scale) {
+      var arr = scale === 'AD' ? OBS_AD : scale === 'A' ? OBS_A : scale === 'B' ? OBS_B : OBS_C;
+      return arr[Math.floor(rnd() * arr.length)];
+    }
+
     STUDENTS.forEach(function(st, si) {
+      var profile = SCORE_PROFILES[si] || [10, 16];
       [[BIM1, 70, 90], [BIM2, 1, 30]].forEach(function(bimDef) {
         var bimId = bimDef[0], daysMin = bimDef[1], daysMax = bimDef[2];
+        var evalSet = EVAL_NAMES[bimId === BIM1 ? 0 : 1];
         SUBJECTS.forEach(function(sub, subIdx) {
           var comps = (typeof Grades !== 'undefined' && Grades.COMPETENCIES[sub]) || ['Competencia general'];
-          for (var e = 0; e < 2; e++) {
-            // Scores variados pero realistas: dist. normal aproximada entre 8-20
-            var base = range(10, 19) + (si < 3 ? 1 : 0); // top 3 estudiantes ligeramente mejores
-            var score = Math.max(0, Math.min(20, base));
-            var scale = (typeof Grades !== 'undefined') ? Grades.scoreToScale(score) : (score >= 18 ? 'AD' : score >= 14 ? 'A' : score >= 11 ? 'B' : 'C');
+          // 3 evaluaciones por materia por bimestre para más datos
+          for (var e = 0; e < 3; e++) {
+            // Ligera variación dentro del perfil del estudiante
+            var lo = profile[0], hi = profile[1];
+            var score = Math.max(0, Math.min(20, range(lo, hi)));
+            // Segunda evaluación puede mejorar (efecto Ariven)
+            if (e === 2 && bimId === BIM2) score = Math.min(20, score + range(0, 2));
+            var scale = score >= 18 ? 'AD' : score >= 14 ? 'A' : score >= 11 ? 'B' : 'C';
             var evalDate = new Date(today);
             evalDate.setDate(today.getDate() - range(daysMin, daysMax));
-            var gId = 'demo-g-' + si + '-' + bimId.slice(-1) + '-' + subIdx + '-' + e;
-            var obs = '';
-            if (scale === 'AD') obs = 'Excelente dominio de la competencia.';
-            else if (scale === 'C') obs = 'Requiere refuerzo y seguimiento.';
+            var gId = 'demo-g-' + si + '-' + (bimId === BIM1 ? '1' : '2') + '-' + subIdx + '-' + e;
             state.grades[gId] = {
               id: gId,
               studentId: st.id,
@@ -197,11 +224,11 @@ const Demo = (() => {
               bimesterId: bimId,
               subject: sub,
               competency: comps[e % comps.length],
-              evaluationName: EVAL_NAMES[e] + ' ' + (bimId === BIM1 ? 'I' : 'II'),
+              evaluationName: evalSet[e % evalSet.length],
               evaluationDate: evalDate.toISOString().slice(0, 10),
               scale: scale,
               score: score,
-              observations: obs,
+              observations: _obs(scale),
               createdAt: evalDate.toISOString(),
               updatedAt: evalDate.toISOString()
             };
