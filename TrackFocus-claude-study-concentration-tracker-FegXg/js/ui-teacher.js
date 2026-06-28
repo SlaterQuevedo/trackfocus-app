@@ -1793,13 +1793,148 @@ const UITeacher = (() => {
     _wireGradesInTab();
   }
 
+  // ── Vista de calificaciones por bimestre ─────────────────────────────────────
+
+  function screenBimesterGrades() {
+    const s = Storage.get();
+    const bimesterId = App._bimesterId;
+    const bimester = bimesterId ? (s.bimesters || {})[bimesterId] : null;
+
+    const backBtn = '<button class="ghost" data-go="teacher-dashboard" style="flex-shrink:0;">← Volver</button>';
+
+    if (!bimester) {
+      return `<div style="padding:24px;">${backBtn}<p class="muted" style="margin-top:16px;">Bimestre no encontrado.</p></div>`;
+    }
+
+    const currentUserId = s.currentUserId;
+    const user = s.users[currentUserId];
+    const isDir = Grades.isDirector(currentUserId);
+    const isDemo = !!(typeof window !== 'undefined' && window.__TF_DEMO);
+
+    // Aulas de esta escuela
+    const schoolClassrooms = Object.values(s.classrooms)
+      .filter(c => c.schoolId === bimester.schoolId)
+      .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+    // Aula seleccionada
+    const selectedCrId = App._bimGradeClassroomId ||
+      (user?.classroomIds?.[0] || user?.classroomId || schoolClassrooms[0]?.id);
+    const classroom = s.classrooms[selectedCrId] || schoolClassrooms[0];
+
+    if (!classroom) {
+      return `<div style="padding:24px;">${backBtn}<p class="muted" style="margin-top:16px;">Sin aula configurada.</p></div>`;
+    }
+
+    const isOpen = bimester.status === 'open';
+    const statusBadge = isOpen
+      ? '<span class="bimester-badge badge-open">🟢 Abierto</span>'
+      : '<span class="bimester-badge badge-closed">🔒 Cerrado</span>';
+
+    const crSelector = (isDir && schoolClassrooms.length > 1) ? `
+      <select id="bimGradeClassroomSel"
+        style="font-size:13px;padding:5px 10px;background:rgba(255,255,255,.07);
+               border:1px solid rgba(255,255,255,.14);color:var(--text,#f0f0f0);border-radius:8px;">
+        ${schoolClassrooms.map(c =>
+          `<option value="${c.id}" ${c.id === classroom.id ? 'selected' : ''}>${c.name}</option>`
+        ).join('')}
+      </select>` : `<span style="font-size:14px;font-weight:600;">${classroom.name}</span>`;
+
+    // Materias con asignación en el aula
+    const assignments = Grades.getAssignmentsForClassroom(classroom.id);
+    const subjects = [...new Set(assignments.map(a => a.subject))].sort();
+
+    // Estudiantes del aula
+    const students = (classroom.studentIds || [])
+      .map(id => s.users[id]).filter(Boolean)
+      .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+    // Mapa: studentId → subject → grades[]
+    const allGrades = Grades.listForClassroom(classroom.id, bimesterId);
+    const gradeMap = {};
+    allGrades.forEach(g => {
+      if (!gradeMap[g.studentId]) gradeMap[g.studentId] = {};
+      if (!gradeMap[g.studentId][g.subject]) gradeMap[g.studentId][g.subject] = [];
+      gradeMap[g.studentId][g.subject].push(g);
+    });
+
+    let tableHtml = '';
+    if (!students.length) {
+      tableHtml = '<p class="muted" style="padding:20px;">Sin estudiantes en esta aula.</p>';
+    } else if (!subjects.length) {
+      tableHtml = '<p class="muted" style="padding:20px;">Sin materias asignadas. Configura las asignaciones en "Gestionar Aula".</p>';
+    } else {
+      const shortName = s => s.length > 14 ? s.slice(0, 12) + '…' : s;
+      const thead = `<tr>
+        <th style="min-width:130px;position:sticky;left:0;background:rgba(30,30,46,.95);">Estudiante</th>
+        ${subjects.map(sub => `<th style="font-size:11px;min-width:72px;text-align:center;">${shortName(sub)}</th>`).join('')}
+        <th style="font-size:11px;min-width:60px;text-align:center;">Total</th>
+      </tr>`;
+
+      const tbody = students.map(st => {
+        const cells = subjects.map(sub => {
+          const grades = (gradeMap[st.id]?.[sub] || [])
+            .sort((a, b) => b.evaluationDate > a.evaluationDate ? 1 : -1);
+          if (!grades.length) return `<td style="text-align:center;color:rgba(255,255,255,.2);">—</td>`;
+          const latest = grades[0];
+          return `<td style="text-align:center;">${GradeUI.renderScaleBadge(latest.scale)}</td>`;
+        }).join('');
+        const total = subjects.reduce((n, sub) => n + (gradeMap[st.id]?.[sub]?.length || 0), 0);
+        return `<tr>
+          <td style="position:sticky;left:0;background:rgba(30,30,46,.95);">
+            <a class="bim-student-link" data-student-id="${st.id}"
+              style="cursor:pointer;font-weight:500;color:var(--text,#f0f0f0);text-decoration:none;font-size:13px;">
+              ${st.name}
+            </a>
+          </td>
+          ${cells}
+          <td style="text-align:center;font-size:12px;color:rgba(255,255,255,.45);">${total}</td>
+        </tr>`;
+      }).join('');
+
+      tableHtml = `<div class="grade-table-wrap"><table class="grade-table">
+        <thead>${thead}</thead><tbody>${tbody}</tbody>
+      </table></div>`;
+    }
+
+    return `
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+        ${backBtn}
+        <h1 style="margin:0;font-size:20px;">${bimester.name}</h1>
+        ${statusBadge}
+        ${crSelector}
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">${tableHtml}</div>
+      <p class="muted" style="margin-top:10px;font-size:12px;">
+        Haz clic en un estudiante para ver sus calificaciones detalladas.
+        ${!isOpen && !isDemo ? ' · Bimestre cerrado — solo lectura.' : ''}
+      </p>`;
+  }
+
+  function wireBimesterGrades() {
+    root().querySelectorAll('[data-go]').forEach(btn =>
+      btn.addEventListener('click', () => App.go(btn.dataset.go)));
+
+    document.getElementById('bimGradeClassroomSel')?.addEventListener('change', function() {
+      App._bimGradeClassroomId = this.value;
+      App.go('bimester-grades');
+    });
+
+    root().querySelectorAll('.bim-student-link').forEach(a => {
+      a.addEventListener('click', () => {
+        App._detailStudentId = a.dataset.studentId;
+        App.go('student-detail');
+      });
+    });
+  }
+
   const _wrap = (typeof window !== 'undefined' && window.__tfSafeScreens) || ((n, s) => s);
   return {
     screens: _wrap('teacher', {
       'teacher-dashboard': { render: screenTeacherDashboard, wire: wireTeacherDashboard },
       'classroom-manage':  { render: screenClassroomManage,  wire: wireClassroomManage },
       'classroom-stats':   { render: screenClassroomStats,   wire: wireClassroomStats },
-      'student-detail':    { render: screenStudentDetail,    wire: wireStudentDetail }
+      'student-detail':    { render: screenStudentDetail,    wire: wireStudentDetail },
+      'bimester-grades':   { render: screenBimesterGrades,   wire: wireBimesterGrades }
     })
   };
 })();

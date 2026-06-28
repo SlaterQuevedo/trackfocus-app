@@ -184,10 +184,14 @@ const GradeUI = (() => {
             <span class="bimester-badge ${badgeClass}">${badgeText}</span>
             ${closedInfo}
           </div>
-          ${directorMode && isOpen ? `
-            <button class="ghost bimester-close-btn"
-              data-id="${_esc(b.id)}" data-name="${_esc(b.name)}"
-              style="font-size:12px;padding:4px 12px;color:var(--bad);">Cerrar</button>` : ''}
+          <div style="display:flex;gap:6px;align-items:center;">
+            <button class="ghost bimester-view-btn" data-id="${_esc(b.id)}"
+              style="font-size:12px;padding:4px 12px;">Ver →</button>
+            ${directorMode && isOpen ? `
+              <button class="ghost bimester-close-btn"
+                data-id="${_esc(b.id)}" data-name="${_esc(b.name)}"
+                style="font-size:12px;padding:4px 12px;color:var(--bad);">Cerrar</button>` : ''}
+          </div>
         </div>`;
     });
 
@@ -402,6 +406,14 @@ const GradeUI = (() => {
     const s = Storage.get();
     const user = s.users[s.currentUserId];
     if (!user) return;
+
+    container.querySelectorAll('.bimester-view-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        App._bimesterId = btn.dataset.id;
+        App._bimGradeClassroomId = null;
+        App.go('bimester-grades');
+      });
+    });
 
     container.querySelectorAll('.bimester-create-btn').forEach(btn => {
       btn.addEventListener('click', () => {
