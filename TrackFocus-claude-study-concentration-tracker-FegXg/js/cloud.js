@@ -88,6 +88,49 @@ const Cloud = (() => {
     })
   };
 
+  // ── Mapeos para el sistema académico ────────────────────────────────────────
+
+  Object.assign(toDb, {
+    subjectAssignment: a => ({
+      id:            a.id,
+      teacher_id:    a.teacherId,
+      classroom_id:  a.classroomId,
+      school_id:     a.schoolId,
+      subject:       a.subject,
+      academic_year: a.academicYear,
+      created_at:    a.createdAt
+    }),
+    bimester: b => ({
+      id:            b.id,
+      school_id:     b.schoolId,
+      academic_year: b.academicYear,
+      number:        b.number,
+      name:          b.name,
+      start_date:    b.startDate || null,
+      end_date:      b.endDate   || null,
+      status:        b.status,
+      closed_at:     b.closedAt  || null,
+      closed_by:     b.closedBy  || null,
+      created_at:    b.createdAt
+    }),
+    grade: g => ({
+      id:               g.id,
+      student_id:       g.studentId,
+      teacher_id:       g.teacherId,
+      classroom_id:     g.classroomId,
+      bimester_id:      g.bimesterId,
+      subject:          g.subject,
+      competency:       g.competency,
+      evaluation_name:  g.evaluationName,
+      evaluation_date:  g.evaluationDate,
+      scale:            g.scale,
+      score:            g.score,
+      observations:     g.observations || '',
+      created_at:       g.createdAt,
+      updated_at:       g.updatedAt
+    })
+  });
+
   const fromDb = {
     user: r => {
       // Si el usuario registró su nombre manualmente, ese tiene prioridad sobre Google.
@@ -174,6 +217,44 @@ const Cloud = (() => {
       classroomId: r.classroom_id,
       metadata: r.metadata || {},
       createdAt: r.created_at
+    }),
+    subjectAssignment: r => ({
+      id:           r.id,
+      teacherId:    r.teacher_id,
+      classroomId:  r.classroom_id,
+      schoolId:     r.school_id,
+      subject:      r.subject,
+      academicYear: r.academic_year,
+      createdAt:    r.created_at
+    }),
+    bimester: r => ({
+      id:           r.id,
+      schoolId:     r.school_id,
+      academicYear: r.academic_year,
+      number:       r.number,
+      name:         r.name,
+      startDate:    r.start_date   || null,
+      endDate:      r.end_date     || null,
+      status:       r.status,
+      closedAt:     r.closed_at    || null,
+      closedBy:     r.closed_by    || null,
+      createdAt:    r.created_at
+    }),
+    grade: r => ({
+      id:              r.id,
+      studentId:       r.student_id,
+      teacherId:       r.teacher_id,
+      classroomId:     r.classroom_id,
+      bimesterId:      r.bimester_id,
+      subject:         r.subject,
+      competency:      r.competency,
+      evaluationName:  r.evaluation_name,
+      evaluationDate:  r.evaluation_date,
+      scale:           r.scale,
+      score:           r.score,
+      observations:    r.observations || '',
+      createdAt:       r.created_at,
+      updatedAt:       r.updated_at
     })
   };
 
@@ -184,18 +265,26 @@ const Cloud = (() => {
   async function bootstrap() {
     if (!window.SB) throw new Error('Supabase no está configurado.');
 
-    const [usersR, schoolsR, classroomsR, sessionsR, customR, requestsR, filesR] = await Promise.all([
+    const [usersR, schoolsR, classroomsR, sessionsR, customR, requestsR, filesR,
+           assignR, bimestersR, gradesR] = await Promise.all([
       window.SB.from('users').select('*'),
       window.SB.from('schools').select('*'),
       window.SB.from('classrooms').select('*'),
       window.SB.from('study_sessions').select('*').order('datetime', { ascending: false }).limit(1000),
       window.SB.from('custom_subjects').select('*'),
       window.SB.from('classroom_requests').select('*'),
-      window.SB.from('uploaded_files').select('*')
+      window.SB.from('uploaded_files').select('*'),
+      window.SB.from('subject_assignments').select('*'),
+      window.SB.from('bimesters').select('*'),
+      window.SB.from('grades').select('*').order('created_at', { ascending: false }).limit(2000)
     ]);
 
     for (const r of [usersR, schoolsR, classroomsR, sessionsR, customR, requestsR, filesR]) {
       if (r.error) throw new Error('Cloud bootstrap: ' + r.error.message);
+    }
+    // Las tablas académicas pueden no existir todavía si la migración no se ha aplicado
+    for (const [label, r] of [['subject_assignments', assignR], ['bimesters', bimestersR], ['grades', gradesR]]) {
+      if (r.error) console.warn(`[Cloud] bootstrap: tabla ${label} no disponible (${r.error.message}). Aplica grades_migration.sql.`);
     }
 
     const state = {
@@ -209,7 +298,10 @@ const Cloud = (() => {
       subjectsByInstitution: { colegio: ['Matemática','Comunicación','Ciencia y Tecnología','Ciencias Sociales','Desarrollo Personal, Ciudadanía y Cívica','Educación Religiosa','Tutoría','Educación Física','Arte y Cultura','Inglés'] },
       customSubjects: {},
       students: {},
-      classroomRequests: {}
+      classroomRequests: {},
+      subjectAssignments: {},
+      bimesters: {},
+      grades: {}
     };
 
     (usersR.data      || []).forEach(r => { state.users[r.id]      = fromDb.user(r); });
@@ -222,6 +314,10 @@ const Cloud = (() => {
     });
     (filesR.data || []).forEach(r => { state.uploadedFiles[r.id] = fromDb.uploadedFile(r); });
     (requestsR.data || []).forEach(r => { state.classroomRequests[r.id] = fromDb.request(r); });
+    // Sistema académico
+    (!assignR.error   ? assignR.data   : []).forEach(r => { state.subjectAssignments[r.id] = fromDb.subjectAssignment(r); });
+    (!bimestersR.error ? bimestersR.data : []).forEach(r => { state.bimesters[r.id]         = fromDb.bimester(r); });
+    (!gradesR.error   ? gradesR.data   : []).forEach(r => { state.grades[r.id]             = fromDb.grade(r); });
 
     return state;
   }
@@ -288,6 +384,21 @@ const Cloud = (() => {
     diffMap(before.classroomRequests, after.classroomRequests,
       row => ops.push(window.SB.from('classroom_requests').upsert(toDb.request(row))),
       id  => ops.push(window.SB.from('classroom_requests').delete().eq('id', id)));
+
+    // SUBJECT ASSIGNMENTS
+    diffMap(before.subjectAssignments || {}, after.subjectAssignments || {},
+      row => ops.push(window.SB.from('subject_assignments').upsert(toDb.subjectAssignment(row))),
+      id  => ops.push(window.SB.from('subject_assignments').delete().eq('id', id)));
+
+    // BIMESTERS
+    diffMap(before.bimesters || {}, after.bimesters || {},
+      row => ops.push(window.SB.from('bimesters').upsert(toDb.bimester(row))),
+      id  => ops.push(window.SB.from('bimesters').delete().eq('id', id)));
+
+    // GRADES
+    diffMap(before.grades || {}, after.grades || {},
+      row => ops.push(window.SB.from('grades').upsert(toDb.grade(row))),
+      id  => ops.push(window.SB.from('grades').delete().eq('id', id)));
 
     if (ops.length === 0) return;
 

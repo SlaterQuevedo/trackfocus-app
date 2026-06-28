@@ -107,6 +107,8 @@ const UITeacher = (() => {
     const weeklyGoalSessions = Math.max(1, students.length * 3);
     const weeklyGoalPct = Math.min(100, Math.round((weekSessions.length / weeklyGoalSessions) * 100));
     const noRiskPct = students.length ? Math.round(((students.length - atRiskList.length) / students.length) * 100) : 100;
+    const _isDirectorDash = Grades.isDirector(user.id);
+    const _mySubjectsDash = primaryCr ? Grades.getAssignmentsForClassroom(primaryCr.id).filter(a => a.teacherId === user.id) : [];
 
     // Insights IA (rule-based from real data)
     const insights = [];
@@ -351,6 +353,22 @@ const UITeacher = (() => {
       </div>
     </div>
 
+    ${school ? `
+    <div class="td-sec-grid" style="margin-top:16px;" id="tdGradeSection">
+      <div class="td-card">
+        <div class="td-sh" style="margin-bottom:12px;">
+          <div class="td-sh-l"><span class="td-sh-ico">📚</span><span class="td-sh-ttl">Mis Materias</span></div>
+          ${primaryCr ? `<span class="td-sh-meta">${esc(primaryCr.name)}</span>` : ''}
+        </div>
+        ${_mySubjectsDash.length === 0
+          ? `<p class="muted" style="font-size:13px;">No tienes materias asignadas en esta aula.${_isDirectorDash ? ' Asígnalas en Gestionar &gt; Distribución de Materias.' : ''}</p>`
+          : `<div class="my-subjects-list">${_mySubjectsDash.map(a => `<div class="my-subject-row"><span class="my-subject-name">${esc(a.subject)}</span></div>`).join('')}</div>`}
+      </div>
+      <div id="tdBimesterPanel">
+        ${GradeUI.renderBimesterPanel(school.id, _isDirectorDash)}
+      </div>
+    </div>` : ''}
+
     ${classrooms.length > 1 ? `
     <div class="td-card" style="margin-top:16px;">
       <div class="td-sh" style="margin-bottom:12px;"><div class="td-sh-l"><span class="td-sh-ico">🏫</span><span class="td-sh-ttl">Otras Aulas</span></div><button class="primary" data-go="classroom-manage" data-id="new" style="font-size:12px;padding:5px 12px;">+ Nueva</button></div>
@@ -424,6 +442,20 @@ const UITeacher = (() => {
       const step = Math.max(1, Math.ceil(target / 18));
       const t = setInterval(() => { cur = Math.min(cur + step, target); el.textContent = cur; if (cur >= target) clearInterval(t); }, 35);
     });
+
+    // Bimester panel (director controls)
+    const _bimPanel = document.getElementById('tdBimesterPanel');
+    if (_bimPanel && school) {
+      GradeUI.wireBimesterPanel(_bimPanel, school.id);
+      // Re-render after create/close so panel reflects new state
+      _bimPanel.addEventListener('click', function(e) {
+        if (!e.target.closest('.bimester-create-btn') && !e.target.closest('.bimester-close-btn')) return;
+        setTimeout(function() {
+          _bimPanel.innerHTML = GradeUI.renderBimesterPanel(school.id, Grades.isDirector(Storage.get().currentUserId));
+          GradeUI.wireBimesterPanel(_bimPanel, school.id);
+        }, 80);
+      });
+    }
 
     _loadPilotCard();
     document.getElementById('btnWeeklyReport')?.addEventListener('click', () => _weeklyReport(user));
@@ -622,6 +654,8 @@ const UITeacher = (() => {
     const weekSessions = allCrSessions.filter(se => se.datetime >= from7Iso);
     const allClassrooms = school ? Schools.listClassrooms(school.id) : [];
     const schoolId = school ? school.id : null;
+
+    const _isDirectorCr = Grades.isDirector(user.id);
 
     // KPIs
     const totalStudents = students.length;
@@ -961,6 +995,16 @@ const UITeacher = (() => {
                   <button class="primary" id="moveStudentBtn">Mover</button>
                 </div>
               </div>
+            </div>` : ''}
+
+            <!-- Distribución de Materias -->
+            ${schoolId ? `
+            <div class="cm-rc-card" style="margin-top:16px;" id="subjectAssignmentSection">
+              <div class="cm-sh" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <span>Distribución de Materias</span>
+                ${_isDirectorCr ? '<span class="muted" style="font-size:11px;">Vista Director — puedes reasignar docentes</span>' : ''}
+              </div>
+              ${GradeUI.renderSubjectAssignmentGrid(classroomId, _isDirectorCr)}
             </div>` : ''}
 
           </div><!-- /cm-main-col -->
@@ -1341,6 +1385,21 @@ const UITeacher = (() => {
 
     document.getElementById('cmSPOverlay')?.addEventListener('click', _closeSidePanel);
 
+    // ── subject assignment section ──
+    const _assignSection = document.getElementById('subjectAssignmentSection');
+    if (_assignSection && classroomId) {
+      GradeUI.wireSubjectAssignments(_assignSection, classroomId);
+      // Re-render after assign/unassign
+      _assignSection.addEventListener('click', function(e) {
+        if (!e.target.closest('.subject-assign-btn') && !e.target.closest('.subject-unassign-btn')) return;
+        setTimeout(function() {
+          const grid = _assignSection.querySelector('.subject-assignment-grid');
+          if (grid) grid.outerHTML = GradeUI.renderSubjectAssignmentGrid(classroomId, Grades.isDirector(Storage.get().currentUserId));
+          GradeUI.wireSubjectAssignments(_assignSection, classroomId);
+        }, 80);
+      });
+    }
+
     // ── student row click → side panel ──
     root().querySelectorAll('.cm-st-row, .cm-st-card-item').forEach(row => {
       row.addEventListener('click', (e) => {
@@ -1539,6 +1598,12 @@ const UITeacher = (() => {
     const alerts = Analytics.generateAlerts(studentId);
     const subs = Stats.bySubject(sessions);
 
+    const _school = student.schoolId ? s.schools[student.schoolId] : null;
+    const _bimesters = _school ? Grades.listBimesters(_school.id) : [];
+    const _activeBim = _school ? (Grades.getCurrentBimester(_school.id) || _bimesters[0] || null) : null;
+    const _activeBimId = _activeBim ? _activeBim.id : null;
+    const _classroomId = App._classroomId || '';
+
     return `
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
         <button class="ghost" data-go="classroom-manage">← Volver</button>
@@ -1547,62 +1612,81 @@ const UITeacher = (() => {
 
       ${alerts.map(a => `<div class="alert ${a.type === 'success' ? 'success' : a.type === 'error' ? 'error' : 'info'}">${a.msg}</div>`).join('')}
 
-      <div class="grid cols-4" style="margin-bottom:18px;">
-        <div class="kpi"><div class="v">${sum.total}</div><div class="l">Sesiones</div></div>
-        <div class="kpi"><div class="v">${sum.avgConc || '—'}</div><div class="l">Conc. prom.</div></div>
-        <div class="kpi"><div class="v">${sum.totalMin}</div><div class="l">Min. totales</div></div>
-        <div class="kpi"><div class="v">🔥 ${gam.streak || 0}</div><div class="l">Racha</div></div>
+      <div class="student-tabs">
+        <button class="student-tab-btn active" data-tab="sessions">Sesiones</button>
+        <button class="student-tab-btn" data-tab="grades">Calificaciones</button>
       </div>
 
-      <div class="grid cols-2" style="margin-bottom:18px;">
-        <div class="card">
-          <h3>Gamificación</h3>
-          <p><strong>Nivel:</strong> ${levelInfo.current.level} — ${esc(levelInfo.current.title)}</p>
-          <p><strong>XP Total:</strong> ${gam.xp || 0}</p>
-          <p><strong>Insignias:</strong> ${(gam.badges || []).length} / ${Gamification.BADGES.length}</p>
-          <div class="xp-bar-wrap" style="margin-top:8px;">
-            <div class="xp-bar" style="width:${levelInfo.progress}%"></div>
-          </div>
+      <div class="student-tab-panel active" id="tabSessions">
+        <div class="grid cols-4" style="margin-bottom:18px;">
+          <div class="kpi"><div class="v">${sum.total}</div><div class="l">Sesiones</div></div>
+          <div class="kpi"><div class="v">${sum.avgConc || '—'}</div><div class="l">Conc. prom.</div></div>
+          <div class="kpi"><div class="v">${sum.totalMin}</div><div class="l">Min. totales</div></div>
+          <div class="kpi"><div class="v">🔥 ${gam.streak || 0}</div><div class="l">Racha</div></div>
         </div>
-        ${profile ? `
-        <div class="card" style="text-align:center;">
-          <div style="font-size:36px;">${profile.icon}</div>
-          <h3 style="margin:8px 0 4px;">${esc(profile.label)}</h3>
-          <p class="muted" style="font-size:12px;">${esc(profile.desc)}</p>
-        </div>` : '<div class="card"><p class="muted">Pocas sesiones para determinar perfil.</p></div>'}
-      </div>
 
-      <div class="card">
-        <h3>Concentración por materia</h3>
-        ${subs.map(r => {
-          const pct = (r.avgConcentration / 5) * 100;
-          return `<div>
-            <div style="display:flex;justify-content:space-between;font-size:13px;">
-              <span>${esc(r.subject)}</span>
-              <span class="muted">${r.avgConcentration}/5 · ${r.count} ses.</span>
+        <div class="grid cols-2" style="margin-bottom:18px;">
+          <div class="card">
+            <h3>Gamificación</h3>
+            <p><strong>Nivel:</strong> ${levelInfo.current.level} — ${esc(levelInfo.current.title)}</p>
+            <p><strong>XP Total:</strong> ${gam.xp || 0}</p>
+            <p><strong>Insignias:</strong> ${(gam.badges || []).length} / ${Gamification.BADGES.length}</p>
+            <div class="xp-bar-wrap" style="margin-top:8px;">
+              <div class="xp-bar" style="width:${levelInfo.progress}%"></div>
             </div>
-            <div class="bar"><span style="width:${pct}%"></span></div>
-          </div>`;
-        }).join('') || '<p class="muted">Sin datos.</p>'}
+          </div>
+          ${profile ? `
+          <div class="card" style="text-align:center;">
+            <div style="font-size:36px;">${profile.icon}</div>
+            <h3 style="margin:8px 0 4px;">${esc(profile.label)}</h3>
+            <p class="muted" style="font-size:12px;">${esc(profile.desc)}</p>
+          </div>` : '<div class="card"><p class="muted">Pocas sesiones para determinar perfil.</p></div>'}
+        </div>
+
+        <div class="card">
+          <h3>Concentración por materia</h3>
+          ${subs.map(r => {
+            const pct = (r.avgConcentration / 5) * 100;
+            return `<div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;">
+                <span>${esc(r.subject)}</span>
+                <span class="muted">${r.avgConcentration}/5 · ${r.count} ses.</span>
+              </div>
+              <div class="bar"><span style="width:${pct}%"></span></div>
+            </div>`;
+          }).join('') || '<p class="muted">Sin datos.</p>'}
+        </div>
+
+        <div class="card" style="padding:0;overflow:auto;">
+          <div style="padding:16px;border-bottom:1px solid var(--border);">
+            <h3 style="margin:0;">Últimas 10 sesiones</h3>
+          </div>
+          <table class="table">
+            <thead><tr><th>Fecha</th><th>Materia</th><th>Conc.</th><th>Min</th><th>Actividad previa</th></tr></thead>
+            <tbody>
+              ${sessions.slice(0, 10).map(x => `
+                <tr>
+                  <td>${new Date(x.datetime).toLocaleString('es-PE')}</td>
+                  <td>${esc(x.subject)}</td>
+                  <td><strong>${x.concentration}</strong>/5</td>
+                  <td>${x.durationMin}</td>
+                  <td>${esc(x.previousActivity)}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <div class="card" style="padding:0;overflow:auto;">
-        <div style="padding:16px;border-bottom:1px solid var(--border);">
-          <h3 style="margin:0;">Últimas 10 sesiones</h3>
-        </div>
-        <table class="table">
-          <thead><tr><th>Fecha</th><th>Materia</th><th>Conc.</th><th>Min</th><th>Actividad previa</th></tr></thead>
-          <tbody>
-            ${sessions.slice(0, 10).map(x => `
-              <tr>
-                <td>${new Date(x.datetime).toLocaleString('es-PE')}</td>
-                <td>${esc(x.subject)}</td>
-                <td><strong>${x.concentration}</strong>/5</td>
-                <td>${x.durationMin}</td>
-                <td>${esc(x.previousActivity)}</td>
-              </tr>`).join('')}
-          </tbody>
-        </table>
+      <div class="student-tab-panel" id="tabGrades"
+        data-student-id="${esc(studentId)}"
+        data-classroom-id="${esc(_classroomId)}">
+        ${GradeUI.renderGradesTab({
+          studentId,
+          classroomId: _classroomId,
+          currentUserId: s.currentUserId,
+          bimesters: _bimesters,
+          activeBimesterId: _activeBimId
+        })}
       </div>`;
   }
 
@@ -1610,6 +1694,103 @@ const UITeacher = (() => {
     root().querySelectorAll('[data-go]').forEach(btn => {
       btn.addEventListener('click', () => App.go(btn.dataset.go));
     });
+
+    // Tab switching
+    root().querySelectorAll('.student-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        root().querySelectorAll('.student-tab-btn').forEach(b => b.classList.remove('active'));
+        root().querySelectorAll('.student-tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        const panelId = 'tab' + tab.charAt(0).toUpperCase() + tab.slice(1);
+        root().querySelector('#' + panelId)?.classList.add('active');
+      });
+    });
+
+    // Grade tab interactions
+    const gradesTab = root().querySelector('#tabGrades');
+    if (!gradesTab) return;
+
+    const studentId = gradesTab.dataset.studentId;
+    const classroomId = gradesTab.dataset.classroomId;
+
+    function _reloadGradesPanel(bimesterId) {
+      const st = Storage.get();
+      const student = st.users[studentId];
+      const school = student && student.schoolId ? st.schools[student.schoolId] : null;
+      const bimesters = school ? Grades.listBimesters(school.id) : [];
+      const cur = school ? (Grades.getCurrentBimester(school.id) || bimesters[0] || null) : null;
+      const activeBimesterId = bimesterId || (cur ? cur.id : null);
+      gradesTab.innerHTML = GradeUI.renderGradesTab({
+        studentId, classroomId,
+        currentUserId: st.currentUserId,
+        bimesters,
+        activeBimesterId
+      });
+      gradesTab.dataset.studentId = studentId;
+      gradesTab.dataset.classroomId = classroomId;
+      _wireGradesInTab();
+    }
+
+    function _wireGradesInTab() {
+      gradesTab.querySelector('#gradesBimesterSelect')?.addEventListener('change', function() {
+        _reloadGradesPanel(this.value);
+      });
+
+      gradesTab.querySelectorAll('.grade-add-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          const subject = btn.dataset.subject;
+          const bimesterId = gradesTab.querySelector('#gradesBimesterSelect')?.value || null;
+          const formArea = Array.from(gradesTab.querySelectorAll('.grade-form-area'))
+            .find(function(el) { return el.id === 'gradeFormArea-' + subject; });
+          if (!formArea) return;
+          if (formArea.style.display !== 'none') { formArea.style.display = 'none'; return; }
+          formArea.innerHTML = GradeUI.renderGradeForm({ studentId, bimesterId, subjects: [subject] });
+          formArea.style.display = 'block';
+          GradeUI.wireGradeForm(formArea.querySelector('#gradeForm'), {
+            onSubmit: function(data) {
+              Grades.add(data);
+              _reloadGradesPanel(bimesterId);
+            },
+            onCancel: function() { formArea.style.display = 'none'; },
+            classroomId
+          });
+        });
+      });
+
+      GradeUI.wireGradeTable(gradesTab, {
+        onEdit: function(gradeId) {
+          const st = Storage.get();
+          const grade = st.grades[gradeId];
+          if (!grade) return;
+          const bimesterId = grade.bimesterId;
+          const formArea = Array.from(gradesTab.querySelectorAll('.grade-form-area'))
+            .find(function(el) { return el.id === 'gradeFormArea-' + grade.subject; });
+          if (!formArea) return;
+          formArea.innerHTML = GradeUI.renderGradeForm({
+            studentId, bimesterId,
+            subjects: Grades.getAssignedSubjects(st.currentUserId, classroomId),
+            editGrade: grade
+          });
+          formArea.style.display = 'block';
+          GradeUI.wireGradeForm(formArea.querySelector('#gradeForm'), {
+            onSubmit: function(data) {
+              Grades.update(gradeId, data);
+              _reloadGradesPanel(bimesterId);
+            },
+            onCancel: function() { formArea.style.display = 'none'; },
+            classroomId
+          });
+        },
+        onDelete: function(gradeId) {
+          const bimesterId = (Storage.get().grades[gradeId] || {}).bimesterId;
+          Grades.remove(gradeId);
+          _reloadGradesPanel(bimesterId || null);
+        }
+      });
+    }
+
+    _wireGradesInTab();
   }
 
   const _wrap = (typeof window !== 'undefined' && window.__tfSafeScreens) || ((n, s) => s);

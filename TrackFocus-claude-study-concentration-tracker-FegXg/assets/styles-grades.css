@@ -1,0 +1,260 @@
+/* styles-grades.css — Sistema de Calificaciones Ariven */
+
+/* ── Badges de escala ─────────────────────────────────────────────────────── */
+
+.grade-scale-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .03em;
+}
+.grade-scale-ad   { background: rgba(34,197,94,.15);  color: #16a34a; }
+.grade-scale-a    { background: rgba(59,130,246,.15); color: #2563eb; }
+.grade-scale-b    { background: rgba(245,158,11,.15); color: #d97706; }
+.grade-scale-c    { background: rgba(239,68,68,.15);  color: #dc2626; }
+.grade-scale-none { background: var(--card-bg,#f4f4f4); color: var(--muted,#888); }
+
+/* ── Tabla de calificaciones ──────────────────────────────────────────────── */
+
+.grade-table-wrap {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid var(--border, rgba(0,0,0,.08));
+}
+.grade-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.grade-table th,
+.grade-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border, rgba(0,0,0,.06));
+}
+.grade-table thead th {
+  background: var(--card-bg, #f8f8f8);
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--muted, #777);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.grade-table tbody tr:last-child td { border-bottom: none; }
+.grade-table tbody tr:hover { background: var(--hover, rgba(0,0,0,.02)); }
+
+/* ── Formulario inline ────────────────────────────────────────────────────── */
+
+.grade-form {
+  background: var(--card-bg, #f9fafb);
+  border: 1px solid var(--border, rgba(0,0,0,.08));
+  border-radius: 12px;
+  padding: 16px;
+  margin: 12px 0;
+}
+.grade-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 600px) {
+  .grade-form-grid { grid-template-columns: 1fr; }
+}
+.grade-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.grade-form-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted, #666);
+}
+.grade-form-field input,
+.grade-form-field select,
+.grade-form-field textarea {
+  border: 1px solid var(--border, rgba(0,0,0,.12));
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 13px;
+  background: var(--bg, #fff);
+  color: var(--text, #111);
+  transition: border-color .15s;
+}
+.grade-form-field input:focus,
+.grade-form-field select:focus,
+.grade-form-field textarea:focus {
+  outline: none;
+  border-color: var(--accent, #6366f1);
+}
+.grade-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  justify-content: flex-end;
+}
+
+/* ── Panel de bimestres ───────────────────────────────────────────────────── */
+
+.bimester-card { padding: 16px; }
+.bimester-list { display: flex; flex-direction: column; gap: 8px; }
+.bimester-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border, rgba(0,0,0,.08));
+  background: var(--bg, #fff);
+  gap: 12px;
+}
+.bimester-status-open   { border-left: 3px solid #22c55e; }
+.bimester-status-closed { border-left: 3px solid #94a3b8; opacity: .8; }
+.bimester-status-none   { border-left: 3px solid #e2e8f0; opacity: .6; }
+
+.bimester-row-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.bimester-num { font-weight: 600; font-size: 14px; }
+.bimester-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+.badge-open   { background: rgba(34,197,94,.12); color: #16a34a; }
+.badge-closed { background: rgba(148,163,184,.15); color: #64748b; }
+.badge-none   { background: var(--card-bg, #f1f5f9); color: var(--muted, #94a3b8); }
+
+/* ── Tabs de estudiante ───────────────────────────────────────────────────── */
+
+.student-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--border, rgba(0,0,0,.08));
+  padding-bottom: 0;
+}
+.student-tab-btn {
+  padding: 8px 18px;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted, #666);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  border-radius: 6px 6px 0 0;
+  transition: color .15s, border-color .15s;
+}
+.student-tab-btn:hover { color: var(--text, #111); }
+.student-tab-btn.active {
+  color: var(--accent, #6366f1);
+  border-bottom-color: var(--accent, #6366f1);
+  font-weight: 600;
+}
+.student-tab-panel { display: none; }
+.student-tab-panel.active { display: block; }
+
+/* ── Tab de calificaciones ────────────────────────────────────────────────── */
+
+.grades-bimester-selector {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.grade-subject-section {
+  margin-bottom: 24px;
+}
+.grade-subject-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border, rgba(0,0,0,.07));
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.grade-locked-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: rgba(148,163,184,.15);
+  color: #64748b;
+  font-weight: 600;
+}
+.grade-form-area { transition: opacity .15s; }
+
+/* ── Asignación de materias ───────────────────────────────────────────────── */
+
+.subject-assignment-grid {
+  border: 1px solid var(--border, rgba(0,0,0,.08));
+  border-radius: 12px;
+  overflow: hidden;
+}
+.subject-assignment-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  padding: 8px 14px;
+  background: var(--card-bg, #f8f9fa);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--muted, #888);
+  border-bottom: 1px solid var(--border, rgba(0,0,0,.07));
+}
+.subject-assignment-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border, rgba(0,0,0,.05));
+  gap: 10px;
+  font-size: 13px;
+}
+.subject-assignment-row:last-child { border-bottom: none; }
+.subject-assignment-row:hover { background: var(--hover, rgba(0,0,0,.02)); }
+.subject-assignment-name { font-weight: 500; }
+.subject-assignment-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.subject-assigned-name { font-weight: 600; }
+
+/* ── Card de "Mis materias" en dashboard ────────────────────────────────────*/
+
+.my-subjects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.my-subject-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--card-bg, #f8f9fa);
+  font-size: 13px;
+  gap: 12px;
+}
+.my-subject-name { font-weight: 600; }
+.my-subject-classroom {
+  font-size: 12px;
+  color: var(--muted, #777);
+}

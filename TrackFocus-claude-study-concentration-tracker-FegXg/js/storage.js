@@ -31,7 +31,11 @@ const Storage = (() => {
     },
     customSubjects: {},
     students: {},
-    classroomRequests: {}
+    classroomRequests: {},
+    // Sistema académico de calificaciones (Fases 1–4)
+    subjectAssignments: {},
+    bimesters:          {},
+    grades:             {}
   };
 
   function _clone(x) {
