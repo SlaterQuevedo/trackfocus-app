@@ -432,7 +432,7 @@ const Cloud = (() => {
     if (!window.SB || _channel) return;
     if (window.__ARV_NO_REALTIME) return;
     _channel = window.SB
-      .channel('ariven-sync')
+      .channel('trackfocus-sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'users' },          onChange)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'study_sessions' }, onChange)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'uploaded_files' },  onChange)

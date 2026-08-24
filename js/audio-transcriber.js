@@ -150,9 +150,9 @@ const AudioTranscriber = (() => {
       return _transcribeWithGemini(audioBlob);
     }
 
-    // Sin clave de Ariven Intelligence: el método principal es el dictado nativo del navegador
+    // Sin clave de TrackTutor: el método principal es el dictado nativo del navegador
     // (Web Speech API). No hay endpoint de servidor (carpeta api/ eliminada).
-    throw new Error('La transcripción por voz usa el dictado del navegador. Si no está disponible, activa Ariven Intelligence desde Vercel.');
+    throw new Error('La transcripción por voz usa el dictado del navegador. Si no está disponible, activa TrackTutor desde Vercel.');
   }
 
   // Transcripción directa con Gemini API (sin servidor)

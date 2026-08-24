@@ -1,4 +1,4 @@
-# Revisión crítica del proyecto Ariven — guía editorial (uso interno del equipo)
+# Revisión crítica del proyecto TrackFocus — guía editorial (uso interno del equipo)
 
 > **Para qué sirve este documento.** Es una revisión hecha por un asesor externo *antes* de la pre-feria,
 > pensada para que el equipo **detecte y corrija los puntos débiles** del discurso. **No se muestra al
@@ -117,7 +117,7 @@ Formato: **Riesgo → Corrección → Vacío a llenar** (si aplica).
 | Lema | "Mide lo que aprendes, no solo lo que estudias" (puede sonar a que la app mide aprendizaje) | Mantener el lema, pero **aclarar en voz**: "lo aterrizamos con un breve quiz antes y después de estudiar, que nos da un **indicio** del avance en comprensión" |
 | Int. 6 | "Realizamos pruebas… **observamos que** la visualización del progreso permite comprender mejor los avances" | "Realizamos pruebas de funcionamiento y un **piloto inicial limitado**; los **indicios preliminares** apuntan a que ver el progreso ayuda a reconocer avances" |
 | Int. 6 | "Estos resultados **sugieren que** evidenciar el aprendizaje **contribuye a fortalecer** la motivación" | "Estos **hallazgos preliminares** son **coherentes con** la idea de que evidenciar el progreso **podría** apoyar la motivación; falta un estudio más amplio" |
-| Int. 7 | "Ariven busca contribuir a una educación más consciente…" (ok, pero reforzar el límite) | Mantener, añadiendo: "es una **propuesta en desarrollo**; lo mostrado hoy es un **avance**, no un resultado definitivo" |
+| Int. 7 | "TrackFocus busca contribuir a una educación más consciente…" (ok, pero reforzar el límite) | Mantener, añadiendo: "es una **propuesta en desarrollo**; lo mostrado hoy es un **avance**, no un resultado definitivo" |
 
 ---
 

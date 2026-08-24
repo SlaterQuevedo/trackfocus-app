@@ -1,6 +1,6 @@
-# Informe técnico — Ariven: de prototipo a plataforma institucional
+# Informe técnico — TrackFocus: de prototipo a plataforma institucional
 
-> Nota: el proyecto se llama **Ariven** (antes *TrackFocus*). Los identificadores técnicos que conservan
+> Nota: el proyecto se llama **TrackFocus** (antes *TrackFocus*). Los identificadores técnicos que conservan
 > su nombre original (p. ej. el repo `trackfocus-app`) se mantienen a propósito; ver `eureka/ALINEACION.md`.
 
 **Rama de trabajo:** `feature/institucional` (12 commits, uno por fase → rollback aislado con `git revert`).

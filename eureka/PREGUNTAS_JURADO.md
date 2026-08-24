@@ -1,4 +1,4 @@
-# Entrenamiento de preguntas del jurado — Ariven (Eureka)
+# Entrenamiento de preguntas del jurado — TrackFocus (Eureka)
 
 > **Cómo usar.** Practiquen en voz alta. Cada respuesta es **corta, honesta y redirige al impacto
 > educativo**. Donde haya `[VACÍO]`, el equipo debe tener lista la respuesta real antes de la feria.
@@ -19,7 +19,7 @@
 > Porque lo vivimos como estudiantes: muchas veces estudiamos horas sin saber si avanzamos, y eso
 > desmotiva. Quisimos investigar algo cercano y real.
 
-**¿Qué hace diferente a Ariven?**
+**¿Qué hace diferente a TrackFocus?**
 > No se queda en registrar tiempo o tareas. Busca **evidenciar el progreso** —con un breve cuestionario
 > antes y después de estudiar— y **acompañar** al estudiante en su mejora.
 
@@ -44,7 +44,7 @@
 
 **1. "Ustedes miden tiempo y concentración. Eso no es aprendizaje. ¿Cómo evidencian *aprendizaje real*?"**
 > Tiene razón en distinguirlos. El tiempo y la concentración son **condiciones** que favorecen aprender;
-> la evidencia *directa* de aprendizaje en Ariven es un **cuestionario breve antes y después** de
+> la evidencia *directa* de aprendizaje en TrackFocus es un **cuestionario breve antes y después** de
 > estudiar: su variación nos da un **indicio** del avance en comprensión. Sabemos que es un primer
 > indicador y queremos hacerlo más robusto.
 
@@ -90,6 +90,6 @@
 
 ## C) "Trampas" de redacción a evitar al responder
 - ❌ "**Demostramos** que mejora el aprendizaje" → ✅ "Observamos **indicios** coherentes con…"
-- ❌ "Ariven **mide** el aprendizaje" → ✅ "Ariven **evidencia el progreso**; el cuestionario da un indicio."
+- ❌ "TrackFocus **mide** el aprendizaje" → ✅ "TrackFocus **evidencia el progreso**; el cuestionario da un indicio."
 - ❌ Inventar un número en el momento → ✅ "No tengo el dato exacto aquí; lo registramos en el piloto."
 - ❌ Entrar en lo técnico (IA, framework) → ✅ "Lo relevante es el problema educativo que resuelve."

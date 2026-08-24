@@ -9,6 +9,7 @@
     { "src": "/(.*)\\.ico$", "headers": { "Cache-Control": "public, max-age=604800, immutable" }, "continue": true },
     { "src": "/api/(.*)", "dest": "/api/$1" },
     { "src": "/sitemap.xml", "dest": "/api/sitemap-xml" },
+    { "src": "/about-ariven\\.html", "status": 301, "headers": { "Location": "/about-trackfocus.html" } },
     { "src": "/(.*)", "dest": "/TrackFocus-claude-study-concentration-tracker-FegXg/$1" }
   ]
 }

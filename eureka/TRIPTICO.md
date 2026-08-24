@@ -1,4 +1,4 @@
-# Tríptico Ariven — contenido para diseñar (Eureka)
+# Tríptico TrackFocus — contenido para diseñar (Eureka)
 
 > **Cómo usar este archivo.** Es el **texto listo** para volcar a Canva/Word/Publisher. No es el diseño:
 > aquí está el contenido de los **6 paneles**, con jerarquía (título / subtítulo / cuerpo). Mantén el
@@ -21,7 +21,7 @@ legible (la app usa **Inter**). Mucho espacio en blanco; 1 idea por panel.
 
 ## PANEL 1 — Portada
 
-> **Ariven**
+> **TrackFocus**
 >
 > *(logo de la marca)*
 >
@@ -52,9 +52,9 @@ legible (la app usa **Inter**). Mucho espacio en blanco; 1 idea por panel.
 
 ---
 
-## PANEL 3 — La propuesta: Ariven
+## PANEL 3 — La propuesta: TrackFocus
 
-> ## ¿Qué es Ariven?
+> ## ¿Qué es TrackFocus?
 >
 > Una propuesta educativa que **acompaña** a quien estudia y le ayuda a **ver sus avances**.
 >
@@ -65,7 +65,7 @@ legible (la app usa **Inter**). Mucho espacio en blanco; 1 idea por panel.
 > concentración, incluye un **breve cuestionario antes y después** de estudiar que da un **indicio** del
 > avance en comprensión.
 >
-> > **Ariven complementa al docente; no lo reemplaza.**
+> > **TrackFocus complementa al docente; no lo reemplaza.**
 
 ---
 
@@ -78,7 +78,7 @@ legible (la app usa **Inter**). Mucho espacio en blanco; 1 idea por panel.
 > 3. **Antecedentes** — revisamos información sobre hábitos de estudio y motivación. `[VACÍO: 2–4 fuentes]`
 > 4. **Hipótesis** — con evidencias del progreso, el estudiante reconoce mejor sus avances y fortalece
 >    hábitos.
-> 5. **Propuesta y pruebas** — desarrollamos Ariven y probamos su funcionamiento `[VACÍO: ¿piloto con
+> 5. **Propuesta y pruebas** — desarrollamos TrackFocus y probamos su funcionamiento `[VACÍO: ¿piloto con
 >    cuántos estudiantes?]`.
 > 6. **Resultados preliminares** — *indicios* de que ver el progreso ayuda a reconocer avances.
 > 7. **Conclusiones** — propuesta prometedora, **en desarrollo**, que requiere más validación.
@@ -116,7 +116,7 @@ legible (la app usa **Inter**). Mucho espacio en blanco; 1 idea por panel.
 >
 > **Equipo:** `[VACÍO: nombres de los 7 integrantes]`
 > **Contacto / demo:** `[VACÍO: enlace o QR a la demostración]`
-> *Proyecto Ariven · Pre-Feria Eureka `[VACÍO: año]`*
+> *Proyecto TrackFocus · Pre-Feria Eureka `[VACÍO: año]`*
 
 ---
 

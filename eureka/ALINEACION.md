@@ -1,22 +1,22 @@
-# Alineación de marca: TrackFocus → Ariven (revisión documental)
+# Alineación de marca: TrackFocus → TrackFocus (revisión documental)
 
 > **Alcance.** Revisión **documental**, sin tocar código ni infraestructura. Objetivo: que ningún
 > material que vea el jurado diga "TrackFocus", **sin romper** identificadores técnicos reales.
 
 ## 1. Lo que YA está alineado (sin acción)
 
-La **marca visible de la aplicación ya es "Ariven"**. Verificado en [index.html](../index.html):
-`<title>`, `application-name`, `og:site_name`/`og:title`, Twitter cards, JSON-LD (`"name": "Ariven"`),
-`canonical → https://ariven.vercel.app/`, y el header (`<span>Ariven</span>`). **El usuario final ve
-"Ariven".**
+La **marca visible de la aplicación ya es "TrackFocus"**. Verificado en [index.html](../index.html):
+`<title>`, `application-name`, `og:site_name`/`og:title`, Twitter cards, JSON-LD (`"name": "TrackFocus"`),
+`canonical → https://trackfocus.vercel.app/`, y el header (`<span>TrackFocus</span>`). **El usuario final ve
+"TrackFocus".**
 
 ## 2. Lo que se alineó en esta revisión (prosa de documentos)
 
 Cambios **solo de texto humano**, no de identificadores:
 
-- **`INFORME_INSTITUCIONAL.md`** — título "TrackFocus: …" → "**Ariven**: …" + nota aclaratoria.
-- **`SETUP.md`** — título "TrackFocus — Setup…" → "**Ariven** — Setup…" + nota; y las referencias a la
-  app que ve el usuario ("Inicia sesión… en **Ariven**", "Recarga **Ariven**").
+- **`INFORME_INSTITUCIONAL.md`** — título "TrackFocus: …" → "**TrackFocus**: …" + nota aclaratoria.
+- **`SETUP.md`** — título "TrackFocus — Setup…" → "**TrackFocus** — Setup…" + nota; y las referencias a la
+  app que ve el usuario ("Inicia sesión… en **TrackFocus**", "Recarga **TrackFocus**").
 
 ## 3. Lo que se PRESERVÓ a propósito (no tocar sin programar/migrar)
 
@@ -39,7 +39,7 @@ rompería referencias o instrucciones. Quedan **fuera de alcance** (requerirían
   `TrackFocus-claude-study-concentration-tracker-FegXg/js/supabase-config.js`, que es la **carpeta
   duplicada/antigua**. El archivo activo es `js/supabase-config.js`. *Recomendación:* verificar y corregir
   la ruta cuando se trabaje el código.
-- ⚠️ **URL de despliegue:** `index.html` usa `ariven.vercel.app` (canónica), pero `SETUP.md` menciona
+- ⚠️ **URL de despliegue:** `index.html` usa `trackfocus.vercel.app` (canónica), pero `SETUP.md` menciona
   `track-focus.vercel.app`. *Recomendación:* confirmar cuál es la URL vigente y unificar.
 - ⚠️ **Carpeta duplicada `TrackFocus-claude-study-concentration-tracker-FegXg/` y el `.zip`** en la raíz:
   copia antigua del proyecto. *Recomendación:* archivar/eliminar para evitar confusiones (tarea de
@@ -49,4 +49,4 @@ rompería referencias o instrucciones. Quedan **fuera de alcance** (requerirían
 
 Sería un trabajo de **código + infraestructura**, fuera de esta tarea: migrar claves `localStorage` con
 retrocompatibilidad, renombrar prefijos `tf-`, crear/renombrar proyecto Supabase y app OAuth, y el repo.
-**No es necesario para Eureka:** lo que el jurado ve (app y materiales) ya dice **Ariven**.
+**No es necesario para Eureka:** lo que el jurado ve (app y materiales) ya dice **TrackFocus**.

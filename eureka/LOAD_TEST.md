@@ -1,5 +1,5 @@
 # Plan de Pruebas de Carga — Feria Eureka
-**Objetivo:** Validar que Ariven soporta 500–1000 usuarios simultáneos sin degradación.
+**Objetivo:** Validar que TrackFocus soporta 500–1000 usuarios simultáneos sin degradación.
 
 ---
 
@@ -19,7 +19,7 @@
 
 ```yaml
 config:
-  target: "https://ariven.vercel.app"
+  target: "https://trackfocus.vercel.app"
   phases:
     - name: "Smoke (10 usuarios)"
       duration: 60
@@ -37,7 +37,7 @@ config:
   defaults:
     headers:
       Content-Type: "application/json"
-      Origin: "https://ariven.vercel.app"
+      Origin: "https://trackfocus.vercel.app"
 
 scenarios:
   - name: "Flujo estudiante típico"
@@ -136,7 +136,7 @@ artillery report eureka/results.json --output eureka/report.html
 
 ### Infraestructura
 - `vercel.json` — JS/CSS: `max-age` 1h → 24h, `stale-while-revalidate` 1d → 7d
-- `sw.js` — `ariven-v26`: PRECACHE ampliado con JS críticos (storage, cloud, gamification, stats, roles, app)
+- `sw.js` — `trackfocus-v26`: PRECACHE ampliado con JS críticos (storage, cloud, gamification, stats, roles, app)
 
 ### Capacidad Supabase (Free Tier)
 - **Realtime:** 200 conexiones WebSocket simultáneas — suficiente para 200 usuarios activos

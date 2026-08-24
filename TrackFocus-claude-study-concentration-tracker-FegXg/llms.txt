@@ -80,7 +80,7 @@ TrackFocus es una aplicación web (SPA) diseñada para el mercado educativo peru
 ## Páginas disponibles
 
 - [Inicio / App](https://trackfocus.vercel.app/) — Landing page y acceso completo a la plataforma
-- [Sobre TrackFocus](https://trackfocus.vercel.app/about-ariven.html) — Descripción completa: qué es, cómo funciona, para quién es
+- [Sobre TrackFocus](https://trackfocus.vercel.app/about-trackfocus.html) — Descripción completa: qué es, cómo funciona, para quién es
 - [Política de Privacidad](https://trackfocus.vercel.app/privacy.html)
 - [Términos y Condiciones](https://trackfocus.vercel.app/terms.html)
 - [Cumplimiento y Transparencia de Datos](https://trackfocus.vercel.app/data-transparency.html)
@@ -89,7 +89,6 @@ TrackFocus es una aplicación web (SPA) diseñada para el mercado educativo peru
 
 ## Contexto adicional
 
-- Nombre anterior (legado técnico): TrackFocus
 - Marco legal aplicable: Ley N.° 29733 (Perú), GDPR-inspired best practices
-- Dominio actual: trackfocus.vercel.app (migración en curso a ariven.vercel.app)
+- Dominio actual: trackfocus.vercel.app
 - Proyecto también presentado en: Feria Eureka de Innovación Educativa

@@ -240,7 +240,7 @@ window.YoutubeRecommender = (() => {
     if (isExplicit) _pendingExplicit = false;
 
     const iaText = bubble.textContent || '';
-    const ctx = window._arivenChatCtx || {};
+    const ctx = window._trackfocusChatCtx || {};
 
     // Último mensaje del usuario
     const userBubbles = document.querySelectorAll('.chat-bubble.user');

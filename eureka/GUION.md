@@ -1,4 +1,4 @@
-# Guion oficial de exposición — Ariven (Pre-Feria Eureka)
+# Guion oficial de exposición — TrackFocus (Pre-Feria Eureka)
 
 > **Versión pulida del guion.** Conserva la estructura del método científico y el reparto entre los **7
 > integrantes**, con tiempos, frases-puente y notas de oratoria. Aplica el **lenguaje prudente** de
@@ -31,7 +31,7 @@
 
 **Guion:**
 > Buenos días, miembros del jurado. Somos estudiantes de `[VACÍO: institución/grado]` y les presentamos
-> nuestro proyecto de investigación: **Ariven**.
+> nuestro proyecto de investigación: **TrackFocus**.
 >
 > Partimos de algo que vivimos a diario: dedicamos **horas** a estudiar, hacemos tareas y repasamos…
 > pero muchas veces **no sabemos si realmente estamos avanzando**. Y cuando uno no ve su progreso, es
@@ -118,10 +118,10 @@ Es lo que distingue una hipótesis enunciada de una **contrastable**.
 ## INTEGRANTE 5 — Desarrollo de la propuesta  ·  2–3 min
 
 **Guion:**
-> Como respuesta desarrollamos **Ariven**, una propuesta educativa cuyo propósito es **transformar el
+> Como respuesta desarrollamos **TrackFocus**, una propuesta educativa cuyo propósito es **transformar el
 > tiempo de estudio en evidencia de aprendizaje**.
 >
-> Ariven acompaña al estudiante mientras estudia: le ayuda a **organizar** sus sesiones y, sobre todo, a
+> TrackFocus acompaña al estudiante mientras estudia: le ayuda a **organizar** sus sesiones y, sobre todo, a
 > **ver su progreso**. Junto al registro de **hábitos y concentración** —que son las **condiciones** que
 > favorecen aprender—, incluye un **cuestionario breve antes y después** de cada sesión, que nos da un
 > **indicio** del avance en comprensión. Esa es la diferencia central: no solo registramos *cuánto* se
@@ -151,7 +151,7 @@ no "medimos el aprendizaje". Concentración/hábitos = *condiciones*; el quiz = 
   crecimiento semanal**, la **mejora en el cuestionario (antes vs. después)** y el **ranking** que sostiene
   la motivación.
 - **Decir en voz alta (honestidad clave):** *"Lo que ven en pantalla son **datos de demostración** para
-  ilustrar **cómo Ariven hace visible el progreso**."* Si hay cifras **reales** del piloto, preséntalas
+  ilustrar **cómo TrackFocus hace visible el progreso**."* Si hay cifras **reales** del piloto, preséntalas
   **por separado** y dilas como tales.
 
 **Guion (parte 2 — cierre del bloque):**
@@ -174,7 +174,7 @@ detectaría y perderías credibilidad. Si la demo falla, continúa con la lámin
 > Como conclusión: el aprendizaje **no debería medirse solo por el tiempo** dedicado a estudiar, sino
 > también por la **evidencia del progreso** alcanzado.
 >
-> Ariven es una **propuesta en desarrollo** que busca contribuir a una educación más **consciente**, donde
+> TrackFocus es una **propuesta en desarrollo** que busca contribuir a una educación más **consciente**, donde
 > el estudiante reconozca sus avances, fortalezca hábitos y se sienta **acompañado**. Lo que mostramos hoy
 > es un **avance prometedor**, no un resultado definitivo: como siguiente paso, queremos **ampliar el
 > piloto** y **validar la propuesta con docentes**.

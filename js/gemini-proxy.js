@@ -197,11 +197,11 @@ REGLAS:
 
   function _mockAnalysis(fileName) {
     return {
-      summary:     `Vista previa de "${fileName}". Ariven Intelligence no está disponible en modo local.`,
-      keyConcepts: 'Activa Ariven Intelligence para ver los conceptos clave.',
-      questions:   [{ text: '¿Cuál es el tema principal del material?', answer: 'Analiza el material con Ariven Intelligence.' }],
+      summary:     `Vista previa de "${fileName}". TrackTutor no está disponible en modo local.`,
+      keyConcepts: 'Activa TrackTutor para ver los conceptos clave.',
+      questions:   [{ text: '¿Cuál es el tema principal del material?', answer: 'Analiza el material con TrackTutor.' }],
       exercises:   [{ title: 'Ejercicio 1', prompt: 'Lee el material y resume los puntos principales.' }],
-      feedback:    'Conecta Ariven Intelligence desde Vercel para obtener análisis completo.'
+      feedback:    'Conecta TrackTutor desde Vercel para obtener análisis completo.'
     };
   }
 

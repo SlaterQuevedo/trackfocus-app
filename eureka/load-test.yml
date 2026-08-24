@@ -1,5 +1,5 @@
 config:
-  target: "https://ariven.vercel.app"
+  target: "https://trackfocus.vercel.app"
   phases:
     - name: "Smoke (10 usuarios)"
       duration: 60
@@ -21,7 +21,7 @@ config:
   defaults:
     headers:
       Content-Type: "application/json"
-      Origin: "https://ariven.vercel.app"
+      Origin: "https://trackfocus.vercel.app"
 
   ensure:
     p95: 3000       # p95 < 3s

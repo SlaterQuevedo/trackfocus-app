@@ -1,5 +1,5 @@
 -- ===========================================================
--- Ariven — Sistema Académico de Calificaciones
+-- TrackFocus — Sistema Académico de Calificaciones
 -- Migración idempotente: ejecutar en el Supabase Dashboard → SQL Editor
 -- ===========================================================
 

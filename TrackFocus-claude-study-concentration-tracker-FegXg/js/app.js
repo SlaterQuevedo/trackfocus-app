@@ -1804,7 +1804,7 @@ const App = (() => {
   }
 
   // Aplica/retira la política de autocompletado en el formulario de auth.
-  // Cuando auto-login está OFF: usa valores no estándar (ariven-*) que los
+  // Cuando auto-login está OFF: usa valores no estándar (trackfocus-*) que los
   // navegadores no reconocen como campos de credenciales, y new-password para
   // contraseñas (el valor más respetado universalmente por Chrome/Safari/Firefox).
   // Cuando está ON: restaura los valores semánticos originales.
@@ -1816,9 +1816,9 @@ const App = (() => {
     if (secure) {
       form.setAttribute('autocomplete', 'off');
       const fields = {
-        firstName:       'ariven-given-name',
-        lastName:        'ariven-family-name',
-        email:           'ariven-email',
+        firstName:       'trackfocus-given-name',
+        lastName:        'trackfocus-family-name',
+        email:           'trackfocus-email',
         password:        'new-password',
         confirmPassword: 'new-password'
       };

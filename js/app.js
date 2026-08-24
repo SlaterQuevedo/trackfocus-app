@@ -566,7 +566,7 @@ const App = (() => {
           'Tu patrón de estudio mejora semana a semana.',
           'La comprensión profunda llega con la práctica constante.',
           'Un día difícil no borra una semana de progreso.',
-          'Ariven detecta tus mejores horas. Confía en el proceso.',
+          'TrackFocus detecta tus mejores horas. Confía en el proceso.',
           'Tu futuro se construye con cada sesión de hoy.'
         ];
 
@@ -575,7 +575,7 @@ const App = (() => {
           + '<span class="lp-prev-dot lp-prev-dot--r"></span>'
           + '<span class="lp-prev-dot lp-prev-dot--y"></span>'
           + '<span class="lp-prev-dot lp-prev-dot--g"></span>'
-          + '<span class="lp-prev-label">Ariven · Panel Personal</span>'
+          + '<span class="lp-prev-label">TrackFocus · Panel Personal</span>'
           + '</div>'
           + '<div class="lp-prev-body">'
           + '<div class="lp-prev-hero-row">'
@@ -598,7 +598,7 @@ const App = (() => {
           + '<span class="lp-prev-chip lp-prev-chip--conc">🧠 ' + avgConc + '/5</span>'
           + '</div>'
           + '<div class="lp-prev-ai">'
-          + '<span class="lp-prev-ai-badge">✶ Ariven Intelligence</span>'
+          + '<span class="lp-prev-ai-badge">✶ TrackTutor</span>'
           + '<p class="lp-prev-ai-text">' + AI_TIPS[DAY] + '</p>'
           + '</div>'
           + '</div></div>';
@@ -609,7 +609,7 @@ const App = (() => {
         const firstName = (user.name || user.firstName || 'estudiante').split(' ')[0];
         const NEW_TIPS = [
           'La primera sesión es la más importante. Empieza hoy.',
-          'Define tu meta y Ariven hará el resto.',
+          'Define tu meta y TrackFocus hará el resto.',
           'El primer paso siempre es el más difícil. Tú ya lo diste.',
           'Una sesión registrada ya te pone por delante de ayer.',
           'Tu concentración mejora cada vez que la practicas.',
@@ -621,7 +621,7 @@ const App = (() => {
           + '<span class="lp-prev-dot lp-prev-dot--r"></span>'
           + '<span class="lp-prev-dot lp-prev-dot--y"></span>'
           + '<span class="lp-prev-dot lp-prev-dot--g"></span>'
-          + '<span class="lp-prev-label">Ariven · ' + firstName + '\'s Panel</span>'
+          + '<span class="lp-prev-label">TrackFocus · ' + firstName + '\'s Panel</span>'
           + '</div>'
           + '<div class="lp-prev-body">'
           + '<div class="lp-prev-hero-row">'
@@ -635,7 +635,7 @@ const App = (() => {
           + '<div class="lp-prev-mission">'
           + '<div class="lp-prev-mission-label">PRIMER PASO</div>'
           + '<div class="lp-prev-mission-sub">Tu primera sesión</div>'
-          + '<div class="lp-prev-mission-reason">Registra hoy y Ariven empieza a aprender contigo.</div>'
+          + '<div class="lp-prev-mission-reason">Registra hoy y TrackFocus empieza a aprender contigo.</div>'
           + '<div class="lp-prev-mission-btn">Iniciar primera sesión →</div>'
           + '</div>'
           + '<div class="lp-prev-chips">'
@@ -644,7 +644,7 @@ const App = (() => {
           + '<span class="lp-prev-chip lp-prev-chip--conc">🧠 Sin límites</span>'
           + '</div>'
           + '<div class="lp-prev-ai">'
-          + '<span class="lp-prev-ai-badge">✶ Ariven Intelligence</span>'
+          + '<span class="lp-prev-ai-badge">✶ TrackTutor</span>'
           + '<p class="lp-prev-ai-text">' + NEW_TIPS[DAY] + '</p>'
           + '</div>'
           + '</div></div>';
@@ -654,7 +654,7 @@ const App = (() => {
       const TIPS = [
         'La concentración no se improvisa. Se entrena sesión a sesión.',
         'Estudiar 30 min con foco vale más que 3 horas con distracción.',
-        'Tu mejor hora para estudiar es la que descubrirás con Ariven.',
+        'Tu mejor hora para estudiar es la que descubrirás con TrackFocus.',
         'Cada sesión registrada es evidencia real de que estás avanzando.',
         'La constancia supera al talento. Empieza hoy.',
         'Un objetivo claro convierte el esfuerzo en progreso medible.',
@@ -664,8 +664,8 @@ const App = (() => {
         'La constancia supera al talento. Una sesión a la vez.',
         'Cada sesión registrada es evidencia real de que estás avanzando.',
         'El aprendizaje profundo no es acumulación. Es comprensión.',
-        'Tu mejor hora para estudiar es la que descubrirás con Ariven.',
-        'No hay dos estudiantes iguales. Ariven se adapta a ti.',
+        'Tu mejor hora para estudiar es la que descubrirás con TrackFocus.',
+        'No hay dos estudiantes iguales. TrackFocus se adapta a ti.',
         'El progreso se construye en silencio, sesión a sesión.',
         'El foco no se improvisa. Se entrena.'
       ];
@@ -674,7 +674,7 @@ const App = (() => {
         + '<span class="lp-prev-dot lp-prev-dot--r"></span>'
         + '<span class="lp-prev-dot lp-prev-dot--y"></span>'
         + '<span class="lp-prev-dot lp-prev-dot--g"></span>'
-        + '<span class="lp-prev-label">Ariven · Vista previa</span>'
+        + '<span class="lp-prev-label">TrackFocus · Vista previa</span>'
         + '</div>'
         + '<div class="lp-prev-body">'
         + '<div class="lp-prev-hero-row">'
@@ -697,7 +697,7 @@ const App = (() => {
         + '<span class="lp-prev-chip lp-prev-chip--conc lp-prev-chip--ghost">🧠 Tu foco</span>'
         + '</div>'
         + '<div class="lp-prev-ai">'
-        + '<span class="lp-prev-ai-badge">✶ Ariven Intelligence</span>'
+        + '<span class="lp-prev-ai-badge">✶ TrackTutor</span>'
         + '<p class="lp-prev-ai-text">' + AI_INTROS[DAY] + '</p>'
         + '</div>'
         + '</div></div>';
@@ -712,8 +712,8 @@ const App = (() => {
       <!-- ── HEADER ── -->
       <header class="lp-header">
         <div class="lp-brand">
-          <img src="assets/logo.svg" class="lp-brand-img" alt="Ariven">
-          <span>Ariven</span>
+          <img src="assets/logo.svg" class="lp-brand-img" alt="TrackFocus">
+          <span>TrackFocus</span>
         </div>
         <nav class="lp-nav" aria-label="Navegación principal">
           <a class="lp-nav-link" href="#lpSolutions">Soluciones</a>
@@ -722,7 +722,7 @@ const App = (() => {
         </nav>
         <div class="lp-header-actions">
           <button class="lp-header-btn" id="lpScrollCards">Iniciar sesión</button>
-          <button class="lp-header-btn lp-header-btn--primary" id="lpScrollCards2">Probar Ariven</button>
+          <button class="lp-header-btn lp-header-btn--primary" id="lpScrollCards2">Probar TrackFocus</button>
         </div>
       </header>
 
@@ -734,9 +734,9 @@ const App = (() => {
             Plataforma educativa con IA · Perú
           </div>
           <h1 class="lp-hero-title">No estudies más.<br><span class="lp-hero-title-accent">Estudia mejor.</span></h1>
-          <p class="lp-hero-sub">Ariven convierte cada hora de estudio en evidencia real de aprendizaje mediante inteligencia artificial, ayudándote a demostrar que realmente estás avanzando.</p>
+          <p class="lp-hero-sub">TrackFocus convierte cada hora de estudio en evidencia real de aprendizaje mediante inteligencia artificial, ayudándote a demostrar que realmente estás avanzando.</p>
           <div class="lp-hero-actions">
-            <button class="lp-btn-main" id="lpHeroCta">Probar Ariven</button>
+            <button class="lp-btn-main" id="lpHeroCta">Probar TrackFocus</button>
             <a href="?demo=1" class="lp-btn-ghost-main">🎯 Ver demostración</a>
           </div>
         </div>
@@ -749,7 +749,7 @@ const App = (() => {
       <section class="lp-section lp-prob-section" id="lpSolutions">
         <div class="lp-section-label">El problema</div>
         <h2 class="lp-section-title">Estudiar duro no siempre significa aprender.</h2>
-        <p class="lp-section-sub">Cada perfil enfrenta su propio obstáculo. Ariven los resuelve a todos.</p>
+        <p class="lp-section-sub">Cada perfil enfrenta su propio obstáculo. TrackFocus los resuelve a todos.</p>
         <div class="lp-prob-grid">
           <div class="lp-prob-card">
             <div class="lp-prob-tag lp-prob-tag--gold">Uso Personal</div>
@@ -781,13 +781,13 @@ const App = (() => {
       <!-- ── SOLUCIÓN EN 3 PASOS ── -->
       <section class="lp-section lp-steps-section" id="lpHow">
         <div class="lp-section-label">La solución</div>
-        <h2 class="lp-section-title">Ariven transforma cómo aprendes en 3 pasos simples.</h2>
+        <h2 class="lp-section-title">TrackFocus transforma cómo aprendes en 3 pasos simples.</h2>
         <div class="lp-steps-v2">
           <div class="lp-step-v2">
             <div class="lp-step-v2-num">1</div>
             <div class="lp-step-v2-icon">🎯</div>
             <h4>Define tu meta</h4>
-            <p>Universidad, curso o objetivo institucional. Ariven construye tu ruta desde el primer día.</p>
+            <p>Universidad, curso o objetivo institucional. TrackFocus construye tu ruta desde el primer día.</p>
             <div class="lp-step-v2-chips">
               <span>🎓 Universidad</span><span>📐 Carrera</span><span>🏫 Institución</span>
             </div>
@@ -818,7 +818,7 @@ const App = (() => {
       <!-- ── ECOSISTEMA ── -->
       <section class="lp-section lp-ecosystem" id="lpEcosystem">
         <div class="lp-section-label">Un solo ecosistema</div>
-        <h2 class="lp-section-title">Ariven acompaña a todos en el proceso educativo.</h2>
+        <h2 class="lp-section-title">TrackFocus acompaña a todos en el proceso educativo.</h2>
         <p class="lp-section-sub">No es una app para un perfil. Es una plataforma para todo el ecosistema.</p>
         <div class="lp-eco-grid">
           <div class="lp-eco-card lp-eco-card--gold">
@@ -848,7 +848,7 @@ const App = (() => {
       <section class="lp-section lp-differ">
         <div class="lp-section-label">La diferencia</div>
         <h2 class="lp-section-title">Lo que no se mide, no se puede mejorar.</h2>
-        <p class="lp-section-sub">Ariven no mide solo cuánto tiempo estudias. Mide evidencia real de aprendizaje.</p>
+        <p class="lp-section-sub">TrackFocus no mide solo cuánto tiempo estudias. Mide evidencia real de aprendizaje.</p>
         <div class="lp-differ-grid">
           <div class="lp-differ-item">
             <div class="lp-differ-icon">⏱</div>
@@ -895,7 +895,7 @@ const App = (() => {
       </section>
 
       <footer class="lp-footer">
-        <span>© 2026 Ariven</span>
+        <span>© 2026 TrackFocus</span>
         <span class="lp-footer-sep">·</span>
         <span>Datos sincronizados de forma segura en la nube</span>
         <span class="lp-footer-sep">·</span>
@@ -914,7 +914,7 @@ const App = (() => {
     const svgArrow    = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
     return `
       <div class="lp-section-label">Elige tu acceso</div>
-      <h2 class="lp-section-title">¿Cómo utilizarás Ariven?</h2>
+      <h2 class="lp-section-title">¿Cómo utilizarás TrackFocus?</h2>
       <p class="lp-wizard-sub">Elige la experiencia que mejor se adapte a tu forma de aprender o gestionar el aprendizaje.</p>
       <div class="lp-cards lp-cards--2col">
         <div class="lp-card lp-card--gold" data-access="personal">
@@ -1095,7 +1095,7 @@ const App = (() => {
         <h3 style="margin:0 0 8px;font-size:18px;">Ya tienes una cuenta</h3>
         <p style="margin:0 0 20px;color:var(--muted-2,#71717a);font-size:14px;line-height:1.5;">
           El correo <strong>${email}</strong> ya está registrado con Google.<br>
-          ¿Cómo quieres que te llamemos en Ariven?
+          ¿Cómo quieres que te llamemos en TrackFocus?
         </p>
 
         <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
@@ -1330,7 +1330,7 @@ const App = (() => {
         <h2 style="margin:0 0 8px;">Consentimiento de privacidad</h2>
         <p class="muted" style="margin:0 0 16px;">Hola${nombre ? ', ' + nombre : ''}. Antes de empezar necesitamos la autorización de tu padre, madre o tutor, como exige la Ley de Protección de Datos Personales del Perú para personas menores de edad.</p>
         <div class="consent-box">
-          <p><strong>¿Qué datos registra Ariven?</strong></p>
+          <p><strong>¿Qué datos registra TrackFocus?</strong></p>
           <ul>
             <li>Tus sesiones de estudio (materia, duración y nivel de concentración).</li>
             <li>Tu progreso de aprendizaje (logros, XP y rachas).</li>
@@ -1346,7 +1346,7 @@ const App = (() => {
         <form id="consentForm" style="margin-top:18px;">
           <label class="consent-check">
             <input type="checkbox" id="consentCheck" required>
-            <span>Confirmo que mi padre, madre o tutor leyó esta información y <strong>autoriza</strong> mi uso de Ariven y el registro de estos datos.</span>
+            <span>Confirmo que mi padre, madre o tutor leyó esta información y <strong>autoriza</strong> mi uso de TrackFocus y el registro de estos datos.</span>
           </label>
           <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">
             <button class="primary" type="submit">Acepto y continúo</button>
@@ -1388,7 +1388,7 @@ const App = (() => {
     return `
       <div class="card" style="max-width:700px;margin:20px auto;padding:0;">
         <div style="padding:20px;border-bottom:1px solid #ddd;position:sticky;top:0;background:#fff;">
-          <h2 style="margin:0;">Política de Privacidad — Ariven</h2>
+          <h2 style="margin:0;">Política de Privacidad — TrackFocus</h2>
           <p class="muted" style="margin:8px 0 0;">Por favor, léela y confirma tu aceptación para continuar.</p>
         </div>
         <div id="policyContent" style="max-height:400px;overflow-y:auto;padding:20px;font-size:14px;line-height:1.6;">
@@ -1398,13 +1398,13 @@ const App = (() => {
           <p>Recopilamos tu correo electrónico, nombre y datos de tus sesiones de estudio (materia, duración, concentración). Si eres menor de edad, también tus métricas de aprendizaje en formato anonimizado.</p>
 
           <h3>¿Por qué los recopilamos?</h3>
-          <p>Para que puedas usar Ariven: registrar tus sesiones, ver tu progreso, interactuar con el tutor de inteligencia artificial y permitir que tus docentes acompañen tu aprendizaje.</p>
+          <p>Para que puedas usar TrackFocus: registrar tus sesiones, ver tu progreso, interactuar con el tutor de inteligencia artificial y permitir que tus docentes acompañen tu aprendizaje.</p>
 
           <h3>¿Con quién se comparten?</h3>
           <p>Tus datos se almacenan en Supabase (base de datos en la nube, ubicada en Estados Unidos). Cuando usas el tutor de IA, tu conversación viaja a Google Gemini a través de un servidor intermediario seguro. Utilizamos Google para que puedas iniciar sesión.</p>
 
           <h3>Seguridad</h3>
-          <p>Utilizamos cifrado HTTPS/TLS para toda comunicación. Tu contraseña no se almacena en Ariven (Google OAuth la maneja). Los datos del piloto científico se guardan anonimizados mediante SHA-256, un proceso irreversible.</p>
+          <p>Utilizamos cifrado HTTPS/TLS para toda comunicación. Tu contraseña no se almacena en TrackFocus (Google OAuth la maneja). Los datos del piloto científico se guardan anonimizados mediante SHA-256, un proceso irreversible.</p>
 
           <h3>Tus derechos</h3>
           <p>Puedes solicitar acceso a tus datos, corregirlos, o pedir su eliminación en cualquier momento escribiendo a <strong>trackfocus.support@gmail.com</strong>.</p>
@@ -1420,7 +1420,7 @@ const App = (() => {
           <form id="privacyPolicyForm">
             <label class="consent-check" style="margin-bottom:15px;">
               <input type="checkbox" id="policyCheck" required>
-              <span>He leído y acepto la Política de Privacidad de Ariven</span>
+              <span>He leído y acepto la Política de Privacidad de TrackFocus</span>
             </label>
             <div style="display:flex;gap:10px;flex-wrap:wrap;">
               <button class="primary" type="submit">Aceptar y continuar</button>
@@ -1457,7 +1457,7 @@ const App = (() => {
     });
 
     document.getElementById('policyDecline')?.addEventListener('click', async () => {
-      const confirm = window.confirm('Si rechazas la política, no podrás usar Ariven. ¿Deseas salir?');
+      const confirm = window.confirm('Si rechazas la política, no podrás usar TrackFocus. ¿Deseas salir?');
       if (confirm) {
         await Auth.logout();
         go('welcome');
@@ -1520,7 +1520,7 @@ const App = (() => {
     return `
       <div class="card" style="max-width:520px;margin:48px auto;">
         <h2 style="margin:0 0 8px;">Verificación de director</h2>
-        <p class="muted" style="margin:0 0 22px;">Ingresa el código de tu colegio para acceder como director. Si no lo tienes, contáctate con el administrador de Ariven.</p>
+        <p class="muted" style="margin:0 0 22px;">Ingresa el código de tu colegio para acceder como director. Si no lo tienes, contáctate con el administrador de TrackFocus.</p>
         <form id="adminPromoteForm">
           <label>Código del colegio</label>
           <input name="schoolCode" maxlength="6" required placeholder="6 caracteres" style="text-transform:uppercase;" />

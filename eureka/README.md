@@ -1,4 +1,4 @@
-# Materiales de exposición — Ariven · Pre-Feria Eureka
+# Materiales de exposición — TrackFocus · Pre-Feria Eureka
 
 Carpeta con todo lo necesario para preparar la exposición. **Foco: el estudiante y la evidencia de su
 aprendizaje, no la tecnología.** Lema: *"Mide lo que aprendes, no solo lo que estudias."*
@@ -14,7 +14,7 @@ aprendizaje, no la tecnología.** Lema: *"Mide lo que aprendes, no solo lo que e
    difíciles).
 5. **[AUTOAUDITORIA_JURADO.md](AUTOAUDITORIA_JURADO.md)** — última revisión "con ojos de jurado" +
    checklist de "listo para la feria".
-6. **[ALINEACION.md](ALINEACION.md)** — coherencia de marca (Ariven) en los documentos del proyecto.
+6. **[ALINEACION.md](ALINEACION.md)** — coherencia de marca (TrackFocus) en los documentos del proyecto.
 
 ## Reglas de oro (de la asesoría)
 

@@ -1,4 +1,4 @@
-# Autoauditoría final — simulación de jurado exigente (Ariven, Eureka)
+# Autoauditoría final — simulación de jurado exigente (TrackFocus, Eureka)
 
 > **Qué es.** Una revisión final, hecha "con ojos de jurado severo", sobre los materiales ya redactados
 > (`GUION.md`, `TRIPTICO.md`, `PREGUNTAS_JURADO.md`). **Solo señala riesgos reales y mejoras**; no inventa
@@ -35,7 +35,7 @@ hasta que salgan naturales, en 30 segundos cada una.
 | Evitar | Usar |
 |---|---|
 | "Demostramos que mejora el aprendizaje" | "Observamos **indicios** coherentes con…" |
-| "Ariven **mide** el aprendizaje" | "Ariven **evidencia el progreso**; el quiz da un **indicio**" |
+| "TrackFocus **mide** el aprendizaje" | "TrackFocus **evidencia el progreso**; el quiz da un **indicio**" |
 | "Los resultados **prueban**…" | "Los **hallazgos preliminares** sugieren…" |
 | "**Contribuye a** fortalecer la motivación" (causal) | "**Podría** apoyar la motivación; falta validar" |
 

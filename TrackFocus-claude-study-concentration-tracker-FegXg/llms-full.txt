@@ -94,7 +94,6 @@ TrackFocus nace de la observación de que los estudiantes pasan horas estudiando
 ### 4.4 Deployment
 - Plataforma: Vercel
 - Dominio actual: trackfocus.vercel.app
-- Dominio futuro: ariven.vercel.app
 - Routing: `/api/(.*)` → serverless; `/(.*) → TrackFocus-.../`
 
 ---
@@ -185,14 +184,13 @@ TrackFocus ha sido presentado en la Feria Eureka de Innovación Educativa como p
 
 ---
 
-## 9. Migración de dominio (en curso)
+## 9. Dominio
 
 | Estado | URL |
 |---|---|
 | Actual (activo) | https://trackfocus.vercel.app |
-| Futuro (destino) | https://ariven.vercel.app |
 
-La migración preservará toda la funcionalidad. Los canonicals y todas las URLs apuntan actualmente a `trackfocus.vercel.app` y se actualizarán a `ariven.vercel.app` cuando se active el nuevo dominio, junto con redirecciones 301.
+Todos los canonicals y URLs apuntan a `trackfocus.vercel.app`.
 
 ---
 
