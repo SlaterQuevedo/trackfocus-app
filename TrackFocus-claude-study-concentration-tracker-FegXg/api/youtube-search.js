@@ -74,7 +74,10 @@ export default async function handler(req, res) {
         { signal: AbortSignal.timeout(7000) }
       );
 
-      if (!ytRes.ok) continue;
+      if (!ytRes.ok) {
+        console.error('[youtube-search] YouTube API error', ytRes.status, await ytRes.text());
+        continue;
+      }
 
       const data = await ytRes.json();
       const items = data.items || [];
