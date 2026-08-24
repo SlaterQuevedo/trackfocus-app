@@ -20,14 +20,11 @@ export default async function handler(req, res) {
   try {
     ({ queries = [], maxResults = 3, language = 'es' } = req.body || {});
   } catch (e) {
-    console.error('[youtube-search] DIAG body parse threw', e && e.message, 'typeof req.body=', typeof req.body);
     return res.status(200).json({ videos: [], error: 'Invalid body' });
   }
 
-  const _diag = { typeofBody: typeof req.body, queriesReceived: queries, apiKeyPresent: !!process.env.YOUTUBE_API_KEY, apiKeyLen: (process.env.YOUTUBE_API_KEY || '').length };
-
   if (!Array.isArray(queries) || queries.length === 0) {
-    return res.status(200).json({ videos: [], _diag: { ..._diag, stage: 'empty-queries' } });
+    return res.status(200).json({ videos: [] });
   }
 
   // Limitar a máximo 3 queries
@@ -55,7 +52,6 @@ export default async function handler(req, res) {
   }
 
   // ── Con API key: llamar YouTube Data API v3 ──────────────────────────────────
-  const _diagCalls = [];
   try {
     const seenIds = new Set();
     const allVideos = [];
@@ -78,15 +74,10 @@ export default async function handler(req, res) {
         { signal: AbortSignal.timeout(7000) }
       );
 
-      if (!ytRes.ok) {
-        const bodyText = await ytRes.text();
-        _diagCalls.push({ query, status: ytRes.status, ok: false, body: bodyText.slice(0, 500) });
-        continue;
-      }
+      if (!ytRes.ok) continue;
 
       const data = await ytRes.json();
       const items = data.items || [];
-      _diagCalls.push({ query, status: ytRes.status, ok: true, itemsCount: items.length, raw: JSON.stringify(data).slice(0, 400) });
 
       for (const item of items) {
         const videoId = item.id?.videoId;
@@ -109,8 +100,8 @@ export default async function handler(req, res) {
     }
 
     _ytCache.set(cacheKey, { ts: Date.now(), videos: allVideos });
-    return res.status(200).json({ videos: allVideos, _diag: { ..._diag, stage: 'ok', calls: _diagCalls } });
+    return res.status(200).json({ videos: allVideos });
   } catch (err) {
-    return res.status(200).json({ videos: [], error: String(err.message || err), _diag: { ..._diag, stage: 'exception', calls: _diagCalls } });
+    return res.status(200).json({ videos: [], error: String(err.message || err) });
   }
 }
