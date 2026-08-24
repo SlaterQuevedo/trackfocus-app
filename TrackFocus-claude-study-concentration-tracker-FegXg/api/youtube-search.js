@@ -24,11 +24,10 @@ export default async function handler(req, res) {
     return res.status(200).json({ videos: [], error: 'Invalid body' });
   }
 
-  console.error('[youtube-search] DIAG typeof req.body=', typeof req.body, 'queries=', JSON.stringify(queries), 'apiKeyPresent=', !!process.env.YOUTUBE_API_KEY);
+  const _diag = { typeofBody: typeof req.body, queriesReceived: queries, apiKeyPresent: !!process.env.YOUTUBE_API_KEY, apiKeyLen: (process.env.YOUTUBE_API_KEY || '').length };
 
   if (!Array.isArray(queries) || queries.length === 0) {
-    console.error('[youtube-search] DIAG early-return empty: queries not valid array');
-    return res.status(200).json({ videos: [] });
+    return res.status(200).json({ videos: [], _diag: { ..._diag, stage: 'empty-queries' } });
   }
 
   // Limitar a máximo 3 queries
@@ -56,6 +55,7 @@ export default async function handler(req, res) {
   }
 
   // ── Con API key: llamar YouTube Data API v3 ──────────────────────────────────
+  const _diagCalls = [];
   try {
     const seenIds = new Set();
     const allVideos = [];
@@ -79,13 +79,14 @@ export default async function handler(req, res) {
       );
 
       if (!ytRes.ok) {
-        console.error('[youtube-search] YouTube API error', ytRes.status, await ytRes.text());
+        const bodyText = await ytRes.text();
+        _diagCalls.push({ query, status: ytRes.status, ok: false, body: bodyText.slice(0, 500) });
         continue;
       }
 
       const data = await ytRes.json();
       const items = data.items || [];
-      console.error('[youtube-search] DIAG query=', query, 'status=', ytRes.status, 'itemsCount=', items.length, 'raw=', JSON.stringify(data).slice(0, 300));
+      _diagCalls.push({ query, status: ytRes.status, ok: true, itemsCount: items.length, raw: JSON.stringify(data).slice(0, 400) });
 
       for (const item of items) {
         const videoId = item.id?.videoId;
@@ -108,8 +109,8 @@ export default async function handler(req, res) {
     }
 
     _ytCache.set(cacheKey, { ts: Date.now(), videos: allVideos });
-    return res.status(200).json({ videos: allVideos });
+    return res.status(200).json({ videos: allVideos, _diag: { ..._diag, stage: 'ok', calls: _diagCalls } });
   } catch (err) {
-    return res.status(200).json({ videos: [], error: String(err.message || err) });
+    return res.status(200).json({ videos: [], error: String(err.message || err), _diag: { ..._diag, stage: 'exception', calls: _diagCalls } });
   }
 }
