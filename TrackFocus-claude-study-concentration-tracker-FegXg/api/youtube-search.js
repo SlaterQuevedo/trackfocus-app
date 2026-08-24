@@ -20,10 +20,14 @@ export default async function handler(req, res) {
   try {
     ({ queries = [], maxResults = 3, language = 'es' } = req.body || {});
   } catch (e) {
+    console.error('[youtube-search] DIAG body parse threw', e && e.message, 'typeof req.body=', typeof req.body);
     return res.status(200).json({ videos: [], error: 'Invalid body' });
   }
 
+  console.error('[youtube-search] DIAG typeof req.body=', typeof req.body, 'queries=', JSON.stringify(queries), 'apiKeyPresent=', !!process.env.YOUTUBE_API_KEY);
+
   if (!Array.isArray(queries) || queries.length === 0) {
+    console.error('[youtube-search] DIAG early-return empty: queries not valid array');
     return res.status(200).json({ videos: [] });
   }
 
@@ -81,6 +85,7 @@ export default async function handler(req, res) {
 
       const data = await ytRes.json();
       const items = data.items || [];
+      console.error('[youtube-search] DIAG query=', query, 'status=', ytRes.status, 'itemsCount=', items.length, 'raw=', JSON.stringify(data).slice(0, 300));
 
       for (const item of items) {
         const videoId = item.id?.videoId;
