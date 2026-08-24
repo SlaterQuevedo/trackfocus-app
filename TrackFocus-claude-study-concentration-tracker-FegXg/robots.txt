@@ -1,4 +1,4 @@
-# robots.txt — Ariven
+# robots.txt — TrackFocus
 # https://trackfocus.vercel.app/
 
 User-agent: *

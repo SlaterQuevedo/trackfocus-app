@@ -114,11 +114,11 @@ const GeminiProxy = (() => {
 
   function _mockAnalysis(fileName) {
     return {
-      summary:     `Vista previa de "${fileName}". Ariven Intelligence no está disponible en este momento.`,
-      keyConcepts: 'Ariven Intelligence no está disponible. Intenta de nuevo más tarde.',
-      questions:   [{ text: '¿Cuál es el tema principal del material?', answer: 'Analiza el material con Ariven Intelligence.' }],
+      summary:     `Vista previa de "${fileName}". TrackTutor no está disponible en este momento.`,
+      keyConcepts: 'TrackTutor no está disponible. Intenta de nuevo más tarde.',
+      questions:   [{ text: '¿Cuál es el tema principal del material?', answer: 'Analiza el material con TrackTutor.' }],
       exercises:   [{ title: 'Ejercicio 1', prompt: 'Lee el material y resume los puntos principales.' }],
-      feedback:    'Ariven Intelligence no está disponible en este momento.'
+      feedback:    'TrackTutor no está disponible en este momento.'
     };
   }
 

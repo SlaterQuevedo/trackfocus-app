@@ -48,7 +48,7 @@ const Monitor = (() => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `ariven-monitor-${new Date().toISOString().slice(0, 10)}.txt`;
+    a.download = `trackfocus-monitor-${new Date().toISOString().slice(0, 10)}.txt`;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1500);
   }

@@ -1,4 +1,4 @@
-// js/institutions.js — Catálogo de instituciones peruanas para Ariven
+// js/institutions.js — Catálogo de instituciones peruanas para TrackFocus
 window.Institutions = (() => {
 
   const MALLAS = {

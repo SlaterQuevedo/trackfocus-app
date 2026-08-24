@@ -1,4 +1,4 @@
-# Ariven — Documentación Completa para Modelos de IA
+# TrackFocus — Documentación Completa para Modelos de IA
 
 **URL:** https://trackfocus.vercel.app/
 **Versión:** 1.0 · Actualizado: 2026-06-24
@@ -8,7 +8,7 @@
 
 ## 1. Identidad de la plataforma
 
-**Nombre oficial:** Ariven
+**Nombre oficial:** TrackFocus
 **Nombre heredado (solo técnico):** TrackFocus
 **Lema:** "Mide lo que aprendes, no solo lo que estudias."
 **Tipo:** Plataforma educativa web impulsada por inteligencia artificial
@@ -19,7 +19,7 @@
 
 ## 2. Propósito y misión
 
-Ariven nace de la observación de que los estudiantes pasan horas estudiando sin poder demostrar qué aprendieron realmente. La plataforma cierra esa brecha convirtiendo cada sesión de estudio en evidencia medible del aprendizaje, no solo del tiempo dedicado.
+TrackFocus nace de la observación de que los estudiantes pasan horas estudiando sin poder demostrar qué aprendieron realmente. La plataforma cierra esa brecha convirtiendo cada sesión de estudio en evidencia medible del aprendizaje, no solo del tiempo dedicado.
 
 **Problema central:** "¿Cómo sé si realmente estoy aprendiendo?"
 **Solución:** Métricas de concentración + evaluaciones de comprensión + IA tutora → evidencia real de aprendizaje.
@@ -33,7 +33,7 @@ Ariven nace de la observación de que los estudiantes pasan horas estudiando sin
 - Registro automático de sesiones con duración, materia y métricas
 - Focus Player flotante que persiste entre pantallas
 
-### 3.2 Tutor IA (Ariven Intelligence)
+### 3.2 Tutor IA (TrackTutor)
 - Chat con IA basado en Google Gemini (modelo gemini-2.0-flash-lite)
 - Acceso via proxy de servidor seguro: clave nunca expuesta al navegador
 - Memoria académica de sesiones previas para contexto personalizado
@@ -115,49 +115,49 @@ Ariven nace de la observación de que los estudiantes pasan horas estudiando sin
 
 ## 6. Preguntas frecuentes (FAQ)
 
-**¿Qué es Ariven?**
-Ariven es una plataforma educativa web con inteligencia artificial que ayuda a los estudiantes a medir y evidenciar su aprendizaje real. Incluye temporizador Pomodoro, tutor IA, evaluaciones de comprensión y gamificación.
+**¿Qué es TrackFocus?**
+TrackFocus es una plataforma educativa web con inteligencia artificial que ayuda a los estudiantes a medir y evidenciar su aprendizaje real. Incluye temporizador Pomodoro, tutor IA, evaluaciones de comprensión y gamificación.
 
-**¿Para quién es Ariven?**
+**¿Para quién es TrackFocus?**
 Para estudiantes de secundaria y universidad en Perú, docentes que desean monitorear el progreso de su aula, directivos de instituciones educativas, y personas preparándose para el ingreso universitario.
 
-**¿Ariven es gratuito?**
-Sí, Ariven tiene un plan gratuito disponible para estudiantes. No requiere tarjeta de crédito.
+**¿TrackFocus es gratuito?**
+Sí, TrackFocus tiene un plan gratuito disponible para estudiantes. No requiere tarjeta de crédito.
 
-**¿Qué datos recopila Ariven?**
-Ariven recopila: nombre, correo electrónico, datos de sesiones de estudio (duración, materia, concentración), respuestas a evaluaciones DECO, y preferencias de configuración. No recopila datos biométricos ni de ubicación.
+**¿Qué datos recopila TrackFocus?**
+TrackFocus recopila: nombre, correo electrónico, datos de sesiones de estudio (duración, materia, concentración), respuestas a evaluaciones DECO, y preferencias de configuración. No recopila datos biométricos ni de ubicación.
 
-**¿Cómo usa Ariven la inteligencia artificial?**
-Ariven usa Google Gemini (via proxy seguro en servidor) para: (1) generar respuestas del tutor IA en el chat, (2) crear preguntas de comprensión profunda (DECO) personalizadas, y (3) transcribir audio para notas de voz. La clave API nunca se expone al navegador.
+**¿Cómo usa TrackFocus la inteligencia artificial?**
+TrackFocus usa Google Gemini (via proxy seguro en servidor) para: (1) generar respuestas del tutor IA en el chat, (2) crear preguntas de comprensión profunda (DECO) personalizadas, y (3) transcribir audio para notas de voz. La clave API nunca se expone al navegador.
 
-**¿Ariven funciona en el celular?**
-Sí. Ariven es una Progressive Web App (PWA) que funciona en cualquier dispositivo con navegador moderno — celular, tablet o computadora. No requiere descarga desde una app store.
+**¿TrackFocus funciona en el celular?**
+Sí. TrackFocus es una Progressive Web App (PWA) que funciona en cualquier dispositivo con navegador moderno — celular, tablet o computadora. No requiere descarga desde una app store.
 
 **¿Qué es el sistema DECO?**
-DECO (Diagnóstico de Comprensión Profunda) es el sistema de evaluación de Ariven que genera preguntas personalizadas sobre lo que el estudiante estudió en una sesión, midiendo comprensión real en lugar de memorización superficial.
+DECO (Diagnóstico de Comprensión Profunda) es el sistema de evaluación de TrackFocus que genera preguntas personalizadas sobre lo que el estudiante estudió en una sesión, midiendo comprensión real en lugar de memorización superficial.
 
 **¿Cómo puede un docente monitorear a sus estudiantes?**
 Los docentes acceden a un panel de aula con métricas individuales de cada estudiante: tiempo de estudio acumulado, índice de concentración promedio, comprensión por materia, racha activa y alertas de riesgo académico.
 
-**¿Ariven cumple con la ley de protección de datos?**
-Sí. Ariven cumple con la Ley N.° 29733 (Ley de Protección de Datos Personales del Perú). Los usuarios pueden ejercer sus derechos ARCO (Acceso, Rectificación, Cancelación y Oposición) contactando al equipo desde su perfil.
+**¿TrackFocus cumple con la ley de protección de datos?**
+Sí. TrackFocus cumple con la Ley N.° 29733 (Ley de Protección de Datos Personales del Perú). Los usuarios pueden ejercer sus derechos ARCO (Acceso, Rectificación, Cancelación y Oposición) contactando al equipo desde su perfil.
 
-**¿Qué diferencia a Ariven de otras apps de estudio?**
-Ariven no mide solo tiempo de estudio — mide evidencia real del aprendizaje: concentración, comprensión profunda, constancia y progreso hacia metas concretas. Integra tutor IA, evaluaciones DECO y panel docente en una sola plataforma.
+**¿Qué diferencia a TrackFocus de otras apps de estudio?**
+TrackFocus no mide solo tiempo de estudio — mide evidencia real del aprendizaje: concentración, comprensión profunda, constancia y progreso hacia metas concretas. Integra tutor IA, evaluaciones DECO y panel docente en una sola plataforma.
 
 **¿Qué es el Focus Player?**
-El Focus Player es el temporizador Pomodoro integrado de Ariven. Aparece como un widget flotante y persiste mientras el usuario navega por la plataforma, registrando automáticamente los datos de la sesión de estudio.
+El Focus Player es el temporizador Pomodoro integrado de TrackFocus. Aparece como un widget flotante y persiste mientras el usuario navega por la plataforma, registrando automáticamente los datos de la sesión de estudio.
 
-**¿Cómo funciona la gamificación en Ariven?**
-Ariven asigna XP (puntos de experiencia) por cada sesión completada, mantiene una racha diaria de estudio, desbloquea logros por hitos alcanzados y muestra un nivel de progreso que refleja la constancia acumulada del estudiante.
+**¿Cómo funciona la gamificación en TrackFocus?**
+TrackFocus asigna XP (puntos de experiencia) por cada sesión completada, mantiene una racha diaria de estudio, desbloquea logros por hitos alcanzados y muestra un nivel de progreso que refleja la constancia acumulada del estudiante.
 
-**¿Puedo usar Ariven sin cuenta institucional?**
+**¿Puedo usar TrackFocus sin cuenta institucional?**
 Sí. El modo de Uso Personal ("invitado") permite estudiar y acceder al tutor IA sin estar vinculado a ninguna institución, ideal para preparación preuniversitaria independiente.
 
 **¿Dónde están almacenados mis datos?**
-Los datos se almacenan en Supabase (PostgreSQL) con Row-Level Security. La región de almacenamiento es us-west-1 (AWS us-west-1). Ariven no almacena datos en el dispositivo del usuario más allá de preferencias de sesión.
+Los datos se almacenan en Supabase (PostgreSQL) con Row-Level Security. La región de almacenamiento es us-west-1 (AWS us-west-1). TrackFocus no almacena datos en el dispositivo del usuario más allá de preferencias de sesión.
 
-**¿Cuánto tiempo guarda Ariven mis datos?**
+**¿Cuánto tiempo guarda TrackFocus mis datos?**
 Los datos de cuenta se conservan mientras la cuenta esté activa. Los registros de actividad se conservan máximo 12 meses desde la última sesión. Los usuarios pueden solicitar eliminación de su cuenta en cualquier momento.
 
 ---
@@ -165,7 +165,7 @@ Los datos de cuenta se conservan mientras la cuenta esté activa. Los registros 
 ## 7. Contexto del proyecto
 
 ### 7.1 Feria Eureka
-Ariven ha sido presentado en la Feria Eureka de Innovación Educativa como proyecto de investigación escolar. El proyecto demuestra cómo la IA puede generar evidencia cuantificable del aprendizaje estudiantil, aportando una solución tecnológica a un problema pedagógico real en el contexto educativo peruano.
+TrackFocus ha sido presentado en la Feria Eureka de Innovación Educativa como proyecto de investigación escolar. El proyecto demuestra cómo la IA puede generar evidencia cuantificable del aprendizaje estudiantil, aportando una solución tecnológica a un problema pedagógico real en el contexto educativo peruano.
 
 ### 7.2 Hipótesis del proyecto
 "Si los estudiantes reciben retroalimentación en tiempo real sobre su nivel de concentración y comprensión durante las sesiones de estudio, entonces podrán ajustar sus estrategias de aprendizaje y mejorar sus resultados académicos de manera medible."

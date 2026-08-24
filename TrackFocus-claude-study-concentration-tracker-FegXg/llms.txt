@@ -1,6 +1,6 @@
-# Ariven
+# TrackFocus
 
-> Ariven es una plataforma educativa impulsada por inteligencia artificial que ayuda a los estudiantes a evidenciar su aprendizaje, mejorar sus hábitos de estudio y demostrar su progreso académico real.
+> TrackFocus es una plataforma educativa impulsada por inteligencia artificial que ayuda a los estudiantes a evidenciar su aprendizaje, mejorar sus hábitos de estudio y demostrar su progreso académico real.
 
 **URL:** https://trackfocus.vercel.app/
 **Lema:** "Mide lo que aprendes, no solo lo que estudias."
@@ -9,9 +9,9 @@
 
 ---
 
-## Qué es Ariven
+## Qué es TrackFocus
 
-Ariven es una aplicación web (SPA) diseñada para el mercado educativo peruano. Transforma las sesiones de estudio en evidencia medible del aprendizaje mediante inteligencia artificial, cerrando la brecha entre "estudiar horas" y "aprender de verdad".
+TrackFocus es una aplicación web (SPA) diseñada para el mercado educativo peruano. Transforma las sesiones de estudio en evidencia medible del aprendizaje mediante inteligencia artificial, cerrando la brecha entre "estudiar horas" y "aprender de verdad".
 
 ---
 
@@ -26,7 +26,7 @@ Ariven es una aplicación web (SPA) diseñada para el mercado educativo peruano.
 
 ## Cómo funciona (3 pasos)
 
-1. **Define tu meta** — Universidad, curso o objetivo institucional. Ariven construye la ruta desde el primer día.
+1. **Define tu meta** — Universidad, curso o objetivo institucional. TrackFocus construye la ruta desde el primer día.
 2. **Estudia con acompañamiento inteligente** — La IA analiza la sesión en tiempo real, genera preguntas personalizadas (DECO) y detecta hábitos de estudio.
 3. **Demuestra tu progreso** — Genera reportes con evidencia real: sesiones completadas, métricas de concentración, comprensión profunda y constancia acumulada.
 
@@ -80,7 +80,7 @@ Ariven es una aplicación web (SPA) diseñada para el mercado educativo peruano.
 ## Páginas disponibles
 
 - [Inicio / App](https://trackfocus.vercel.app/) — Landing page y acceso completo a la plataforma
-- [Sobre Ariven](https://trackfocus.vercel.app/about-ariven.html) — Descripción completa: qué es, cómo funciona, para quién es
+- [Sobre TrackFocus](https://trackfocus.vercel.app/about-ariven.html) — Descripción completa: qué es, cómo funciona, para quién es
 - [Política de Privacidad](https://trackfocus.vercel.app/privacy.html)
 - [Términos y Condiciones](https://trackfocus.vercel.app/terms.html)
 - [Cumplimiento y Transparencia de Datos](https://trackfocus.vercel.app/data-transparency.html)

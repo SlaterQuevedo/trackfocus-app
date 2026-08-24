@@ -1,4 +1,4 @@
-// QR Scanner & Generator — Ariven
+// QR Scanner & Generator — TrackFocus
 // Genera QRs reales con URL de invitación; escanea con cámara del dispositivo.
 const QRScanner = (() => {
 
@@ -58,15 +58,15 @@ const QRScanner = (() => {
       document.getElementById(`${elementId}-dl`)?.addEventListener('click', () => {
         const a = document.createElement('a');
         a.href = dataUrl;
-        a.download = `ariven-qr-${(crName || code).replace(/\s+/g, '-').toLowerCase()}.png`;
+        a.download = `trackfocus-qr-${(crName || code).replace(/\s+/g, '-').toLowerCase()}.png`;
         a.click();
       });
 
       document.getElementById(`${elementId}-sh`)?.addEventListener('click', () => {
         const url = inviteUrl(code);
-        const text = `Únete al aula ${crName ? '"' + crName + '"' : ''} en Ariven: ${url}`;
+        const text = `Únete al aula ${crName ? '"' + crName + '"' : ''} en TrackFocus: ${url}`;
         if (navigator.share) {
-          navigator.share({ title: 'Invitación Ariven', text, url }).catch(() => {});
+          navigator.share({ title: 'Invitación TrackFocus', text, url }).catch(() => {});
         } else if (navigator.clipboard) {
           navigator.clipboard.writeText(url).then(() => {
             if (typeof UI !== 'undefined') UI.flash('Enlace copiado.', 'success');
@@ -81,7 +81,7 @@ const QRScanner = (() => {
           <style>body{font-family:sans-serif;text-align:center;padding:40px;}
           h2{margin-bottom:8px;}p{color:#666;margin:4px 0;font-size:14px;}
           img{margin:20px auto;display:block;}</style></head><body>
-          <h2>Ariven — Código de invitación</h2>
+          <h2>TrackFocus — Código de invitación</h2>
           <p>${crName ? 'Aula: <strong>' + crName + '</strong>' : ''}</p>
           <p>Código: <strong>${code}</strong></p>
           <img src="${dataUrl}" width="${size}" height="${size}" />
@@ -144,7 +144,7 @@ const QRScanner = (() => {
       dlBtn.onclick = () => {
         const a = document.createElement('a');
         a.href = canvas.toDataURL('image/png');
-        a.download = `ariven-qr-${(crName || code).replace(/\s+/g, '-').toLowerCase()}.png`;
+        a.download = `trackfocus-qr-${(crName || code).replace(/\s+/g, '-').toLowerCase()}.png`;
         a.click();
       };
 
@@ -152,8 +152,8 @@ const QRScanner = (() => {
       shBtn.className = 'cm-code-btn';
       shBtn.textContent = '↗ Compartir';
       shBtn.onclick = () => {
-        const text = `Únete al aula${crName ? ' "' + crName + '"' : ''} en Ariven: ${url}`;
-        if (navigator.share) navigator.share({ title: 'Ariven — Invitación', text, url }).catch(() => {});
+        const text = `Únete al aula${crName ? ' "' + crName + '"' : ''} en TrackFocus: ${url}`;
+        if (navigator.share) navigator.share({ title: 'TrackFocus — Invitación', text, url }).catch(() => {});
         else if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => {
           if (typeof UI !== 'undefined') UI.flash('Enlace copiado.', 'success');
         });
@@ -166,11 +166,11 @@ const QRScanner = (() => {
         const dataUrl = canvas.toDataURL('image/png');
         const win = window.open('', '_blank');
         if (!win) return;
-        win.document.write(`<!DOCTYPE html><html><head><title>QR Ariven</title>
+        win.document.write(`<!DOCTYPE html><html><head><title>QR TrackFocus</title>
           <style>body{font-family:sans-serif;text-align:center;padding:40px;}
           h2{margin-bottom:4px;}p{color:#555;margin:4px 0;font-size:14px;}
           img{margin:20px auto;display:block;border:1px solid #eee;border-radius:8px;padding:8px;}</style></head><body>
-          <h2>Ariven — Invitación al aula</h2>
+          <h2>TrackFocus — Invitación al aula</h2>
           ${crName ? '<p>Aula: <strong>' + crName + '</strong></p>' : ''}
           <p>Código: <strong style="font-family:monospace;letter-spacing:2px;">${code}</strong></p>
           <img src="${dataUrl}" width="220" height="220" />
@@ -262,7 +262,7 @@ const QRScanner = (() => {
       dlBtn.onclick = () => {
         const a = document.createElement('a');
         a.href = canvas.toDataURL('image/png');
-        a.download = `ariven-id-${(displayCode || 'qr').replace(/[^A-Z0-9]/gi, '-').toLowerCase()}.png`;
+        a.download = `trackfocus-id-${(displayCode || 'qr').replace(/[^A-Z0-9]/gi, '-').toLowerCase()}.png`;
         a.click();
       };
 
@@ -270,8 +270,8 @@ const QRScanner = (() => {
       shBtn.className = 'cm-code-btn';
       shBtn.textContent = '↗ Compartir';
       shBtn.onclick = () => {
-        const text = `${displayTitle || 'Perfil Ariven'}${displayCode ? ' · ' + displayCode : ''}: ${url}`;
-        if (navigator.share) navigator.share({ title: 'Ariven — Identidad Digital', text, url }).catch(() => {});
+        const text = `${displayTitle || 'Perfil TrackFocus'}${displayCode ? ' · ' + displayCode : ''}: ${url}`;
+        if (navigator.share) navigator.share({ title: 'TrackFocus — Identidad Digital', text, url }).catch(() => {});
         else if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => {
           if (typeof UI !== 'undefined') UI.flash('Enlace copiado.', 'success');
         });
@@ -367,7 +367,7 @@ const QRScanner = (() => {
   // Extrae el código de invitación de un string (puede ser URL o código directo)
   function _extractCode(raw) {
     if (!raw) return null;
-    // Si es una URL de Ariven con ?join=
+    // Si es una URL de TrackFocus con ?join=
     try {
       const url = new URL(raw);
       const join = url.searchParams.get('join');

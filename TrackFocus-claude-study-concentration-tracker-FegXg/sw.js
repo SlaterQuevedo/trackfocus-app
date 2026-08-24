@@ -1,4 +1,4 @@
-// Service Worker — Ariven
+// Service Worker — TrackFocus
 // Estrategia: cache-first para assets estáticos (JS, CSS, imágenes, fuentes).
 // HTML siempre desde la red para garantizar versión más reciente.
 // API calls (/api/, Supabase, Gemini) nunca interceptadas.

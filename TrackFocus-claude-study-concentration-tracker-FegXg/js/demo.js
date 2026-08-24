@@ -119,7 +119,7 @@ const Demo = (() => {
         const d = new Date(today);
         d.setDate(today.getDate() - daysAgo);
         d.setHours(range(7, 22), range(0, 59), 0, 0);
-        // Concentración según perfil académico + tendencia temporal (efecto Ariven).
+        // Concentración según perfil académico + tendencia temporal (efecto TrackFocus).
         const _sr = st.scoreRange || [10, 16];
         const _concMin = _sr[0] >= 17 ? 3 : _sr[0] >= 14 ? 2 : _sr[0] >= 11 ? 2 : 1;
         const _concMax = _sr[0] >= 17 ? 5 : _sr[0] >= 14 ? 4 : _sr[0] >= 11 ? 3 : 3;
@@ -237,7 +237,7 @@ const Demo = (() => {
             // Ligera variación dentro del perfil del estudiante
             var lo = profile[0], hi = profile[1];
             var score = Math.max(0, Math.min(20, range(lo, hi)));
-            // Segunda evaluación puede mejorar (efecto Ariven)
+            // Segunda evaluación puede mejorar (efecto TrackFocus)
             if (e === 2 && bimId === BIM2) score = Math.min(20, score + range(0, 2));
             var scale = score >= 18 ? 'AD' : score >= 14 ? 'A' : score >= 11 ? 'B' : 'C';
             var evalDate = new Date(today);
