@@ -172,11 +172,14 @@ export async function enrichCandidates(candidates, apiKey) {
       if (!item) return c; // sin datos → se mantiene tal cual (permisivo)
       const iso = item.contentDetails?.duration;
       const sec = iso ? _parseISODuration(iso) : undefined;
+      const region = item.contentDetails?.regionRestriction || null;
       return {
         ...c,
         durationSec: sec,
         durationLabel: sec ? _formatDuration(sec) : c.durationLabel,
-        embeddable: item.status?.embeddable !== false
+        embeddable: item.status?.embeddable !== false,
+        _regionRestriction: region,
+        _debugRaw: JSON.stringify(item).slice(0, 500)
       };
     });
 
