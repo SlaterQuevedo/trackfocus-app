@@ -172,6 +172,17 @@ export async function enrichCandidates(candidates, apiKey) {
     const data = await r.json();
     const byId = new Map((data.items || []).map(it => [it.id, it]));
 
+    // Perú (PE) es la región objetivo de TrackFocus — si un video restringe
+    // por región, verificamos que PE no esté bloqueado explícitamente y que,
+    // si hay lista de "permitidos", PE esté en ella.
+    const REGION = 'PE';
+    const regionOk = (restriction) => {
+      if (!restriction) return true;
+      if (restriction.blocked?.includes(REGION)) return false;
+      if (restriction.allowed && !restriction.allowed.includes(REGION)) return false;
+      return true;
+    };
+
     const enriched = candidates.map(c => {
       const item = byId.get(c.videoId);
       if (!item) return c; // sin datos → se mantiene tal cual (permisivo)
@@ -181,14 +192,15 @@ export async function enrichCandidates(candidates, apiKey) {
         ...c,
         durationSec: sec,
         durationLabel: sec ? _formatDuration(sec) : c.durationLabel,
-        embeddable: item.status?.embeddable !== false
+        embeddable: item.status?.embeddable !== false,
+        regionOk: regionOk(item.contentDetails?.regionRestriction)
       };
     });
 
-    // Descartamos explícitamente los no-embebibles, aunque eso deje el array
-    // vacío — es preferible caer al fallback de búsqueda que recomendar un
-    // video que YouTube va a bloquear dentro del reproductor.
-    return enriched.filter(c => c.embeddable !== false);
+    // Descartamos los no-embebibles y los bloqueados/no-permitidos en Perú.
+    // Puede dejar el array vacío — es preferible caer al fallback de
+    // búsqueda que recomendar un video que YouTube va a bloquear.
+    return enriched.filter(c => c.embeddable !== false && c.regionOk !== false);
   } catch {
     return candidates; // silencioso: el enriquecimiento es best-effort
   }
