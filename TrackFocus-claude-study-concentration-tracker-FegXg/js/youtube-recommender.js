@@ -60,7 +60,11 @@ window.YoutubeRecommender = (() => {
         '</div>' +
         `<div class="yt-rec-card-title">${_esc(v.title)}</div>` +
         (v.channel ? `<div class="yt-rec-channel">${_esc(v.channel)}${v.durationLabel ? ' · ' + _esc(v.durationLabel) : ''}</div>` : '') +
-        (v.reason ? `<div class="yt-rec-reason">${_esc(v.reason)}</div>` : '');
+        (v.reason ? `<div class="yt-rec-reason">${_esc(v.reason)}</div>` : '') +
+        // Salida de emergencia: YouTube a veces bloquea el embed por reclamos de
+        // derechos de terceros (Content ID) sin que la API lo anticipe. Este link
+        // siempre está disponible para que nunca sea un callejón sin salida.
+        `<a class="yt-rec-watch-link" href="${_esc(v.url)}" target="_blank" rel="noopener">¿No carga el video? Verlo en YouTube ↗</a>`;
     } else {
       const q = (data && data.fallbackQuery) || '';
       section.innerHTML =
