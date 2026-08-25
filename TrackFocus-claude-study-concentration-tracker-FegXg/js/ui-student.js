@@ -874,7 +874,11 @@ const UIStudent = (() => {
       midDecoTriggered: false, // previene doble auto-trigger DECO
       quizResult: null        // resultado del quiz opcional (si el alumno lo usó)
     };
-    window._trackfocusChatCtx = { grade: metadata.grade, subject: metadata.subject, studyMode: metadata.studyMode, topicGoal: metadata.topicGoal || '' };
+    window._trackfocusChatCtx = { grade: metadata.grade, subject: metadata.subject, studyMode: metadata.studyMode, topicGoal: metadata.topicGoal || '', memoryContext: metadata.memoryContext || '' };
+    // Referencia viva al historial: se acumula progresivamente a medida que
+    // avanza la conversación (mismo array que _chatState.history, por referencia).
+    // La usa youtube-recommender.js para recomendar en base a TODA la sesión.
+    window._trackfocusChatHistory = _chatState.history;
     // El chat reemplaza el cuerpo de la pantalla actual. Funciona tanto en
     // 'ai-study' (#aiPanelBody) como en 'new-session' (.session-setup-wrap).
     const panelBody = document.getElementById('aiPanelBody')

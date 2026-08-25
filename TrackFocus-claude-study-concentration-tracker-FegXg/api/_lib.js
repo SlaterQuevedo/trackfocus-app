@@ -97,3 +97,98 @@ export function checkRateLimit(req, res, { maxRequests = 30, windowMs = 60_000 }
   }
   return false;
 }
+
+// ── YouTube search (compartido entre youtube-search.js y ai-chat.js) ──────────
+
+/**
+ * Busca en YouTube Data API v3 con hasta 3 queries, deduplicando por videoId.
+ * Retorna hasta 5 candidatos con snippet básico (sin duración real — ver attachDurations).
+ */
+export async function searchYouTubeCandidates(queries, apiKey) {
+  const seenIds = new Set();
+  const allVideos = [];
+
+  for (const query of queries.slice(0, 3)) {
+    if (allVideos.length >= 5) break;
+
+    const params = new URLSearchParams({
+      part: 'snippet',
+      type: 'video',
+      maxResults: '5',
+      q: query,
+      key: apiKey,
+      relevanceLanguage: 'es',
+      safeSearch: 'strict'
+    });
+
+    let ytRes;
+    try {
+      ytRes = await fetch(`https://www.googleapis.com/youtube/v3/search?${params}`, { signal: AbortSignal.timeout(7000) });
+    } catch {
+      continue;
+    }
+    if (!ytRes.ok) continue;
+
+    const data = await ytRes.json();
+    for (const item of (data.items || [])) {
+      const videoId = item.id?.videoId;
+      if (!videoId || seenIds.has(videoId)) continue;
+      seenIds.add(videoId);
+
+      const s = item.snippet || {};
+      allVideos.push({
+        title: s.title || '',
+        channel: s.channelTitle || '',
+        description: s.description || '',
+        videoId,
+        url: `https://www.youtube.com/watch?v=${videoId}`,
+        thumbnail: s.thumbnails?.medium?.url || s.thumbnails?.default?.url || '',
+        publishedAt: s.publishedAt || ''
+      });
+
+      if (allVideos.length >= 5) break;
+    }
+  }
+
+  return allVideos;
+}
+
+/**
+ * Añade duración real (segundos + label "mm:ss") a cada candidato vía videos.list.
+ * Muta el array en sitio; si falla, deja los candidatos sin duración (degrada bien).
+ */
+export async function attachDurations(candidates, apiKey) {
+  if (!candidates.length) return;
+  const ids = candidates.map(c => c.videoId).join(',');
+  try {
+    const params = new URLSearchParams({ part: 'contentDetails', id: ids, key: apiKey });
+    const r = await fetch(`https://www.googleapis.com/youtube/v3/videos?${params}`, { signal: AbortSignal.timeout(7000) });
+    if (!r.ok) return;
+    const data = await r.json();
+    const byId = new Map((data.items || []).map(it => [it.id, it.contentDetails?.duration]));
+    for (const c of candidates) {
+      const iso = byId.get(c.videoId);
+      if (!iso) continue;
+      const sec = _parseISODuration(iso);
+      c.durationSec = sec;
+      c.durationLabel = _formatDuration(sec);
+    }
+  } catch {
+    // silencioso: la duración es un enriquecimiento opcional
+  }
+}
+
+function _parseISODuration(iso) {
+  const m = /^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/.exec(iso || '');
+  if (!m) return 0;
+  const [, h, min, s] = m;
+  return (Number(h) || 0) * 3600 + (Number(min) || 0) * 60 + (Number(s) || 0);
+}
+
+function _formatDuration(sec) {
+  if (!sec) return '';
+  const h = Math.floor(sec / 3600), min = Math.floor((sec % 3600) / 60), s = sec % 60;
+  const mm = h ? String(min).padStart(2, '0') : String(min);
+  const ss = String(s).padStart(2, '0');
+  return h ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+}

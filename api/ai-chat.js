@@ -1,4 +1,4 @@
-import { GEMINI_MODEL, GEMINI_BASE, geminiHeaders, applyCors } from './_lib.js';
+import { GEMINI_MODEL, GEMINI_BASE, geminiHeaders, applyCors, searchYouTubeCandidates, attachDurations } from './_lib.js';
 
 export default async (req, res) => {
   if (applyCors(req, res)) return;
@@ -9,12 +9,13 @@ export default async (req, res) => {
 
   const { action } = req.body;
 
-  if (action === 'message')  return handleMessage(req, res);
-  if (action === 'finalize') return handleFinalize(req, res);
-  if (action === 'quiz')     return handleQuiz(req, res);
-  if (action === 'deco')     return handleDeco(req, res);
+  if (action === 'message')         return handleMessage(req, res);
+  if (action === 'finalize')        return handleFinalize(req, res);
+  if (action === 'quiz')            return handleQuiz(req, res);
+  if (action === 'deco')            return handleDeco(req, res);
+  if (action === 'recommend-video') return handleRecommendVideo(req, res);
 
-  return res.status(400).json({ error: 'action debe ser "message", "finalize", "quiz" o "deco"' });
+  return res.status(400).json({ error: 'action debe ser "message", "finalize", "quiz", "deco" o "recommend-video"' });
 };
 
 // ── Handler: evaluación DECO (Fase 5) ─────────────────────────────────────────
@@ -164,6 +165,124 @@ REGLAS:
     return res.status(200).json({ questions });
   } catch (err) {
     return res.status(200).json({ questions: [] });
+  }
+}
+
+// ── Handler: recomendación de UN video de YouTube (bajo demanda) ────────────
+// Se dispara solo cuando el alumno hace click en "📹 Videos" — nunca automático.
+// Usa TODA la conversación acumulada (no solo el último mensaje) para entender
+// el contexto real: (1) la IA decide qué buscar, (2) se traen candidatos REALES
+// de YouTube, (3) la IA elige el único mejor entre esos candidatos reales, o
+// ninguno si no hay uno suficientemente bueno.
+async function handleRecommendVideo(req, res) {
+  const { metadata, history = [] } = req.body || {};
+  if (!metadata) return res.status(400).json({ error: 'metadata requerido' });
+
+  const fallbackQuery = (metadata.topicGoal || metadata.subject || 'estudio').trim();
+
+  const geminiKey = process.env.GEMINI_API_KEY;
+  const ytKey     = process.env.YOUTUBE_API_KEY;
+  if (!geminiKey || !ytKey) return res.status(200).json({ video: null, fallbackQuery });
+
+  const transcript = history.slice(-20)
+    .map(m => `[${m.role === 'user' ? 'ALUMNO' : 'TUTOR'}]: ${m.content}`)
+    .join('\n');
+
+  if (!transcript.trim()) return res.status(200).json({ video: null, fallbackQuery });
+
+  const memoryBlock = metadata.memoryContext ? `MEMORIA DEL ALUMNO: ${metadata.memoryContext}\n` : '';
+
+  // ── 1. La IA decide QUÉ buscar, en base a toda la conversación acumulada ────
+  let searchQuery = fallbackQuery;
+  try {
+    const queryPrompt = `Eres un asistente que decide qué video de YouTube ayudaría más a un estudiante ahora mismo.
+
+CONTEXTO: materia ${metadata.subject}, grado ${metadata.grade}, modo de estudio ${metadata.studyMode || 'tutor'}.
+${memoryBlock}
+CONVERSACIÓN COMPLETA HASTA AHORA (no te bases solo en el último mensaje, entiende el hilo completo):
+${transcript}
+
+Basándote en TODA la conversación, identifica cuál es la necesidad real y actual del estudiante en este momento. Genera UNA sola búsqueda de YouTube en español, natural y específica (como la escribiría alguien que realmente busca ese video), con la mayor probabilidad de encontrar un video que explique exactamente lo que el estudiante necesita ahora.
+
+Responde SOLO con el texto de la búsqueda, sin comillas ni explicación, una sola línea.`;
+
+    const r = await fetch(`${GEMINI_BASE}/${GEMINI_MODEL}:generateContent`, {
+      method: 'POST',
+      headers: geminiHeaders(geminiKey),
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: queryPrompt }] }],
+        generationConfig: { temperature: 0.3, maxOutputTokens: 60, thinkingConfig: { thinkingBudget: 0 } }
+      })
+    });
+    if (r.ok) {
+      const j = await r.json();
+      const raw = (j.candidates?.[0]?.content?.parts?.[0]?.text || '').trim().replace(/^["']|["']$/g, '');
+      if (raw) searchQuery = raw.slice(0, 120);
+    }
+  } catch {
+    // continúa con fallbackQuery
+  }
+
+  // ── 2. Buscar candidatos reales en YouTube ──────────────────────────────────
+  let candidates;
+  try {
+    candidates = await searchYouTubeCandidates([searchQuery], ytKey);
+  } catch {
+    candidates = [];
+  }
+  if (!candidates.length) return res.status(200).json({ video: null, fallbackQuery: searchQuery });
+
+  await attachDurations(candidates, ytKey);
+
+  // ── 3. La IA elige el MEJOR candidato real, o ninguno ───────────────────────
+  const candidatesList = candidates.map((c, i) =>
+    `${i}. Título: "${c.title}" | Canal: ${c.channel} | Duración: ${c.durationLabel || 'desconocida'} | Descripción: ${(c.description || '').slice(0, 200)}`
+  ).join('\n');
+
+  const rankPrompt = `Eres un tutor que elige el MEJOR video de YouTube para un estudiante, entre candidatos REALES ya encontrados (no inventes nada, elige solo entre los listados).
+
+CONTEXTO DEL ESTUDIANTE: materia ${metadata.subject}, grado ${metadata.grade}, modo ${metadata.studyMode || 'tutor'}.
+${memoryBlock}
+CONVERSACIÓN COMPLETA:
+${transcript}
+
+CANDIDATOS REALES:
+${candidatesList}
+
+Elige el índice del candidato más útil para la situación actual de este estudiante, considerando: relevancia exacta con el tema, claridad de la explicación (según título/descripción), adecuación al nivel/grado, duración razonable, y que sea contenido educativo real (no solo coincidencia de palabras clave). Si NINGUNO es realmente bueno para este estudiante ahora, responde index: -1.
+
+Devuelve SOLO este JSON, sin markdown ni texto extra:
+{"index": <número o -1>, "reason": "<1-2 frases en español explicando por qué este video ayuda a ESTE estudiante en ESTE momento, basándote en datos reales del video y de la conversación — no afirmes nada que no puedas verificar del título/descripción>"}`;
+
+  try {
+    const r2 = await fetch(`${GEMINI_BASE}/${GEMINI_MODEL}:generateContent`, {
+      method: 'POST',
+      headers: geminiHeaders(geminiKey),
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: rankPrompt }] }],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 220, thinkingConfig: { thinkingBudget: 0 } }
+      })
+    });
+    if (!r2.ok) return res.status(200).json({ video: null, fallbackQuery: searchQuery });
+
+    const j2 = await r2.json();
+    const raw2 = j2.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const match = raw2.match(/\{[\s\S]*\}/);
+    if (!match) return res.status(200).json({ video: null, fallbackQuery: searchQuery });
+
+    const parsed = JSON.parse(match[0]);
+    const idx = Number(parsed.index);
+    if (!Number.isInteger(idx) || idx < 0 || idx >= candidates.length) {
+      return res.status(200).json({ video: null, fallbackQuery: searchQuery });
+    }
+
+    const chosen = candidates[idx];
+    return res.status(200).json({
+      video: { ...chosen, reason: String(parsed.reason || '').slice(0, 400) },
+      fallbackQuery: null
+    });
+  } catch {
+    return res.status(200).json({ video: null, fallbackQuery: searchQuery });
   }
 }
 

@@ -1,7 +1,7 @@
 // api/youtube-search.js — Serverless Vercel function
 // Busca videos de YouTube relevantes para el Tutor IA de TrackFocus.
 
-import { applyCors, checkRateLimit } from './_lib.js';
+import { applyCors, checkRateLimit, searchYouTubeCandidates } from './_lib.js';
 
 // Caché en memoria: previene agotamiento de cuota YouTube (10K units/día → 100 por búsqueda → ~12 min a 500 usuarios)
 const _ytCache = new Map(); // key: query normalizada → { ts, videos }
@@ -51,54 +51,9 @@ export default async function handler(req, res) {
     return res.status(200).json({ videos });
   }
 
-  // ── Con API key: llamar YouTube Data API v3 ──────────────────────────────────
+  // ── Con API key: llamar YouTube Data API v3 (helper compartido) ──────────────
   try {
-    const seenIds = new Set();
-    const allVideos = [];
-
-    for (const query of limitedQueries) {
-      if (allVideos.length >= 5) break;
-
-      const params = new URLSearchParams({
-        part: 'snippet',
-        type: 'video',
-        maxResults: '3',
-        q: query,
-        key: apiKey,
-        relevanceLanguage: 'es',
-        safeSearch: 'strict'
-      });
-
-      const ytRes = await fetch(
-        `https://www.googleapis.com/youtube/v3/search?${params}`,
-        { signal: AbortSignal.timeout(7000) }
-      );
-
-      if (!ytRes.ok) continue;
-
-      const data = await ytRes.json();
-      const items = data.items || [];
-
-      for (const item of items) {
-        const videoId = item.id?.videoId;
-        if (!videoId || seenIds.has(videoId)) continue;
-        seenIds.add(videoId);
-
-        const s = item.snippet || {};
-        allVideos.push({
-          title: s.title || '',
-          channel: s.channelTitle || '',
-          description: s.description || '',
-          videoId,
-          url: `https://www.youtube.com/watch?v=${videoId}`,
-          thumbnail: s.thumbnails?.medium?.url || s.thumbnails?.default?.url || '',
-          publishedAt: s.publishedAt || ''
-        });
-
-        if (allVideos.length >= 5) break;
-      }
-    }
-
+    const allVideos = await searchYouTubeCandidates(limitedQueries, apiKey);
     _ytCache.set(cacheKey, { ts: Date.now(), videos: allVideos });
     return res.status(200).json({ videos: allVideos });
   } catch (err) {
