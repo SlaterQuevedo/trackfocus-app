@@ -1,4 +1,4 @@
-import { GEMINI_MODEL, GEMINI_BASE, geminiHeaders, applyCors, searchYouTubeCandidates, attachDurations } from './_lib.js';
+import { GEMINI_MODEL, GEMINI_BASE, geminiHeaders, applyCors, searchYouTubeCandidates, enrichCandidates } from './_lib.js';
 
 export default async (req, res) => {
   if (applyCors(req, res)) return;
@@ -226,13 +226,16 @@ Responde SOLO con el texto de la búsqueda, sin comillas ni explicación, una so
   // ── 2. Buscar candidatos reales en YouTube ──────────────────────────────────
   let candidates;
   try {
-    candidates = await searchYouTubeCandidates([searchQuery], ytKey);
+    candidates = await searchYouTubeCandidates([searchQuery], ytKey, 8);
   } catch {
     candidates = [];
   }
   if (!candidates.length) return res.status(200).json({ video: null, fallbackQuery: searchQuery });
 
-  await attachDurations(candidates, ytKey);
+  // Enriquecer con duración real y descartar los que YouTube no permite embeber
+  // (evita recomendar un video que luego se muestre bloqueado en el reproductor).
+  candidates = await enrichCandidates(candidates, ytKey);
+  if (!candidates.length) return res.status(200).json({ video: null, fallbackQuery: searchQuery });
 
   // ── 3. La IA elige el MEJOR candidato real, o ninguno ───────────────────────
   const candidatesList = candidates.map((c, i) =>

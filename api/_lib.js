@@ -97,19 +97,20 @@ export function checkRateLimit(req, res, { maxRequests = 20, windowMs = 60_000 }
 
 /**
  * Busca en YouTube Data API v3 con hasta 3 queries, deduplicando por videoId.
- * Retorna hasta 5 candidatos con snippet básico (sin duración real — ver attachDurations).
+ * Retorna hasta `maxTotal` candidatos con snippet básico (sin duración real —
+ * ver enrichCandidates).
  */
-export async function searchYouTubeCandidates(queries, apiKey) {
+export async function searchYouTubeCandidates(queries, apiKey, maxTotal = 5) {
   const seenIds = new Set();
   const allVideos = [];
 
   for (const query of queries.slice(0, 3)) {
-    if (allVideos.length >= 5) break;
+    if (allVideos.length >= maxTotal) break;
 
     const params = new URLSearchParams({
       part: 'snippet',
       type: 'video',
-      maxResults: '5',
+      maxResults: String(Math.min(maxTotal, 10)),
       q: query,
       key: apiKey,
       relevanceLanguage: 'es',
@@ -141,7 +142,7 @@ export async function searchYouTubeCandidates(queries, apiKey) {
         publishedAt: s.publishedAt || ''
       });
 
-      if (allVideos.length >= 5) break;
+      if (allVideos.length >= maxTotal) break;
     }
   }
 
@@ -149,27 +150,42 @@ export async function searchYouTubeCandidates(queries, apiKey) {
 }
 
 /**
- * Añade duración real (segundos + label "mm:ss") a cada candidato vía videos.list.
- * Muta el array en sitio; si falla, deja los candidatos sin duración (degrada bien).
+ * Añade duración real (segundos + label "mm:ss") y descarta los candidatos que
+ * YouTube marca como no-embeddable (status.embeddable === false) — evitamos
+ * elegir un video que luego mostraría "Este contenido está bloqueado" dentro
+ * del reproductor embebido. Retorna un NUEVO array (no muta el original).
+ * Si la llamada falla, retorna los candidatos sin filtrar (degrada permisivo:
+ * mejor mostrar algo, aunque no todos sean embebibles, que no mostrar nada).
  */
-export async function attachDurations(candidates, apiKey) {
-  if (!candidates.length) return;
+export async function enrichCandidates(candidates, apiKey) {
+  if (!candidates.length) return candidates;
   const ids = candidates.map(c => c.videoId).join(',');
   try {
-    const params = new URLSearchParams({ part: 'contentDetails', id: ids, key: apiKey });
+    const params = new URLSearchParams({ part: 'contentDetails,status', id: ids, key: apiKey });
     const r = await fetch(`https://www.googleapis.com/youtube/v3/videos?${params}`, { signal: AbortSignal.timeout(7000) });
-    if (!r.ok) return;
+    if (!r.ok) return candidates;
     const data = await r.json();
-    const byId = new Map((data.items || []).map(it => [it.id, it.contentDetails?.duration]));
-    for (const c of candidates) {
-      const iso = byId.get(c.videoId);
-      if (!iso) continue;
-      const sec = _parseISODuration(iso);
-      c.durationSec = sec;
-      c.durationLabel = _formatDuration(sec);
-    }
+    const byId = new Map((data.items || []).map(it => [it.id, it]));
+
+    const enriched = candidates.map(c => {
+      const item = byId.get(c.videoId);
+      if (!item) return c; // sin datos → se mantiene tal cual (permisivo)
+      const iso = item.contentDetails?.duration;
+      const sec = iso ? _parseISODuration(iso) : undefined;
+      return {
+        ...c,
+        durationSec: sec,
+        durationLabel: sec ? _formatDuration(sec) : c.durationLabel,
+        embeddable: item.status?.embeddable !== false
+      };
+    });
+
+    // Descartamos explícitamente los no-embebibles, aunque eso deje el array
+    // vacío — es preferible caer al fallback de búsqueda que recomendar un
+    // video que YouTube va a bloquear dentro del reproductor.
+    return enriched.filter(c => c.embeddable !== false);
   } catch {
-    // silencioso: la duración es un enriquecimiento opcional
+    return candidates; // silencioso: el enriquecimiento es best-effort
   }
 }
 
