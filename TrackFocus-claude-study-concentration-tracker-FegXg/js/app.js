@@ -150,6 +150,30 @@ const App = (() => {
     }
   }
 
+  // Abrevia el nombre del colegio a iniciales para el header, preservando un
+  // código numérico inicial si lo tiene (ej: "2038 Inca Garcilaso de la Vega"
+  // -> "2038 IGV"). Omite conectores cortos (de, la, los...) de las iniciales.
+  const _SCHOOL_NAME_STOPWORDS = new Set(['de', 'del', 'la', 'las', 'los', 'y', 'e']);
+  function _abbreviateSchoolName(name) {
+    const words = (name || '').trim().split(/\s+/);
+    if (!words.length || !words[0]) return name || '';
+    const leadingCode = /^\d/.test(words[0]) ? words.shift() : '';
+    const initials = words
+      .filter(w => !_SCHOOL_NAME_STOPWORDS.has(w.toLowerCase()))
+      .map(w => w[0])
+      .join('')
+      .toUpperCase();
+    return [leadingCode, initials].filter(Boolean).join(' ') || name;
+  }
+
+  // Extrae el apellido para el header (todo menos la primera palabra del
+  // nombre completo — ej: "Andres Mata" -> "Mata"). Si solo hay una palabra,
+  // la devuelve tal cual.
+  function _surname(fullName) {
+    const words = (fullName || '').trim().split(/\s+/);
+    return words.length > 1 ? words.slice(1).join(' ') : (fullName || '');
+  }
+
   function updateChrome() {
     const user = Roles.current();
     const nav = document.getElementById('topnav');
@@ -228,7 +252,7 @@ const App = (() => {
     if (user.role === 'student') {
       navButtons = `
         <button data-route="dashboard">Panel</button>
-        <button data-route="ai-study">Estudio IA</button>
+        <button data-route="ai-study">TrackTutor</button>
         <button data-route="stats">Estadísticas</button>
         <button data-route="leaderboard">Ranking</button>
         <button data-route="profile">Perfil</button>`;
@@ -282,8 +306,10 @@ const App = (() => {
       bottomnav.classList.remove('hidden');
     }
 
-    const schoolName = user.schoolId && s.schools[user.schoolId] ? ` · ${s.schools[user.schoolId].name}` : '';
-    document.getElementById('userLabel').textContent = `${user.name}${schoolName}`;
+    const schoolName = user.schoolId && s.schools[user.schoolId]
+      ? ` · ${_abbreviateSchoolName(s.schools[user.schoolId].name)}`
+      : '';
+    document.getElementById('userLabel').textContent = `${_surname(user.name)}${schoolName}`;
 
     // "Información Legal" en el userbox solo para docente, admin y padre.
     // Los estudiantes acceden exclusivamente desde Mi Perfil (ppLegalBtn).
