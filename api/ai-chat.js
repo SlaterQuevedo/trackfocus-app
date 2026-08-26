@@ -313,10 +313,24 @@ const _PERF_BAND_HINTS = {
 
 function buildSystemPrompt(metadata, decoDue) {
   const { subject, grade, memoryContext, studyMode, examDate, topicGoal,
-          decoLevel, performanceBand } = metadata;
+          decoLevel, performanceBand, career, prepPct } = metadata;
 
   const memoryBlock = memoryContext
     ? `\nMemoria del alumno (información interna — para decidir cómo enseñar; nunca la repitas ni la cites): ${memoryContext}\n`
+    : '';
+
+  // Calibración inicial (Panel Personal): meta/carrera + nivel de preparación
+  // general, ya calculados por TrackFocus (nunca inventados). Se usan para
+  // que el primer ejercicio ya tenga la dificultad correcta, en vez de
+  // esperar a estimarla en vivo durante la conversación.
+  const calibParts = [];
+  if (career) calibParts.push(`aspira a estudiar ${career}`);
+  if (typeof prepPct === 'number') {
+    const prepLevel = prepPct >= 70 ? 'alto' : prepPct >= 40 ? 'medio' : 'inicial';
+    calibParts.push(`nivel de preparación general ${prepLevel}`);
+  }
+  const calibBlock = calibParts.length
+    ? `\nCalibración inicial (información interna, nunca la menciones): el alumno ${calibParts.join(', ')}. Ajusta la dificultad de tus ejercicios y ejemplos a esto y a ${grade} desde el primer mensaje — evita problemas de nivel muy por debajo de secundaria salvo que el alumno demuestre que los necesita.\n`
     : '';
 
   const perfBlock = performanceBand && _PERF_BAND_HINTS[performanceBand]
@@ -336,7 +350,7 @@ function buildSystemPrompt(metadata, decoDue) {
     : '';
 
   return `Eres TrackTutor, el tutor de IA de TrackFocus, para un estudiante de ${grade} de secundaria peruana. Enseñas ${subject}.
-${memoryBlock}${modeBlock}${perfBlock}
+${memoryBlock}${calibBlock}${modeBlock}${perfBlock}
 CÓMO ENSEÑAS:
 - Ve directo a enseñar. Nada de saludos largos, frases motivacionales genéricas, recapitulaciones de sesiones pasadas ni relleno. Un saludo de una frase está bien solo si es el primer mensaje de la sesión.
 - Sé breve por defecto y no repitas la misma idea con otras palabras:
@@ -346,7 +360,8 @@ CÓMO ENSEÑAS:
   · retroalimentación → qué estuvo bien/mal + el punto clave + siguiente paso
   Extiéndete solo si el tema realmente lo exige o el alumno lo pide explícitamente.
 - Distingue "enséñame/explícame" de "dime la respuesta": si pide entender un concepto, guíalo con preguntas y pistas progresivas (pregunta orientadora → pista conceptual → pista concreta), nunca la solución directa de un ejercicio que debe resolver él. Si pide una explicación o definición directa, explícasela sin forzarlo todo a preguntas.
-- Antes de validar una respuesta, pide brevemente el razonamiento si es vaga o de una sola palabra.
+- Antes de validar una respuesta, pide brevemente el razonamiento SOLO si la respuesta es dudosa, vaga o incorrecta.
+- Si el alumno responde rápido, fácil y correctamente — muestra que ya domina el punto — NO insistas pidiéndole que explique cómo llegó al resultado ni repreguntes sobre lo mismo: sube la dificultad, da un ejercicio nuevo, o avanza al siguiente concepto del curso.
 - Celebra con una palabra o frase corta ("Bien.", "Exacto.", "Casi, revisa esto:") — nunca un párrafo de felicitación.
 
 FORMATO:

@@ -867,6 +867,21 @@ const UIStudent = (() => {
       const ctx = AcademicMemory.getContext(uid, metadata.subject);
       if (ctx) metadata.memoryContext = ctx;
     }
+
+    // Ruta de aprendizaje (Panel Personal): carrera/meta + nivel de
+    // preparación general, ya existentes en TrackFocus (arv-academic-profile-v3
+    // y _calcPrep) — se usan para calibrar la dificultad inicial de los
+    // ejercicios desde el primer mensaje, sin esperar a estimarla en vivo.
+    try {
+      const acadProfile = JSON.parse(localStorage.getItem('arv-academic-profile-v3') || '{}');
+      if (acadProfile.career) metadata.career = acadProfile.career;
+      const st = Storage.get();
+      const currentUser = st.users[st.currentUserId];
+      if (currentUser) {
+        metadata.prepPct = _calcPrep(currentUser, Sessions.listFor(currentUser.id), acadProfile);
+      }
+    } catch (_) { /* calibración opcional: si falla, se sigue sin ella */ }
+
     _chatState = {
       metadata, history: [], startedAt: Date.now(), attachedFiles: [],
       messageCount: 0,        // mensajes del alumno enviados
