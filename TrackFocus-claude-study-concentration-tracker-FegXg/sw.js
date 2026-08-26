@@ -5,7 +5,7 @@
 //
 // IMPORTANTE: Actualizar CACHE_VERSION en cada deploy para invalidar caché.
 
-const CACHE_VERSION = 'trackfocus-v60';
+const CACHE_VERSION = 'trackfocus-v61';
 
 // Extensiones estáticas que se almacenan en caché
 const STATIC_EXTS = /\.(js|css|svg|png|ico|webmanifest|woff|woff2|ttf)(\?.*)?$/;
@@ -36,7 +36,15 @@ const PRECACHE = [
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE_VERSION)
-      .then(cache => cache.addAll(PRECACHE))
+      .then(cache => Promise.all(
+        // cache:'reload' fuerza bypass de la caché HTTP del navegador — sin
+        // esto, una nueva versión del Service Worker podía precachear bytes
+        // viejos si el navegador aún tenía el archivo en su caché HTTP
+        // (Cache-Control: max-age=86400 en /js/ y /assets/).
+        PRECACHE.map(url => fetch(url, { cache: 'reload' }).then(res => {
+          if (res && res.ok) return cache.put(url, res);
+        }).catch(() => {}))
+      ))
       .then(() => self.skipWaiting())
   );
 });
@@ -83,8 +91,10 @@ async function staleWhileRevalidate(req) {
   const cache = await caches.open(CACHE_VERSION);
   const cached = await cache.match(req);
 
-  // Actualizar en segundo plano sin bloquear la respuesta
-  const fetchPromise = fetch(req).then(response => {
+  // Actualizar en segundo plano sin bloquear la respuesta.
+  // cache:'reload' evita que esta revalidación quede atrapada sirviendo una
+  // respuesta ya vieja desde la caché HTTP del navegador.
+  const fetchPromise = fetch(req, { cache: 'reload' }).then(response => {
     if (response && response.ok) {
       cache.put(req, response.clone());
     }
