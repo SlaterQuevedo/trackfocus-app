@@ -1424,9 +1424,14 @@ const UIStudent = (() => {
       _chatState.decoLevelIndex = Math.floor(_chatState.messageCount / 3) % _DECO_LEVELS.length;
       _chatState.metadata.decoLevel = _DECO_LEVELS[_chatState.decoLevelIndex];
 
-      // Actualizar indicador de Índice de Aprendizaje en tiempo real
+      // Actualizar indicador de Índice de Aprendizaje en tiempo real y
+      // pasarlo a TrackTutor para que adapte CÓMO enseña en el próximo turno
+      // (nunca se lo menciona al alumno — solo cambia el comportamiento).
       const liveLI = _estimateLiveLI();
-      if (liveLI != null) _updateLiChip(liveLI);
+      if (liveLI != null) {
+        _updateLiChip(liveLI);
+        _chatState.metadata.liveLearningIndex = liveLI;
+      }
 
       // Auto-trigger evaluación DECO completa al 6° mensaje del alumno (mitad de sesión)
       const userMsgCount = _chatState.history.filter(m => m.role === 'user').length;
