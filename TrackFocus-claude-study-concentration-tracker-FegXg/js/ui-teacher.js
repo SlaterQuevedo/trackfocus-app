@@ -188,7 +188,7 @@ const UITeacher = (() => {
         <div class="td-hdr-date">${dateStr}</div>
       </div>
       <div class="td-hdr-right">
-        ${primaryCr ? `<button class="ghost td-hdr-btn" data-go="classroom-stats" data-id="${primaryCr.id}">📊 Estadísticas</button>
+        ${primaryCr ? `<button class="ghost td-hdr-btn" data-go="classroom-stats" data-id="${primaryCr.id}">Estadísticas</button>
         <button class="primary td-hdr-btn" data-go="classroom-manage" data-id="${primaryCr.id}">⚙️ Gestionar</button>` : `<button class="primary td-hdr-btn" data-go="classroom-manage" data-id="new">+ Nueva aula</button>`}
       </div>
     </div>
@@ -790,7 +790,7 @@ const UITeacher = (() => {
                   <div class="cm-cr-title">${esc(crName)}</div>
                   <div class="cm-cr-sub">${esc(school ? school.name : '')} · ${totalStudents} alumnos</div>
                   <div class="cm-cr-meta-pills">
-                    <span class="cm-cr-pill">📚 ${esc(cr.grade || '')}</span>
+                    <span class="cm-cr-pill">${esc(cr.grade || '')}</span>
                     <span class="cm-cr-pill">🏷 ${esc(cr.section || '')}</span>
                     <span class="cm-cr-pill" style="color:${atRiskCount > 0 ? '#f59e0b' : '#22c55e'};">${atRiskCount > 0 ? '⚠ ' + atRiskCount + ' en riesgo' : '✓ Sin riesgos'}</span>
                   </div>

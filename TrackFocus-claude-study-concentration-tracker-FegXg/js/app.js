@@ -750,8 +750,8 @@ const App = (() => {
         const uni    = apro.targetUniversity || apro.university || user.university || '';
         const career = apro.targetCareer || apro.career || user.career || '';
         const goal   = (uni || career)
-          ? '🎓 ' + [uni, career].filter(Boolean).join(' · ')
-          : '🎓 Tu meta universitaria';
+          ? [uni, career].filter(Boolean).join(' · ')
+          : 'Tu meta universitaria';
 
         const totalMins = sessions.reduce(function(a, s){ return a + (Number(s.duration)||0); }, 0);
         const totalConc = sessions.reduce(function(a, s){ return a + (Number(s.concentration)||0); }, 0);
@@ -812,7 +812,7 @@ const App = (() => {
           + '<div class="lp-prev-chips">'
           + '<span class="lp-prev-chip lp-prev-chip--fire">🔥 ' + streak + ' día' + (streak !== 1 ? 's' : '') + '</span>'
           + '<span class="lp-prev-chip lp-prev-chip--time">⏱ ' + hours + 'h</span>'
-          + '<span class="lp-prev-chip lp-prev-chip--conc">🧠 ' + avgConc + '/5</span>'
+          + '<span class="lp-prev-chip lp-prev-chip--conc">' + avgConc + '/5</span>'
           + '</div>'
           + '<div class="lp-prev-ai">'
           + '<span class="lp-prev-ai-badge">✶ TrackTutor</span>'
@@ -858,7 +858,7 @@ const App = (() => {
           + '<div class="lp-prev-chips">'
           + '<span class="lp-prev-chip lp-prev-chip--fire">🔥 Empieza hoy</span>'
           + '<span class="lp-prev-chip lp-prev-chip--time">⏱ 0h</span>'
-          + '<span class="lp-prev-chip lp-prev-chip--conc">🧠 Sin límites</span>'
+          + '<span class="lp-prev-chip lp-prev-chip--conc">Sin límites</span>'
           + '</div>'
           + '<div class="lp-prev-ai">'
           + '<span class="lp-prev-ai-badge">✶ TrackTutor</span>'
@@ -897,7 +897,7 @@ const App = (() => {
         + '<div class="lp-prev-hero-row">'
         + '<div>'
         + '<div class="lp-prev-greeting">Hola, futuro estudiante 👋</div>'
-        + '<div class="lp-prev-goal">🎓 Tu universidad · Tu carrera</div>'
+        + '<div class="lp-prev-goal">Tu universidad · Tu carrera</div>'
         + '</div>'
         + '<div class="lp-prev-pct lp-prev-pct--ghost">—%</div>'
         + '</div>'
@@ -911,7 +911,7 @@ const App = (() => {
         + '<div class="lp-prev-chips">'
         + '<span class="lp-prev-chip lp-prev-chip--fire lp-prev-chip--ghost">🔥 Tu racha</span>'
         + '<span class="lp-prev-chip lp-prev-chip--time lp-prev-chip--ghost">⏱ Tu tiempo</span>'
-        + '<span class="lp-prev-chip lp-prev-chip--conc lp-prev-chip--ghost">🧠 Tu foco</span>'
+        + '<span class="lp-prev-chip lp-prev-chip--conc lp-prev-chip--ghost">Tu foco</span>'
         + '</div>'
         + '<div class="lp-prev-ai">'
         + '<span class="lp-prev-ai-badge">✶ TrackTutor</span>'
@@ -1003,7 +1003,7 @@ const App = (() => {
             <h4>Define tu meta</h4>
             <p>Universidad, curso o objetivo institucional. TrackFocus construye tu ruta desde el primer día.</p>
             <div class="lp-step-v2-chips">
-              <span>🎓 Universidad</span><span>📐 Carrera</span><span>🏫 Institución</span>
+              <span>Universidad</span><span>Carrera</span><span>Institución</span>
             </div>
           </div>
           <div class="lp-step-v2-arrow">→</div>
@@ -1689,7 +1689,7 @@ const App = (() => {
         }
       });
       try { await Storage.flush(); } catch (_) {}
-      UI.flash('¡Listo! Gracias. Ya puedes empezar a estudiar. 🎓', 'success');
+      UI.flash('¡Listo! Gracias. Ya puedes empezar a estudiar.', 'success');
       go('dashboard');
     });
     document.getElementById('consentDecline')?.addEventListener('click', async () => {

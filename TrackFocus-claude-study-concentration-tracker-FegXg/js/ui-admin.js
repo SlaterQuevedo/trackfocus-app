@@ -1866,7 +1866,7 @@ const UIAdmin = (() => {
   <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
     <div><h1 style="margin:0;font-size:20px;font-weight:800;">⚙️ Centro de Operaciones</h1><p class="muted" style="margin:3px 0 0;font-size:12px;">${now.toLocaleDateString('es-PE',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</p></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="primary" data-go="manage-schools">🏫 Colegios</button>
+      <button class="primary" data-go="manage-schools">Colegios</button>
       <button class="ghost"   data-go="manage-users">👥 Usuarios</button>
       <button class="ghost" id="btnDiagLog">🩺 Diagnóstico</button>
     </div>

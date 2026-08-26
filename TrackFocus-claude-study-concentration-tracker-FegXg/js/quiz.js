@@ -1,6 +1,6 @@
 // Quiz opcional de práctica (refactorizado).
 // El quiz YA NO se dispara automáticamente. El estudiante lo activa
-// con el botón "📝 Quiz" dentro del chat cuando quiera practicar.
+// con el botón "Quiz" dentro del chat cuando quiera practicar.
 // Usa generateAdvanced (config: count/difficulty/focus) y presentInChat
 // (panel integrado en el chat, no modal bloqueante).
 const Quiz = (() => {
@@ -70,7 +70,7 @@ const Quiz = (() => {
       const LETTERS = ['A', 'B', 'C', 'D'];
       panel.innerHTML = `
         <div class="quiz-panel-header">
-          <span class="quiz-panel-title">📝 Quiz de práctica</span>
+          <span class="quiz-panel-title">Quiz de práctica</span>
           <span class="quiz-panel-progress">${qi + 1} / ${questions.length}</span>
           <button class="ghost quiz-close-inline" style="font-size:12px;padding:4px 10px;">✕ Cerrar</button>
         </div>
@@ -184,7 +184,7 @@ const Quiz = (() => {
 
       panel.innerHTML = `
         <div class="quiz-panel-header">
-          <span class="quiz-panel-title">📝 Resultados del Quiz</span>
+          <span class="quiz-panel-title">Resultados del Quiz</span>
           <button class="ghost quiz-close-inline" style="font-size:12px;padding:4px 10px;">✕ Cerrar</button>
         </div>
         <div class="quiz-summary">
@@ -200,7 +200,7 @@ const Quiz = (() => {
                   <ul>${wrongQs.map(q => `<li>${_esc(q.length > 80 ? q.slice(0, 80) + '…' : q)}</li>`).join('')}</ul>
                 </div>`
               : '<div class="quiz-summary-section" style="color:#22c55e;">✅ ¡Dominas el tema completamente!</div>'}
-            <p class="muted" style="font-size:12px;margin-top:8px;">📊 El Índice de Aprendizaje ha sido actualizado con estos resultados.</p>
+            <p class="muted" style="font-size:12px;margin-top:8px;">El Índice de Aprendizaje ha sido actualizado con estos resultados.</p>
           </div>
           <div class="quiz-summary-actions">
             <button class="ghost quiz-close-inline">Volver al chat</button>

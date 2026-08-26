@@ -244,7 +244,7 @@ const UIStudent = (() => {
     // ── HERO ──
     const heroGoalHtml = profile.university
       ? '<div class="dpv-hero-goal-row">'
-        + '<span class="dpv-goal-pill">🎓 ' + esc(profile.university) + '</span>'
+        + '<span class="dpv-goal-pill">' + esc(profile.university) + '</span>'
         + (profile.career ? '<span class="dpv-goal-pill dpv-goal-pill-career">📐 ' + esc(profile.career) + '</span>' : '')
         + '</div>'
         + '<div class="dpv-prep-row">'
@@ -299,7 +299,7 @@ const UIStudent = (() => {
     const habitsHtml = '<div class="dpv-habits-row">'
       + '<div class="dpv-habit-chip dpv-habit-fire"><div class="dpv-habit-val">' + streak + '</div><div class="dpv-habit-label">🔥 días seguidos</div></div>'
       + '<div class="dpv-habit-chip dpv-habit-time"><div class="dpv-habit-val">' + weekHours + 'h</div><div class="dpv-habit-label">⏱ esta semana</div></div>'
-      + '<div class="dpv-habit-chip dpv-habit-conc"><div class="dpv-habit-val">' + (sum.avgConc || '—') + '</div><div class="dpv-habit-label">🧠 concentración</div></div>'
+      + '<div class="dpv-habit-chip dpv-habit-conc"><div class="dpv-habit-val">' + (sum.avgConc || '—') + '</div><div class="dpv-habit-label">concentración</div></div>'
       + '</div>';
 
     // ── MI CAMINO ──
@@ -356,11 +356,11 @@ const UIStudent = (() => {
 
     const heroHtml = `
       <div class="ds-hero">
-        <div class="ds-hero-name">🎓 ${esc(user.name)}</div>
+        <div class="ds-hero-name">${esc(user.name)}</div>
         <div class="ds-hero-meta">
           ${classroom ? `<span class="ds-hero-pill">${esc(classroom.name)}</span>` : ''}
-          ${school ? `<span class="ds-hero-pill">🏫 ${esc(school.name)}</span>` : ''}
-          ${tutorUser ? `<span class="ds-hero-pill">👤 Prof. ${esc(tutorUser.name)}</span>` : ''}
+          ${school ? `<span class="ds-hero-pill">${esc(school.name)}</span>` : ''}
+          ${tutorUser ? `<span class="ds-hero-pill">Prof. ${esc(tutorUser.name)}</span>` : ''}
         </div>
         <div class="ds-hero-date">${todayStr}</div>
       </div>`;
@@ -478,7 +478,7 @@ const UIStudent = (() => {
     return `
       <div class="card" style="margin-top:18px;">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
-          <h2 style="margin:0;">🎯 Mis Metas (esta semana)</h2>
+          <h2 style="margin:0;">Mis Metas (esta semana)</h2>
           <span class="muted" style="font-size:12px;">Toca el lápiz para ajustar un objetivo.</span>
         </div>
         <div class="goals-grid">
@@ -613,7 +613,7 @@ const UIStudent = (() => {
           </div>
           <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
             <button type="button" class="ghost" data-go="dashboard">Cancelar</button>
-            <button class="primary" type="submit">Comenzar sesión con IA ✨</button>
+            <button class="primary" type="submit">Comenzar sesión con IA</button>
           </div>
         </form>
 
@@ -903,7 +903,7 @@ const UIStudent = (() => {
     panelBody.innerHTML = _renderChatScreen(metadata);
     _wireChatScreen();
 
-    // Quiz inicial automático eliminado — el quiz es ahora opcional (botón "📝 Quiz").
+    // Quiz inicial automático eliminado — el quiz es ahora opcional (botón "Quiz").
 
     // Saludo adaptado al modo de estudio seleccionado
     let greeting;
@@ -931,7 +931,7 @@ const UIStudent = (() => {
     const gradeLabel = formatGradeShort(metadata.grade);
 
     const modeBadgeText = metadata.studyMode === 'exam-prep'
-      ? '📝 Modo Examen'
+      ? 'Modo Examen'
       : metadata.studyMode === 'topic-mastery'
       ? '🎯 Dominio de Tema'
       : '';
@@ -968,9 +968,9 @@ const UIStudent = (() => {
           <div class="chat-footer-actions">
             <div class="ai-toolbar">
               <span class="ai-always-on-badge" title="Método Minerva y Sistema DECO (4 niveles cognitivos) están activos en toda la sesión">🦉 Minerva · 🎯 DECO activos</span>
-              <button class="ghost ai-toolbar-btn" id="chatQuizBtn" title="Practicar con un Quiz opcional — no interrumpe la sesión">📝 Quiz</button>
+              <button class="ghost ai-toolbar-btn" id="chatQuizBtn" title="Practicar con un Quiz opcional — no interrumpe la sesión">Quiz</button>
               <button class="ghost ai-toolbar-btn" id="chatVideosBtn" title="Recibir una recomendación de video sobre el tema actual">📹 Video</button>
-              <span class="li-live-chip" id="chatLiChip" style="display:none;" title="Índice de Aprendizaje estimado en tiempo real">📊 <span id="chatLiVal">—</span></span>
+              <span class="li-live-chip" id="chatLiChip" style="display:none;" title="Índice de Aprendizaje estimado en tiempo real"><span id="chatLiVal">—</span></span>
             </div>
             <span class="chat-hint">Enter envía · Shift+Enter salto de línea</span>
           </div>
@@ -1147,7 +1147,7 @@ const UIStudent = (() => {
       // Actualizar el indicador de Índice de Aprendizaje con el resultado real
       const liEstimate = (typeof Deco !== 'undefined') ? Deco.learningIndex({}, result) : _estimateLiveLI();
       if (liEstimate != null) _updateLiChip(liEstimate);
-      UI.flash?.(`DECO calificado: ${result.decoScore}/${result.total}. Índice de Aprendizaje actualizado: ${liEstimate ?? '—'}/100 📊`, 'success');
+      UI.flash?.(`DECO calificado: ${result.decoScore}/${result.total}. Índice de Aprendizaje actualizado: ${liEstimate ?? '—'}/100`, 'success');
     });
   }
 
@@ -1170,7 +1170,7 @@ const UIStudent = (() => {
     configCard.className = 'quiz-config-card';
     configCard.innerHTML = `
       <div class="quiz-panel-header">
-        <span class="quiz-panel-title">📝 Practicar con un Quiz</span>
+        <span class="quiz-panel-title">Practicar con un Quiz</span>
         <button class="ghost quiz-close-inline" style="font-size:12px;padding:4px 10px;">✕</button>
       </div>
       <p class="muted" style="font-size:13px;margin:0 0 14px;">Genera preguntas basadas en lo que estás estudiando ahora.</p>
@@ -1458,7 +1458,7 @@ const UIStudent = (() => {
             const notice = document.createElement('div');
             notice.className = 'chat-bubble-wrap ia';
             notice.innerHTML = `<div class="chat-bubble ia chat-deco-notice" style="border:1px solid var(--accent);padding:12px 14px;">
-              <strong>📊 Evaluación DECO automática</strong><br>
+              <strong>Evaluación DECO automática</strong><br>
               <span style="font-size:13px;">Llevas 6 intercambios — es el momento perfecto para medir tu comprensión real en los 4 niveles cognitivos.</span>
             </div>`;
             msgs.appendChild(notice);
@@ -1533,7 +1533,7 @@ const UIStudent = (() => {
       // Persistir la última materia utilizada para pre-selección futura
       Subjects.saveLastSubject(user.id, _chatState.metadata.subject);
 
-      // Quiz final automático eliminado — el quiz es opcional (botón "📝 Quiz" en el chat).
+      // Quiz final automático eliminado — el quiz es opcional (botón "Quiz" en el chat).
       const timeSpentSeconds = (Date.now() - (_chatState.startedAt || Date.now())) / 1000;
       const quizResult = _chatState.quizResult || null;
 
@@ -1565,10 +1565,10 @@ const UIStudent = (() => {
         : [];
       try { sessionStorage.setItem('arv-last-recommendations', JSON.stringify({ at: Date.now(), subject: record.subject, recs })); } catch (_) {}
 
-      const idxTxt = (learningIndex != null) ? ` · Índice ${learningIndex}/100 📊` : '';
+      const idxTxt = (learningIndex != null) ? ` · Índice ${learningIndex}/100` : '';
       const goPanel = () => {
         App.go('dashboard');
-        UI.flash(`Sesión guardada · Concentración deducida: ${concentration}/5 🎯${idxTxt}`, 'success');
+        UI.flash(`Sesión guardada · Concentración deducida: ${concentration}/5${idxTxt}`, 'success');
         showXpToast(gamResult.xpEarned, gamResult.newBadges);
       };
 
@@ -2369,7 +2369,7 @@ const UIStudent = (() => {
             <div class="sv3-sidebar-card sv3-pdf-card">
               <div class="sv3-sidebar-title">Informe de Progreso</div>
               <p class="sv3-pdf-desc">Genera un informe PDF con todas tus estadísticas y logros.</p>
-              <button class="sv3-pdf-btn" id="sv3-btn-pdf">📄 Descargar Informe PDF</button>
+              <button class="sv3-pdf-btn" id="sv3-btn-pdf">Descargar Informe PDF</button>
             </div>
           </aside>
         </div>
@@ -2501,7 +2501,7 @@ const UIStudent = (() => {
       if (stored && Array.isArray(stored.recs) && stored.recs.length) {
         lastRecHtml = `
           <div class="card" style="margin-bottom:18px;">
-            <h3 style="margin:0 0 4px;">🧠 Basado en tu última sesión${stored.subject ? ' de ' + esc(stored.subject) : ''}</h3>
+            <h3 style="margin:0 0 4px;">Basado en tu última sesión${stored.subject ? ' de ' + esc(stored.subject) : ''}</h3>
             <p class="muted" style="margin:0 0 12px;font-size:13px;">Sugerencias de TrackTutor.</p>
             ${stored.recs.map(r => `<div class="rec-item"><span class="rec-icon">${r.icon || '•'}</span><div><strong>${esc(r.label || '')}:</strong> ${esc(r.text || '')}</div></div>`).join('')}
           </div>`;
@@ -2575,7 +2575,7 @@ const UIStudent = (() => {
       </div>
 
       <div style="margin:4px 0 18px;">
-        <button class="primary" id="btnProgressReport">📄 Mi reporte de progreso (PDF)</button>
+        <button class="primary" id="btnProgressReport">Mi reporte de progreso (PDF)</button>
       </div>
 
       <div class="card" style="margin:18px 0;">
@@ -3178,7 +3178,7 @@ const UIStudent = (() => {
 
     // El timer y sus callbacks los gestiona la barra global (#pomBar en app.js).
     // Aquí solo renderizamos el estado inicial y cableamos los botones de la página.
-    const modeLabels = { focus: 'Enfocado 🧠', break: 'Descanso ☕', paused: 'Pausado ⏸', idle: 'Listo para enfocar' };
+    const modeLabels = { focus: 'Enfocado', break: 'Descanso ☕', paused: 'Pausado ⏸', idle: 'Listo para enfocar' };
     const pState = Pomodoro.getState();
     const display = document.getElementById('timerDisplay');
     const modeEl  = document.getElementById('timerMode');
@@ -3379,14 +3379,14 @@ const UIStudent = (() => {
                 <div class="ph2-planner-stat">
                   <div class="ph2-planner-big">${esc(levelInfo.current.title)}</div>
                   <div class="ph2-planner-sub">Nivel ${levelInfo.current.level} · XP</div>
-                  <div class="ph2-planner-row">📚 Sesiones: ${sum.total}</div>
+                  <div class="ph2-planner-row">Sesiones: ${sum.total}</div>
                   <div class="ph2-planner-row">⏱ Estudio: ${Math.floor(sum.totalMin / 60)}h ${sum.totalMin % 60}min</div>
                 </div>
                 <div class="ph2-planner-stat">
                   <div class="ph2-planner-big">${xp.toLocaleString()}</div>
                   <div class="ph2-planner-sub">XP Acumulado</div>
-                  <div class="ph2-planner-row">🎯 Sesiones AM: ${sum.total}</div>
-                  <div class="ph2-planner-row">📊 Conc. Promedio: ${avgConc}%</div>
+                  <div class="ph2-planner-row">Sesiones AM: ${sum.total}</div>
+                  <div class="ph2-planner-row">Conc. Promedio: ${avgConc}%</div>
                 </div>
               </div>
               <button class="primary" data-go="stats" style="width:100%;margin-top:14px;">Ver Estadísticas</button>
@@ -3473,7 +3473,7 @@ const UIStudent = (() => {
                 </label>
                 <div class="ph2-setting-row">
                   <span class="ph2-setting-lbl">Diagnóstico</span>
-                  <button class="ghost ph2-diag-btn" id="ppDiagBtn">🩺</button>
+                  <button class="ghost ph2-diag-btn" id="ppDiagBtn">Exportar</button>
                 </div>
               </div>
             </div>
@@ -3547,7 +3547,7 @@ const UIStudent = (() => {
           <div class="ph-meta-card card" style="border-color:rgba(200,155,109,.25);">
             <div style="font-size:17px;font-weight:800;margin-bottom:4px;color:var(--text);">${esc(uniDisplay)}</div>
             <div style="color:var(--primary);font-size:14px;font-weight:600;margin-bottom:12px;">${esc(acadProfile.career || '')}</div>
-            <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">📚 Materias: ${(acadProfile.enabledSubjects || []).map(s => esc(s)).join(', ') || 'Ninguna'}</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Materias: ${(acadProfile.enabledSubjects || []).map(s => esc(s)).join(', ') || 'Ninguna'}</div>
             <button class="ghost" id="ppChangeMeta" style="width:100%;">Cambiar meta</button>
           </div>
         </div>`;
@@ -3584,7 +3584,7 @@ const UIStudent = (() => {
               <input type="text" id="pp-career-input" class="pp-career-inp" style="display:none;"
                 placeholder="¿Qué carrera o especialidad quieres estudiar?"
                 value="${esc(acadProfile.career || '')}" />
-              <button class="primary" id="pp-save-meta" style="width:100%;">Guardar mi meta 🎯</button>
+              <button class="primary" id="pp-save-meta" style="width:100%;">Guardar mi meta</button>
             </div>
           </div>
         </div>`;
@@ -3734,7 +3734,7 @@ const UIStudent = (() => {
           <div class="pp-kpi-card"><div class="pp-kpi-val">${earnedBadges.length}</div><div class="pp-kpi-lbl">Insignias</div></div>
         </div>
         <div class="pp-prog-actions">
-          <button class="primary" data-go="stats" style="width:100%;margin-bottom:10px;">📊 Ver estadísticas completas →</button>
+          <button class="primary" data-go="stats" style="width:100%;margin-bottom:10px;">Ver estadísticas completas →</button>
           <button class="ghost" data-go="achievements" style="width:100%;">🏆 Logros e insignias →</button>
         </div>
       </div>`;
@@ -3757,7 +3757,7 @@ const UIStudent = (() => {
           <button class="ghost pp-account-btn" id="ppExportBtn">📥 Exportar mis datos</button>
           <input type="file" id="ppRestoreInput" accept=".json" style="display:none;" />
           <button class="ghost pp-account-btn" id="ppRestoreBtn">📤 Restaurar respaldo</button>
-          <button class="ghost pp-account-btn" id="ppDiagBtn">🩺 Exportar registro de errores</button>
+          <button class="ghost pp-account-btn" id="ppDiagBtn">Exportar registro de errores</button>
           <button class="primary pp-account-btn" id="ppLogoutBtn">Cerrar sesión</button>
         </div>
         <div class="pp-version-info">TrackFocus · Todos los datos guardados localmente</div>
@@ -3799,7 +3799,7 @@ const UIStudent = (() => {
           <div class="pp-prefs-section-title">Diagnóstico</div>
           <div class="pp-prefs-row">
             <div><div class="pp-prefs-label">Registro de errores</div><div class="pp-prefs-sub">Para soporte técnico</div></div>
-            <button class="ghost" id="ppDiagBtn" style="font-size:12px;padding:6px 12px;">🩺 Exportar</button>
+            <button class="ghost" id="ppDiagBtn" style="font-size:12px;padding:6px 12px;">Exportar</button>
           </div>
         </div>
       </div>`;
@@ -3927,9 +3927,9 @@ const UIStudent = (() => {
           <div class="pp-profile-info" style="margin-left:16px;">
             <div class="pp-name">${esc(user.name)}</div>
             <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;">
-              ${classroom ? `<span class="ps-pill">🏫 ${esc(classroom.name)}</span>` : ''}
+              ${classroom ? `<span class="ps-pill">${esc(classroom.name)}</span>` : ''}
               ${school ? `<span class="ps-pill">🏛️ ${esc(school.name)}</span>` : ''}
-              ${user.grade ? `<span class="ps-pill">📚 ${formatGrade(user.grade)}</span>` : ''}
+              ${user.grade ? `<span class="ps-pill">${formatGrade(user.grade)}</span>` : ''}
             </div>
           </div>
         </div>
@@ -4114,7 +4114,7 @@ const UIStudent = (() => {
           <div class="pp-prefs-section-title">Diagnóstico</div>
           <div class="pp-prefs-row">
             <div><div class="pp-prefs-label">Registro de errores</div><div class="pp-prefs-sub">Para soporte técnico</div></div>
-            <button class="ghost" id="ppDiagBtn" style="font-size:12px;padding:6px 12px;">🩺 Exportar</button>
+            <button class="ghost" id="ppDiagBtn" style="font-size:12px;padding:6px 12px;">Exportar</button>
           </div>
         </div>
       </div>`;
@@ -4182,7 +4182,7 @@ const UIStudent = (() => {
           <button class="ghost pp-account-btn" id="ppExportBtn">📥 Exportar mis datos</button>
           <input type="file" id="ppRestoreInput" accept=".json" style="display:none;" />
           <button class="ghost pp-account-btn" id="ppRestoreBtn">📤 Restaurar respaldo</button>
-          <button class="ghost pp-account-btn" id="ppDiagBtn">🩺 Exportar registro de errores</button>
+          <button class="ghost pp-account-btn" id="ppDiagBtn">Exportar registro de errores</button>
           <button class="primary pp-account-btn" id="ppLogoutBtn">Cerrar sesión</button>
         </div>
         <div class="pp-version-info">TrackFocus · Datos sincronizados en la nube</div>
@@ -4195,10 +4195,10 @@ const UIStudent = (() => {
           <nav class="ps-nav">
             <button class="ps-nav-item active" data-panel="profile">👤 Mi Perfil</button>
             <button class="ps-nav-item" data-panel="evals">📅 Evaluaciones</button>
-            <button class="ps-nav-item" data-panel="courses">📚 Mis Materias</button>
+            <button class="ps-nav-item" data-panel="courses">Mis Materias</button>
             <button class="ps-nav-item" data-panel="ranking">🏆 Ranking</button>
-            <button class="ps-nav-item" data-panel="cognitive">🧠 Perfil Cognitivo</button>
-            <button class="ps-nav-item" data-panel="institution">🏫 Institución</button>
+            <button class="ps-nav-item" data-panel="cognitive">Perfil Cognitivo</button>
+            <button class="ps-nav-item" data-panel="institution">Institución</button>
             <button class="ps-nav-item" data-panel="prefs">⚙️ Ajustes</button>
             <button class="ps-nav-item" data-panel="account">🔐 Cuenta</button>
           </nav>
@@ -4924,7 +4924,7 @@ const UIStudent = (() => {
         <div id="aiPanelBody">
 
           <div class="ai-intro">
-            <h1>🧠 Estudio con TrackTutor</h1>
+            <h1>Estudio con TrackTutor</h1>
             <p class="muted">Conversa, adjunta archivos (PDF, imágenes) o habla por voz. TrackTutor te guía mientras estudias.</p>
           </div>
 
@@ -4962,7 +4962,7 @@ const UIStudent = (() => {
                 <label>Modo de estudio</label>
                 <select name="studyMode" id="studyModeSelectAI">
                   <option value="tutor">🦉 Aprendizaje guiado (Minerva + DECO)</option>
-                  <option value="exam-prep">📝 Prepararme para un examen</option>
+                  <option value="exam-prep">Prepararme para un examen</option>
                   <option value="topic-mastery">🎯 Mejorar en un tema específico</option>
                 </select>
               </div>
@@ -5008,11 +5008,11 @@ const UIStudent = (() => {
             </div>
             <input type="hidden" name="datetime" value="${local}" />
             <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
-              <button class="primary" type="submit">Comenzar sesión ✨</button>
+              <button class="primary" type="submit">Comenzar sesión</button>
             </div>
           </form>
           <p class="muted" style="font-size:12px;margin-top:12px;text-align:center;">
-            🦉 Método Minerva + 🎯 Sistema DECO activos en toda sesión. TrackTutor te guía mientras aprendes.
+            Método Minerva y Sistema DECO activos en toda sesión. TrackTutor te guía mientras aprendes.
           </p>
 
           <!-- Sección Progreso -->
@@ -5334,7 +5334,7 @@ const UIStudent = (() => {
       return `
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
           <button class="ghost" data-go="dashboard">← Volver</button>
-          <h1 style="margin:0;">📝 Mis Calificaciones</h1>
+          <h1 style="margin:0;">Mis Calificaciones</h1>
         </div>
         <div style="text-align:center;padding:48px 24px;color:rgba(255,255,255,.45);font-size:14px;">
           Aún no estás asignado a un colegio.<br>Únete a un aula para ver tus calificaciones.
@@ -5345,7 +5345,7 @@ const UIStudent = (() => {
       return `
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
           <button class="ghost" data-go="dashboard">← Volver</button>
-          <h1 style="margin:0;">📝 Mis Calificaciones</h1>
+          <h1 style="margin:0;">Mis Calificaciones</h1>
         </div>
         <div style="text-align:center;padding:48px 24px;color:rgba(255,255,255,.45);font-size:14px;">
           Tu docente aún no ha configurado los bimestres.
@@ -5355,7 +5355,7 @@ const UIStudent = (() => {
     return `
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
         <button class="ghost" data-go="dashboard">← Volver</button>
-        <h1 style="margin:0;">📝 Mis Calificaciones</h1>
+        <h1 style="margin:0;">Mis Calificaciones</h1>
       </div>
       <div id="studentGradesPanel">
         ${GradeUI.renderGradesTab({
