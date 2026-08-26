@@ -528,7 +528,7 @@ const UIAdmin = (() => {
                       ${schoolCrs.map(function(cr){
                         var isCurrent = tutorCr && tutorCr.id === cr.id;
                         var existingTutor = cr.tutorId && cr.tutorId !== u.id && s.users[cr.tutorId];
-                        var label = esc(cr.name) + (isCurrent ? ' ✓ actual' : existingTutor ? ' (tutor: '+esc(existingTutor.name)+')' : '');
+                        var label = esc(cr.name) + (isCurrent ? ' actual' : existingTutor ? ' (tutor: '+esc(existingTutor.name)+')' : '');
                         return '<option value="'+esc(cr.id)+'"'+(isCurrent?' selected':'')+'>'+label+'</option>';
                       }).join('')}
                     </select>
@@ -564,7 +564,7 @@ const UIAdmin = (() => {
               </button>`}
           <button class="um-act-btn um-act-del-perm" data-action-delperm="${esc(u.id)}" data-action-name="${esc(u.name)}">
             Eliminar permanentemente
-            <span class="um-act-btn-desc">⚠ Irreversible. Requiere doble confirmación.</span>
+            <span class="um-act-btn-desc">Irreversible. Requiere doble confirmación.</span>
           </button>
           <button class="um-act-btn um-act-sessions" data-action-sessions="${esc(u.id)}" data-action-name="${esc(u.name)}">
             Cerrar sesiones activas
@@ -688,7 +688,7 @@ const UIAdmin = (() => {
     <div class="um-table-wrap">
       <div class="um-table-header">
         <span class="um-table-title">${users.length} usuario${users.length !== 1 ? 's' : ''} ${filterStatus || filterRole || filterSearch ? '(filtrado)' : ''}</span>
-        <button class="ghost" id="btnDiagLog" style="font-size:11px;padding:4px 10px;">🩺 Diagnóstico</button>
+        <button class="ghost" id="btnDiagLog" style="font-size:11px;padding:4px 10px;">Diagnóstico</button>
       </div>
       ${users.length === 0
         ? `<div class="um-empty">
@@ -729,7 +729,7 @@ const UIAdmin = (() => {
     <button class="um-bulk-btn um-bulk-suspend" id="umBulkSuspendBtn">Suspender</button>
     <button class="um-bulk-btn um-bulk-reactivate" id="umBulkReactivateBtn">Reactivar</button>
     <button class="um-bulk-btn um-bulk-quitar" id="umBulkQuitarBtn">Quitar aula</button>
-    <button class="um-bulk-btn um-bulk-cancel" id="umBulkCancelBtn">✕ Cancelar</button>
+    <button class="um-bulk-btn um-bulk-cancel" id="umBulkCancelBtn">Cancelar</button>
   </div>
   <div class="um-bulk-move-form" id="umBulkMoveForm" style="display:none;">
     <select class="um-select" id="umBulkSchoolSel">
@@ -921,7 +921,7 @@ const UIAdmin = (() => {
         var id   = btn.dataset.actionDelperm;
         var name = btn.dataset.actionName;
         // Primera confirmación
-        if (!confirm('⚠️ ELIMINAR PERMANENTEMENTE\n\n¿Estás seguro de que quieres eliminar a "' + name + '"?\n\nEsta acción es IRREVERSIBLE. Se eliminarán la cuenta y todos sus datos de forma permanente.\n\nProceder requiere una segunda confirmación.')) return;
+        if (!confirm('ELIMINAR PERMANENTEMENTE\n\n¿Estás seguro de que quieres eliminar a "' + name + '"?\n\nEsta acción es IRREVERSIBLE. Se eliminarán la cuenta y todos sus datos de forma permanente.\n\nProceder requiere una segunda confirmación.')) return;
         // Segunda confirmación: escribir el nombre
         var typed = window.prompt('Para confirmar, escribe exactamente el nombre del usuario:\n\n"' + name + '"');
         if (typed === null) return; // cancelled
@@ -1460,7 +1460,7 @@ const UIAdmin = (() => {
   ${kpiStrip}
   <div id="newSchoolForm" style="display:none;">
     <div class="cp-card">
-      <div class="cp-card-hd"><span class="cp-card-hd-title">Nuevo colegio</span><button class="cp-btn-ghost" id="btnCancelNewSchool" style="padding:4px 12px;font-size:12px;">✕ Cancelar</button></div>
+      <div class="cp-card-hd"><span class="cp-card-hd-title">Nuevo colegio</span><button class="cp-btn-ghost" id="btnCancelNewSchool" style="padding:4px 12px;font-size:12px;">Cancelar</button></div>
       <div class="cp-card-body">
         <form id="schoolForm">
           <div class="cp-field"><label>Nombre del colegio</label><input name="name" placeholder="Ej. I.E. San Martín, Colegio Trilce…" required /></div>
@@ -1520,7 +1520,7 @@ const UIAdmin = (() => {
                   + '<input type="radio" name="tutorRad-'+esc(cr.id)+'" value="'+esc(t.id)+'"'+(isCurrent?' checked':'')+' style="display:none;"/>'
                   + '<div class="cp-tutor-item-av">'+_ini(t.name)+'</div>'
                   + '<div><div class="cp-tutor-item-name">'+esc(t.name)+'</div>'
-                  + (warnText ? '<div class="cp-tutor-item-warn">⚠ '+warnText+'</div>' : '<div class="cp-tutor-item-sub">'+esc(t.email)+'</div>')
+                  + (warnText ? '<div class="cp-tutor-item-warn">'+warnText+'</div>' : '<div class="cp-tutor-item-sub">'+esc(t.email)+'</div>')
                   + '</div></label>';
               }).join('');
           var tutorFormHtml = `<div class="cp-tutor-form-wrap" id="tutorForm-${esc(cr.id)}">
@@ -1544,7 +1544,7 @@ const UIAdmin = (() => {
             <td><div class="cp-cr-actions">
               <button class="cp-move-btn" data-move-up="${esc(cr.id)}" ${idx===0?'disabled':''} title="Subir">↑</button>
               <button class="cp-move-btn" data-move-down="${esc(cr.id)}" ${idx===classrooms.length-1?'disabled':''} title="Bajar">↓</button>
-              <button class="cp-cr-save" data-save-cr-code="${esc(cr.id)}">✓ Guardar</button>
+              <button class="cp-cr-save" data-save-cr-code="${esc(cr.id)}">Guardar</button>
               <button class="cp-cr-auto" data-regen-cr="${esc(cr.id)}">↻ Auto</button>
               <button class="cp-cr-del" data-del-cr="${esc(cr.id)}" data-del-cr-name="${esc(cr.name)}">Eliminar</button>
             </div></td>
@@ -1570,7 +1570,7 @@ const UIAdmin = (() => {
       <div style="display:flex;align-items:center;gap:10px;"><button class="cp-btn-ghost" data-go="manage-schools" id="btnBackSchools" style="padding:6px 12px;font-size:12px;">← Volver</button><h1>Gestión de Colegios</h1></div>
       <p>Editando: <strong style="color:var(--text);">${esc(editSchool.name)}</strong> · ${stats.classroomCount} aulas · ${stats.studentCount} alumnos · ${stats.sessionCount} sesiones</p>
     </div>
-    <div class="cp-hd-right"><button class="cp-btn-ghost" id="btnDiagLog" style="font-size:12px;padding:6px 12px;">🩺 Diagnóstico</button><button class="primary" id="btnExportReporte">Exportar reporte</button></div>
+    <div class="cp-hd-right"><button class="cp-btn-ghost" id="btnDiagLog" style="font-size:12px;padding:6px 12px;">Diagnóstico</button><button class="primary" id="btnExportReporte">Exportar reporte</button></div>
   </div>
   ${kpiStrip}
   <div class="cp-edit-grid">
@@ -1581,7 +1581,7 @@ const UIAdmin = (() => {
           <form id="schoolForm">
             <div class="cp-field"><label>Nombre del colegio</label><input name="name" value="${esc(editSchool.name)}" required /></div>
             <div class="cp-field"><label>Código de colegio</label><div class="cp-code-row"><input name="schoolCode" maxlength="6" value="${esc(editSchool.code)}" /><button type="button" class="cp-regen-btn" id="btnRegenSchoolCode">↻</button></div></div>
-            <div class="cp-warn">⚠ Cambiar el código invalida los accesos anteriores de docentes y estudiantes.</div>
+            <div class="cp-warn">Cambiar el código invalida los accesos anteriores de docentes y estudiantes.</div>
             <div class="cp-form-btns"><button type="submit" class="cp-btn-gold">Guardar cambios</button><button type="button" class="cp-btn-ghost" data-go="manage-schools" id="cancelEdit">Cancelar</button></div>
           </form>
         </div>
@@ -1864,11 +1864,11 @@ const UIAdmin = (() => {
 </style>
 <div class="ops-wrap">
   <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
-    <div><h1 style="margin:0;font-size:20px;font-weight:800;">⚙️ Centro de Operaciones</h1><p class="muted" style="margin:3px 0 0;font-size:12px;">${now.toLocaleDateString('es-PE',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</p></div>
+    <div><h1 style="margin:0;font-size:20px;font-weight:800;">Centro de Operaciones</h1><p class="muted" style="margin:3px 0 0;font-size:12px;">${now.toLocaleDateString('es-PE',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</p></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <button class="primary" data-go="manage-schools">Colegios</button>
-      <button class="ghost"   data-go="manage-users">👥 Usuarios</button>
-      <button class="ghost" id="btnDiagLog">🩺 Diagnóstico</button>
+      <button class="ghost"   data-go="manage-users">Usuarios</button>
+      <button class="ghost" id="btnDiagLog">Diagnóstico</button>
     </div>
   </div>
   <div class="ops-strip">
@@ -1890,10 +1890,10 @@ const UIAdmin = (() => {
     <div style="display:flex;flex-direction:column;gap:14px;">
       <div class="ops-card ops-card-body">
         <div class="ops-label" style="margin-bottom:12px;">Alertas del sistema</div>
-        <div class="ops-al"><div><div style="font-size:13px;font-weight:600;">⚠️ Sin actividad</div><div style="font-size:11px;color:var(--muted);">Colegios con alumnos sin sesiones</div></div><span style="font-size:18px;font-weight:800;color:${alertInactive.length>0?'#f59e0b':'#22c55e'};">${alertInactive.length}</span></div>
-        <div class="ops-al"><div><div style="font-size:13px;font-weight:600;">📉 Concentración baja</div><div style="font-size:11px;color:var(--muted);">Colegios prom. &lt; 3/5</div></div><span style="font-size:18px;font-weight:800;color:${alertLowConc.length>0?'#ef4444':'#22c55e'};">${alertLowConc.length}</span></div>
-        <div class="ops-al"><div><div style="font-size:13px;font-weight:600;">😴 Inactivos 7+ días</div></div><span style="font-size:18px;font-weight:800;color:${alertNoSess.length>3?'#f59e0b':'#22c55e'};">${alertNoSess.length}</span></div>
-        <div class="ops-al"><div><div style="font-size:13px;font-weight:600;">🔴 Suspendidos</div></div><span style="font-size:18px;font-weight:800;color:${alertSuspended.length>0?'#ef4444':'#22c55e'};">${alertSuspended.length}</span></div>
+        <div class="ops-al"><div><div style="font-size:13px;font-weight:600;">Sin actividad</div><div style="font-size:11px;color:var(--muted);">Colegios con alumnos sin sesiones</div></div><span style="font-size:18px;font-weight:800;color:${alertInactive.length>0?'#f59e0b':'#22c55e'};">${alertInactive.length}</span></div>
+        <div class="ops-al"><div><div style="font-size:13px;font-weight:600;">Concentración baja</div><div style="font-size:11px;color:var(--muted);">Colegios prom. &lt; 3/5</div></div><span style="font-size:18px;font-weight:800;color:${alertLowConc.length>0?'#ef4444':'#22c55e'};">${alertLowConc.length}</span></div>
+        <div class="ops-al"><div><div style="font-size:13px;font-weight:600;">Inactivos 7+ días</div></div><span style="font-size:18px;font-weight:800;color:${alertNoSess.length>3?'#f59e0b':'#22c55e'};">${alertNoSess.length}</span></div>
+        <div class="ops-al"><div><div style="font-size:13px;font-weight:600;">Suspendidos</div></div><span style="font-size:18px;font-weight:800;color:${alertSuspended.length>0?'#ef4444':'#22c55e'};">${alertSuspended.length}</span></div>
       </div>
       ${ranking.length>0?'<div class="ops-card ops-card-body"><div class="ops-label" style="margin-bottom:12px;">Ranking por sesiones</div>'+ranking.map(function(r,i){return '<div class="ops-rk"><div class="ops-rk-lbl"><span>'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'.')+' '+esc(r.name)+'</span><span style="color:var(--muted);font-size:11px;">'+r.sessionCount+' ses.</span></div><div style="background:rgba(255,255,255,.06);border-radius:4px;height:5px;overflow:hidden;"><div style="width:'+Math.round(r.sessionCount/maxRank*100)+'%;height:100%;background:'+(i===0?'var(--primary)':i===1?'var(--accent-2)':'rgba(139,92,246,.45)')+';border-radius:4px;"></div></div></div>';}).join('')+'</div>':''}
     </div>

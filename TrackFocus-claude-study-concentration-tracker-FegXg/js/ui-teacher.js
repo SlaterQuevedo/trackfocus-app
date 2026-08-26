@@ -38,8 +38,8 @@ const UITeacher = (() => {
                     <option value="">— Asignar aula —</option>
                     ${classrooms.map(c => `<option value="${c.id}"${req.classroomId === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}
                   </select>` : ''}
-                  <button class="primary" data-approve="${req.id}" style="padding:7px 14px;font-size:12px;">✓ Aprobar</button>
-                  <button class="danger" data-reject="${req.id}" style="padding:7px 14px;font-size:12px;">✕ Rechazar</button>
+                  <button class="primary" data-approve="${req.id}" style="padding:7px 14px;font-size:12px;">Aprobar</button>
+                  <button class="danger" data-reject="${req.id}" style="padding:7px 14px;font-size:12px;">Rechazar</button>
                 </div>
               </div>
             </div>`;
@@ -189,7 +189,7 @@ const UITeacher = (() => {
       </div>
       <div class="td-hdr-right">
         ${primaryCr ? `<button class="ghost td-hdr-btn" data-go="classroom-stats" data-id="${primaryCr.id}">Estadísticas</button>
-        <button class="primary td-hdr-btn" data-go="classroom-manage" data-id="${primaryCr.id}">⚙️ Gestionar</button>` : `<button class="primary td-hdr-btn" data-go="classroom-manage" data-id="new">+ Nueva aula</button>`}
+        <button class="primary td-hdr-btn" data-go="classroom-manage" data-id="${primaryCr.id}">Gestionar</button>` : `<button class="primary td-hdr-btn" data-go="classroom-manage" data-id="new">+ Nueva aula</button>`}
       </div>
     </div>
 
@@ -301,7 +301,7 @@ const UITeacher = (() => {
             <div class="td-stav" style="background:${_clr(st.name)};">${esc(_ini(st.name))}</div>
             <div class="td-stinf">
               <div class="td-stnm">${esc(st.name)}</div>
-              <div class="td-stbadge td-b-risk">⚠️ Concentración crítica</div>
+              <div class="td-stbadge td-b-risk">Concentración crítica</div>
               <div class="td-stmeta">Última: ${stSess.length ? _ago(stSess[0].datetime) : 'Nunca'} · Nv.${gam.level || 1}</div>
             </div>
             <button class="ghost td-stbtn" data-go="student-detail" data-sid="${esc(st.id)}">Ver</button>
@@ -313,7 +313,7 @@ const UITeacher = (() => {
             <div class="td-stav" style="background:${_clr(st.name)};">${esc(_ini(st.name))}</div>
             <div class="td-stinf">
               <div class="td-stnm">${esc(st.name)}</div>
-              <div class="td-stbadge td-b-inactive">😴 Sin sesiones recientes</div>
+              <div class="td-stbadge td-b-inactive">Sin sesiones recientes</div>
               <div class="td-stmeta">Última: ${stSess.length ? _ago(stSess[0].datetime) : 'Nunca'}</div>
             </div>
             <button class="ghost td-stbtn" data-go="student-detail" data-sid="${esc(st.id)}">Ver</button>
@@ -791,8 +791,8 @@ const UITeacher = (() => {
                   <div class="cm-cr-sub">${esc(school ? school.name : '')} · ${totalStudents} alumnos</div>
                   <div class="cm-cr-meta-pills">
                     <span class="cm-cr-pill">${esc(cr.grade || '')}</span>
-                    <span class="cm-cr-pill">🏷 ${esc(cr.section || '')}</span>
-                    <span class="cm-cr-pill" style="color:${atRiskCount > 0 ? '#f59e0b' : '#22c55e'};">${atRiskCount > 0 ? '⚠ ' + atRiskCount + ' en riesgo' : '✓ Sin riesgos'}</span>
+                    <span class="cm-cr-pill">${esc(cr.section || '')}</span>
+                    <span class="cm-cr-pill" style="color:${atRiskCount > 0 ? '#f59e0b' : '#22c55e'};">${atRiskCount > 0 ? atRiskCount + ' en riesgo' : 'Sin riesgos'}</span>
                   </div>
                 </div>
               </div>
@@ -800,7 +800,7 @@ const UITeacher = (() => {
                 <div class="cm-code-label">Código de invitación</div>
                 <div class="cm-code-badge" id="cmInviteCode">${esc(cr.inviteCode || '—')}</div>
                 <div class="cm-code-actions">
-                  <button class="cm-code-btn" id="cmCopyCodeBtn" title="Copiar">📋 Copiar</button>
+                  <button class="cm-code-btn" id="cmCopyCodeBtn" title="Copiar">Copiar</button>
                   <button class="cm-code-btn" id="cmShareCodeBtn" title="Compartir">↗ Compartir</button>
                   <button class="cm-code-btn" id="regenCodeBtn" data-cr="${esc(classroomId)}" title="Regenerar código">↻ Nuevo</button>
                 </div>
@@ -1507,12 +1507,12 @@ const UITeacher = (() => {
 
       ${atRisk.length > 0 ? `
       <div class="card" style="border-color:var(--bad);margin-bottom:18px;">
-        <h3 style="color:var(--bad);">⚠️ Alumnos en riesgo (${atRisk.length})</h3>
+        <h3 style="color:var(--bad);">Alumnos en riesgo (${atRisk.length})</h3>
         <p class="muted">Concentración promedio menor a 2.5 en sus últimas 5 sesiones.</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           ${atRisk.map(st => `<span class="chip" style="border-color:var(--bad);cursor:pointer;" data-go="student-detail" data-sid="${esc(st.id)}">${esc(st.name)}</span>`).join('')}
         </div>
-      </div>` : `<div class="alert success" style="margin-bottom:18px;">✓ Ningún alumno en situación de riesgo esta semana.</div>`}
+      </div>` : `<div class="alert success" style="margin-bottom:18px;">Ningún alumno en situación de riesgo esta semana.</div>`}
 
       <div class="card" style="padding:0;overflow:auto;">
         <div style="padding:16px;border-bottom:1px solid var(--border);">
@@ -1676,7 +1676,7 @@ const UITeacher = (() => {
     return `
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
         <button class="ghost" data-go="classroom-manage">← Volver</button>
-        <h1 style="margin:0;">👤 ${esc(student.name)}</h1>
+        <h1 style="margin:0;">${esc(student.name)}</h1>
       </div>
 
       ${alerts.map(a => `<div class="alert ${a.type === 'success' ? 'success' : a.type === 'error' ? 'error' : 'info'}">${a.msg}</div>`).join('')}
@@ -1917,8 +1917,8 @@ const UITeacher = (() => {
 
     const isOpen = bimester.status === 'open';
     const statusBadge = isOpen
-      ? '<span class="bimester-badge badge-open">🟢 Abierto</span>'
-      : '<span class="bimester-badge badge-closed">🔒 Cerrado</span>';
+      ? '<span class="bimester-badge badge-open">Abierto</span>'
+      : '<span class="bimester-badge badge-closed">Cerrado</span>';
 
     const crSelector = (isDir && schoolClassrooms.length > 1) ? `
       <select id="bimGradeClassroomSel"
@@ -2160,7 +2160,7 @@ const UITeacher = (() => {
             ${school ? esc(school.name) + ' &nbsp;·&nbsp; ' : ''}${classroom ? esc(classroom.name) + ' &nbsp;·&nbsp; ' : ''}Código: <strong>${student.studentCode || '—'}</strong>
           </div>
         </div>
-        <button class="ghost" id="boletaPrintBtn" style="flex-shrink:0;">🖨️ Imprimir</button>
+        <button class="ghost" id="boletaPrintBtn" style="flex-shrink:0;">Imprimir</button>
       </div>
 
       <div style="overflow-x:auto;border-radius:10px;border:1px solid rgba(255,255,255,.09);">

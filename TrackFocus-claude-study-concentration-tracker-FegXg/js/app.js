@@ -357,7 +357,7 @@ const App = (() => {
     const modeEl  = document.getElementById('pomBarMode');
     if (!bar) return;
 
-    const modeLabels = { focus: 'ENFOCADO 🧠', break: 'DESCANSO ☕', paused: 'PAUSADO ⏸', idle: 'LISTO' };
+    const modeLabels = { focus: 'ENFOCADO', break: 'DESCANSO ☕', paused: 'PAUSADO ⏸', idle: 'LISTO' };
 
     // Rellenar materias cuando haya usuario activo
     function _refreshSubjects() {
@@ -386,7 +386,7 @@ const App = (() => {
         modal.id = 'pomModal';
         modal.className = 'pom-modal';
         modal.innerHTML = `<div class="pom-modal-inner card">
-          <h2>🍅 ¡Ciclo completado!</h2>
+          <h2>¡Ciclo completado!</h2>
           <p>¿Qué nivel de concentración tuviste?</p>
           <div class="likert" id="pomLikert">
             ${[1,2,3,4,5].map(v => `<label><input type="radio" name="pomConc" value="${v}" ${v===3?'checked':''}/><div class="lk-num">${v}</div></label>`).join('')}
@@ -423,7 +423,7 @@ const App = (() => {
 
     let lastFocus = Pomodoro.DEFAULTS.focus;
 
-    const pageModeLabels = { focus: 'Enfocado 🧠', break: 'Descanso ☕', paused: 'Pausado ⏸', idle: 'Listo para enfocar' };
+    const pageModeLabels = { focus: 'Enfocado', break: 'Descanso ☕', paused: 'Pausado ⏸', idle: 'Listo para enfocar' };
 
     Pomodoro.setCallbacks(
       (remaining, mode) => {
@@ -679,7 +679,7 @@ const App = (() => {
     // Auto-login: sesión restaurada automáticamente → saludo de bienvenida
     if (_isAutoLogin) {
       const firstName = (user.name || '').split(' ')[0] || 'de nuevo';
-      setTimeout(() => UI.flash?.(`Bienvenido de nuevo, ${firstName} 👋`, 'success'), 300);
+      setTimeout(() => UI.flash?.(`Bienvenido de nuevo, ${firstName}`, 'success'), 300);
     }
 
     // 3. ¿Hay intención de rol pendiente del click pre-OAuth?
@@ -732,6 +732,22 @@ const App = (() => {
 
   // ---- Pantalla de bienvenida rediseñada (institucional) ----
   function screenWelcome() {
+    // Íconos SVG de la landing (mismo estilo que el wizard de acceso: trazo
+    // simple 2px, currentColor) — reemplazan los emojis de los grids de
+    // "El problema", "La solución", "Ecosistema" y "La diferencia".
+    const _lpIco = {
+      target:  `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>`,
+      book:    `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`,
+      users:   `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+      chart:   `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,
+      brain:   `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2z"/></svg>`,
+      trophy:  `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3a2 2 0 0 1-2 4h-1M7 5H4a2 2 0 0 0 2 4h1"/></svg>`,
+      trend:   `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
+      building:`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M3 10h18M3 7l9-4 9 4M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/></svg>`,
+      cap:     `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`,
+      board:   `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>`
+    };
+
     // --- Tarjeta preview del hero (siempre anónima — esta es una página pública) ---
     // IMPORTANTE: nunca leer localStorage aquí. Cualquier visitante vería los datos
     // del propietario del dispositivo. Siempre mostrar contenido genérico/aspiracional.
@@ -797,7 +813,7 @@ const App = (() => {
           + '<div class="lp-prev-body">'
           + '<div class="lp-prev-hero-row">'
           + '<div>'
-          + '<div class="lp-prev-greeting">Hola, ' + firstName + ' 👋</div>'
+          + '<div class="lp-prev-greeting">Hola, ' + firstName + '</div>'
           + '<div class="lp-prev-goal">' + goal + '</div>'
           + '</div>'
           + '<div class="lp-prev-pct">' + pct + '%</div>'
@@ -843,8 +859,8 @@ const App = (() => {
           + '<div class="lp-prev-body">'
           + '<div class="lp-prev-hero-row">'
           + '<div>'
-          + '<div class="lp-prev-greeting">Hola, ' + firstName + ' 👋</div>'
-          + '<div class="lp-prev-goal">📍 Listo para empezar</div>'
+          + '<div class="lp-prev-greeting">Hola, ' + firstName + '</div>'
+          + '<div class="lp-prev-goal">Listo para empezar</div>'
           + '</div>'
           + '<div class="lp-prev-pct" style="font-size:15px;color:var(--muted)">Día 1</div>'
           + '</div>'
@@ -896,7 +912,7 @@ const App = (() => {
         + '<div class="lp-prev-body">'
         + '<div class="lp-prev-hero-row">'
         + '<div>'
-        + '<div class="lp-prev-greeting">Hola, futuro estudiante 👋</div>'
+        + '<div class="lp-prev-greeting">Hola, futuro estudiante</div>'
         + '<div class="lp-prev-goal">Tu universidad · Tu carrera</div>'
         + '</div>'
         + '<div class="lp-prev-pct lp-prev-pct--ghost">—%</div>'
@@ -967,25 +983,25 @@ const App = (() => {
         <div class="lp-prob-grid">
           <div class="lp-prob-card">
             <div class="lp-prob-tag lp-prob-tag--gold">Uso Personal</div>
-            <div class="lp-prob-icon">🎯</div>
+            <div class="lp-prob-icon">${_lpIco.target}</div>
             <h4>Sin ruta hacia la universidad</h4>
             <p>Estudias solo y no sabes si lo que haces te acerca realmente a la carrera que quieres.</p>
           </div>
           <div class="lp-prob-card">
             <div class="lp-prob-tag lp-prob-tag--blue">Estudiante</div>
-            <div class="lp-prob-icon">📚</div>
+            <div class="lp-prob-icon">${_lpIco.book}</div>
             <h4>Horas de estudio sin evidencia</h4>
             <p>Estudias durante horas pero no puedes demostrar cuánto avanzas ni en qué fallaste.</p>
           </div>
           <div class="lp-prob-card">
             <div class="lp-prob-tag lp-prob-tag--purple">Docente</div>
-            <div class="lp-prob-icon">👥</div>
+            <div class="lp-prob-icon">${_lpIco.users}</div>
             <h4>Imposible acompañar a todos</h4>
             <p>Con 30 estudiantes en el aula, detectar quién necesita ayuda antes del examen es muy difícil.</p>
           </div>
           <div class="lp-prob-card">
             <div class="lp-prob-tag lp-prob-tag--green">Director</div>
-            <div class="lp-prob-icon">📊</div>
+            <div class="lp-prob-icon">${_lpIco.chart}</div>
             <h4>Cero evidencia de impacto</h4>
             <p>Los informes llegan tarde y no reflejan lo que realmente pasa en el aprendizaje diario.</p>
           </div>
@@ -999,7 +1015,7 @@ const App = (() => {
         <div class="lp-steps-v2">
           <div class="lp-step-v2">
             <div class="lp-step-v2-num">1</div>
-            <div class="lp-step-v2-icon">🎯</div>
+            <div class="lp-step-v2-icon">${_lpIco.target}</div>
             <h4>Define tu meta</h4>
             <p>Universidad, curso o objetivo institucional. TrackFocus construye tu ruta desde el primer día.</p>
             <div class="lp-step-v2-chips">
@@ -1009,7 +1025,7 @@ const App = (() => {
           <div class="lp-step-v2-arrow">→</div>
           <div class="lp-step-v2">
             <div class="lp-step-v2-num">2</div>
-            <div class="lp-step-v2-icon">🧠</div>
+            <div class="lp-step-v2-icon">${_lpIco.brain}</div>
             <h4>Estudia con acompañamiento inteligente</h4>
             <p>La IA analiza tu sesión en tiempo real, genera preguntas personalizadas y detecta tus hábitos.</p>
             <div class="lp-step-v2-chips">
@@ -1019,7 +1035,7 @@ const App = (() => {
           <div class="lp-step-v2-arrow">→</div>
           <div class="lp-step-v2">
             <div class="lp-step-v2-num">3</div>
-            <div class="lp-step-v2-icon">🏆</div>
+            <div class="lp-step-v2-icon">${_lpIco.trophy}</div>
             <h4>Demuestra tu progreso</h4>
             <p>Genera reportes con evidencia real: sesiones, concentración, comprensión y constancia.</p>
             <div class="lp-step-v2-chips">
@@ -1036,22 +1052,22 @@ const App = (() => {
         <p class="lp-section-sub">No es una app para un perfil. Es una plataforma para todo el ecosistema.</p>
         <div class="lp-eco-grid">
           <div class="lp-eco-card lp-eco-card--gold">
-            <div class="lp-eco-icon">🎯</div>
+            <div class="lp-eco-icon">${_lpIco.target}</div>
             <div class="lp-eco-label">Uso Personal</div>
             <p>Prepárate para la universidad a tu ritmo, con IA como mentor.</p>
           </div>
           <div class="lp-eco-card lp-eco-card--blue">
-            <div class="lp-eco-icon">🎓</div>
+            <div class="lp-eco-icon">${_lpIco.cap}</div>
             <div class="lp-eco-label">Estudiante</div>
             <p>Estudia con enfoque, mide tu comprensión y demuestra tu avance.</p>
           </div>
           <div class="lp-eco-card lp-eco-card--purple">
-            <div class="lp-eco-icon">👩‍🏫</div>
+            <div class="lp-eco-icon">${_lpIco.board}</div>
             <div class="lp-eco-label">Docente</div>
             <p>Monitorea tu aula, detecta riesgos y acompaña individualmente.</p>
           </div>
           <div class="lp-eco-card lp-eco-card--green">
-            <div class="lp-eco-icon">🏫</div>
+            <div class="lp-eco-icon">${_lpIco.building}</div>
             <div class="lp-eco-label">Director</div>
             <p>Evidencia del impacto educativo en tiempo real, sin esperar informes.</p>
           </div>
@@ -1070,22 +1086,22 @@ const App = (() => {
             <div class="lp-differ-desc">Rachas, frecuencia y horario óptimo detectado por la IA.</div>
           </div>
           <div class="lp-differ-item">
-            <div class="lp-differ-icon">🧠</div>
+            <div class="lp-differ-icon">${_lpIco.brain}</div>
             <div class="lp-differ-name">Comprensión</div>
             <div class="lp-differ-desc">Evaluaciones DECO que miden profundidad real, no memorización.</div>
           </div>
           <div class="lp-differ-item">
-            <div class="lp-differ-icon">🎯</div>
+            <div class="lp-differ-icon">${_lpIco.target}</div>
             <div class="lp-differ-name">Concentración</div>
             <div class="lp-differ-desc">Métrica por sesión para saber cuándo y cómo estudias mejor.</div>
           </div>
           <div class="lp-differ-item">
-            <div class="lp-differ-icon">📈</div>
+            <div class="lp-differ-icon">${_lpIco.trend}</div>
             <div class="lp-differ-name">Constancia</div>
             <div class="lp-differ-desc">Progreso semanal visible que construye motivación real.</div>
           </div>
           <div class="lp-differ-item">
-            <div class="lp-differ-icon">🏆</div>
+            <div class="lp-differ-icon">${_lpIco.trophy}</div>
             <div class="lp-differ-name">Preparación</div>
             <div class="lp-differ-desc">Porcentaje de avance hacia tu meta universitaria o académica.</div>
           </div>
@@ -1465,14 +1481,20 @@ const App = (() => {
 
     container.classList.remove('hidden', 'lp-form--purple', 'lp-form--blue');
 
+    // Mismos SVG que el wizard de acceso (_wizardStep2B) — consistencia visual,
+    // sin emojis en el encabezado del formulario de login.
+    const svgStudentIco = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`;
+    const svgTeacherIco = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>`;
+    const svgAdminIco   = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
+
     const cfg = {
-      student: { cls: 'lp-form-emoji--gold',   emoji: '🎒', title: 'Comenzar a estudiar',
+      student: { cls: 'lp-form-emoji--gold',   emoji: svgStudentIco, title: 'Comenzar a estudiar',
                  subtitle: 'Crea tu cuenta o inicia sesión para empezar.',
                  btnCls: '' },
-      teacher: { cls: 'lp-form-emoji--purple', emoji: '👩‍🏫', title: 'Entrar como Profesor',
+      teacher: { cls: 'lp-form-emoji--purple', emoji: svgTeacherIco, title: 'Entrar como Profesor',
                  subtitle: 'Necesitarás el código de tu colegio para acceder. El código de aula es opcional.',
                  btnCls: 'lp-btn-submit--purple' },
-      admin:   { cls: 'lp-form-emoji--blue',   emoji: '🏫', title: 'Acceso Director',
+      admin:   { cls: 'lp-form-emoji--blue',   emoji: svgAdminIco, title: 'Acceso Director',
                  subtitle: 'Necesitarás el código de tu institución al ingresar.',
                  btnCls: 'lp-btn-submit--blue' }
     }[role];
@@ -1587,8 +1609,8 @@ const App = (() => {
         <div id="pobRoleChoice">
           <p class="muted" style="margin:0 0 20px;">¿Cómo vas a usar TrackFocus?</p>
           <div style="display:flex;gap:12px;flex-wrap:wrap;">
-            <button class="primary" id="pobIsStudent" style="flex:1;padding:16px;font-size:15px;">📚 Soy Estudiante</button>
-            <button class="secondary" id="pobIsParent" style="flex:1;padding:16px;font-size:15px;">👨‍👩‍👧 Soy Padre / Tutor</button>
+            <button class="primary" id="pobIsStudent" style="flex:1;padding:16px;font-size:15px;">Soy Estudiante</button>
+            <button class="secondary" id="pobIsParent" style="flex:1;padding:16px;font-size:15px;">Soy Padre / Tutor</button>
           </div>
         </div>
         <div id="pobStudentForm" style="display:none;margin-top:20px;">` : '<div id="pobStudentForm">'}

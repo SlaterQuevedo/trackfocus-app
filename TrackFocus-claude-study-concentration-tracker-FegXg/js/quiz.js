@@ -72,7 +72,7 @@ const Quiz = (() => {
         <div class="quiz-panel-header">
           <span class="quiz-panel-title">Quiz de práctica</span>
           <span class="quiz-panel-progress">${qi + 1} / ${questions.length}</span>
-          <button class="ghost quiz-close-inline" style="font-size:12px;padding:4px 10px;">✕ Cerrar</button>
+          <button class="ghost quiz-close-inline" style="font-size:12px;padding:4px 10px;">Cerrar</button>
         </div>
         <div class="quiz-q-body">
           <div class="quiz-q-text">${qi + 1}. ${_esc(q.q)}</div>
@@ -134,7 +134,7 @@ const Quiz = (() => {
         results.push({ qi, correct: false, chosen });
         const wrongExpl = q.explanations?.[chosen] || '';
         const hint = retryCountForQ <= 2
-          ? `<p class="quiz-fb-hint">💡 <em>Observa nuevamente el enunciado. ¿Qué dato te orienta hacia la respuesta correcta?</em></p>`
+          ? `<p class="quiz-fb-hint"><em>Observa nuevamente el enunciado. ¿Qué dato te orienta hacia la respuesta correcta?</em></p>`
           : '';
         fbEl.innerHTML = `
           <div class="quiz-fb quiz-fb-err">
@@ -147,7 +147,7 @@ const Quiz = (() => {
           </div>
           <div class="quiz-fb-actions">
             ${retryCountForQ <= 2
-              ? `<button class="ghost quiz-retry-btn">🔄 Intentar nuevamente</button>`
+              ? `<button class="ghost quiz-retry-btn">Intentar nuevamente</button>`
               : ''}
             <button class="ghost quiz-next-btn">
               ${qi + 1 < questions.length ? 'Siguiente pregunta →' : 'Ver resultados →'}
@@ -175,36 +175,36 @@ const Quiz = (() => {
       const total = questions.length;
       const pct = Math.round((score / total) * 100);
       const trend = pct >= 80
-        ? { icon: '🌟', label: 'Excelente dominio', color: '#22c55e' }
+        ? { label: 'Excelente dominio', color: '#22c55e' }
         : pct >= 60
-        ? { icon: '📈', label: 'Buen progreso', color: 'var(--accent)' }
-        : { icon: '📌', label: 'Necesita refuerzo', color: '#f59e0b' };
+        ? { label: 'Buen progreso', color: 'var(--accent)' }
+        : { label: 'Necesita refuerzo', color: '#f59e0b' };
 
       const wrongQs = results.filter(r => !r.correct).map(r => questions[r.qi].q).slice(0, 3);
 
       panel.innerHTML = `
         <div class="quiz-panel-header">
           <span class="quiz-panel-title">Resultados del Quiz</span>
-          <button class="ghost quiz-close-inline" style="font-size:12px;padding:4px 10px;">✕ Cerrar</button>
+          <button class="ghost quiz-close-inline" style="font-size:12px;padding:4px 10px;">Cerrar</button>
         </div>
         <div class="quiz-summary">
           <div class="quiz-score-display">
             <div class="quiz-score-num" style="color:${trend.color};">${score}/${total}</div>
             <div class="quiz-score-pct">${pct}%</div>
-            <div class="quiz-score-trend">${trend.icon} ${trend.label}</div>
+            <div class="quiz-score-trend">${trend.label}</div>
           </div>
           <div class="quiz-summary-body">
             ${wrongQs.length
               ? `<div class="quiz-summary-section">
-                  <strong>📌 Temas a reforzar:</strong>
+                  <strong>Temas a reforzar:</strong>
                   <ul>${wrongQs.map(q => `<li>${_esc(q.length > 80 ? q.slice(0, 80) + '…' : q)}</li>`).join('')}</ul>
                 </div>`
-              : '<div class="quiz-summary-section" style="color:#22c55e;">✅ ¡Dominas el tema completamente!</div>'}
+              : '<div class="quiz-summary-section" style="color:#22c55e;">¡Dominas el tema completamente!</div>'}
             <p class="muted" style="font-size:12px;margin-top:8px;">El Índice de Aprendizaje ha sido actualizado con estos resultados.</p>
           </div>
           <div class="quiz-summary-actions">
             <button class="ghost quiz-close-inline">Volver al chat</button>
-            <button class="primary quiz-retake-btn">🔄 Nuevo Quiz</button>
+            <button class="primary quiz-retake-btn">Nuevo Quiz</button>
           </div>
         </div>`;
 
