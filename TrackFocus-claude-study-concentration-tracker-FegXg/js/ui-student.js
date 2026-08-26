@@ -4895,6 +4895,9 @@ const UIStudent = (() => {
     });
     r().querySelector('#ppLangSelect')?.addEventListener('change', function() {
       I18N.setLang(this.value);
+      // Evita que App.start() trate esta recarga como un auto-login sujeto
+      // al "modo seguro": es una recarga en la misma sesión, no un reingreso.
+      sessionStorage.setItem('tf.loginInProgress', '1');
       window.location.reload();
     });
   }
