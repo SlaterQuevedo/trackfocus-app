@@ -1,6 +1,6 @@
 // youtube-recommender.js — IIFE module
 // Recomienda UN solo video de YouTube, únicamente cuando el alumno hace click
-// en el botón "📹 Videos" (nunca automático). Usa TODA la conversación
+// en el botón "📹 Video" (nunca automático). Usa TODA la conversación
 // acumulada hasta ese momento (no solo el último mensaje) para que la
 // recomendación entienda el contexto completo de la sesión, y elige el video
 // mediante IA entre candidatos reales de YouTube — nunca inventa datos.
@@ -51,13 +51,16 @@ window.YoutubeRecommender = (() => {
 
     if (data && data.video) {
       const v = data.video;
-      // Compacto por defecto: miniatura pequeña + título, complementa el chat
-      // sin invadirlo. El reproductor solo aparece si el alumno hace click.
+      // Compacto por defecto: miniatura pequeña (con width/height fijos en el
+      // propio <img>, no solo por CSS, para que nunca se vea "gigante" aunque
+      // el navegador aún no haya aplicado los estilos) + título. El reproductor
+      // grande solo aparece si el alumno hace click. El link a YouTube está
+      // visible desde el inicio, no solo después de intentar reproducir.
       section.innerHTML =
         '<div class="yt-rec-header"><span class="yt-rec-icon">▶</span><span class="yt-rec-title">Recurso recomendado para ti</span></div>' +
         '<div class="yt-rec-compact" role="button" tabindex="0">' +
           `<div class="yt-rec-thumb-wrap">` +
-            (v.thumbnail ? `<img class="yt-rec-thumb" src="${_esc(v.thumbnail)}" loading="lazy" alt="">` : '') +
+            (v.thumbnail ? `<img class="yt-rec-thumb" src="${_esc(v.thumbnail)}" width="96" height="54" loading="lazy" alt="">` : '') +
             '<span class="yt-rec-play">▶</span>' +
           '</div>' +
           '<div class="yt-rec-compact-info">' +
@@ -65,7 +68,8 @@ window.YoutubeRecommender = (() => {
             (v.channel ? `<div class="yt-rec-channel">${_esc(v.channel)}${v.durationLabel ? ' · ' + _esc(v.durationLabel) : ''}</div>` : '') +
           '</div>' +
         '</div>' +
-        (v.reason ? `<div class="yt-rec-reason">${_esc(v.reason)}</div>` : '');
+        (v.reason ? `<div class="yt-rec-reason">${_esc(v.reason)}</div>` : '') +
+        `<a class="yt-rec-watch-link" href="${_esc(v.url)}" target="_blank" rel="noopener">Reproducir en YouTube ↗</a>`;
 
       const compact = section.querySelector('.yt-rec-compact');
       const playIt = () => {
@@ -74,10 +78,7 @@ window.YoutubeRecommender = (() => {
             `<iframe src="https://www.youtube-nocookie.com/embed/${_esc(v.videoId)}?autoplay=1" ` +
             'title="Video recomendado" frameborder="0" ' +
             'allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>' +
-          '</div>' +
-          // Salida de emergencia: YouTube a veces bloquea el embed por reclamos
-          // de derechos de terceros (Content ID) sin que la API lo anticipe.
-          `<a class="yt-rec-watch-link" href="${_esc(v.url)}" target="_blank" rel="noopener">¿No carga el video? Verlo en YouTube ↗</a>`;
+          '</div>';
       };
       compact.addEventListener('click', playIt);
       compact.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); playIt(); } });
@@ -103,7 +104,7 @@ window.YoutubeRecommender = (() => {
     // en el texto del alumno. La única entrada es requestVideos().
   }
 
-  // Llamar desde el botón "📹 Videos": recomienda en base a toda la sesión.
+  // Llamar desde el botón "📹 Video": recomienda en base a toda la sesión.
   async function requestVideos() {
     const iaBubbles = document.querySelectorAll('.chat-bubble.ia');
     const lastBubble = iaBubbles[iaBubbles.length - 1];
@@ -111,7 +112,7 @@ window.YoutubeRecommender = (() => {
 
     const btn = document.getElementById('chatVideosBtn');
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Buscando...'; }
-    const restore = () => { if (btn) { btn.disabled = false; btn.textContent = '📹 Videos'; } };
+    const restore = () => { if (btn) { btn.disabled = false; btn.textContent = '📹 Video'; } };
 
     try {
       const data = await _fetchRecommendation();

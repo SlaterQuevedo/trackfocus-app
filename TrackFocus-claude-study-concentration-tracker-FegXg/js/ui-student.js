@@ -954,7 +954,7 @@ const UIStudent = (() => {
             <div class="ai-toolbar">
               <span class="ai-always-on-badge" title="Método Minerva y Sistema DECO (4 niveles cognitivos) están activos en toda la sesión">🦉 Minerva · 🎯 DECO activos</span>
               <button class="ghost ai-toolbar-btn" id="chatQuizBtn" title="Practicar con un Quiz opcional — no interrumpe la sesión">📝 Quiz</button>
-              <button class="ghost ai-toolbar-btn" id="chatVideosBtn" title="Recibir recomendaciones de videos sobre el tema actual">📹 Videos</button>
+              <button class="ghost ai-toolbar-btn" id="chatVideosBtn" title="Recibir una recomendación de video sobre el tema actual">📹 Video</button>
               <span class="li-live-chip" id="chatLiChip" style="display:none;" title="Índice de Aprendizaje estimado en tiempo real">📊 <span id="chatLiVal">—</span></span>
             </div>
             <span class="chat-hint">Enter envía · Shift+Enter salto de línea</span>
