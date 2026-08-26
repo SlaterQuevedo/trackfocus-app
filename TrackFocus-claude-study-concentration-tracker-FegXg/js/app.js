@@ -573,6 +573,14 @@ const App = (() => {
     }
     console.log('[App] Auth session:', { isSuperAdmin: authSession.isSuperAdmin, roles: authSession.availableRoles?.map(r => r.role), autoLogin: _isAutoLogin });
 
+    // Nombre distinto detectado (ej: otra persona usó esta cuenta con su
+    // propio nombre). Se muestra encima del panel ya cargado, sin bloquear
+    // la navegación — el usuario decide cuál nombre mantener.
+    if (authSession.nameMismatch) {
+      const email = (authSession.user?.email || authSession.session?.user?.email || '');
+      setTimeout(() => _showNameMismatchModal(authSession.nameMismatch, email), 600);
+    }
+
     // 2. Verificar roles disponibles y multi-rol.
     // NEW: Si es super_admin oficial, auto-seleccionar su rol admin (skip selector)
     if (authSession.isSuperAdmin) {
@@ -1366,6 +1374,81 @@ const App = (() => {
     // Resaltar el default
     const checkedRadio = overlay.querySelector('input[name="tfNameChoice"]:checked');
     if (checkedRadio) checkedRadio.closest('label').style.borderColor = 'var(--accent,#a78bfa)';
+  }
+
+  // Modal: el nombre de la cuenta de Google que inició sesión difiere del
+  // nombre guardado en TrackFocus (ej: otra persona usó esta cuenta con su
+  // propio nombre durante la feria). No se cambia nada solo — se ofrece
+  // mantener el nombre actual o actualizarlo al de la cuenta de Google.
+  // No bloquea la carga de la app: aparece encima del panel ya cargado.
+  function _showNameMismatchModal({ currentName, googleName }, email) {
+    const overlay = document.createElement('div');
+    overlay.id = 'tfNameMismatchOverlay';
+    overlay.style.cssText = `
+      position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;
+      align-items:center;justify-content:center;z-index:9999;padding:16px;`;
+
+    overlay.innerHTML = `
+      <div style="background:var(--card-bg,#1a1a2e);border:1px solid var(--border,rgba(255,255,255,0.1));
+                  border-radius:16px;padding:28px;max-width:440px;width:100%;">
+        <h3 style="margin:0 0 8px;font-size:18px;">${GOOGLE_SVG} <span style="vertical-align:middle;">Detectamos un nombre distinto</span></h3>
+        <p style="margin:0 0 20px;color:var(--muted-2,#71717a);font-size:14px;line-height:1.5;">
+          Tu cuenta de Google ahora se llama <strong>${googleName}</strong>, pero en TrackFocus figuras como <strong>${currentName}</strong>.
+          ¿Qué nombre quieres usar?
+        </p>
+
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+          <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;
+                        border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:10px;
+                        cursor:pointer;font-size:14px;" id="tfMismatchOptCurrent">
+            <input type="radio" name="tfMismatchChoice" value="current" checked style="accent-color:var(--accent,#a78bfa);" />
+            <span>Mantener: <strong>${currentName}</strong></span>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;
+                        border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:10px;
+                        cursor:pointer;font-size:14px;" id="tfMismatchOptGoogle">
+            <input type="radio" name="tfMismatchChoice" value="google" style="accent-color:var(--accent,#a78bfa);" />
+            <span>Actualizar a: <strong>${googleName}</strong></span>
+          </label>
+        </div>
+
+        <button id="tfMismatchConfirm" style="
+          width:100%;padding:12px 20px;border-radius:10px;border:none;cursor:pointer;
+          background:var(--accent,#a78bfa);color:#111;font-size:14px;font-weight:600;">
+          Confirmar
+        </button>
+      </div>`;
+
+    document.body.appendChild(overlay);
+
+    overlay.querySelectorAll('input[name="tfMismatchChoice"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        overlay.querySelectorAll('label[id^="tfMismatchOpt"]').forEach(l => l.style.borderColor = '');
+        if (radio.checked) radio.closest('label').style.borderColor = 'var(--accent,#a78bfa)';
+      });
+    });
+    overlay.querySelector('input[name="tfMismatchChoice"]:checked').closest('label').style.borderColor = 'var(--accent,#a78bfa)';
+
+    document.getElementById('tfMismatchConfirm').addEventListener('click', async () => {
+      const choice = overlay.querySelector('input[name="tfMismatchChoice"]:checked')?.value;
+      const dismissKey = `tf.nameMismatchDismissed.${email.toLowerCase().trim()}`;
+      if (choice === 'google') {
+        const parts = googleName.split(' ');
+        try {
+          await Auth.updateDisplayName(email, parts[0] || '', parts.slice(1).join(' '));
+          overlay.remove();
+          location.reload(); // refresco simple: refleja el nombre nuevo en todo el panel
+          return;
+        } catch (err) {
+          UI.flash?.(err.message || 'No se pudo actualizar el nombre.', 'error');
+        }
+      } else {
+        // Recordar que el usuario prefiere mantener su nombre actual frente a
+        // este mismo nombre de Google — no volver a preguntar por este valor.
+        localStorage.setItem(dismissKey, googleName);
+      }
+      overlay.remove();
+    });
   }
 
   function renderAuthForm(role) {

@@ -57,6 +57,7 @@ const Auth = (() => {
           name: correctedName,
           updated_at: new Date().toISOString()
         }).eq('id', userEmail).then(() => {});
+        user.name = correctedName;
       }
     }
 
@@ -67,6 +68,24 @@ const Auth = (() => {
         google_linked: true,
         updated_at: new Date().toISOString()
       }).eq('id', userEmail).then(() => {});
+    }
+
+    // Detección de nombre distinto (caso "otra persona usó mi cuenta con su
+    // nombre"): si el nombre actual de la cuenta de Google logueada difiere
+    // del nombre guardado en TrackFocus, se ofrece al usuario elegir cuál
+    // mantener — nunca se cambia el nombre solo, y no se vuelve a preguntar
+    // por el mismo nombre de Google una vez que el usuario decide (por
+    // dispositivo, vía localStorage).
+    let nameMismatch = null;
+    if (provider === 'google') {
+      const meta = session.user.user_metadata || {};
+      const googleName = (meta.full_name || meta.name || '').trim();
+      if (googleName && user.name && googleName !== user.name) {
+        const dismissKey = `tf.nameMismatchDismissed.${userEmail}`;
+        if (localStorage.getItem(dismissKey) !== googleName) {
+          nameMismatch = { currentName: user.name, googleName };
+        }
+      }
     }
 
     // Consultar user_roles para este usuario
@@ -82,6 +101,7 @@ const Auth = (() => {
     return {
       session,
       user,
+      nameMismatch,
       availableRoles,
       hasMultipleRoles,
       isSuperAdmin
