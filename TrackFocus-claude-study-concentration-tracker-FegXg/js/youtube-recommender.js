@@ -51,14 +51,14 @@ window.YoutubeRecommender = (() => {
 
     if (data && data.video) {
       const v = data.video;
-      // Compacto por defecto: miniatura pequeña (con width/height fijos en el
-      // propio <img>, no solo por CSS, para que nunca se vea "gigante" aunque
-      // el navegador aún no haya aplicado los estilos) + título. El reproductor
-      // grande solo aparece si el alumno hace click. El link a YouTube está
-      // visible desde el inicio, no solo después de intentar reproducir.
+      // Compacto: miniatura pequeña (width/height fijos en el propio <img>,
+      // no solo por CSS) + título. El embed dentro de TrackFocus resultó no
+      // ser confiable (YouTube puede bloquearlo por razones que ninguna API
+      // anticipa) — la tarjeta completa es un link directo al video en
+      // YouTube, sin pasar nunca por una búsqueda.
       section.innerHTML =
         '<div class="yt-rec-header"><span class="yt-rec-icon">▶</span><span class="yt-rec-title">Recurso recomendado para ti</span></div>' +
-        '<div class="yt-rec-compact" role="button" tabindex="0">' +
+        `<a class="yt-rec-compact" href="${_esc(v.url)}" target="_blank" rel="noopener">` +
           `<div class="yt-rec-thumb-wrap">` +
             (v.thumbnail ? `<img class="yt-rec-thumb" src="${_esc(v.thumbnail)}" width="96" height="54" loading="lazy" alt="">` : '') +
             '<span class="yt-rec-play">▶</span>' +
@@ -67,21 +67,8 @@ window.YoutubeRecommender = (() => {
             `<div class="yt-rec-card-title">${_esc(v.title)}</div>` +
             (v.channel ? `<div class="yt-rec-channel">${_esc(v.channel)}${v.durationLabel ? ' · ' + _esc(v.durationLabel) : ''}</div>` : '') +
           '</div>' +
-        '</div>' +
-        (v.reason ? `<div class="yt-rec-reason">${_esc(v.reason)}</div>` : '') +
-        `<a class="yt-rec-watch-link" href="${_esc(v.url)}" target="_blank" rel="noopener">Reproducir en YouTube ↗</a>`;
-
-      const compact = section.querySelector('.yt-rec-compact');
-      const playIt = () => {
-        compact.outerHTML =
-          '<div class="yt-rec-player">' +
-            `<iframe src="https://www.youtube-nocookie.com/embed/${_esc(v.videoId)}?autoplay=1" ` +
-            'title="Video recomendado" frameborder="0" ' +
-            'allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>' +
-          '</div>';
-      };
-      compact.addEventListener('click', playIt);
-      compact.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); playIt(); } });
+        '</a>' +
+        (v.reason ? `<div class="yt-rec-reason">${_esc(v.reason)}</div>` : '');
     } else {
       const q = (data && data.fallbackQuery) || '';
       section.innerHTML =

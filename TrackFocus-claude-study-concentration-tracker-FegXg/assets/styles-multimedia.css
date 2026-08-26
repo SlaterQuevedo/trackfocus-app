@@ -407,12 +407,13 @@
 .yt-rec-icon { color: #FF0000; font-size: 12px; flex-shrink: 0; }
 .yt-rec-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); flex: 1; }
 
-/* Tarjeta compacta por defecto: miniatura pequeña + título, complementa el
-   chat sin invadirlo. El reproductor grande solo aparece tras el click. */
+/* Tarjeta compacta: miniatura pequeña + título, complementa el chat sin
+   invadirlo. Es un link directo al video en YouTube (nueva pestaña). */
 .yt-rec-compact {
   display: flex; align-items: center; gap: 10px;
   padding: 6px; border-radius: 10px; cursor: pointer;
   transition: background 0.15s;
+  text-decoration: none; color: inherit;
 }
 .yt-rec-compact:hover, .yt-rec-compact:focus-visible { background: rgba(255,255,255,0.05); }
 [data-theme="light"] .yt-rec-compact:hover, [data-theme="light"] .yt-rec-compact:focus-visible { background: rgba(0,0,0,0.04); }
