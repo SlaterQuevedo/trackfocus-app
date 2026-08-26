@@ -4796,6 +4796,9 @@ const UIStudent = (() => {
       try {
         await Exporter.readBackupFile(file);
         UI.flash('Respaldo restaurado. Recargando...', 'success');
+        // Evita que App.start() trate esta recarga como un auto-login sujeto
+        // al "modo seguro": es una recarga en la misma sesión, no un reingreso.
+        sessionStorage.setItem('tf.loginInProgress', '1');
         setTimeout(() => location.reload(), 1200);
       } catch (_) { UI.flash('Error al restaurar el respaldo.', 'error'); }
     });

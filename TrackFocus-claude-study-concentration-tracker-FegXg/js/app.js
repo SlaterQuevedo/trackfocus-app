@@ -1462,6 +1462,9 @@ const App = (() => {
         try {
           await Auth.updateDisplayName(email, parts[0] || '', parts.slice(1).join(' '));
           overlay.remove();
+          // Evita que App.start() trate esta recarga como un auto-login sujeto
+          // al "modo seguro": es una recarga en la misma sesión, no un reingreso.
+          sessionStorage.setItem('tf.loginInProgress', '1');
           location.reload(); // refresco simple: refleja el nombre nuevo en todo el panel
           return;
         } catch (err) {
