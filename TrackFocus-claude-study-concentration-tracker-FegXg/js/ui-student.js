@@ -3449,31 +3449,31 @@ const UIStudent = (() => {
 
             <!-- Ajustes (grid 2 cols) -->
             <div class="ph2-card ph2-settings-card">
-              <div class="ph2-card-title">Ajustes</div>
+              <div class="ph2-card-title">${I18N.t('settings.title','Ajustes')}</div>
               <div class="ph2-settings-grid">
                 <label class="ph2-setting-row">
-                  <span class="ph2-setting-lbl">Tema Oscuro</span>
+                  <span class="ph2-setting-lbl">${I18N.t('settings.themeDark','Oscuro')}</span>
                   <button class="pp-theme-btn ph2-theme-mini${currentTheme==='dark'?' ph2-theme-on':''}" data-theme="dark">🌙</button>
                 </label>
                 <label class="ph2-setting-row">
-                  <span class="ph2-setting-lbl">Reducir animaciones</span>
-                  <input type="checkbox" class="pp-toggle" id="ppToggleMotion"${prefs.reduceMotion?' checked':''} />
+                  <span class="ph2-setting-lbl">${I18N.t('settings.reduceMotion','Reducir animaciones')}</span>
+                  <input type="checkbox" class="pp-toggle" id="ppToggleMotion2"${prefs.reduceMotion?' checked':''} />
                 </label>
                 <label class="ph2-setting-row">
-                  <span class="ph2-setting-lbl">Mostrar Tracky</span>
-                  <input type="checkbox" class="pp-toggle" id="ppToggleTracky"${prefs.tracky!==false?' checked':''} />
+                  <span class="ph2-setting-lbl">${I18N.t('settings.showTracky','Mostrar Tracky')}</span>
+                  <input type="checkbox" class="pp-toggle" id="ppToggleTracky2"${prefs.tracky!==false?' checked':''} />
                 </label>
                 <label class="ph2-setting-row">
-                  <span class="ph2-setting-lbl">Sonidos Pomodoro</span>
-                  <input type="checkbox" class="pp-toggle" id="ppToggleSounds"${prefs.sounds!==false?' checked':''} />
+                  <span class="ph2-setting-lbl">${I18N.t('settings.pomodoroSounds','Sonidos Pomodoro')}</span>
+                  <input type="checkbox" class="pp-toggle" id="ppToggleSounds2"${prefs.sounds!==false?' checked':''} />
                 </label>
                 <label class="ph2-setting-row">
-                  <span class="ph2-setting-lbl">Tema Claro</span>
+                  <span class="ph2-setting-lbl">${I18N.t('settings.themeLight','Claro')}</span>
                   <button class="pp-theme-btn ph2-theme-mini${currentTheme==='light'?' ph2-theme-on':''}" data-theme="light">☀️</button>
                 </label>
                 <div class="ph2-setting-row">
-                  <span class="ph2-setting-lbl">Diagnóstico</span>
-                  <button class="ghost ph2-diag-btn" id="ppDiagBtn">Exportar</button>
+                  <span class="ph2-setting-lbl">${I18N.t('settings.diagnostics','Diagnóstico')}</span>
+                  <button class="ghost ph2-diag-btn" id="ppDiagBtn2">${I18N.t('settings.export','Exportar')}</button>
                 </div>
               </div>
             </div>
@@ -3764,42 +3764,49 @@ const UIStudent = (() => {
       </div>`;
 
     // ── Panel: Preferencias ──
+    const currentLang = I18N.getLang();
     const panelPrefs = `
       <div class="pp-panel" data-panel="prefs">
         <div class="ph-panel-hdr">
           <div class="ph-panel-hdr-icon">⚙️</div>
-          <div><div class="ph-panel-title">Ajustes</div><div class="ph-panel-sub">Apariencia y funcionalidades</div></div>
+          <div><div class="ph-panel-title">${I18N.t('settings.title','Ajustes')}</div><div class="ph-panel-sub">${I18N.t('settings.subtitle','Apariencia y funcionalidades')}</div></div>
         </div>
         <div class="pp-prefs-section">
-          <div class="pp-prefs-section-title">Apariencia</div>
+          <div class="pp-prefs-section-title">${I18N.t('settings.appearance','Apariencia')}</div>
           <div class="pp-prefs-row">
-            <div><div class="pp-prefs-label">Tema visual</div><div class="pp-prefs-sub">Modo claro u oscuro</div></div>
+            <div><div class="pp-prefs-label">${I18N.t('settings.theme','Tema visual')}</div><div class="pp-prefs-sub">${I18N.t('settings.themeSub','Modo claro u oscuro')}</div></div>
             <div class="pp-theme-btns">
-              <button class="pp-theme-btn${currentTheme==='light'?' active':''}" data-theme="light">☀️ Claro</button>
-              <button class="pp-theme-btn${currentTheme==='dark'?' active':''}" data-theme="dark">🌙 Oscuro</button>
+              <button class="pp-theme-btn${currentTheme==='light'?' active':''}" data-theme="light">☀️ ${I18N.t('settings.themeLight','Claro')}</button>
+              <button class="pp-theme-btn${currentTheme==='dark'?' active':''}" data-theme="dark">🌙 ${I18N.t('settings.themeDark','Oscuro')}</button>
             </div>
           </div>
           <div class="pp-prefs-row">
-            <div><div class="pp-prefs-label">Reducir animaciones</div></div>
+            <div><div class="pp-prefs-label">${I18N.t('settings.language','Idioma')}</div><div class="pp-prefs-sub">${I18N.t('settings.languageSub','Idioma de la aplicación')}</div></div>
+            <select class="pp-lang-select" id="ppLangSelect">
+              ${I18N.SUPPORTED.map(l => `<option value="${l}"${l===currentLang?' selected':''}>${I18N.FLAGS[l]} ${I18N.LABELS[l]}</option>`).join('')}
+            </select>
+          </div>
+          <div class="pp-prefs-row">
+            <div><div class="pp-prefs-label">${I18N.t('settings.reduceMotion','Reducir animaciones')}</div></div>
             <input type="checkbox" class="pp-toggle" id="ppToggleMotion"${prefs.reduceMotion?' checked':''} />
           </div>
         </div>
         <div class="pp-prefs-section">
-          <div class="pp-prefs-section-title">Funcionalidades</div>
+          <div class="pp-prefs-section-title">${I18N.t('settings.features','Funcionalidades')}</div>
           <div class="pp-prefs-row">
-            <div><div class="pp-prefs-label">Mostrar Tracky</div><div class="pp-prefs-sub">Mascota virtual</div></div>
+            <div><div class="pp-prefs-label">${I18N.t('settings.showTracky','Mostrar Tracky')}</div><div class="pp-prefs-sub">${I18N.t('settings.showTrackySub','Mascota virtual')}</div></div>
             <input type="checkbox" class="pp-toggle" id="ppToggleTracky"${prefs.tracky!==false?' checked':''} />
           </div>
           <div class="pp-prefs-row">
-            <div><div class="pp-prefs-label">Sonidos Pomodoro</div></div>
+            <div><div class="pp-prefs-label">${I18N.t('settings.pomodoroSounds','Sonidos Pomodoro')}</div></div>
             <input type="checkbox" class="pp-toggle" id="ppToggleSounds"${prefs.sounds!==false?' checked':''} />
           </div>
         </div>
         <div class="pp-prefs-section">
-          <div class="pp-prefs-section-title">Diagnóstico</div>
+          <div class="pp-prefs-section-title">${I18N.t('settings.diagnostics','Diagnóstico')}</div>
           <div class="pp-prefs-row">
-            <div><div class="pp-prefs-label">Registro de errores</div><div class="pp-prefs-sub">Para soporte técnico</div></div>
-            <button class="ghost" id="ppDiagBtn" style="font-size:12px;padding:6px 12px;">Exportar</button>
+            <div><div class="pp-prefs-label">${I18N.t('settings.errorLog','Registro de errores')}</div><div class="pp-prefs-sub">${I18N.t('settings.errorLogSub','Para soporte técnico')}</div></div>
+            <button class="ghost" id="ppDiagBtn" style="font-size:12px;padding:6px 12px;">${I18N.t('settings.export','Exportar')}</button>
           </div>
         </div>
       </div>`;
@@ -3884,7 +3891,7 @@ const UIStudent = (() => {
             </button>
             <div class="ph-nav-sep">CONFIGURACIÓN</div>
             <button class="pp-nav-item" data-panel="prefs">
-              <span class="ph-nav-icon">⚙️</span><span>Ajustes</span>
+              <span class="ph-nav-icon">⚙️</span><span>${I18N.t('settings.nav.label','Ajustes')}</span>
             </button>
             <button class="pp-nav-item" data-panel="account">
               <span class="ph-nav-icon">🔐</span><span>Cuenta</span>
@@ -4062,29 +4069,35 @@ const UIStudent = (() => {
     const currentTheme = localStorage.getItem('arv-theme') || 'dark';
     const panelPrefs = `
       <div class="ps-panel" data-panel="prefs">
-        <h2 class="pp-section-title">Preferencias</h2>
+        <h2 class="pp-section-title">${I18N.t('settings.title','Preferencias')}</h2>
         <div class="pp-prefs-section">
-          <div class="pp-prefs-section-title">Apariencia</div>
+          <div class="pp-prefs-section-title">${I18N.t('settings.appearance','Apariencia')}</div>
           <div class="pp-prefs-row">
-            <div><div class="pp-prefs-label">Tema visual</div></div>
+            <div><div class="pp-prefs-label">${I18N.t('settings.theme','Tema visual')}</div></div>
             <div class="pp-theme-btns">
-              <button class="pp-theme-btn${currentTheme==='light'?' active':''}" data-theme="light">☀️ Claro</button>
-              <button class="pp-theme-btn${currentTheme==='dark'?' active':''}" data-theme="dark">🌙 Oscuro</button>
+              <button class="pp-theme-btn${currentTheme==='light'?' active':''}" data-theme="light">☀️ ${I18N.t('settings.themeLight','Claro')}</button>
+              <button class="pp-theme-btn${currentTheme==='dark'?' active':''}" data-theme="dark">🌙 ${I18N.t('settings.themeDark','Oscuro')}</button>
             </div>
           </div>
           <div class="pp-prefs-row">
-            <div><div class="pp-prefs-label">Reducir animaciones</div></div>
+            <div><div class="pp-prefs-label">${I18N.t('settings.language','Idioma')}</div><div class="pp-prefs-sub">${I18N.t('settings.languageSub','Idioma de la aplicación')}</div></div>
+            <select class="pp-lang-select" id="ppLangSelect">
+              ${I18N.SUPPORTED.map(l => `<option value="${l}"${l===I18N.getLang()?' selected':''}>${I18N.FLAGS[l]} ${I18N.LABELS[l]}</option>`).join('')}
+            </select>
+          </div>
+          <div class="pp-prefs-row">
+            <div><div class="pp-prefs-label">${I18N.t('settings.reduceMotion','Reducir animaciones')}</div></div>
             <input type="checkbox" class="pp-toggle" id="ppToggleMotion"${prefs.reduceMotion?' checked':''} />
           </div>
         </div>
         <div class="pp-prefs-section">
-          <div class="pp-prefs-section-title">Funcionalidades</div>
+          <div class="pp-prefs-section-title">${I18N.t('settings.features','Funcionalidades')}</div>
           <div class="pp-prefs-row">
-            <div><div class="pp-prefs-label">Mostrar Tracky</div><div class="pp-prefs-sub">Mascota virtual</div></div>
+            <div><div class="pp-prefs-label">${I18N.t('settings.showTracky','Mostrar Tracky')}</div><div class="pp-prefs-sub">${I18N.t('settings.showTrackySub','Mascota virtual')}</div></div>
             <input type="checkbox" class="pp-toggle" id="ppToggleTracky"${prefs.tracky!==false?' checked':''} />
           </div>
           <div class="pp-prefs-row">
-            <div><div class="pp-prefs-label">Sonidos Pomodoro</div></div>
+            <div><div class="pp-prefs-label">${I18N.t('settings.pomodoroSounds','Sonidos Pomodoro')}</div></div>
             <input type="checkbox" class="pp-toggle" id="ppToggleSounds"${prefs.sounds!==false?' checked':''} />
           </div>
         </div>
@@ -4199,7 +4212,7 @@ const UIStudent = (() => {
             <button class="ps-nav-item" data-panel="ranking">🏆 Ranking</button>
             <button class="ps-nav-item" data-panel="cognitive">Perfil Cognitivo</button>
             <button class="ps-nav-item" data-panel="institution">Institución</button>
-            <button class="ps-nav-item" data-panel="prefs">⚙️ Ajustes</button>
+            <button class="ps-nav-item" data-panel="prefs">⚙️ ${I18N.t('settings.nav.label','Ajustes')}</button>
             <button class="ps-nav-item" data-panel="account">🔐 Cuenta</button>
           </nav>
         </aside>
@@ -4879,6 +4892,10 @@ const UIStudent = (() => {
       const p = JSON.parse(localStorage.getItem('arv-prefs') || '{}');
       p.reduceMotion = this.checked;
       localStorage.setItem('arv-prefs', JSON.stringify(p));
+    });
+    r().querySelector('#ppLangSelect')?.addEventListener('change', function() {
+      I18N.setLang(this.value);
+      window.location.reload();
     });
   }
 

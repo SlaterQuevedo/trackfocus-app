@@ -3434,6 +3434,10 @@ html[data-theme="light"] .pp-inst-item:hover { background: rgba(200,155,109,.08)
   background: var(--panel); border: 1px solid var(--border); color: var(--muted); cursor: pointer; transition: all .15s;
 }
 .pp-theme-btn.active { background: linear-gradient(135deg,var(--primary),var(--accent)); border-color: transparent; color: #fff; }
+.pp-lang-select {
+  padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;
+  background: var(--panel); border: 1px solid var(--border); color: var(--text); cursor: pointer; flex-shrink: 0;
+}
 .pp-toggle {
   appearance: none; -webkit-appearance: none;
   width: 42px; height: 22px; border-radius: 11px; background: var(--muted-3);

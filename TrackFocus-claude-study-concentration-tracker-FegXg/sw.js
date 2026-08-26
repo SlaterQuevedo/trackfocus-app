@@ -5,13 +5,14 @@
 //
 // IMPORTANTE: Actualizar CACHE_VERSION en cada deploy para invalidar caché.
 
-const CACHE_VERSION = 'trackfocus-v71';
+const CACHE_VERSION = 'trackfocus-v72';
 
 // Extensiones estáticas que se almacenan en caché
 const STATIC_EXTS = /\.(js|css|svg|png|ico|webmanifest|woff|woff2|ttf)(\?.*)?$/;
 
 // Assets críticos a pre-cachear en install (CSS y SVG del core)
 const PRECACHE = [
+  '/js/i18n.js',
   '/assets/styles.css',
   '/assets/styles-gamification.css',
   '/assets/styles-charts.css',

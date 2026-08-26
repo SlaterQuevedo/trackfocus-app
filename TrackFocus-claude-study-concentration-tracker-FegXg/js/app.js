@@ -251,17 +251,17 @@ const App = (() => {
 
     if (user.role === 'student') {
       navButtons = `
-        <button data-route="dashboard">Panel</button>
-        <button data-route="ai-study">TrackTutor</button>
-        <button data-route="stats">Estadísticas</button>
-        <button data-route="leaderboard">Ranking</button>
-        <button data-route="profile">Perfil</button>`;
+        <button data-route="dashboard">${I18N.t('nav.student.dashboard','Panel')}</button>
+        <button data-route="ai-study">${I18N.t('nav.student.aiStudy','TrackTutor')}</button>
+        <button data-route="stats">${I18N.t('nav.student.stats','Estadísticas')}</button>
+        <button data-route="leaderboard">${I18N.t('nav.student.leaderboard','Ranking')}</button>
+        <button data-route="profile">${I18N.t('nav.student.profile','Perfil')}</button>`;
       bottomItems = [
-        { route: 'dashboard',   icon: '🏠', label: 'Inicio' },
-        { route: 'ai-study',    icon: '🧠', label: 'IA' },
-        { route: 'stats',       icon: '📊', label: 'Progreso' },
-        { route: 'leaderboard', icon: '🏆', label: 'Ranking' },
-        { route: 'profile',     icon: '👤', label: 'Perfil' }
+        { route: 'dashboard',   icon: '🏠', label: I18N.t('bn.home','Inicio') },
+        { route: 'ai-study',    icon: '🧠', label: I18N.t('bn.ai','IA') },
+        { route: 'stats',       icon: '📊', label: I18N.t('bn.progress','Progreso') },
+        { route: 'leaderboard', icon: '🏆', label: I18N.t('bn.ranking','Ranking') },
+        { route: 'profile',     icon: '👤', label: I18N.t('nav.student.profile','Perfil') }
       ];
     } else if (user.role === 'teacher') {
       navButtons = `
@@ -884,7 +884,7 @@ const App = (() => {
       }
 
       // --- ESTADO: visitante nuevo (sin cuenta) ---
-      const TIPS = [
+      const TIPS = [0,1,2,3,4,5,6].map(i => I18N.t('landing.tips.'+i, [
         'La concentración no se improvisa. Se entrena sesión a sesión.',
         'Estudiar 30 min con foco vale más que 3 horas con distracción.',
         'Tu mejor hora para estudiar es la que descubrirás con TrackFocus.',
@@ -892,8 +892,8 @@ const App = (() => {
         'La constancia supera al talento. Empieza hoy.',
         'Un objetivo claro convierte el esfuerzo en progreso medible.',
         'El aprendizaje profundo no es acumulación. Es comprensión.'
-      ];
-      const AI_INTROS = [
+      ][i]));
+      const AI_INTROS = [0,1,2,3,4,5,6].map(i => I18N.t('landing.aiIntros.'+i, [
         'La constancia supera al talento. Una sesión a la vez.',
         'Cada sesión registrada es evidencia real de que estás avanzando.',
         'El aprendizaje profundo no es acumulación. Es comprensión.',
@@ -901,19 +901,20 @@ const App = (() => {
         'No hay dos estudiantes iguales. TrackFocus se adapta a ti.',
         'El progreso se construye en silencio, sesión a sesión.',
         'El foco no se improvisa. Se entrena.'
-      ];
+      ][i]));
+      const dayNameI18n = I18N.t('landing.days.'+DAY, dayName);
       return '<div class="lp-preview lp-preview--guest">'
         + '<div class="lp-prev-topbar">'
         + '<span class="lp-prev-dot lp-prev-dot--r"></span>'
         + '<span class="lp-prev-dot lp-prev-dot--y"></span>'
         + '<span class="lp-prev-dot lp-prev-dot--g"></span>'
-        + '<span class="lp-prev-label">TrackFocus · Vista previa</span>'
+        + '<span class="lp-prev-label">' + I18N.t('landing.preview.label','TrackFocus · Vista previa') + '</span>'
         + '</div>'
         + '<div class="lp-prev-body">'
         + '<div class="lp-prev-hero-row">'
         + '<div>'
-        + '<div class="lp-prev-greeting">Hola, futuro estudiante</div>'
-        + '<div class="lp-prev-goal">Tu universidad · Tu carrera</div>'
+        + '<div class="lp-prev-greeting">' + I18N.t('landing.preview.greeting','Hola, futuro estudiante') + '</div>'
+        + '<div class="lp-prev-goal">' + I18N.t('landing.preview.goal','Tu universidad · Tu carrera') + '</div>'
         + '</div>'
         + '<div class="lp-prev-pct lp-prev-pct--ghost">—%</div>'
         + '</div>'
@@ -921,13 +922,13 @@ const App = (() => {
         + '<div class="lp-prev-bar lp-prev-bar--ghost" style="width:0%"></div>'
         + '</div>'
         + '<div class="lp-prev-mission">'
-        + '<div class="lp-prev-mission-label">CONSEJO DEL ' + dayName.toUpperCase() + '</div>'
+        + '<div class="lp-prev-mission-label">' + I18N.t('landing.preview.adviceOf','CONSEJO DEL') + ' ' + dayNameI18n.toUpperCase() + '</div>'
         + '<div class="lp-prev-tip-text">' + TIPS[DAY] + '</div>'
         + '</div>'
         + '<div class="lp-prev-chips">'
-        + '<span class="lp-prev-chip lp-prev-chip--fire lp-prev-chip--ghost">🔥 Tu racha</span>'
-        + '<span class="lp-prev-chip lp-prev-chip--time lp-prev-chip--ghost">⏱ Tu tiempo</span>'
-        + '<span class="lp-prev-chip lp-prev-chip--conc lp-prev-chip--ghost">Tu foco</span>'
+        + '<span class="lp-prev-chip lp-prev-chip--fire lp-prev-chip--ghost">🔥 ' + I18N.t('landing.preview.chipStreak','Tu racha') + '</span>'
+        + '<span class="lp-prev-chip lp-prev-chip--time lp-prev-chip--ghost">⏱ ' + I18N.t('landing.preview.chipTime','Tu tiempo') + '</span>'
+        + '<span class="lp-prev-chip lp-prev-chip--conc lp-prev-chip--ghost">' + I18N.t('landing.preview.chipFocus','Tu foco') + '</span>'
         + '</div>'
         + '<div class="lp-prev-ai">'
         + '<span class="lp-prev-ai-badge">✶ TrackTutor</span>'
@@ -949,9 +950,9 @@ const App = (() => {
           <span>TrackFocus</span>
         </div>
         <nav class="lp-nav" aria-label="Navegación principal">
-          <a class="lp-nav-link" href="#lpSolutions">Soluciones</a>
-          <a class="lp-nav-link" href="#lpHow">Cómo funciona</a>
-          <a class="lp-nav-link" href="#lpEcosystem">Instituciones</a>
+          <a class="lp-nav-link" href="#lpSolutions">${I18N.t('landing.nav.solutions','Soluciones')}</a>
+          <a class="lp-nav-link" href="#lpHow">${I18N.t('landing.nav.how','Cómo funciona')}</a>
+          <a class="lp-nav-link" href="#lpEcosystem">${I18N.t('landing.nav.institutions','Instituciones')}</a>
         </nav>
         <div class="lp-header-actions"></div>
       </header>
@@ -961,13 +962,13 @@ const App = (() => {
         <div class="lp-hero-left">
           <div class="lp-pill">
             <span class="lp-pill-dot"></span>
-            Plataforma educativa con IA · Perú
+            ${I18N.t('landing.hero.pill','Plataforma educativa con IA · Perú')}
           </div>
-          <h1 class="lp-hero-title">No estudies de más.<br><span class="lp-hero-title-accent">Estudia mejor.</span></h1>
-          <p class="lp-hero-sub">TrackFocus convierte cada hora de estudio en evidencia real de aprendizaje mediante inteligencia artificial, ayudándote a demostrar que realmente estás avanzando.</p>
+          <h1 class="lp-hero-title">${I18N.t('landing.hero.title1','No estudies de más.')}<br><span class="lp-hero-title-accent">${I18N.t('landing.hero.title2','Estudia mejor.')}</span></h1>
+          <p class="lp-hero-sub">${I18N.t('landing.hero.sub','TrackFocus convierte cada hora de estudio en evidencia real de aprendizaje mediante inteligencia artificial, ayudándote a demostrar que realmente estás avanzando.')}</p>
           <div class="lp-hero-actions">
-            <button class="lp-btn-main" id="lpHeroCta">Comenzar</button>
-            <a href="?demo=1" class="lp-btn-ghost-main">Demo en vivo</a>
+            <button class="lp-btn-main" id="lpHeroCta">${I18N.t('landing.hero.cta','Comenzar')}</button>
+            <a href="?demo=1" class="lp-btn-ghost-main">${I18N.t('landing.hero.demo','Demo en vivo')}</a>
           </div>
         </div>
         <div class="lp-hero-right" aria-hidden="true">
@@ -977,69 +978,69 @@ const App = (() => {
 
       <!-- ── PROBLEMA ── -->
       <section class="lp-section lp-prob-section" id="lpSolutions">
-        <div class="lp-section-label">El problema</div>
-        <h2 class="lp-section-title">Estudiar duro no siempre significa aprender.</h2>
-        <p class="lp-section-sub">Cada perfil enfrenta su propio obstáculo. TrackFocus los resuelve a todos.</p>
+        <div class="lp-section-label">${I18N.t('landing.problem.label','El problema')}</div>
+        <h2 class="lp-section-title">${I18N.t('landing.problem.title','Estudiar duro no siempre significa aprender.')}</h2>
+        <p class="lp-section-sub">${I18N.t('landing.problem.sub','Cada perfil enfrenta su propio obstáculo. TrackFocus los resuelve a todos.')}</p>
         <div class="lp-prob-grid">
           <div class="lp-prob-card">
-            <div class="lp-prob-tag lp-prob-tag--gold">Uso Personal</div>
+            <div class="lp-prob-tag lp-prob-tag--gold">${I18N.t('landing.problem.card1.tag','Uso Personal')}</div>
             <div class="lp-prob-icon">${_lpIco.target}</div>
-            <h4>Sin ruta hacia la universidad</h4>
-            <p>Estudias solo y no sabes si lo que haces te acerca realmente a la carrera que quieres.</p>
+            <h4>${I18N.t('landing.problem.card1.title','Sin ruta hacia la universidad')}</h4>
+            <p>${I18N.t('landing.problem.card1.desc','Estudias solo y no sabes si lo que haces te acerca realmente a la carrera que quieres.')}</p>
           </div>
           <div class="lp-prob-card">
-            <div class="lp-prob-tag lp-prob-tag--blue">Estudiante</div>
+            <div class="lp-prob-tag lp-prob-tag--blue">${I18N.t('landing.problem.card2.tag','Estudiante')}</div>
             <div class="lp-prob-icon">${_lpIco.book}</div>
-            <h4>Horas de estudio sin evidencia</h4>
-            <p>Estudias durante horas pero no puedes demostrar cuánto avanzas ni en qué fallaste.</p>
+            <h4>${I18N.t('landing.problem.card2.title','Horas de estudio sin evidencia')}</h4>
+            <p>${I18N.t('landing.problem.card2.desc','Estudias durante horas pero no puedes demostrar cuánto avanzas ni en qué fallaste.')}</p>
           </div>
           <div class="lp-prob-card">
-            <div class="lp-prob-tag lp-prob-tag--purple">Docente</div>
+            <div class="lp-prob-tag lp-prob-tag--purple">${I18N.t('landing.problem.card3.tag','Docente')}</div>
             <div class="lp-prob-icon">${_lpIco.users}</div>
-            <h4>Imposible acompañar a todos</h4>
-            <p>Con 30 estudiantes en el aula, detectar quién necesita ayuda antes del examen es muy difícil.</p>
+            <h4>${I18N.t('landing.problem.card3.title','Imposible acompañar a todos')}</h4>
+            <p>${I18N.t('landing.problem.card3.desc','Con 30 estudiantes en el aula, detectar quién necesita ayuda antes del examen es muy difícil.')}</p>
           </div>
           <div class="lp-prob-card">
-            <div class="lp-prob-tag lp-prob-tag--green">Director</div>
+            <div class="lp-prob-tag lp-prob-tag--green">${I18N.t('landing.problem.card4.tag','Director')}</div>
             <div class="lp-prob-icon">${_lpIco.chart}</div>
-            <h4>Cero evidencia de impacto</h4>
-            <p>Los informes llegan tarde y no reflejan lo que realmente pasa en el aprendizaje diario.</p>
+            <h4>${I18N.t('landing.problem.card4.title','Cero evidencia de impacto')}</h4>
+            <p>${I18N.t('landing.problem.card4.desc','Los informes llegan tarde y no reflejan lo que realmente pasa en el aprendizaje diario.')}</p>
           </div>
         </div>
       </section>
 
       <!-- ── SOLUCIÓN EN 3 PASOS ── -->
       <section class="lp-section lp-steps-section" id="lpHow">
-        <div class="lp-section-label">La solución</div>
-        <h2 class="lp-section-title">TrackFocus transforma cómo aprendes en 3 pasos simples.</h2>
+        <div class="lp-section-label">${I18N.t('landing.solution.label','La solución')}</div>
+        <h2 class="lp-section-title">${I18N.t('landing.solution.title','TrackFocus transforma cómo aprendes en 3 pasos simples.')}</h2>
         <div class="lp-steps-v2">
           <div class="lp-step-v2">
             <div class="lp-step-v2-num">1</div>
             <div class="lp-step-v2-icon">${_lpIco.target}</div>
-            <h4>Define tu meta</h4>
-            <p>Universidad, curso o objetivo institucional. TrackFocus construye tu ruta desde el primer día.</p>
+            <h4>${I18N.t('landing.solution.step1.title','Define tu meta')}</h4>
+            <p>${I18N.t('landing.solution.step1.desc','Universidad, curso o objetivo institucional. TrackFocus construye tu ruta desde el primer día.')}</p>
             <div class="lp-step-v2-chips">
-              <span>Universidad</span><span>Carrera</span><span>Institución</span>
+              <span>${I18N.t('landing.solution.step1.chip1','Universidad')}</span><span>${I18N.t('landing.solution.step1.chip2','Carrera')}</span><span>${I18N.t('landing.solution.step1.chip3','Institución')}</span>
             </div>
           </div>
           <div class="lp-step-v2-arrow">→</div>
           <div class="lp-step-v2">
             <div class="lp-step-v2-num">2</div>
             <div class="lp-step-v2-icon">${_lpIco.brain}</div>
-            <h4>Estudia con acompañamiento inteligente</h4>
-            <p>La IA analiza tu sesión en tiempo real, genera preguntas personalizadas y detecta tus hábitos.</p>
+            <h4>${I18N.t('landing.solution.step2.title','Estudia con acompañamiento inteligente')}</h4>
+            <p>${I18N.t('landing.solution.step2.desc','La IA analiza tu sesión en tiempo real, genera preguntas personalizadas y detecta tus hábitos.')}</p>
             <div class="lp-step-v2-chips">
-              <span>🤖 IA Mentor</span><span>⏱ Pomodoro</span><span>📈 Hábitos</span>
+              <span>🤖 ${I18N.t('landing.solution.step2.chip1','IA Mentor')}</span><span>⏱ ${I18N.t('landing.solution.step2.chip2','Pomodoro')}</span><span>📈 ${I18N.t('landing.solution.step2.chip3','Hábitos')}</span>
             </div>
           </div>
           <div class="lp-step-v2-arrow">→</div>
           <div class="lp-step-v2">
             <div class="lp-step-v2-num">3</div>
             <div class="lp-step-v2-icon">${_lpIco.trophy}</div>
-            <h4>Demuestra tu progreso</h4>
-            <p>Genera reportes con evidencia real: sesiones, concentración, comprensión y constancia.</p>
+            <h4>${I18N.t('landing.solution.step3.title','Demuestra tu progreso')}</h4>
+            <p>${I18N.t('landing.solution.step3.desc','Genera reportes con evidencia real: sesiones, concentración, comprensión y constancia.')}</p>
             <div class="lp-step-v2-chips">
-              <span>📄 PDF</span><span>🔥 Rachas</span><span>💎 XP</span>
+              <span>📄 ${I18N.t('landing.solution.step3.chip1','PDF')}</span><span>🔥 ${I18N.t('landing.solution.step3.chip2','Rachas')}</span><span>💎 ${I18N.t('landing.solution.step3.chip3','XP')}</span>
             </div>
           </div>
         </div>
@@ -1047,63 +1048,63 @@ const App = (() => {
 
       <!-- ── ECOSISTEMA ── -->
       <section class="lp-section lp-ecosystem" id="lpEcosystem">
-        <div class="lp-section-label">Un solo ecosistema</div>
-        <h2 class="lp-section-title">TrackFocus acompaña a todos en el proceso educativo.</h2>
-        <p class="lp-section-sub">No es una app para un perfil. Es una plataforma para todo el ecosistema.</p>
+        <div class="lp-section-label">${I18N.t('landing.ecosystem.label','Un solo ecosistema')}</div>
+        <h2 class="lp-section-title">${I18N.t('landing.ecosystem.title','TrackFocus acompaña a todos en el proceso educativo.')}</h2>
+        <p class="lp-section-sub">${I18N.t('landing.ecosystem.sub','No es una app para un perfil. Es una plataforma para todo el ecosistema.')}</p>
         <div class="lp-eco-grid">
           <div class="lp-eco-card lp-eco-card--gold">
             <div class="lp-eco-icon">${_lpIco.target}</div>
-            <div class="lp-eco-label">Uso Personal</div>
-            <p>Prepárate para la universidad a tu ritmo, con IA como mentor.</p>
+            <div class="lp-eco-label">${I18N.t('landing.ecosystem.card1.label','Uso Personal')}</div>
+            <p>${I18N.t('landing.ecosystem.card1.desc','Prepárate para la universidad a tu ritmo, con IA como mentor.')}</p>
           </div>
           <div class="lp-eco-card lp-eco-card--blue">
             <div class="lp-eco-icon">${_lpIco.cap}</div>
-            <div class="lp-eco-label">Estudiante</div>
-            <p>Estudia con enfoque, mide tu comprensión y demuestra tu avance.</p>
+            <div class="lp-eco-label">${I18N.t('landing.ecosystem.card2.label','Estudiante')}</div>
+            <p>${I18N.t('landing.ecosystem.card2.desc','Estudia con enfoque, mide tu comprensión y demuestra tu avance.')}</p>
           </div>
           <div class="lp-eco-card lp-eco-card--purple">
             <div class="lp-eco-icon">${_lpIco.board}</div>
-            <div class="lp-eco-label">Docente</div>
-            <p>Monitorea tu aula, detecta riesgos y acompaña individualmente.</p>
+            <div class="lp-eco-label">${I18N.t('landing.ecosystem.card3.label','Docente')}</div>
+            <p>${I18N.t('landing.ecosystem.card3.desc','Monitorea tu aula, detecta riesgos y acompaña individualmente.')}</p>
           </div>
           <div class="lp-eco-card lp-eco-card--green">
             <div class="lp-eco-icon">${_lpIco.building}</div>
-            <div class="lp-eco-label">Director</div>
-            <p>Evidencia del impacto educativo en tiempo real, sin esperar informes.</p>
+            <div class="lp-eco-label">${I18N.t('landing.ecosystem.card4.label','Director')}</div>
+            <p>${I18N.t('landing.ecosystem.card4.desc','Evidencia del impacto educativo en tiempo real, sin esperar informes.')}</p>
           </div>
         </div>
       </section>
 
       <!-- ── DIFERENCIADOR ── -->
       <section class="lp-section lp-differ">
-        <div class="lp-section-label">La diferencia</div>
-        <h2 class="lp-section-title">Lo que no se mide, no se puede mejorar.</h2>
-        <p class="lp-section-sub">TrackFocus no mide solo cuánto tiempo estudias. Mide evidencia real de aprendizaje.</p>
+        <div class="lp-section-label">${I18N.t('landing.differ.label','La diferencia')}</div>
+        <h2 class="lp-section-title">${I18N.t('landing.differ.title','Lo que no se mide, no se puede mejorar.')}</h2>
+        <p class="lp-section-sub">${I18N.t('landing.differ.sub','TrackFocus no mide solo cuánto tiempo estudias. Mide evidencia real de aprendizaje.')}</p>
         <div class="lp-differ-grid">
           <div class="lp-differ-item">
             <div class="lp-differ-icon">⏱</div>
-            <div class="lp-differ-name">Hábitos</div>
-            <div class="lp-differ-desc">Rachas, frecuencia y horario óptimo detectado por la IA.</div>
+            <div class="lp-differ-name">${I18N.t('landing.differ.item1.name','Hábitos')}</div>
+            <div class="lp-differ-desc">${I18N.t('landing.differ.item1.desc','Rachas, frecuencia y horario óptimo detectado por la IA.')}</div>
           </div>
           <div class="lp-differ-item">
             <div class="lp-differ-icon">${_lpIco.brain}</div>
-            <div class="lp-differ-name">Comprensión</div>
-            <div class="lp-differ-desc">Evaluaciones DECO que miden profundidad real, no memorización.</div>
+            <div class="lp-differ-name">${I18N.t('landing.differ.item2.name','Comprensión')}</div>
+            <div class="lp-differ-desc">${I18N.t('landing.differ.item2.desc','Evaluaciones DECO que miden profundidad real, no memorización.')}</div>
           </div>
           <div class="lp-differ-item">
             <div class="lp-differ-icon">${_lpIco.target}</div>
-            <div class="lp-differ-name">Concentración</div>
-            <div class="lp-differ-desc">Métrica por sesión para saber cuándo y cómo estudias mejor.</div>
+            <div class="lp-differ-name">${I18N.t('landing.differ.item3.name','Concentración')}</div>
+            <div class="lp-differ-desc">${I18N.t('landing.differ.item3.desc','Métrica por sesión para saber cuándo y cómo estudias mejor.')}</div>
           </div>
           <div class="lp-differ-item">
             <div class="lp-differ-icon">${_lpIco.trend}</div>
-            <div class="lp-differ-name">Constancia</div>
-            <div class="lp-differ-desc">Progreso semanal visible que construye motivación real.</div>
+            <div class="lp-differ-name">${I18N.t('landing.differ.item4.name','Constancia')}</div>
+            <div class="lp-differ-desc">${I18N.t('landing.differ.item4.desc','Progreso semanal visible que construye motivación real.')}</div>
           </div>
           <div class="lp-differ-item">
             <div class="lp-differ-icon">${_lpIco.trophy}</div>
-            <div class="lp-differ-name">Preparación</div>
-            <div class="lp-differ-desc">Porcentaje de avance hacia tu meta universitaria o académica.</div>
+            <div class="lp-differ-name">${I18N.t('landing.differ.item5.name','Preparación')}</div>
+            <div class="lp-differ-desc">${I18N.t('landing.differ.item5.desc','Porcentaje de avance hacia tu meta universitaria o académica.')}</div>
           </div>
         </div>
       </section>
@@ -1117,17 +1118,17 @@ const App = (() => {
       <!-- ── CTA FINAL ── -->
       <section class="lp-section lp-cta-v2">
         <div class="lp-cta-v2-inner">
-          <p class="lp-cta-v2-lead">Tu futuro no se construye en un solo día.</p>
-          <h2 class="lp-cta-v2-title">Se construye <span class="lp-cta-v2-accent">hoy.</span></h2>
-          <p class="lp-cta-v2-sub">Empieza a demostrar tu progreso desde tu próxima sesión de estudio.</p>
-          <button class="lp-btn-main lp-btn-main--lg" id="lpCtaFinal">Comenzar</button>
+          <p class="lp-cta-v2-lead">${I18N.t('landing.cta.lead','Tu futuro no se construye en un solo día.')}</p>
+          <h2 class="lp-cta-v2-title">${I18N.t('landing.cta.title','Se construye')} <span class="lp-cta-v2-accent">${I18N.t('landing.cta.titleAccent','hoy.')}</span></h2>
+          <p class="lp-cta-v2-sub">${I18N.t('landing.cta.sub','Empieza a demostrar tu progreso desde tu próxima sesión de estudio.')}</p>
+          <button class="lp-btn-main lp-btn-main--lg" id="lpCtaFinal">${I18N.t('landing.cta.button','Comenzar')}</button>
         </div>
       </section>
 
       <footer class="lp-footer">
         <span>© 2026 TrackFocus</span>
         <span class="lp-footer-sep">·</span>
-        <span>Datos sincronizados de forma segura en la nube</span>
+        <span>${I18N.t('landing.footer.text','Datos sincronizados de forma segura en la nube')}</span>
       </footer>
     </div>`;
   }
@@ -1141,25 +1142,25 @@ const App = (() => {
     const svgInst     = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M3 10h18M3 7l9-4 9 4M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/></svg>`;
     const svgArrow    = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
     return `
-      <div class="lp-section-label">Elige tu acceso</div>
-      <h2 class="lp-section-title">¿Cómo utilizarás TrackFocus?</h2>
-      <p class="lp-wizard-sub">Elige la experiencia que mejor se adapte a tu forma de aprender o gestionar el aprendizaje.</p>
+      <div class="lp-section-label">${I18N.t('wizard.step0.label','Elige tu acceso')}</div>
+      <h2 class="lp-section-title">${I18N.t('wizard.step0.title','¿Cómo utilizarás TrackFocus?')}</h2>
+      <p class="lp-wizard-sub">${I18N.t('wizard.step0.sub','Elige la experiencia que mejor se adapte a tu forma de aprender o gestionar el aprendizaje.')}</p>
       <div class="lp-cards lp-cards--2col">
         <div class="lp-card lp-card--gold" data-access="personal">
           <div class="lp-icon-ring">${svgPersonal}</div>
-          <h3>USO PERSONAL</h3>
-          <p>Estudia a tu ritmo, desarrolla hábitos y mejora tu comprensión.</p>
+          <h3>${I18N.t('wizard.step0.personal.title','USO PERSONAL')}</h3>
+          <p>${I18N.t('wizard.step0.personal.desc','Estudia a tu ritmo, desarrolla hábitos y mejora tu comprensión.')}</p>
           <div class="lp-card-foot">
-            <span style="font-size:12px;color:#52525B;">Continuar →</span>
+            <span style="font-size:12px;color:#52525B;">${I18N.t('wizard.continue','Continuar →')}</span>
             <button class="lp-arrow-btn" tabindex="-1">${svgArrow}</button>
           </div>
         </div>
         <div class="lp-card lp-card--blue" data-access="institutional">
           <div class="lp-icon-ring">${svgInst}</div>
-          <h3>USO INSTITUCIONAL</h3>
-          <p>Gestiona estudiantes, aulas y el progreso académico.</p>
+          <h3>${I18N.t('wizard.step0.institutional.title','USO INSTITUCIONAL')}</h3>
+          <p>${I18N.t('wizard.step0.institutional.desc','Gestiona estudiantes, aulas y el progreso académico.')}</p>
           <div class="lp-card-foot">
-            <span style="font-size:12px;color:#52525B;">Continuar →</span>
+            <span style="font-size:12px;color:#52525B;">${I18N.t('wizard.continue','Continuar →')}</span>
             <button class="lp-arrow-btn" tabindex="-1">${svgArrow}</button>
           </div>
         </div>
@@ -1172,35 +1173,35 @@ const App = (() => {
     const svgAdmin   = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
     const svgArrow   = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
     return `
-      <button class="lp-wizard-back" id="lpWizardBack">← Volver</button>
-      <div class="lp-section-label">Uso Institucional</div>
-      <h2 class="lp-section-title">¿Quién eres en tu institución?</h2>
-      <p class="lp-wizard-sub">Selecciona el rol con el que ingresarás hoy.</p>
+      <button class="lp-wizard-back" id="lpWizardBack">${I18N.t('wizard.step2b.back','← Volver')}</button>
+      <div class="lp-section-label">${I18N.t('wizard.step2b.label','Uso Institucional')}</div>
+      <h2 class="lp-section-title">${I18N.t('wizard.step2b.title','¿Quién eres en tu institución?')}</h2>
+      <p class="lp-wizard-sub">${I18N.t('wizard.step2b.sub','Selecciona el rol con el que ingresarás hoy.')}</p>
       <div class="lp-cards">
         <div class="lp-card lp-card--gold" data-role="student">
           <div class="lp-icon-ring">${svgStudent}</div>
-          <h3>ESTUDIANTE</h3>
-          <p>Aprende, practica y mejora tu comprensión con orientación paso a paso.</p>
+          <h3>${I18N.t('wizard.step2b.student.title','ESTUDIANTE')}</h3>
+          <p>${I18N.t('wizard.step2b.student.desc','Aprende, practica y mejora tu comprensión con orientación paso a paso.')}</p>
           <div class="lp-card-foot">
-            <span style="font-size:12px;color:#52525B;">Solo Gmail</span>
+            <span style="font-size:12px;color:#52525B;">${I18N.t('wizard.step2b.student.note','Solo Gmail')}</span>
             <button class="lp-arrow-btn" tabindex="-1">${svgArrow}</button>
           </div>
         </div>
         <div class="lp-card lp-card--purple" data-role="teacher">
           <div class="lp-icon-ring">${svgTeacher}</div>
-          <h3>PROFESOR</h3>
-          <p>Monitorea aulas, detecta riesgos y acompaña el aprendizaje.</p>
+          <h3>${I18N.t('wizard.step2b.teacher.title','PROFESOR')}</h3>
+          <p>${I18N.t('wizard.step2b.teacher.desc','Monitorea aulas, detecta riesgos y acompaña el aprendizaje.')}</p>
           <div class="lp-card-foot">
-            <span style="font-size:12px;color:#52525B;">Requiere código</span>
+            <span style="font-size:12px;color:#52525B;">${I18N.t('wizard.step2b.teacher.note','Requiere código')}</span>
             <button class="lp-arrow-btn" tabindex="-1">${svgArrow}</button>
           </div>
         </div>
         <div class="lp-card lp-card--blue" data-role="admin">
           <div class="lp-icon-ring">${svgAdmin}</div>
-          <h3>DIRECTOR</h3>
-          <p>Gestiona el rendimiento institucional desde un solo lugar.</p>
+          <h3>${I18N.t('wizard.step2b.admin.title','DIRECTOR')}</h3>
+          <p>${I18N.t('wizard.step2b.admin.desc','Gestiona el rendimiento institucional desde un solo lugar.')}</p>
           <div class="lp-card-foot">
-            <span style="font-size:12px;color:#52525B;">Acceso restringido</span>
+            <span style="font-size:12px;color:#52525B;">${I18N.t('wizard.step2b.admin.note','Acceso restringido')}</span>
             <button class="lp-arrow-btn" tabindex="-1">${svgArrow}</button>
           </div>
         </div>
@@ -1488,14 +1489,14 @@ const App = (() => {
     const svgAdminIco   = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
 
     const cfg = {
-      student: { cls: 'lp-form-emoji--gold',   emoji: svgStudentIco, title: 'Comenzar a estudiar',
-                 subtitle: 'Crea tu cuenta o inicia sesión para empezar.',
+      student: { cls: 'lp-form-emoji--gold',   emoji: svgStudentIco, title: I18N.t('auth.student.title','Comenzar a estudiar'),
+                 subtitle: I18N.t('auth.student.sub','Crea tu cuenta o inicia sesión para empezar.'),
                  btnCls: '' },
-      teacher: { cls: 'lp-form-emoji--purple', emoji: svgTeacherIco, title: 'Entrar como Profesor',
-                 subtitle: 'Necesitarás el código de tu colegio para acceder. El código de aula es opcional.',
+      teacher: { cls: 'lp-form-emoji--purple', emoji: svgTeacherIco, title: I18N.t('auth.teacher.title','Entrar como Profesor'),
+                 subtitle: I18N.t('auth.teacher.sub','Necesitarás el código de tu colegio para acceder. El código de aula es opcional.'),
                  btnCls: 'lp-btn-submit--purple' },
-      admin:   { cls: 'lp-form-emoji--blue',   emoji: svgAdminIco, title: 'Acceso Director',
-                 subtitle: 'Necesitarás el código de tu institución al ingresar.',
+      admin:   { cls: 'lp-form-emoji--blue',   emoji: svgAdminIco, title: I18N.t('auth.admin.title','Acceso Director'),
+                 subtitle: I18N.t('auth.admin.sub','Necesitarás el código de tu institución al ingresar.'),
                  btnCls: 'lp-btn-submit--blue' }
     }[role];
 
@@ -1516,28 +1517,28 @@ const App = (() => {
 
       <button class="lp-btn-google" type="button" id="googleSignInBtn">
         ${GOOGLE_SVG}
-        <span>Continuar con Google</span>
+        <span>${I18N.t('auth.google','Continuar con Google')}</span>
       </button>
 
-      <div class="lp-or-sep"><span>o</span></div>
+      <div class="lp-or-sep"><span>${I18N.t('auth.or','o')}</span></div>
 
       <form id="emailAuthForm" autocomplete="on" novalidate>
         <div class="lp-fields-row">
-          ${_lpField('Nombres', _lpInput('user', 'name="firstName" autocomplete="given-name" placeholder="Tus nombres"'))}
-          ${_lpField('Apellidos', _lpInput('user', 'name="lastName" autocomplete="family-name" placeholder="Tus apellidos"'))}
+          ${_lpField(I18N.t('auth.field.firstName','Nombres'), _lpInput('user', `name="firstName" autocomplete="given-name" placeholder="${I18N.t('auth.field.firstNamePh','Tus nombres')}"`))}
+          ${_lpField(I18N.t('auth.field.lastName','Apellidos'), _lpInput('user', `name="lastName" autocomplete="family-name" placeholder="${I18N.t('auth.field.lastNamePh','Tus apellidos')}"`))}
         </div>
-        ${_lpField('Correo electrónico', _lpInput('mail', 'type="email" name="email" autocomplete="email" placeholder="tucorreo@gmail.com" required'))}
-        ${_lpField('Contraseña', _lpInput('lock', 'type="password" name="password" autocomplete="current-password" placeholder="Mínimo 6 caracteres" required minlength="6"'))}
-        ${_lpField('Confirmar contraseña', _lpInput('lock', 'type="password" name="confirmPassword" autocomplete="new-password" placeholder="Repite tu contraseña" required'))}
-        ${_lpField('Fecha de nacimiento',
+        ${_lpField(I18N.t('auth.field.email','Correo electrónico'), _lpInput('mail', `type="email" name="email" autocomplete="email" placeholder="${I18N.t('auth.field.emailPh','tucorreo@gmail.com')}" required`))}
+        ${_lpField(I18N.t('auth.field.password','Contraseña'), _lpInput('lock', `type="password" name="password" autocomplete="current-password" placeholder="${I18N.t('auth.field.passwordPh','Mínimo 6 caracteres')}" required minlength="6"`))}
+        ${_lpField(I18N.t('auth.field.confirmPassword','Confirmar contraseña'), _lpInput('lock', `type="password" name="confirmPassword" autocomplete="new-password" placeholder="${I18N.t('auth.field.confirmPasswordPh','Repite tu contraseña')}" required`))}
+        ${_lpField(I18N.t('auth.field.birthdate','Fecha de nacimiento'),
           `<div class="lp-input-row"><span class="lp-input-ico">${calSvg}</span><input type="date" name="birthdate" style="padding-left:40px;" /></div>`,
-          'opcional')}
+          I18N.t('auth.field.optional','opcional'))}
         <button class="lp-btn-submit ${cfg.btnCls}" type="submit" id="emailAuthBtn">
-          Crear cuenta / Ingresar ${_svgIco.arrow}
+          ${I18N.t('auth.submit','Crear cuenta / Ingresar')} ${_svgIco.arrow}
         </button>
       </form>
 
-      <p class="lp-form-foot">Al continuar aceptas que tus datos se sincronicen de forma segura en la nube.</p>
+      <p class="lp-form-foot">${I18N.t('auth.footer','Al continuar aceptas que tus datos se sincronicen de forma segura en la nube.')}</p>
     `;
 
     // Aplicar política de autocompletado según preferencia de auto-login
@@ -1559,7 +1560,7 @@ const App = (() => {
 
       const btn = document.getElementById('emailAuthBtn');
       btn.disabled = true;
-      btn.innerHTML = 'Ingresando…';
+      btn.innerHTML = I18N.t('auth.submitting','Ingresando…');
 
       try {
         sessionStorage.setItem('tf.accessType', role === 'student'
@@ -1572,7 +1573,7 @@ const App = (() => {
         window.location.reload();
       } catch (err) {
         btn.disabled = false;
-        btn.innerHTML = `Crear cuenta / Ingresar ${_svgIco.arrow}`;
+        btn.innerHTML = `${I18N.t('auth.submit','Crear cuenta / Ingresar')} ${_svgIco.arrow}`;
 
         // Escenario B: el correo ya existe con Google → mostrar modal de elección de nombre
         if (err.type === 'name_conflict') {
