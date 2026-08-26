@@ -311,21 +311,31 @@ const _PERF_BAND_HINTS = {
   high: 'El desempeño reciente es alto (respuestas correctas y bien razonadas). Profundiza más, plantea problemas más completos, exige más razonamiento, avanza sin repetir lo básico.'
 };
 
+const _DIFFICULTY_PRESET_HINTS = {
+  easy:   'eligió explícitamente empezar en nivel fácil — repasa desde lo básico, ejercicios simples y directos',
+  medium: 'eligió explícitamente nivel medio — el esperado para su grado, sin simplificar de más ni saltarse pasos',
+  hard:   'eligió explícitamente nivel difícil — retos más avanzados desde el primer ejercicio, sin repasar lo básico'
+};
+
 function buildSystemPrompt(metadata, decoDue) {
   const { subject, grade, memoryContext, studyMode, examDate, topicGoal,
-          decoLevel, performanceBand, career, prepPct } = metadata;
+          decoLevel, performanceBand, career, prepPct, difficultyPreset } = metadata;
 
   const memoryBlock = memoryContext
     ? `\nMemoria del alumno (información interna — para decidir cómo enseñar; nunca la repitas ni la cites): ${memoryContext}\n`
     : '';
 
-  // Calibración inicial (Panel Personal): meta/carrera + nivel de preparación
-  // general, ya calculados por TrackFocus (nunca inventados). Se usan para
-  // que el primer ejercicio ya tenga la dificultad correcta, en vez de
-  // esperar a estimarla en vivo durante la conversación.
+  // Calibración inicial (Panel Personal + selector de dificultad en el setup):
+  // meta/carrera + nivel de preparación general o nivel elegido explícitamente
+  // por el alumno. Nada de esto se inventa — career/prepPct ya existían en
+  // TrackFocus, difficultyPreset es una elección directa del alumno antes de
+  // empezar. Si el alumno eligió un nivel explícito, ese manda sobre el
+  // cálculo automático de prepPct (pero career sigue aplicando).
   const calibParts = [];
   if (career) calibParts.push(`aspira a estudiar ${career}`);
-  if (typeof prepPct === 'number') {
+  if (difficultyPreset && _DIFFICULTY_PRESET_HINTS[difficultyPreset]) {
+    calibParts.push(_DIFFICULTY_PRESET_HINTS[difficultyPreset]);
+  } else if (typeof prepPct === 'number') {
     const prepLevel = prepPct >= 70 ? 'alto' : prepPct >= 40 ? 'medio' : 'inicial';
     calibParts.push(`nivel de preparación general ${prepLevel}`);
   }

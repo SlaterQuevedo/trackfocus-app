@@ -4979,6 +4979,33 @@ const UIStudent = (() => {
                 <input type="text" name="topicGoal" placeholder="Ej. Ecuaciones cuadráticas, Revolución Francesa, Fotosíntesis…" />
               </div>
             </div>
+            <div class="field">
+              <label>Nivel de dificultad inicial</label>
+              <div class="ai-diff-picker" id="aiDiffPicker" role="radiogroup" aria-label="Nivel de dificultad inicial">
+                <button type="button" class="ai-diff-opt is-active" data-diff="auto" aria-pressed="true">
+                  <span class="ai-diff-ico">🎯</span>
+                  <span class="ai-diff-lbl">Automático</span>
+                  <span class="ai-diff-sub">Según tu nivel</span>
+                </button>
+                <button type="button" class="ai-diff-opt" data-diff="easy" aria-pressed="false">
+                  <span class="ai-diff-ico">🌱</span>
+                  <span class="ai-diff-lbl">Fácil</span>
+                  <span class="ai-diff-sub">Repasar la base</span>
+                </button>
+                <button type="button" class="ai-diff-opt" data-diff="medium" aria-pressed="false">
+                  <span class="ai-diff-ico">⚡</span>
+                  <span class="ai-diff-lbl">Medio</span>
+                  <span class="ai-diff-sub">Nivel esperado</span>
+                </button>
+                <button type="button" class="ai-diff-opt" data-diff="hard" aria-pressed="false">
+                  <span class="ai-diff-ico">🔥</span>
+                  <span class="ai-diff-lbl">Difícil</span>
+                  <span class="ai-diff-sub">Retarme más</span>
+                </button>
+              </div>
+              <p class="muted" style="font-size:11px;margin:6px 0 0;">TrackTutor parte de este nivel y lo ajusta durante la conversación según cómo te vaya.</p>
+              <input type="hidden" name="difficulty" id="aiDiffInput" value="auto" />
+            </div>
             <input type="hidden" name="datetime" value="${local}" />
             <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
               <button class="primary" type="submit">Comenzar sesión ✨</button>
@@ -5048,6 +5075,21 @@ const UIStudent = (() => {
       modeSelAI?.addEventListener('change', _updateModeFields);
       _updateModeFields(); // estado inicial
 
+      // Selector visual de nivel de dificultad inicial (pills interactivas)
+      const diffPicker = document.getElementById('aiDiffPicker');
+      const diffInput  = document.getElementById('aiDiffInput');
+      diffPicker?.querySelectorAll('.ai-diff-opt').forEach(btn => {
+        btn.addEventListener('click', () => {
+          diffPicker.querySelectorAll('.ai-diff-opt').forEach(b => {
+            b.classList.remove('is-active');
+            b.setAttribute('aria-pressed', 'false');
+          });
+          btn.classList.add('is-active');
+          btn.setAttribute('aria-pressed', 'true');
+          if (diffInput) diffInput.value = btn.dataset.diff;
+        });
+      });
+
       // Demo guiada: pre-llenar el formulario y auto-submitear
       if (window.__TF_DEMO_GUIDED_META) {
         const meta = window.__TF_DEMO_GUIDED_META;
@@ -5078,7 +5120,8 @@ const UIStudent = (() => {
           previousActivityOther: actPick.previousActivityOther,
           studyMode,
           examDate:              studyMode === 'exam-prep'     ? (fd.get('examDate') || null)  : null,
-          topicGoal:             studyMode === 'topic-mastery' ? (fd.get('topicGoal') || null) : null
+          topicGoal:             studyMode === 'topic-mastery' ? (fd.get('topicGoal') || null) : null,
+          difficultyPreset:      (fd.get('difficulty') && fd.get('difficulty') !== 'auto') ? fd.get('difficulty') : null
         };
         _startAiChat(metadata);
       });

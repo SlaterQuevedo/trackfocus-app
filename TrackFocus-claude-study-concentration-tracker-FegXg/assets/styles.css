@@ -2067,6 +2067,37 @@ body.pom-active .container { padding-top: 0; }
   max-width: 620px;
   margin: 0 auto;
 }
+/* Selector visual de nivel de dificultad inicial (pantalla de setup del chat) */
+.ai-diff-picker {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.ai-diff-opt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 6px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: var(--panel, transparent);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+  font-family: inherit;
+}
+.ai-diff-opt:hover { border-color: var(--accent, #C89B6D); transform: translateY(-1px); }
+.ai-diff-opt.is-active {
+  border-color: var(--accent, #C89B6D);
+  background: rgba(200, 155, 109, 0.12);
+}
+.ai-diff-ico { font-size: 18px; line-height: 1; }
+.ai-diff-lbl { font-size: 12.5px; font-weight: 600; }
+.ai-diff-sub { font-size: 10px; color: var(--muted); text-align: center; line-height: 1.2; }
+@media (max-width: 480px) {
+  .ai-diff-picker { grid-template-columns: repeat(2, 1fr); }
+}
 /* Indicador permanente Minerva + DECO (siempre activos en toda sesión) — oculto */
 .ai-always-on-badge {
   display: none;
