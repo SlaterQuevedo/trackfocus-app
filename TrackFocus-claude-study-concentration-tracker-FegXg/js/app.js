@@ -616,8 +616,16 @@ const App = (() => {
     }
 
     Storage.setCurrent((authSession.user?.email || authSession.session?.user?.email || '').toLowerCase());
-    // Restaurar preferencia de auto-login en localStorage desde el perfil persistido
-    { const _st = Storage.get(); if (_st.users[_st.currentUserId]?.autoLogin) localStorage.setItem('arv_al', '1'); }
+    // Restaurar preferencia de auto-login en localStorage desde el perfil persistido.
+    // Simétrico a propósito: si la nube dice ON, se activa; si dice OFF (o no
+    // existe), se limpia — antes solo activaba y nunca desactivaba, lo que
+    // podía dejar arv_al="1" atascado (sesión recordándose de verdad) aunque
+    // el resto de la UI mostrara "modo seguro" correctamente.
+    {
+      const _st = Storage.get();
+      if (_st.users[_st.currentUserId]?.autoLogin) localStorage.setItem('arv_al', '1');
+      else localStorage.removeItem('arv_al');
+    }
 
     // Suscribirse a cambios remotos (multi-dispositivo).
     // IMPORTANTE: Supabase Realtime reenvía al mismo cliente sus propios writes (loopback).
@@ -1393,7 +1401,7 @@ const App = (() => {
                   border-radius:16px;padding:28px;max-width:440px;width:100%;">
         <h3 style="margin:0 0 8px;font-size:18px;">${GOOGLE_SVG} <span style="vertical-align:middle;">Detectamos un nombre distinto</span></h3>
         <p style="margin:0 0 20px;color:var(--muted-2,#71717a);font-size:14px;line-height:1.5;">
-          Tu cuenta de Google ahora se llama <strong>${googleName}</strong>, pero en TrackFocus figuras como <strong>${currentName}</strong>.
+          Tu cuenta de Google se llama <strong>${googleName}</strong>, pero en TrackFocus figuras como <strong>${currentName}</strong>.
           ¿Qué nombre quieres usar?
         </p>
 
@@ -1974,8 +1982,12 @@ const App = (() => {
   function _openSecurityModal() {
     const user = Roles.current();
     if (!user) return;
-    const s = Storage.get();
-    const isOn = !!(s.users[user.id]?.autoLogin);
+    // Fuente única de verdad: localStorage.arv_al es el flag que REALMENTE
+    // controla el auto-login (ver App.start()). Storage.users[id].autoLogin
+    // es solo un espejo que puede desincronizarse (ej. tras un sync con la
+    // nube que reescribe el objeto de usuario), causando que el toggle/badge
+    // mostraran un estado distinto al que en verdad aplica.
+    const isOn = localStorage.getItem('arv_al') === '1';
 
     const el = document.createElement('div');
     el.id = 'arv-sec-modal';
