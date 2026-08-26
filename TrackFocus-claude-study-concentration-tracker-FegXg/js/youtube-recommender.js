@@ -51,20 +51,36 @@ window.YoutubeRecommender = (() => {
 
     if (data && data.video) {
       const v = data.video;
+      // Compacto por defecto: miniatura pequeña + título, complementa el chat
+      // sin invadirlo. El reproductor solo aparece si el alumno hace click.
       section.innerHTML =
         '<div class="yt-rec-header"><span class="yt-rec-icon">▶</span><span class="yt-rec-title">Recurso recomendado para ti</span></div>' +
-        '<div class="yt-rec-player">' +
-          `<iframe src="https://www.youtube-nocookie.com/embed/${_esc(v.videoId)}" ` +
-          'title="Video recomendado" frameborder="0" loading="lazy" ' +
-          'allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>' +
+        '<div class="yt-rec-compact" role="button" tabindex="0">' +
+          `<div class="yt-rec-thumb-wrap">` +
+            (v.thumbnail ? `<img class="yt-rec-thumb" src="${_esc(v.thumbnail)}" loading="lazy" alt="">` : '') +
+            '<span class="yt-rec-play">▶</span>' +
+          '</div>' +
+          '<div class="yt-rec-compact-info">' +
+            `<div class="yt-rec-card-title">${_esc(v.title)}</div>` +
+            (v.channel ? `<div class="yt-rec-channel">${_esc(v.channel)}${v.durationLabel ? ' · ' + _esc(v.durationLabel) : ''}</div>` : '') +
+          '</div>' +
         '</div>' +
-        `<div class="yt-rec-card-title">${_esc(v.title)}</div>` +
-        (v.channel ? `<div class="yt-rec-channel">${_esc(v.channel)}${v.durationLabel ? ' · ' + _esc(v.durationLabel) : ''}</div>` : '') +
-        (v.reason ? `<div class="yt-rec-reason">${_esc(v.reason)}</div>` : '') +
-        // Salida de emergencia: YouTube a veces bloquea el embed por reclamos de
-        // derechos de terceros (Content ID) sin que la API lo anticipe. Este link
-        // siempre está disponible para que nunca sea un callejón sin salida.
-        `<a class="yt-rec-watch-link" href="${_esc(v.url)}" target="_blank" rel="noopener">¿No carga el video? Verlo en YouTube ↗</a>`;
+        (v.reason ? `<div class="yt-rec-reason">${_esc(v.reason)}</div>` : '');
+
+      const compact = section.querySelector('.yt-rec-compact');
+      const playIt = () => {
+        compact.outerHTML =
+          '<div class="yt-rec-player">' +
+            `<iframe src="https://www.youtube-nocookie.com/embed/${_esc(v.videoId)}?autoplay=1" ` +
+            'title="Video recomendado" frameborder="0" ' +
+            'allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>' +
+          '</div>' +
+          // Salida de emergencia: YouTube a veces bloquea el embed por reclamos
+          // de derechos de terceros (Content ID) sin que la API lo anticipe.
+          `<a class="yt-rec-watch-link" href="${_esc(v.url)}" target="_blank" rel="noopener">¿No carga el video? Verlo en YouTube ↗</a>`;
+      };
+      compact.addEventListener('click', playIt);
+      compact.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); playIt(); } });
     } else {
       const q = (data && data.fallbackQuery) || '';
       section.innerHTML =

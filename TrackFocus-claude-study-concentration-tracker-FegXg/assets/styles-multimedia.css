@@ -407,6 +407,28 @@
 .yt-rec-icon { color: #FF0000; font-size: 12px; flex-shrink: 0; }
 .yt-rec-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); flex: 1; }
 
+/* Tarjeta compacta por defecto: miniatura pequeña + título, complementa el
+   chat sin invadirlo. El reproductor grande solo aparece tras el click. */
+.yt-rec-compact {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px; border-radius: 10px; cursor: pointer;
+  transition: background 0.15s;
+}
+.yt-rec-compact:hover, .yt-rec-compact:focus-visible { background: rgba(255,255,255,0.05); }
+[data-theme="light"] .yt-rec-compact:hover, [data-theme="light"] .yt-rec-compact:focus-visible { background: rgba(0,0,0,0.04); }
+
+.yt-rec-thumb-wrap {
+  position: relative; flex-shrink: 0;
+  width: 96px; height: 54px; border-radius: 8px; overflow: hidden;
+  background: rgba(0,0,0,0.25);
+}
+.yt-rec-thumb { width: 100%; height: 100%; object-fit: cover; display: block; }
+.yt-rec-play {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 14px; background: rgba(0,0,0,0.28);
+}
+.yt-rec-compact-info { flex: 1; min-width: 0; }
+
 .yt-rec-player {
   position: relative;
   width: 100%;
@@ -420,7 +442,10 @@
   position: absolute; inset: 0; width: 100%; height: 100%; border: 0;
 }
 
-.yt-rec-card-title { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.35; }
+.yt-rec-card-title {
+  font-size: 12.5px; font-weight: 600; color: var(--text); line-height: 1.35;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
 .yt-rec-channel { font-size: 11px; color: var(--muted); font-weight: 500; margin-top: 2px; }
 .yt-rec-reason {
   font-size: 12px; color: var(--muted-2); line-height: 1.5; margin-top: 8px;
