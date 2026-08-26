@@ -1514,6 +1514,13 @@ const App = (() => {
         </div>
       </div>
 
+      <button class="lp-btn-google" type="button" id="googleSignInBtn">
+        ${GOOGLE_SVG}
+        <span>Continuar con Google</span>
+      </button>
+
+      <div class="lp-or-sep"><span>o</span></div>
+
       <form id="emailAuthForm" autocomplete="on" novalidate>
         <div class="lp-fields-row">
           ${_lpField('Nombres', _lpInput('user', 'name="firstName" autocomplete="given-name" placeholder="Tus nombres"'))}
@@ -1530,12 +1537,6 @@ const App = (() => {
         </button>
       </form>
 
-      <div class="lp-or-sep"><span>o</span></div>
-
-      <button class="lp-btn-google" type="button" id="googleSignInBtn">
-        ${GOOGLE_SVG}
-        <span>Continuar con Google</span>
-      </button>
       <p class="lp-form-foot">Al continuar aceptas que tus datos se sincronicen de forma segura en la nube.</p>
     `;
 
