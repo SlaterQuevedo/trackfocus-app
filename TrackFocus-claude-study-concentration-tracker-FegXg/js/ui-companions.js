@@ -11,6 +11,7 @@ const UICompanions = (() => {
     return AVATAR_COLORS[h % AVATAR_COLORS.length];
   };
   let _chatChannel = null;
+  let _roomChannel = null;
 
   function screenCompanions() {
     return `
@@ -24,6 +25,7 @@ const UICompanions = (() => {
           <button class="cp-tab" data-tab="requests">Solicitudes</button>
           <button class="cp-tab" data-tab="mine">Mis Compañeros</button>
           <button class="cp-tab" data-tab="messages">Mensajes</button>
+          <button class="cp-tab" data-tab="rooms">Salas</button>
         </nav>
         <div class="cp-panel active" data-tab="search">
           <input type="text" id="cpSearchInput" class="cp-search-input" placeholder="Buscar por nombre o apodo (mínimo 2 letras)..." maxlength="40" autocomplete="off">
@@ -37,6 +39,9 @@ const UICompanions = (() => {
         </div>
         <div class="cp-panel" data-tab="messages">
           <div id="cpMessagesList" class="cp-list"><div class="cp-empty">Cargando…</div></div>
+        </div>
+        <div class="cp-panel" data-tab="rooms">
+          <div id="cpRoomsList" class="cp-list"><div class="cp-empty">Cargando…</div></div>
         </div>
       </div>`;
   }
@@ -59,7 +64,7 @@ const UICompanions = (() => {
       case 'none':             return `<button class="cp-btn cp-btn-primary cp-add-btn" data-id="${esc(userId)}">Agregar compañero</button>`;
       case 'pending_sent':     return `<span class="cp-status-label">Solicitud enviada</span>`;
       case 'pending_received': return `<span class="cp-status-label">Te envió una solicitud</span>`;
-      case 'accepted':         return `<span class="cp-status-label cp-status-ok">✓ Compañeros</span><button class="cp-btn cp-btn-primary cp-msg-btn" data-id="${esc(userId)}">Mensaje</button>`;
+      case 'accepted':         return `<span class="cp-status-label cp-status-ok">✓ Compañeros</span><button class="cp-btn cp-btn-primary cp-msg-btn" data-id="${esc(userId)}">Mensaje</button><button class="cp-btn cp-btn-ghost cp-room-btn" data-id="${esc(userId)}">Estudiar juntos</button>`;
       case 'blocked':          return `<span class="cp-status-label">Bloqueado</span>`;
       default:                 return '';
     }
@@ -143,6 +148,7 @@ const UICompanions = (() => {
       }
     });
     _wireMsgButtons(inner, myId);
+    _wireRoomButtons(inner, myId);
   }
 
   // Wire del botón "Mensaje" en filas/perfil (solo aparece con status
@@ -276,6 +282,105 @@ const UICompanions = (() => {
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSend(); });
   }
 
+  // Wire del botón "Estudiar juntos" (solo status 'accepted'): obtiene o crea
+  // la sala compartida con esa persona y abre la ventana de sala.
+  function _wireRoomButtons(container, myId) {
+    container.querySelectorAll('.cp-room-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const otherId = btn.dataset.id;
+        btn.disabled = true;
+        try {
+          const roomId = await StudyRooms.getOrCreateRoom(otherId);
+          _openStudyRoom(roomId, otherId, myId);
+        } catch (err) {
+          UI.flash(err?.message || 'No se pudo abrir la sala.', 'error');
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    });
+  }
+
+  // Tarjeta de un participante dentro de la sala, con punto de presencia
+  // (verde = conectado ahora, gris = desconectado). El estado de presencia es
+  // efímero (Supabase Realtime Presence) — no se persiste en ninguna tabla.
+  function _roomParticipantCard(profile, photoUrl, online, isMe) {
+    return `
+      <div class="cp-room-card">
+        <div class="cp-room-avatar-wrap">
+          <div class="pp-avatar-big ph2-avatar cp-room-avatar" style="background:${esc(_colorFor(profile.id))};">${photoUrl ? `<img src="${esc(photoUrl)}" alt="" class="pp-avatar-img">` : esc(initials(profile.name))}</div>
+          <span class="cp-room-presence-dot ${online ? 'cp-room-online' : 'cp-room-offline'}"></span>
+        </div>
+        <div class="cp-room-card-name">${esc(profile.name || 'Estudiante')}${isMe ? ' (tú)' : ''}</div>
+        <div class="cp-room-card-status">${online ? 'En línea' : 'Desconectado'}</div>
+      </div>`;
+  }
+
+  // Ventana de sala de estudio: dos tarjetas de participantes con presencia en
+  // vivo (Supabase Realtime Presence, canal dedicado por sala). Sin chat ni
+  // mensajería propia todavía (eso ya existe por separado en "Mensajes"); la
+  // Fase 5 agrega TrackTutor compartido dentro de esta misma ventana.
+  async function _openStudyRoom(roomId, otherId, myId) {
+    const existing = document.getElementById('cp-room-page');
+    if (existing) existing.remove();
+    if (_roomChannel) { StudyRooms.leavePresence(_roomChannel); _roomChannel = null; }
+
+    const page = document.createElement('div');
+    page.id = 'cp-room-page';
+    page.className = 'cp-profile-page';
+    page.innerHTML = `
+      <div class="cp-profile-page-topbar">
+        <button id="cp-room-back" class="cp-profile-back-btn">← Volver</button>
+      </div>
+      <div class="cp-profile-page-inner">
+        <div class="ph-panel-hdr" style="margin-bottom:16px;">
+          <div class="ph-panel-hdr-icon">📚</div>
+          <div><div class="ph-panel-title">Sala de estudio</div><div class="ph-panel-sub">La presencia se actualiza en vivo mientras ambos tengan la sala abierta</div></div>
+        </div>
+        <div class="cp-room-cards" id="cpRoomCards"><div class="cp-empty">Cargando…</div></div>
+      </div>
+    `;
+    document.body.appendChild(page);
+
+    const closeRoom = () => {
+      page.remove();
+      if (_roomChannel) { StudyRooms.leavePresence(_roomChannel); _roomChannel = null; }
+    };
+    page.querySelector('#cp-room-back').onclick = closeRoom;
+
+    let profiles, photos, myProfile;
+    try {
+      [profiles, photos, myProfile] = await Promise.all([
+        Companions.getPublicProfiles([otherId]),
+        Companions.getPrimaryPhotos([otherId, myId]),
+        Companions.getPublicProfiles([myId]).then(m => m[myId])
+      ]);
+    } catch (err) {
+      if (!document.body.contains(page)) return;
+      page.querySelector('#cpRoomCards').innerHTML = '<div class="cp-empty">No se pudo cargar la sala. Intenta de nuevo.</div>';
+      UI.flash(err?.message || 'No se pudo cargar la sala.', 'error');
+      return;
+    }
+    if (!document.body.contains(page)) return; // se cerró mientras cargaba
+
+    const other = profiles[otherId] || { id: otherId, name: 'Estudiante' };
+    const me = myProfile || { id: myId, name: 'Tú' };
+    const cardsEl = page.querySelector('#cpRoomCards');
+
+    const renderCards = (onlineSet) => {
+      cardsEl.innerHTML =
+        _roomParticipantCard(me, photos[myId], onlineSet.has(myId), true) +
+        _roomParticipantCard(other, photos[otherId], onlineSet.has(otherId), false);
+    };
+    renderCards(new Set());
+
+    _roomChannel = StudyRooms.joinPresence(roomId, myId, (onlineSet) => {
+      if (!document.body.contains(page)) return;
+      renderCards(onlineSet);
+    });
+  }
+
   async function wireCompanions() {
     const r = () => root();
     const s = Storage.get();
@@ -308,6 +413,7 @@ const UICompanions = (() => {
       _wireAddButtons();
       _wireRowClicks(resultsBox, myId);
       _wireMsgButtons(resultsBox, myId);
+      _wireRoomButtons(resultsBox, myId);
     }
     function _wireAddButtons() {
       resultsBox.querySelectorAll('.cp-add-btn').forEach(btn => {
@@ -398,12 +504,14 @@ const UICompanions = (() => {
         const p = profiles[otherId] || { id: otherId, name: 'Estudiante' };
         const actions = `
           <button class="cp-btn cp-btn-primary cp-msg-btn" data-id="${esc(otherId)}">Mensaje</button>
+          <button class="cp-btn cp-btn-ghost cp-room-btn" data-id="${esc(otherId)}">Estudiar juntos</button>
           <button class="cp-btn cp-btn-ghost cp-remove-btn" data-conn="${esc(c.id)}">Eliminar</button>
           <button class="cp-btn cp-btn-ghost cp-block-btn" data-conn="${esc(c.id)}">Bloquear</button>`;
         return _rowHtml(p, photos[otherId], actions);
       }).join('');
       _wireRowClicks(box, myId);
       _wireMsgButtons(box, myId);
+      _wireRoomButtons(box, myId);
 
       box.querySelectorAll('.cp-remove-btn').forEach(btn => btn.addEventListener('click', async (e) => {
         e.stopPropagation();
@@ -448,10 +556,36 @@ const UICompanions = (() => {
       });
     }
 
+    // ── Salas ──
+    async function _renderRooms() {
+      const box = r().querySelector('#cpRoomsList');
+      if (!box) return;
+      let rooms = [];
+      try { rooms = await StudyRooms.listRooms(); } catch (_) { rooms = []; }
+      if (!rooms.length) { box.innerHTML = '<div class="cp-empty">Todavía no tienes salas. Ábrele una a un compañero desde "Mis Compañeros".</div>'; return; }
+
+      const photos = await Companions.getPrimaryPhotos(rooms.map(r => r.other_id));
+      box.innerHTML = rooms.map(rm => {
+        const photoUrl = photos[rm.other_id];
+        return `
+          <div class="cp-row cp-room-row" data-room-id="${esc(rm.room_id)}" data-other-id="${esc(rm.other_id)}">
+            <div class="cp-row-avatar" style="background:${esc(_colorFor(rm.other_id))};">${photoUrl ? `<img src="${esc(photoUrl)}" alt="">` : esc(initials(rm.other_name))}</div>
+            <div class="cp-row-info">
+              <div class="cp-row-name">${esc(rm.other_name || 'Estudiante')}</div>
+              <div class="cp-row-sub">Sala de estudio</div>
+            </div>
+          </div>`;
+      }).join('');
+      box.querySelectorAll('.cp-room-row').forEach(row => {
+        row.addEventListener('click', () => _openStudyRoom(row.dataset.roomId, row.dataset.otherId, myId));
+      });
+    }
+
     resultsBox.innerHTML = '<div class="cp-empty">Escribe un nombre o apodo para empezar a buscar.</div>';
     _renderRequests();
     _renderMine();
     _renderMessages();
+    _renderRooms();
   }
 
   // Cierra cualquier overlay de Compañeros (perfil público / chat) que haya
@@ -464,7 +598,9 @@ const UICompanions = (() => {
   function closeOverlays() {
     document.getElementById('cp-chat-page')?.remove();
     document.getElementById('cp-profile-modal')?.remove();
+    document.getElementById('cp-room-page')?.remove();
     if (_chatChannel) { Chat.unsubscribe(_chatChannel); _chatChannel = null; }
+    if (_roomChannel) { StudyRooms.leavePresence(_roomChannel); _roomChannel = null; }
   }
 
   return { screens: { companions: { render: screenCompanions, wire: wireCompanions } }, closeOverlays };

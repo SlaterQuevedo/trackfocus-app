@@ -5439,6 +5439,25 @@ html[data-theme="light"] .ph-sidebar .pp-nav-item.active {
 .cp-chat-input:focus { outline: none; border-color: var(--primary); }
 .cp-chat-send-btn { border-radius: 999px; }
 
+/* Salas de estudio (Fase 4) — tarjetas de participante con presencia en vivo. */
+.cp-room-cards { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+.cp-room-card {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px; padding: 20px 24px; min-width: 140px;
+}
+.cp-room-avatar-wrap { position: relative; }
+.cp-room-avatar { margin: 0; }
+.cp-room-presence-dot {
+  position: absolute; bottom: 2px; right: 2px;
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid #060A0F;
+}
+.cp-room-online { background: #22C55E; }
+.cp-room-offline { background: #6B7280; }
+.cp-room-card-name { font-weight: 700; font-size: 14px; color: var(--text-primary, #F1F0EC); margin-top: 4px; }
+.cp-room-card-status { font-size: 12px; color: var(--text-secondary, rgba(241,240,236,.55)); }
+
 /* ── cm-* Classroom Manage Dashboard ─────────────────────────────────────── */
 
 .cm-layout {
