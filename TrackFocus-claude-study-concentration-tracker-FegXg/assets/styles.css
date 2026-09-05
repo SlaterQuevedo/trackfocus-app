@@ -3257,7 +3257,8 @@ html[data-theme="light"] .dp-prep-bar-wrap, html[data-theme="light"] .dp-route-b
 .pp-avatar-modal-add:hover { background: rgba(255,255,255,.14); border-color: var(--primary); color: #fff; }
 
 .pp-avatar-modal-center {
-  min-height: 100%; display: flex; flex-direction: column; align-items: center;
+  width: 100%; min-height: 100%; box-sizing: border-box;
+  display: flex; flex-direction: column; align-items: center;
   justify-content: center; gap: 28px; padding: 80px 20px 40px;
 }
 .pp-avatar-modal-avatar-row { display: flex; align-items: center; gap: 18px; }
