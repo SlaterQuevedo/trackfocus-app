@@ -3474,6 +3474,7 @@ const UIStudent = (() => {
                   <button class="primary pp-msg-edit-btn" id="ppMsgSaveBtn" style="padding:5px 14px;font-size:12px;">Guardar</button>
                 </div>
               </div>
+              <div class="cp-profile-social-stats" id="ppSocialStats"></div>
             </div>
           </div>
           <div class="ph2-kpi-bar">
@@ -4121,6 +4122,7 @@ const UIStudent = (() => {
                 <button class="primary pp-msg-edit-btn" id="ppMsgSaveBtn" style="padding:5px 14px;font-size:12px;">Guardar</button>
               </div>
             </div>
+            <div class="cp-profile-social-stats" id="ppSocialStats"></div>
             <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;">
               ${classroom ? `<span class="ps-pill">${esc(classroom.name)}</span>` : ''}
               ${school ? `<span class="ps-pill">🏛️ ${esc(school.name)}</span>` : ''}
@@ -4452,6 +4454,29 @@ const UIStudent = (() => {
     _wireProfileIdentity(user);
     if (isPersonal) _wireProfilePersonal(user); else _wireProfileStudent(user);
     _hydratePhotoAvatars(root());
+    _hydrateSocialStats(user);
+  }
+
+  // Cuenta de Compañeros/Siguiendo/Seguidores en "Mi Perfil" (como en
+  // Facebook/Instagram) — se resuelve aparte porque requiere ida y vuelta a
+  // Supabase (companion_count/following_count/follower_count vienen de
+  // get_public_profiles), a diferencia del resto de la tarjeta que es
+  // síncrono desde el estado local.
+  async function _hydrateSocialStats(user) {
+    const el = document.getElementById('ppSocialStats');
+    if (!el || typeof Companions === 'undefined') return;
+    try {
+      const profiles = await Companions.getPublicProfiles([user.id]);
+      const p = profiles[user.id] || {};
+      el.innerHTML = `
+        <span class="cp-social-stat" data-go="companions">${p.companion_count ?? 0}<span class="cp-social-stat-lbl">Compañeros</span></span>
+        <span class="cp-social-stat" data-go="companions">${p.following_count ?? 0}<span class="cp-social-stat-lbl">Siguiendo</span></span>
+        <span class="cp-social-stat">${p.follower_count ?? 0}<span class="cp-social-stat-lbl">Seguidores</span></span>
+      `;
+      el.querySelectorAll('[data-go]').forEach(s => s.addEventListener('click', () => App.go('companions')));
+    } catch (_) {
+      el.innerHTML = '';
+    }
   }
 
   function _wireClassroomForms(user) {

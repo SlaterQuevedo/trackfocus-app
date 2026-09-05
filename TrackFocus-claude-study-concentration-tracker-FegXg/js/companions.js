@@ -111,9 +111,39 @@ const Companions = (() => {
     return map;
   }
 
+  // ── Siguiendo (unidireccional, sin aceptación) ──────────────────────
+  // A diferencia de las conexiones de arriba (mutuas, desbloquean chat/salas),
+  // esto es solo para inspirarte en el progreso público de alguien — no pasa
+  // por Storage/Cloud porque no necesita estado offline-first, es CRUD directo.
+  async function follow(myId, otherId) {
+    if (myId === otherId) throw new Error('No puedes seguirte a ti mismo.');
+    const { error } = await window.SB.from('follows').insert({ follower_id: myId, followed_id: otherId });
+    if (error) throw error;
+  }
+
+  async function unfollow(myId, otherId) {
+    const { error } = await window.SB.from('follows').delete().eq('follower_id', myId).eq('followed_id', otherId);
+    if (error) throw error;
+  }
+
+  async function isFollowing(myId, otherId) {
+    const { data, error } = await window.SB.from('follows').select('follower_id')
+      .eq('follower_id', myId).eq('followed_id', otherId).maybeSingle();
+    if (error) return false;
+    return !!data;
+  }
+
+  async function listFollowing(myId) {
+    const { data, error } = await window.SB.from('follows').select('followed_id, created_at')
+      .eq('follower_id', myId).order('created_at', { ascending: false });
+    if (error) { window.Monitor?.log?.('companions', 'Fallo al listar seguidos', error.message); return []; }
+    return data || [];
+  }
+
   return {
     getWith, statusWith, listMine, otherIdOf,
     sendRequest, respond, remove, block, unblock,
-    search, getPublicProfiles, getPrimaryPhotos
+    search, getPublicProfiles, getPrimaryPhotos,
+    follow, unfollow, isFollowing, listFollowing
   };
 })();

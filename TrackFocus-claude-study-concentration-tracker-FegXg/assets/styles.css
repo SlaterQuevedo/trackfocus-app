@@ -5327,11 +5327,14 @@ html[data-theme="light"] .ph-sidebar .pp-nav-item.active {
 
 /* ── cp-* Compañeros (Fase 2 — social) ───────────────────────────────────── */
 .cp-layout { max-width: 720px; margin: 0 auto; padding: 0 4px; }
-.cp-tabs { display: flex; gap: 6px; margin: 18px 0; border-bottom: 1px solid var(--border); }
+.cp-tabs {
+  display: flex; gap: 6px; margin: 18px 0; border-bottom: 1px solid var(--border);
+  overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: thin;
+}
 .cp-tab {
   background: none; border: none; color: var(--muted); font-size: 13px; font-weight: 600;
   padding: 10px 16px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px;
-  transition: color .15s, border-color .15s;
+  transition: color .15s, border-color .15s; white-space: nowrap; flex-shrink: 0;
 }
 .cp-tab:hover { color: var(--text); }
 .cp-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
@@ -5376,6 +5379,7 @@ html[data-theme="light"] .ph-sidebar .pp-nav-item.active {
 .cp-btn-primary:hover:not(:disabled) { opacity: .9; }
 .cp-btn-ghost { background: rgba(255,255,255,.06); color: var(--text); border: 1px solid var(--border-strong); }
 .cp-btn-ghost:hover:not(:disabled) { background: rgba(255,255,255,.12); }
+.cp-follow-btn.cp-following { color: var(--primary); border-color: rgba(200,155,109,.35); background: rgba(200,155,109,.1); }
 .cp-status-label { font-size: 12px; color: var(--muted); font-weight: 600; }
 .cp-status-ok { color: var(--good, #22c55e); }
 
@@ -5405,6 +5409,14 @@ html[data-theme="light"] .ph-sidebar .pp-nav-item.active {
 .cp-profile-kpi-bar { grid-template-columns: repeat(3, 1fr); }
 .cp-profile-actions { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; }
 .cp-profile-actions .cp-btn { padding: 10px 28px; font-size: 14px; }
+
+/* Conteo social (Compañeros/Siguiendo/Seguidores) — estilo FB/IG. Se usa
+   tanto en "Mi Perfil" como en el perfil público de Compañeros. */
+.cp-profile-social-stats { display: flex; gap: 16px; margin-top: 8px; flex-wrap: wrap; }
+.cp-social-stat { font-size: 13px; font-weight: 700; color: var(--text); }
+.cp-social-stat[data-go] { cursor: pointer; }
+.cp-social-stat[data-go]:hover { color: var(--primary); }
+.cp-social-stat-lbl { font-size: 11px; font-weight: 400; color: var(--muted); margin-left: 4px; }
 
 /* Chat 1:1 en tiempo real (Fase 3) — mismo fondo que cp-profile-page. */
 .cp-chat-page {

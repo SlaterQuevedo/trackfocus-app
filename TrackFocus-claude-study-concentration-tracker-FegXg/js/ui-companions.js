@@ -27,6 +27,7 @@ const UICompanions = (() => {
           <button class="cp-tab" data-tab="mine">Mis Compañeros</button>
           <button class="cp-tab" data-tab="messages">Mensajes</button>
           <button class="cp-tab" data-tab="rooms">Salas</button>
+          <button class="cp-tab" data-tab="following">Siguiendo</button>
         </nav>
         <div class="cp-panel active" data-tab="search">
           <input type="text" id="cpSearchInput" class="cp-search-input" placeholder="Buscar por nombre o apodo (mínimo 2 letras)..." maxlength="40" autocomplete="off">
@@ -44,10 +45,13 @@ const UICompanions = (() => {
         <div class="cp-panel" data-tab="rooms">
           <div id="cpRoomsList" class="cp-list"><div class="cp-empty">Cargando…</div></div>
         </div>
+        <div class="cp-panel" data-tab="following">
+          <div id="cpFollowingList" class="cp-list"><div class="cp-empty">Cargando…</div></div>
+        </div>
       </div>`;
   }
 
-  function _rowHtml(profile, photoUrl, actionHtml, subLabel) {
+  function _rowHtml(profile, photoUrl, actionHtml, subLabel, followHtml) {
     return `
       <div class="cp-row" data-user-id="${esc(profile.id)}">
         <div class="cp-row-avatar">${photoUrl ? `<img src="${esc(photoUrl)}" alt="">` : esc(initials(profile.name))}</div>
@@ -56,8 +60,37 @@ const UICompanions = (() => {
           ${profile.nickname ? `<div class="cp-row-nick">@${esc(profile.nickname)}</div>` : ''}
           ${subLabel ? `<div class="cp-row-sub">${subLabel}</div>` : (profile.bio ? `<div class="cp-row-bio">${esc(profile.bio)}</div>` : '')}
         </div>
-        <div class="cp-row-action">${actionHtml}</div>
+        <div class="cp-row-action">${actionHtml}${followHtml || ''}</div>
       </div>`;
+  }
+
+  // "Siguiendo": seguimiento unidireccional, sin aceptación — inspirarte en
+  // el progreso público de alguien sin que sea tu compañero de estudio.
+  // Independiente del estado de compañero (se puede seguir a cualquiera).
+  function _followBtnHtml(otherId, following) {
+    return `<button class="cp-btn cp-btn-ghost cp-follow-btn${following ? ' cp-following' : ''}" data-id="${esc(otherId)}">${following ? 'Siguiendo ✓' : 'Seguir'}</button>`;
+  }
+
+  function _wireFollowButtons(container, myId, onToggle) {
+    container.querySelectorAll('.cp-follow-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const otherId = btn.dataset.id;
+        const wasFollowing = btn.classList.contains('cp-following');
+        btn.disabled = true;
+        try {
+          if (wasFollowing) await Companions.unfollow(myId, otherId);
+          else await Companions.follow(myId, otherId);
+          if (onToggle) { onToggle(); return; }
+          btn.textContent = wasFollowing ? 'Seguir' : 'Siguiendo ✓';
+          btn.classList.toggle('cp-following', !wasFollowing);
+        } catch (err) {
+          UI.flash(err?.message || 'No se pudo actualizar el seguimiento.', 'error');
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    });
   }
 
   function _actionForStatus(status, userId) {
@@ -104,9 +137,10 @@ const UICompanions = (() => {
     document.body.appendChild(modal);
     modal.querySelector('#cp-profile-modal-back').onclick = () => modal.remove();
 
-    const [profiles, photos] = await Promise.all([
+    const [profiles, photos, isFollowingNow] = await Promise.all([
       Companions.getPublicProfiles([userId]),
-      Companions.getPrimaryPhotos([userId])
+      Companions.getPrimaryPhotos([userId]),
+      Companions.isFollowing(myId, userId)
     ]);
     if (!document.body.contains(modal)) return; // se cerró mientras cargaba
     const p = profiles[userId] || { id: userId, name: 'Estudiante' };
@@ -126,6 +160,11 @@ const UICompanions = (() => {
             <div class="ph2-hero-msg">
               <span class="ph2-motto">${p.bio ? esc(p.bio) : 'Este usuario aún no escribió una biografía.'}</span>
             </div>
+            <div class="cp-profile-social-stats">
+              <span class="cp-social-stat">${p.companion_count ?? 0}<span class="cp-social-stat-lbl">Compañeros</span></span>
+              <span class="cp-social-stat">${p.following_count ?? 0}<span class="cp-social-stat-lbl">Siguiendo</span></span>
+              <span class="cp-social-stat">${p.follower_count ?? 0}<span class="cp-social-stat-lbl">Seguidores</span></span>
+            </div>
           </div>
         </div>
         <div class="ph2-kpi-bar cp-profile-kpi-bar">
@@ -134,8 +173,9 @@ const UICompanions = (() => {
           <div class="ph2-kpi-card"><div class="ph2-kpi-icon">🔥</div><div class="ph2-kpi-lbl">Racha Actual</div><div class="ph2-kpi-val">${p.streak ?? 0} días</div></div>
         </div>
       </div>
-      <div class="cp-profile-actions" id="cpProfileActionSlot">${_actionForStatus(status, userId)}</div>
+      <div class="cp-profile-actions" id="cpProfileActionSlot">${_actionForStatus(status, userId)}${_followBtnHtml(userId, isFollowingNow)}</div>
     `;
+    _wireFollowButtons(inner, myId);
     inner.querySelector('.cp-add-btn')?.addEventListener('click', async (e) => {
       const btn = e.currentTarget;
       btn.disabled = true;
@@ -333,6 +373,7 @@ const UICompanions = (() => {
     const existing = document.getElementById('cp-room-page');
     if (existing) existing.remove();
     if (_roomChannel) { StudyRooms.leavePresence(_roomChannel); _roomChannel = null; }
+    if (_roomMsgChannel) { StudyRooms.unsubscribeRoomMessages(_roomMsgChannel); _roomMsgChannel = null; }
 
     const page = document.createElement('div');
     page.id = 'cp-room-page';
@@ -462,7 +503,12 @@ const UICompanions = (() => {
         role: m.sender === 'assistant' ? 'model' : 'user',
         content: m.body
       }));
-      const metadata = { subject: 'la sesión de estudio compartida', grade: 'secundaria' };
+      // buildSystemPrompt (api/ai-chat.js) arma la frase fija
+      // "para un estudiante de ${grade} de secundaria peruana. Enseñas ${subject}."
+      // — grade='secundaria' duplicaba "secundaria de secundaria" y un subject
+      // narrativo quedaba raro después de "Enseñas". Estos valores calzan en
+      // esa plantilla sin sonar absurdos.
+      const metadata = { subject: 'temas de estudio en general (sesión compartida entre dos compañeros)', grade: 'cualquier grado' };
       let fullText = '';
       let firstChunk = true;
       try {
@@ -525,15 +571,20 @@ const UICompanions = (() => {
       resultsBox.innerHTML = '<div class="cp-empty">Buscando…</div>';
       const results = await Companions.search(q);
       if (!results.length) { resultsBox.innerHTML = '<div class="cp-empty">No se encontraron estudiantes con ese nombre o apodo.</div>'; return; }
-      const photos = await Companions.getPrimaryPhotos(results.map(p => p.id));
+      const [photos, followingRows] = await Promise.all([
+        Companions.getPrimaryPhotos(results.map(p => p.id)),
+        Companions.listFollowing(myId)
+      ]);
+      const followSet = new Set(followingRows.map(f => f.followed_id));
       resultsBox.innerHTML = results.map(p => {
         const status = Companions.statusWith(myId, p.id);
-        return _rowHtml(p, photos[p.id], _actionForStatus(status, p.id));
+        return _rowHtml(p, photos[p.id], _actionForStatus(status, p.id), null, _followBtnHtml(p.id, followSet.has(p.id)));
       }).join('');
       _wireAddButtons();
       _wireRowClicks(resultsBox, myId);
       _wireMsgButtons(resultsBox, myId);
       _wireRoomButtons(resultsBox, myId);
+      _wireFollowButtons(resultsBox, myId);
     }
     function _wireAddButtons() {
       resultsBox.querySelectorAll('.cp-add-btn').forEach(btn => {
@@ -701,11 +752,29 @@ const UICompanions = (() => {
       });
     }
 
+    // ── Siguiendo ──
+    async function _renderFollowing() {
+      const box = r().querySelector('#cpFollowingList');
+      if (!box) return;
+      const rows = await Companions.listFollowing(myId).catch(() => []);
+      if (!rows.length) { box.innerHTML = '<div class="cp-empty">Todavía no sigues a nadie. Busca estudiantes que te inspiren por su experiencia, materias o carrera.</div>'; return; }
+
+      const otherIds = rows.map(r => r.followed_id);
+      const [profiles, photos] = await Promise.all([Companions.getPublicProfiles(otherIds), Companions.getPrimaryPhotos(otherIds)]);
+      box.innerHTML = rows.map(r => {
+        const p = profiles[r.followed_id] || { id: r.followed_id, name: 'Estudiante' };
+        return _rowHtml(p, photos[r.followed_id], '', null, _followBtnHtml(r.followed_id, true));
+      }).join('');
+      _wireRowClicks(box, myId);
+      _wireFollowButtons(box, myId, _renderFollowing);
+    }
+
     resultsBox.innerHTML = '<div class="cp-empty">Escribe un nombre o apodo para empezar a buscar.</div>';
     _renderRequests();
     _renderMine();
     _renderMessages();
     _renderRooms();
+    _renderFollowing();
   }
 
   // Cierra cualquier overlay de Compañeros (perfil público / chat) que haya
