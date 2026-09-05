@@ -94,6 +94,16 @@ const Cloud = (() => {
       storage_path: p.storagePath,
       position: p.position,
       created_at: p.createdAt
+    }),
+    connection: c => ({
+      id: c.id,
+      user_id_a: c.userIdA,
+      user_id_b: c.userIdB,
+      status: c.status,
+      requested_by: c.requestedBy,
+      blocked_by: c.blockedBy || null,
+      created_at: c.createdAt,
+      responded_at: c.respondedAt || null
     })
   };
 
@@ -236,6 +246,16 @@ const Cloud = (() => {
       position: r.position,
       createdAt: r.created_at
     }),
+    connection: r => ({
+      id: r.id,
+      userIdA: r.user_id_a,
+      userIdB: r.user_id_b,
+      status: r.status,
+      requestedBy: r.requested_by,
+      blockedBy: r.blocked_by,
+      createdAt: r.created_at,
+      respondedAt: r.responded_at
+    }),
     subjectAssignment: r => ({
       id:           r.id,
       teacherId:    r.teacher_id,
@@ -284,7 +304,7 @@ const Cloud = (() => {
     if (!window.SB) throw new Error('Supabase no está configurado.');
 
     const [usersR, schoolsR, classroomsR, sessionsR, customR, requestsR, filesR,
-           assignR, bimestersR, gradesR, photosR] = await Promise.all([
+           assignR, bimestersR, gradesR, photosR, connectionsR] = await Promise.all([
       window.SB.from('users').select('*'),
       window.SB.from('schools').select('*'),
       window.SB.from('classrooms').select('*'),
@@ -295,14 +315,15 @@ const Cloud = (() => {
       window.SB.from('subject_assignments').select('*'),
       window.SB.from('bimesters').select('*'),
       window.SB.from('grades').select('*').order('created_at', { ascending: false }).limit(2000),
-      window.SB.from('profile_photos').select('*')
+      window.SB.from('profile_photos').select('*'),
+      window.SB.from('connections').select('*')
     ]);
 
     for (const r of [usersR, schoolsR, classroomsR, sessionsR, customR, requestsR, filesR]) {
       if (r.error) throw new Error('Cloud bootstrap: ' + r.error.message);
     }
     // Las tablas académicas/sociales pueden no existir todavía si la migración no se ha aplicado
-    for (const [label, r] of [['subject_assignments', assignR], ['bimesters', bimestersR], ['grades', gradesR], ['profile_photos', photosR]]) {
+    for (const [label, r] of [['subject_assignments', assignR], ['bimesters', bimestersR], ['grades', gradesR], ['profile_photos', photosR], ['connections', connectionsR]]) {
       if (r.error) console.warn(`[Cloud] bootstrap: tabla ${label} no disponible (${r.error.message}). Aplica la migración correspondiente.`);
     }
 
@@ -321,7 +342,8 @@ const Cloud = (() => {
       subjectAssignments: {},
       bimesters: {},
       grades: {},
-      profilePhotos: {}
+      profilePhotos: {},
+      connections: {}
     };
 
     (usersR.data      || []).forEach(r => { state.users[r.id]      = fromDb.user(r); });
@@ -339,6 +361,7 @@ const Cloud = (() => {
     (!bimestersR.error ? bimestersR.data : []).forEach(r => { state.bimesters[r.id]         = fromDb.bimester(r); });
     (!gradesR.error   ? gradesR.data   : []).forEach(r => { state.grades[r.id]             = fromDb.grade(r); });
     (!photosR.error   ? photosR.data   : []).forEach(r => { state.profilePhotos[r.id]      = fromDb.profilePhoto(r); });
+    (!connectionsR.error ? connectionsR.data : []).forEach(r => { state.connections[r.id]  = fromDb.connection(r); });
 
     return state;
   }
@@ -421,6 +444,11 @@ const Cloud = (() => {
       row => ops.push(window.SB.from('profile_photos').upsert(toDb.profilePhoto(row))),
       id  => ops.push(window.SB.from('profile_photos').delete().eq('id', id)));
 
+    // CONNECTIONS (compañeros)
+    diffMap(before.connections || {}, after.connections || {},
+      row => ops.push(window.SB.from('connections').upsert(toDb.connection(row))),
+      id  => ops.push(window.SB.from('connections').delete().eq('id', id)));
+
     // GRADES
     diffMap(before.grades || {}, after.grades || {},
       row => ops.push(window.SB.from('grades').upsert(toDb.grade(row))),
@@ -463,6 +491,7 @@ const Cloud = (() => {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'study_sessions' }, onChange)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'uploaded_files' },  onChange)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'classroom_requests' }, onChange)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'connections' },      onChange)
       .subscribe();
   }
 

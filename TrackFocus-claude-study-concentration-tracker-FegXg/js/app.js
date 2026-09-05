@@ -28,6 +28,7 @@ const App = (() => {
     'leaderboard':        ['student'],
     'profile':            ['student'],
     'ai-study':           ['student'],
+    'companions':         ['student'],
 
     // Docente
     'teacher-dashboard':  ['teacher'],
@@ -120,7 +121,8 @@ const App = (() => {
       ...UITeacher.screens,
       ...UIAdmin.screens,
       ...(typeof UIEureka  !== 'undefined' ? UIEureka.screens  : {}),
-      ...(typeof ParentUI  !== 'undefined' ? ParentUI.screens  : {})
+      ...(typeof ParentUI  !== 'undefined' ? ParentUI.screens  : {}),
+      ...(typeof UICompanions !== 'undefined' ? UICompanions.screens : {})
     };
 
     const screen = allScreens[route];
@@ -255,12 +257,14 @@ const App = (() => {
         <button data-route="ai-study">${I18N.t('nav.student.aiStudy','TrackTutor')}</button>
         <button data-route="stats">${I18N.t('nav.student.stats','Progreso')}</button>
         <button data-route="leaderboard">${I18N.t('nav.student.leaderboard','Rankings')}</button>
+        <button data-route="companions">${I18N.t('nav.student.companions','Compañeros')}</button>
         <button data-route="profile">${I18N.t('nav.student.profile','Cuenta')}</button>`;
       bottomItems = [
         { route: 'dashboard',   icon: '🏠', label: I18N.t('bn.home','Inicio') },
         { route: 'ai-study',    icon: '🧠', label: I18N.t('bn.ai','TrackTutor') },
         { route: 'stats',       icon: '📊', label: I18N.t('bn.progress','Progreso') },
         { route: 'leaderboard', icon: '🏆', label: I18N.t('bn.ranking','Rankings') },
+        { route: 'companions',  icon: '👥', label: I18N.t('bn.companions','Compañeros') },
         { route: 'profile',     icon: '👤', label: I18N.t('nav.student.profile','Cuenta') }
       ];
     } else if (user.role === 'teacher') {
@@ -638,6 +642,7 @@ const App = (() => {
       'welcome', 'consent', 'privacy-policy', 'legal',
       'ai-study',                    // chat activo
       'profile',                     // personal, no colaborativo
+      'companions',                  // búsqueda activa (input se perdería con el refresh)
       'stats', 'history', 'achievements',  // datos propios históricos
       'parent-dashboard', 'parent-link',   // panel padre, solo lectura
       'student-onboarding', 'teacher-promote', 'admin-promote',

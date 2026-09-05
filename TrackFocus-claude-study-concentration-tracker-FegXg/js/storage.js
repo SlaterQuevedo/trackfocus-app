@@ -37,7 +37,8 @@ const Storage = (() => {
     subjectAssignments: {},
     bimesters:          {},
     grades:             {},
-    profilePhotos:      {}
+    profilePhotos:      {},
+    connections:        {}
   };
 
   function _clone(x) {
@@ -217,6 +218,11 @@ const Storage = (() => {
     }
     for (const [id, p] of Object.entries(state.profilePhotos || {})) {
       if (p.userId === uid) scoped.profilePhotos[id] = p;
+    }
+    // Todas las filas de connections que tengo localmente son, por RLS, filas
+    // donde soy una de las dos partes — se pueden reenviar tal cual.
+    for (const [id, c] of Object.entries(state.connections || {})) {
+      scoped.connections[id] = c;
     }
 
     try {
