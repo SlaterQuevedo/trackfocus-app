@@ -1,7 +1,7 @@
 {
-  "name": "trackfocus",
+  "name": "tracknara",
   "version": "1.0.0",
-  "description": "TrackFocus — Plataforma Educativa de Concentración",
+  "description": "TrackNara — Plataforma Educativa de Concentración",
   "scripts": {
     "dev": "npx serve TrackFocus-claude-study-concentration-tracker-FegXg -p 3000 --no-clipboard",
     "start": "npx serve TrackFocus-claude-study-concentration-tracker-FegXg -p 3000 --no-clipboard"

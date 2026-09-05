@@ -1,4 +1,4 @@
-// Centro de Revisión Legal — TrackFocus
+// Centro de Revisión Legal — TrackNara
 // Reemplaza la UI de aceptación de 3 checkboxes por un centro de documentos moderno.
 // Lógica legal intacta: mismos 3 timestamps (termsAcceptedAt, privacyPolicyAcceptedAt, transparencyAcceptedAt).
 // UX: 2 documentos (TC | PP+Transparencia), visor integrado, progreso de lectura, aceptación por doc.
@@ -16,15 +16,15 @@ const LegalUI = (() => {
       ext: 'terms.html',
       sections: [
         { id: 'resumen', title: 'Resumen ejecutivo', html: `
-          <p>TrackFocus es una plataforma educativa <strong>gratuita</strong> diseñada para ayudarte a gestionar tus hábitos de estudio. Al usarla aceptas que:</p>
+          <p>TrackNara es una plataforma educativa <strong>gratuita</strong> diseñada para ayudarte a gestionar tus hábitos de estudio. Al usarla aceptas que:</p>
           <ul>
-            <li>TrackFocus <strong>no garantiza</strong> resultados académicos, calificaciones, admisiones ni becas.</li>
+            <li>TrackNara <strong>no garantiza</strong> resultados académicos, calificaciones, admisiones ni becas.</li>
             <li>La IA puede cometer errores y no reemplaza a tu docente ni a un profesional.</li>
             <li>La plataforma es actualmente gratuita; no hay pagos activos.</li>
-            <li>Usas TrackFocus bajo tu propia responsabilidad y criterio.</li>
+            <li>Usas TrackNara bajo tu propia responsabilidad y criterio.</li>
           </ul>` },
         { id: 'elegibilidad', title: 'Aceptación y elegibilidad', html: `
-          <p>Para usar TrackFocus debes cumplir uno de estos criterios de edad:</p>
+          <p>Para usar TrackNara debes cumplir uno de estos criterios de edad:</p>
           <ul>
             <li><strong>Mayor de 18 años:</strong> sin restricciones adicionales.</li>
             <li><strong>Entre 13 y 17 años:</strong> requiere consentimiento parental explícito (pantalla integrada en el registro).</li>
@@ -32,7 +32,7 @@ const LegalUI = (() => {
           </ul>
           <p>La aceptación ocurre al marcar la casilla en esta pantalla. Para menores, el tutor legal debe completar adicionalmente la autorización parental.</p>` },
         { id: 'permitido', title: 'Uso permitido', html: `
-          <p>Puedes usar TrackFocus para:</p>
+          <p>Puedes usar TrackNara para:</p>
           <ul>
             <li>Registrar y revisar sesiones de estudio y estadísticas de concentración.</li>
             <li>Consultar al Tutor IA (Gemini) con fines educativos y de orientación académica.</li>
@@ -46,7 +46,7 @@ const LegalUI = (() => {
             <li>Compartir tu cuenta o suplantar la identidad de otras personas.</li>
             <li>Realizar ingeniería inversa, scraping automatizado o ataques de denegación de servicio.</li>
             <li>Publicar contenido pornográfico, violento, de odio o ilegal.</li>
-            <li>Usar la plataforma con fines comerciales sin autorización escrita de TrackFocus.</li>
+            <li>Usar la plataforma con fines comerciales sin autorización escrita de TrackNara.</li>
             <li>Intentar acceder a datos de otros usuarios por métodos no autorizados.</li>
           </ul>` },
         { id: 'ia-tc', title: 'Inteligencia Artificial', html: `
@@ -59,10 +59,10 @@ const LegalUI = (() => {
             <li>Puede cometer errores — verifica la información antes de usarla académicamente.</li>
           </ul>` },
         { id: 'propiedad', title: 'Propiedad intelectual', html: `
-          <p>Todo el contenido de TrackFocus — código, diseño, textos, marca y activos visuales — pertenece a <strong>Slater Quevedo</strong>.</p>
+          <p>Todo el contenido de TrackNara — código, diseño, textos, marca y activos visuales — pertenece a <strong>Slater Quevedo</strong>.</p>
           <p>Se otorga una licencia <strong>limitada, no exclusiva e intransferible</strong> para usar la plataforma con fines personales y educativos. No puedes copiar, modificar, distribuir ni crear obras derivadas sin autorización expresa y escrita.</p>` },
         { id: 'responsabilidad', title: 'Limitaciones de responsabilidad', html: `
-          <p>TrackFocus no será responsable por:</p>
+          <p>TrackNara no será responsable por:</p>
           <ul>
             <li>Resultados académicos ni decisiones tomadas basándose en el Tutor IA.</li>
             <li>Pérdida de datos por fallos de conexión (se hace best-effort de sincronización).</li>
@@ -70,7 +70,7 @@ const LegalUI = (() => {
             <li>Daños indirectos, incidentales o consecuentes de cualquier naturaleza.</li>
           </ul>` },
         { id: 'menores-tc', title: 'Protección de menores', html: `
-          <p>TrackFocus toma en serio la protección de menores de edad:</p>
+          <p>TrackNara toma en serio la protección de menores de edad:</p>
           <ul>
             <li>Menores de 13 años: <strong>acceso técnicamente bloqueado</strong>.</li>
             <li>Entre 13 y 17 años: acceso solo con consentimiento parental (bloqueo técnico integrado).</li>
@@ -110,7 +110,7 @@ const LegalUI = (() => {
             </tbody>
           </table>` },
         { id: 'no-datos', title: 'Qué NO recopilamos', html: `
-          <p>TrackFocus <strong>nunca recopila</strong>:</p>
+          <p>TrackNara <strong>nunca recopila</strong>:</p>
           <ul>
             <li>Ubicación GPS ni geolocalización de ningún tipo.</li>
             <li>Historial de navegación web.</li>
@@ -133,14 +133,14 @@ const LegalUI = (() => {
         { id: 'ia-pp', title: 'Inteligencia Artificial y tus datos', html: `
           <p>El Tutor IA funciona mediante <strong>Google Gemini API</strong>. Así interactúa con tus datos:</p>
           <ul>
-            <li>Las consultas <strong>pasan siempre por un servidor intermediario de TrackFocus</strong> (Vercel) — nunca van directamente desde tu navegador a Google.</li>
+            <li>Las consultas <strong>pasan siempre por un servidor intermediario de TrackNara</strong> (Vercel) — nunca van directamente desde tu navegador a Google.</li>
             <li><strong>No se envía a Gemini:</strong> tu correo electrónico ni datos que te identifiquen.</li>
             <li><strong>Sí se envía:</strong> historial de conversación (últimos 12 turnos), tu grado/nivel, la materia, y los archivos que compartes voluntariamente.</li>
             <li>Las conversaciones <strong>no se almacenan</strong> de forma permanente en ningún servidor.</li>
             <li>Los archivos procesados por IA se descartan inmediatamente tras la respuesta.</li>
           </ul>` },
         { id: 'servicios', title: 'Servicios externos', html: `
-          <p>TrackFocus usa los siguientes servicios de terceros con estándares de seguridad internacionales:</p>
+          <p>TrackNara usa los siguientes servicios de terceros con estándares de seguridad internacionales:</p>
           <table class="lgl-table">
             <thead><tr><th>Servicio</th><th>Propósito</th><th>Región</th></tr></thead>
             <tbody>
@@ -215,7 +215,7 @@ const LegalUI = (() => {
   <!-- ── Sidebar izquierdo ── -->
   <aside class="lgl-sidebar">
     <div class="lgl-brand">
-      <span class="lgl-brand-dot"></span>trackfocus
+      <span class="lgl-brand-dot"></span>tracknara
     </div>
     <h1 class="lgl-sidebar-title">Documentos legales</h1>
     <p class="lgl-sidebar-sub">Hola${nombre ? ', <strong>' + nombre + '</strong>' : ''}. Revisa y acepta los documentos para continuar.</p>
@@ -253,11 +253,11 @@ const LegalUI = (() => {
     <div class="lgl-accept-zone">
       <label class="lgl-chk-row${tcOk ? ' lgl-chk-done' : ''}" id="lglChkRowTC">
         <span class="lgl-chk-box"><input type="checkbox" id="checkTC" ${tcOk ? 'checked' : ''}><span class="lgl-chk-mark"></span></span>
-        <span class="lgl-chk-text">He leído y acepto los <strong>Términos y Condiciones</strong> de TrackFocus.</span>
+        <span class="lgl-chk-text">He leído y acepto los <strong>Términos y Condiciones</strong> de TrackNara.</span>
       </label>
       <label class="lgl-chk-row${ppOk ? ' lgl-chk-done' : ''}" id="lglChkRowPP">
         <span class="lgl-chk-box"><input type="checkbox" id="checkPP" ${ppOk ? 'checked' : ''}><span class="lgl-chk-mark"></span></span>
-        <span class="lgl-chk-text">He leído y acepto la <strong>Política de Privacidad</strong> de TrackFocus, incluyendo el <strong>Cumplimiento y Transparencia de Datos</strong>.</span>
+        <span class="lgl-chk-text">He leído y acepto la <strong>Política de Privacidad</strong> de TrackNara, incluyendo el <strong>Cumplimiento y Transparencia de Datos</strong>.</span>
       </label>
       <div class="lgl-submit-row">
         <button class="primary lgl-submit-btn" id="lglSubmitBtn" ${done < 2 ? 'disabled' : ''}>Aceptar y continuar</button>
@@ -530,7 +530,7 @@ const LegalUI = (() => {
 
     // Decline
     document.getElementById('legalDeclineBtn')?.addEventListener('click', async () => {
-      if (window.confirm('Si rechazas los documentos legales, no podrás usar TrackFocus. ¿Deseas salir?')) {
+      if (window.confirm('Si rechazas los documentos legales, no podrás usar TrackNara. ¿Deseas salir?')) {
         await Auth.logout();
         App.goWelcomeToRoles();
       }

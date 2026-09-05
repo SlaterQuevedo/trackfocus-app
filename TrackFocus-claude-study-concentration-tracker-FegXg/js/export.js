@@ -36,7 +36,7 @@ const Exporter = (() => {
   }
 
   function exportSessions(sessions, filename) {
-    download(filename || `TrackFocus-sesiones-${new Date().toISOString().slice(0,10)}.csv`, toCsv(sessions));
+    download(filename || `TrackNara-sesiones-${new Date().toISOString().slice(0,10)}.csv`, toCsv(sessions));
   }
 
   // ── Reportes imprimibles (Fase D) — para docentes, padres y directivos ──────
@@ -67,7 +67,7 @@ const Exporter = (() => {
         @media print { .noprint{display:none;} body{margin:12px;} }
       </style></head><body>
       ${bodyHtml}
-      <div class="foot">Generado por TrackFocus · ${new Date().toLocaleString('es-PE')}</div>
+      <div class="foot">Generado por TrackNara · ${new Date().toLocaleString('es-PE')}</div>
       <button class="noprint" onclick="window.print()" style="margin-top:16px;padding:10px 18px;border:0;border-radius:8px;background:#c89b6d;color:#fff;font-size:14px;cursor:pointer;">🖨️ Imprimir / Guardar PDF</button>
       </body></html>`);
     w.document.close();
@@ -86,7 +86,7 @@ const Exporter = (() => {
     const date = data.date || new Date().toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });
     w.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Certificado · TrackFocus</title>
+      <title>Certificado · TrackNara</title>
       <style>
         *{box-sizing:border-box;margin:0;padding:0;}
         body{font-family:Inter,Georgia,serif;background:#f4f1ea;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:24px;}
@@ -110,7 +110,7 @@ const Exporter = (() => {
         <div class="name">${esc(data.studentName || 'Estudiante')}</div>
         <div class="detail">${esc(data.detail || '')}</div>
         <div class="foot">
-          <div style="text-align:left;">${esc(data.school || 'TrackFocus')}<br><span style="color:#999;">${esc(date)}</span></div>
+          <div style="text-align:left;">${esc(data.school || 'TrackNara')}<br><span style="color:#999;">${esc(date)}</span></div>
           <div class="seal">🏆</div>
         </div>
       </div>
@@ -125,11 +125,11 @@ const Exporter = (() => {
   function backupJSON(filename) {
     const state = (typeof Storage !== 'undefined') ? Storage.get() : {};
     const payload = {
-      _meta: { app: 'TrackFocus', kind: 'backup', exportedAt: new Date().toISOString(), version: 2 },
+      _meta: { app: 'TrackNara', kind: 'backup', exportedAt: new Date().toISOString(), version: 2 },
       state
     };
     download(
-      filename || `TrackFocus-backup-${new Date().toISOString().slice(0, 10)}.json`,
+      filename || `TrackNara-backup-${new Date().toISOString().slice(0, 10)}.json`,
       JSON.stringify(payload, null, 2),
       'application/json'
     );
@@ -148,7 +148,7 @@ const Exporter = (() => {
           }
           resolve(state);
         } catch (_) {
-          reject(new Error('El archivo no es un respaldo válido de TrackFocus.'));
+          reject(new Error('El archivo no es un respaldo válido de TrackNara.'));
         }
       };
       r.onerror = () => reject(new Error('No se pudo leer el archivo.'));

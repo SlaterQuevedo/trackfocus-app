@@ -1,5 +1,5 @@
 -- ===========================================================
--- TrackFocus — Sistema Académico de Calificaciones
+-- TrackNara — Sistema Académico de Calificaciones
 -- Migración idempotente: ejecutar en el Supabase Dashboard → SQL Editor
 -- ===========================================================
 

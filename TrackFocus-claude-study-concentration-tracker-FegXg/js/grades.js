@@ -1,4 +1,4 @@
-// grades.js — Sistema de Calificaciones TrackFocus
+// grades.js — Sistema de Calificaciones TrackNara
 // Lógica de negocio: asignaciones, bimestres, calificaciones, auditoría.
 // No contiene UI. Todos los writes pasan por Storage.set() → sync automático.
 const Grades = (() => {

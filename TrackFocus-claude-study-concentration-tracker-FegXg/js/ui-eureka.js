@@ -92,9 +92,9 @@ const UIEureka = (() => {
     return `
       <div class="eureka">
         <div class="eureka-hero">
-          <div class="ek-badge">🏆 TrackFocus · Resultados del Piloto</div>
+          <div class="ek-badge">🏆 TrackNara · Resultados del Piloto</div>
           <h1 class="eureka-title">Impacto medible en concentración y aprendizaje</h1>
-          <p class="eureka-sub">Datos reales de los estudiantes que usan TrackFocus en su preparación diaria.</p>
+          <p class="eureka-sub">Datos reales de los estudiantes que usan TrackNara en su preparación diaria.</p>
         </div>
 
         <div class="ek-grid">
@@ -137,7 +137,7 @@ const UIEureka = (() => {
     const improve = sum.quizPairs ? ((sum.avgImprovement > 0 ? '+' : '') + sum.avgImprovement + ' pts') : '—';
     const weeklyRows = g.weekly.map(w => `<tr><td>${esc(w.label)}</td><td>${w.count}</td></tr>`).join('');
     const body = `
-      <h1>TrackFocus — Resultados del Piloto</h1>
+      <h1>TrackNara — Resultados del Piloto</h1>
       <p class="sub">Evidencia de impacto en concentración y aprendizaje.</p>
       <h2>Indicadores clave</h2>
       <div class="kpis">
@@ -156,7 +156,7 @@ const UIEureka = (() => {
         : 'Aún no hay suficientes quizzes completados para mostrar la mejora.'}</p>
       <h2>Crecimiento semanal</h2>
       <table><thead><tr><th>Semana</th><th>Sesiones</th></tr></thead><tbody>${weeklyRows}</tbody></table>`;
-    Exporter.printHTML('Resultados del Piloto — TrackFocus', body);
+    Exporter.printHTML('Resultados del Piloto — TrackNara', body);
   }
 
   async function wireEureka() {

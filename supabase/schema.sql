@@ -1,5 +1,5 @@
 -- ===========================================================
--- TrackFocus · Esquema PostgreSQL para Supabase
+-- TrackNara · Esquema PostgreSQL para Supabase
 -- 100% idempotente: puedes ejecutarlo entero, a trozos, o repetido
 -- y nunca fallará.  PostgreSQL no soporta "CREATE POLICY IF NOT EXISTS",
 -- así que usamos el patrón equivalente: DROP IF EXISTS + CREATE.
@@ -187,12 +187,12 @@ declare
 begin
   -- Insert admin1 user, force super_admin even if already exists as student
   insert into public.users (id, email, name, role)
-  values (admin1_email, admin1_email, 'TrackFocus Owner', 'super_admin')
+  values (admin1_email, admin1_email, 'TrackNara Owner', 'super_admin')
   on conflict (id) do update set role = 'super_admin';
 
   -- Insert admin2 user, force super_admin even if already exists as student
   insert into public.users (id, email, name, role)
-  values (admin2_email, admin2_email, 'TrackFocus Support', 'super_admin')
+  values (admin2_email, admin2_email, 'TrackNara Support', 'super_admin')
   on conflict (id) do update set role = 'super_admin';
 
   -- Remove student role from admin emails (in case trigger created it first)

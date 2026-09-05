@@ -16,8 +16,8 @@ window.YoutubeRecommender = (() => {
   // ── Llamada al backend ────────────────────────────────────────────────────
 
   async function _fetchRecommendation() {
-    const ctx = window._trackfocusChatCtx || {};
-    const history = window._trackfocusChatHistory || [];
+    const ctx = window._tracknaraChatCtx || {};
+    const history = window._tracknaraChatHistory || [];
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 20000);
@@ -52,7 +52,7 @@ window.YoutubeRecommender = (() => {
     if (data && data.video) {
       const v = data.video;
       // Compacto: miniatura pequeña (width/height fijos en el propio <img>,
-      // no solo por CSS) + título. El embed dentro de TrackFocus resultó no
+      // no solo por CSS) + título. El embed dentro de TrackNara resultó no
       // ser confiable (YouTube puede bloquearlo por razones que ninguna API
       // anticipa) — la tarjeta completa es un link directo al video en
       // YouTube, sin pasar nunca por una búsqueda.

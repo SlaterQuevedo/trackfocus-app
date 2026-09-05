@@ -1,4 +1,4 @@
-# GEO AUDIT — TrackFocus
+# GEO AUDIT — TrackNara
 **Generative Engine Optimization · AI Search Readiness**
 Fecha: 2026-06-25 · Versión: 1.0
 
@@ -6,9 +6,9 @@ Fecha: 2026-06-25 · Versión: 1.0
 
 ## 1. Resumen ejecutivo
 
-Este documento registra la auditoría y optimización GEO (Generative Engine Optimization) completa del proyecto TrackFocus, realizada sobre la base de una implementación SEO técnica previa (Technical SEO: 83/100, Knowledge Graph: 80/100).
+Este documento registra la auditoría y optimización GEO (Generative Engine Optimization) completa del proyecto TrackNara, realizada sobre la base de una implementación SEO técnica previa (Technical SEO: 83/100, Knowledge Graph: 80/100).
 
-El objetivo fue elevar a TrackFocus al máximo nivel posible de descubribilidad, legibilidad y citabilidad por motores de IA, incluyendo ChatGPT, Claude, Gemini, Perplexity, Copilot y Google AI Overviews.
+El objetivo fue elevar a TrackNara al máximo nivel posible de descubribilidad, legibilidad y citabilidad por motores de IA, incluyendo ChatGPT, Claude, Gemini, Perplexity, Copilot y Google AI Overviews.
 
 ---
 
@@ -54,7 +54,7 @@ Añadida `about-trackfocus.html` a la sección de páginas disponibles con descr
 
 | Archivo | Tipo | Propósito |
 |---|---|---|
-| `about-trackfocus.html` | Página GEO | Descripción completa de TrackFocus — 1500+ palabras, H1-H3, FAQ, schemas |
+| `about-trackfocus.html` | Página GEO | Descripción completa de TrackNara — 1500+ palabras, H1-H3, FAQ, schemas |
 | `blog/index.html` | Placeholder | Arquitectura para futura sección de blog EdTech |
 | `eureka/index.html` | Placeholder | Arquitectura para contenido de la Feria Eureka |
 | `investigacion/index.html` | Placeholder | Arquitectura para publicaciones de investigación educativa |
@@ -64,19 +64,19 @@ Añadida `about-trackfocus.html` a la sección de páginas disponibles con descr
 Esta es la página GEO más importante creada. Contiene:
 
 **Contenido (~1500 palabras visibles):**
-- H1: ¿Qué es TrackFocus?
+- H1: ¿Qué es TrackNara?
 - H2: El problema que resuelve (4 perfiles)
-- H2: Cómo funciona TrackFocus (3 pasos con tarjetas)
+- H2: Cómo funciona TrackNara (3 pasos con tarjetas)
 - H2: Para quién es (tabla 4 roles)
 - H2: Características principales (8 items)
-- H2: ¿Qué diferencia a TrackFocus? (4 diferenciadores con grid)
-- H2: Cómo TrackFocus usa la IA (3 endpoints explicados)
+- H2: ¿Qué diferencia a TrackNara? (4 diferenciadores con grid)
+- H2: Cómo TrackNara usa la IA (3 endpoints explicados)
 - H2: Preguntas frecuentes (7 Q&As)
 
 **Schemas implementados:**
 - `AboutPage` con `@id`, `isPartOf` → WebSite, `about` → Organization
 - `SpeakableSpecification` apuntando a `#trackfocus-intro` y `#trackfocus-how`
-- `BreadcrumbList` (Inicio → Sobre TrackFocus)
+- `BreadcrumbList` (Inicio → Sobre TrackNara)
 - `FAQPage` con 7 preguntas GEO-optimizadas (distintas a las 8 de index.html)
 
 **SEO:**
@@ -90,7 +90,7 @@ Esta es la página GEO más importante creada. Contiene:
 - `noindex, follow` — evita penalización por thin content mientras se llenen
 - Schema `Blog` / `WebPage` con `@id`, `isPartOf` → WebSite, `about` → Organization
 - Keywords temáticas relevantes para autoridad futura
-- Diseño limpio con CTA de regreso a TrackFocus
+- Diseño limpio con CTA de regreso a TrackNara
 
 ---
 
@@ -133,7 +133,7 @@ FAQPage (about-trackfocus.html) — 7 preguntas GEO sobre DECO, IA, diferenciado
 
 **GEO 94/100 (no 100/100):** Lo que falta para el máximo: (a) `sameAs` con perfiles sociales verificados — no hay redes confirmadas; (b) `foundingDate` — no documentado en el proyecto; (c) reviews/ratings con datos reales de usuarios.
 
-**Knowledge Graph 88/100 (no 100/100):** Lo que falta: (a) `sameAs` con LinkedIn/Twitter verificados; (b) menciones externas en medios digitales, directorios EdTech, Wikipedia/Wikidata; (c) `contactPoint` con email oficial de marca TrackFocus (actualmente trackfocus.support@gmail.com).
+**Knowledge Graph 88/100 (no 100/100):** Lo que falta: (a) `sameAs` con LinkedIn/Twitter verificados; (b) menciones externas en medios digitales, directorios EdTech, Wikipedia/Wikidata; (c) `contactPoint` con email oficial de marca TrackNara (actualmente trackfocus.support@gmail.com).
 
 **AI Search 95/100 (no 100/100):** Lo que falta: (a) contenido real en blog/eureka/investigacion — actualmente son placeholders con noindex; (b) IndexNow para Bing; (c) artículos con `ScholarlyArticle` schema.
 
@@ -155,8 +155,8 @@ FAQPage (about-trackfocus.html) — 7 preguntas GEO sobre DECO, IA, diferenciado
 ## 7. Recomendaciones futuras
 
 ### Inmediatas (antes del despliegue a producción)
-1. Crear perfil en LinkedIn para TrackFocus → añadir URL a `sameAs` en Organization schema
-2. Actualizar email de contacto en documentos legales de `trackfocus.support@gmail.com` a email con marca TrackFocus
+1. Crear perfil en LinkedIn para TrackNara → añadir URL a `sameAs` en Organization schema
+2. Actualizar email de contacto en documentos legales de `trackfocus.support@gmail.com` a email con marca TrackNara
 3. Crear imagen social 1200×630px para OG y Twitter Cards
 
 ### Corto plazo (1-4 semanas post-lanzamiento)
@@ -168,7 +168,7 @@ FAQPage (about-trackfocus.html) — 7 preguntas GEO sobre DECO, IA, diferenciado
 
 ### Mediano plazo (1-3 meses)
 9. Añadir `aggregateRating` schema cuando haya suficientes reseñas reales de usuarios
-10. Registrar TrackFocus en Wikidata como entidad — potencia Knowledge Graph significativamente
+10. Registrar TrackNara en Wikidata como entidad — potencia Knowledge Graph significativamente
 11. Enviar a directorios EdTech: G2 Educación, Capterra, ProductHunt, EducationDatabase
 12. Crear `ScholarlyArticle` o `ResearchProject` schema para `/investigacion/` con datos de la Feria Eureka
 
@@ -208,4 +208,4 @@ FAQPage (about-trackfocus.html) — 7 preguntas GEO sobre DECO, IA, diferenciado
 
 ---
 
-*GEO_AUDIT.md v1.0 · TrackFocus · 2026-06-25*
+*GEO_AUDIT.md v1.0 · TrackNara · 2026-06-25*

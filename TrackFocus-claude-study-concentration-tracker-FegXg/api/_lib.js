@@ -172,7 +172,7 @@ export async function enrichCandidates(candidates, apiKey) {
     const data = await r.json();
     const byId = new Map((data.items || []).map(it => [it.id, it]));
 
-    // Perú (PE) es la región objetivo de TrackFocus — si un video restringe
+    // Perú (PE) es la región objetivo de TrackNara — si un video restringe
     // por región, verificamos que PE no esté bloqueado explícitamente y que,
     // si hay lista de "permitidos", PE esté en ella.
     const REGION = 'PE';

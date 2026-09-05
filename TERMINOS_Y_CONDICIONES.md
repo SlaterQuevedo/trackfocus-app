@@ -1,4 +1,4 @@
-# Términos y Condiciones de Uso — TrackFocus
+# Términos y Condiciones de Uso — TrackNara
 
 **Fecha de entrada en vigor:** 24/06/2026
 **Versión:** 1.1
@@ -11,7 +11,7 @@
 
 ## Resumen ejecutivo (lectura fácil)
 
-**¿Qué es TrackFocus?** Una plataforma educativa digital que te ayuda a registrar tus sesiones de estudio, visualizar tu progreso y recibir apoyo de un tutor de inteligencia artificial. Es una herramienta de apoyo; no reemplaza a tus docentes ni garantiza resultados académicos específicos.
+**¿Qué es TrackNara?** Una plataforma educativa digital que te ayuda a registrar tus sesiones de estudio, visualizar tu progreso y recibir apoyo de un tutor de inteligencia artificial. Es una herramienta de apoyo; no reemplaza a tus docentes ni garantiza resultados académicos específicos.
 
 **¿Quién puede usarla?** Estudiantes (incluyendo menores con consentimiento parental), docentes y directivos de instituciones educativas.
 
@@ -23,13 +23,13 @@
 
 ## 1. Introducción
 
-TrackFocus es una plataforma educativa digital cuyo propósito es ayudar a estudiantes a evidenciar su progreso de aprendizaje mediante el registro de sesiones de estudio, gamificación del esfuerzo y apoyo de un tutor de inteligencia artificial.
+TrackNara es una plataforma educativa digital cuyo propósito es ayudar a estudiantes a evidenciar su progreso de aprendizaje mediante el registro de sesiones de estudio, gamificación del esfuerzo y apoyo de un tutor de inteligencia artificial.
 
-Estos Términos y Condiciones (en adelante, "los Términos") regulan el acceso y uso de la plataforma TrackFocus (trackfocus.vercel.app), sus funcionalidades, interfaces y servicios asociados (en adelante, "el Servicio").
+Estos Términos y Condiciones (en adelante, "los Términos") regulan el acceso y uso de la plataforma TrackNara (trackfocus.vercel.app), sus funcionalidades, interfaces y servicios asociados (en adelante, "el Servicio").
 
 Al registrarte o utilizar el Servicio, aceptas íntegramente estos Términos. Si no estás de acuerdo con alguna disposición, debes abstenerte de usar la plataforma.
 
-Estos Términos deben leerse en conjunto con nuestra **Política de Privacidad**, disponible en [trackfocus.vercel.app/privacy.html](https://trackfocus.vercel.app/privacy.html), que forma parte integrante del acuerdo entre el usuario y TrackFocus.
+Estos Términos deben leerse en conjunto con nuestra **Política de Privacidad**, disponible en [trackfocus.vercel.app/privacy.html](https://trackfocus.vercel.app/privacy.html), que forma parte integrante del acuerdo entre el usuario y TrackNara.
 
 ---
 
@@ -46,15 +46,15 @@ Para usuarios menores de edad, la aceptación requiere adicionalmente la autoriz
 
 ---
 
-## 3. Elegibilidad para usar TrackFocus
+## 3. Elegibilidad para usar TrackNara
 
 ### 3.1 Mayores de edad
 
-Cualquier persona mayor de 18 años puede registrarse y usar TrackFocus sin restricciones adicionales.
+Cualquier persona mayor de 18 años puede registrarse y usar TrackNara sin restricciones adicionales.
 
 ### 3.2 Menores de edad (entre 13 y 17 años)
 
-Los menores de edad pueden usar TrackFocus únicamente si:
+Los menores de edad pueden usar TrackNara únicamente si:
 
 - Cuentan con la autorización expresa de su padre, madre o tutor legal; y
 - Dicha autorización ha sido confirmada a través de la pantalla de consentimiento parental integrada en la plataforma.
@@ -63,7 +63,7 @@ Sin cumplir estos requisitos, el acceso al panel principal queda técnicamente b
 
 ### 3.3 Menores de 13 años
 
-El uso de TrackFocus por personas menores de 13 años no está permitido. Si detectamos que un usuario menor de 13 años ha creado una cuenta sin la supervisión adecuada, nos reservamos el derecho de suspender dicha cuenta.
+El uso de TrackNara por personas menores de 13 años no está permitido. Si detectamos que un usuario menor de 13 años ha creado una cuenta sin la supervisión adecuada, nos reservamos el derecho de suspender dicha cuenta.
 
 ### 3.4 Usuarios institucionales
 
@@ -75,7 +75,7 @@ Los docentes y directivos que registren menores de edad bajo su gestión institu
 
 ### 4.1 Método de autenticación
 
-TrackFocus utiliza exclusivamente **Google OAuth** como método de autenticación. No se almacenan contraseñas directamente en la plataforma. Al iniciar sesión, Google transmite tu nombre, correo electrónico y foto de perfil a TrackFocus.
+TrackNara utiliza exclusivamente **Google OAuth** como método de autenticación. No se almacenan contraseñas directamente en la plataforma. Al iniciar sesión, Google transmite tu nombre, correo electrónico y foto de perfil a TrackNara.
 
 ### 4.2 Unicidad de cuenta
 
@@ -83,7 +83,7 @@ El correo electrónico de Google es el identificador único en el sistema. No se
 
 ### 4.3 Responsabilidad sobre la cuenta
 
-Eres responsable de mantener la seguridad de tu cuenta de Google asociada a TrackFocus. TrackFocus no se hace responsable por accesos no autorizados derivados de la vulneración de tu cuenta de Google.
+Eres responsable de mantener la seguridad de tu cuenta de Google asociada a TrackNara. TrackNara no se hace responsable por accesos no autorizados derivados de la vulneración de tu cuenta de Google.
 
 ### 4.4 Exactitud de la información
 
@@ -91,13 +91,13 @@ Te comprometes a que la información de tu perfil sea veraz y actualizada. El us
 
 ### 4.5 Cuentas institucionales
 
-Los usuarios que deseen acceder como docentes o directivos deben ingresar el código de escuela correspondiente durante el proceso de promoción de rol. TrackFocus no verifica de forma independiente la afiliación institucional del usuario.
+Los usuarios que deseen acceder como docentes o directivos deben ingresar el código de escuela correspondiente durante el proceso de promoción de rol. TrackNara no verifica de forma independiente la afiliación institucional del usuario.
 
 ---
 
 ## 5. Uso permitido
 
-Puedes usar TrackFocus para:
+Puedes usar TrackNara para:
 
 - Registrar y gestionar tus sesiones de estudio personales.
 - Visualizar estadísticas de concentración, progreso y hábitos de estudio.
@@ -121,7 +121,7 @@ Está expresamente prohibido:
 - Difamar, acosar o intimidar a otros usuarios de la plataforma.
 
 ### 6.2 Conductas que afectan al Servicio
-- Intentar descompilar, hacer ingeniería inversa, copiar o reproducir el código fuente, los algoritmos, el diseño o las funcionalidades de TrackFocus.
+- Intentar descompilar, hacer ingeniería inversa, copiar o reproducir el código fuente, los algoritmos, el diseño o las funcionalidades de TrackNara.
 - Utilizar scripts, bots o herramientas automatizadas para interactuar con la plataforma.
 - Realizar pruebas de carga, ataques de denegación de servicio (DoS) o cualquier acción que degrade el rendimiento del Servicio.
 - Intentar acceder a áreas restringidas, paneles de administración o datos de otros usuarios mediante técnicas de hacking o vulneración de seguridad.
@@ -133,9 +133,9 @@ Está expresamente prohibido:
 - Cargar materiales cuya propiedad intelectual no te pertenezca o para cuyo uso no cuentes con los permisos correspondientes.
 
 ### 6.4 Explotación comercial no autorizada
-- Explotar comercialmente la plataforma o cualquiera de sus componentes sin autorización escrita de TrackFocus.
-- Revender, sublicenciar o redistribuir el acceso a TrackFocus a terceros.
-- Utilizar TrackFocus o sus funcionalidades de IA para construir, entrenar o mejorar sistemas competidores.
+- Explotar comercialmente la plataforma o cualquiera de sus componentes sin autorización escrita de TrackNara.
+- Revender, sublicenciar o redistribuir el acceso a TrackNara a terceros.
+- Utilizar TrackNara o sus funcionalidades de IA para construir, entrenar o mejorar sistemas competidores.
 
 ---
 
@@ -163,11 +163,11 @@ Las instituciones educativas que incorporen menores de edad a la plataforma medi
 
 ## 8. Responsabilidades del usuario
 
-Al usar TrackFocus, el usuario asume las siguientes responsabilidades:
+Al usar TrackNara, el usuario asume las siguientes responsabilidades:
 
 - **Veracidad de los datos:** Los datos ingresados (sesiones, materias, concentración) deben reflejar la realidad del usuario. El uso de datos falsos perjudica la utilidad del servicio.
-- **Uso crítico de la IA:** El usuario es responsable de verificar la información proporcionada por el tutor de inteligencia artificial. TrackFocus no garantiza la exactitud, completitud ni idoneidad del contenido generado por la IA.
-- **Contenido cargado:** El usuario es el único responsable por los archivos y materiales que sube a la plataforma. TrackFocus no revisa el contenido antes de su análisis por la IA.
+- **Uso crítico de la IA:** El usuario es responsable de verificar la información proporcionada por el tutor de inteligencia artificial. TrackNara no garantiza la exactitud, completitud ni idoneidad del contenido generado por la IA.
+- **Contenido cargado:** El usuario es el único responsable por los archivos y materiales que sube a la plataforma. TrackNara no revisa el contenido antes de su análisis por la IA.
 - **Seguridad de la cuenta:** El usuario debe proteger el acceso a su cuenta de Google. Cualquier actividad realizada desde su cuenta es responsabilidad del titular.
 - **Cumplimiento legal:** El usuario debe usar el Servicio conforme a la legislación peruana vigente y estas condiciones.
 
@@ -175,41 +175,41 @@ Al usar TrackFocus, el usuario asume las siguientes responsabilidades:
 
 ## 9. Responsabilidades de instituciones educativas
 
-Las instituciones que utilicen TrackFocus para gestionar aulas y estudiantes asumen adicionalmente las siguientes responsabilidades:
+Las instituciones que utilicen TrackNara para gestionar aulas y estudiantes asumen adicionalmente las siguientes responsabilidades:
 
 - Obtener la autorización parental de todos los menores de edad antes de registrarlos en la plataforma.
 - Supervisar el uso de la plataforma por parte de sus estudiantes.
 - No compartir los códigos de acceso institucional (código de escuela, código de aula) con personas ajenas a la institución.
-- Notificar a TrackFocus inmediatamente si detectan un uso indebido que pueda afectar a menores bajo su supervisión.
-- TrackFocus no es responsable por el incumplimiento de estas obligaciones por parte de la institución.
+- Notificar a TrackNara inmediatamente si detectan un uso indebido que pueda afectar a menores bajo su supervisión.
+- TrackNara no es responsable por el incumplimiento de estas obligaciones por parte de la institución.
 
 ---
 
 ## 10. Uso de Inteligencia Artificial
 
 ### 10.1 Descripción del sistema
-TrackFocus integra el modelo de inteligencia artificial **Google Gemini** (versión `gemini-3.1-flash-lite`) como tutor digital. Este sistema responde siguiendo el método socrático: guía al estudiante mediante preguntas en lugar de proporcionar respuestas directas.
+TrackNara integra el modelo de inteligencia artificial **Google Gemini** (versión `gemini-3.1-flash-lite`) como tutor digital. Este sistema responde siguiendo el método socrático: guía al estudiante mediante preguntas en lugar de proporcionar respuestas directas.
 
 ### 10.2 Arquitectura segura de la API
-Las consultas a Gemini no viajan directamente desde el navegador del usuario. Pasan por un servidor intermediario (proxy) operado por TrackFocus en Vercel, donde la clave de acceso a la API se inyecta desde variables de entorno del servidor. El correo electrónico del usuario **nunca** es enviado a Google Gemini. La clave de acceso a la API **nunca** es accesible desde el navegador, DevTools ni ningún mecanismo del lado del cliente. Para el detalle completo de la arquitectura de seguridad de credenciales, véase la sección 16.
+Las consultas a Gemini no viajan directamente desde el navegador del usuario. Pasan por un servidor intermediario (proxy) operado por TrackNara en Vercel, donde la clave de acceso a la API se inyecta desde variables de entorno del servidor. El correo electrónico del usuario **nunca** es enviado a Google Gemini. La clave de acceso a la API **nunca** es accesible desde el navegador, DevTools ni ningún mecanismo del lado del cliente. Para el detalle completo de la arquitectura de seguridad de credenciales, véase la sección 16.
 
 ### 10.3 Almacenamiento del historial
-Las conversaciones con el tutor de IA existen únicamente en la memoria del navegador durante la sesión activa. No se almacenan de forma permanente en los servidores de TrackFocus. Al cerrar o recargar la aplicación, el historial se descarta completamente.
+Las conversaciones con el tutor de IA existen únicamente en la memoria del navegador durante la sesión activa. No se almacenan de forma permanente en los servidores de TrackNara. Al cerrar o recargar la aplicación, el historial se descarta completamente.
 
 ### 10.4 Archivos cargados
-Los archivos cargados para análisis por la IA (imágenes, PDFs, documentos, audios, videos de hasta 3 MB) se procesan en base64 en la memoria del navegador y se envían al servidor de TrackFocus para su transmisión a Gemini. El contenido no se almacena permanentemente en ningún servidor de TrackFocus. Solo los metadatos (nombre del archivo, tipo, tamaño) se guardan en la base de datos.
+Los archivos cargados para análisis por la IA (imágenes, PDFs, documentos, audios, videos de hasta 3 MB) se procesan en base64 en la memoria del navegador y se envían al servidor de TrackNara para su transmisión a Gemini. El contenido no se almacena permanentemente en ningún servidor de TrackNara. Solo los metadatos (nombre del archivo, tipo, tamaño) se guardan en la base de datos.
 
 ### 10.5 Responsabilidad por el uso de la IA
 El usuario acepta que:
 - La IA está diseñada como herramienta de apoyo académico, no como sustituto de docentes.
 - El contenido generado puede contener errores, imprecisiones u omisiones.
-- TrackFocus no es responsable por decisiones académicas, personales o profesionales tomadas basándose en las respuestas de la IA.
+- TrackNara no es responsable por decisiones académicas, personales o profesionales tomadas basándose en las respuestas de la IA.
 
 ---
 
 ## 11. Limitaciones de la Inteligencia Artificial
 
-TrackFocus reconoce expresamente las siguientes limitaciones del tutor de IA:
+TrackNara reconoce expresamente las siguientes limitaciones del tutor de IA:
 
 - **Puede cometer errores:** Los modelos de lenguaje como Gemini pueden generar respuestas incorrectas, incompletas o desactualizadas, incluso con apariencia de certeza.
 - **No verifica fuentes externas en tiempo real:** El modelo no accede a internet durante la sesión de tutoría; su conocimiento tiene una fecha de corte.
@@ -217,14 +217,14 @@ TrackFocus reconoce expresamente las siguientes limitaciones del tutor de IA:
 - **No garantiza aprendizaje:** El uso del tutor de IA no garantiza por sí solo la comprensión, retención o aprobación de ninguna materia.
 - **Sensibilidad a la calidad del input:** La calidad de las respuestas depende directamente de la calidad y claridad de las preguntas del usuario.
 
-**TrackFocus no se hace responsable por ningún daño directo o indirecto derivado del uso o confianza en las respuestas del tutor de inteligencia artificial.**
+**TrackNara no se hace responsable por ningún daño directo o indirecto derivado del uso o confianza en las respuestas del tutor de inteligencia artificial.**
 
 ---
 
 ## 12. Propiedad intelectual
 
-### 12.1 Titularidad de TrackFocus
-TrackFocus y todos sus componentes — incluyendo pero no limitándose al código fuente, algoritmos, diseño visual, marca, logotipos, interfaces, textos, datos de entrenamiento y documentación — son propiedad exclusiva de **Slater Quevedo**. Todos los derechos están reservados.
+### 12.1 Titularidad de TrackNara
+TrackNara y todos sus componentes — incluyendo pero no limitándose al código fuente, algoritmos, diseño visual, marca, logotipos, interfaces, textos, datos de entrenamiento y documentación — son propiedad exclusiva de **Slater Quevedo**. Todos los derechos están reservados.
 
 ### 12.2 Licencia de uso
 Se concede al usuario una licencia limitada, no exclusiva, intransferible, revocable y sin posibilidad de sublicencia para acceder y usar el Servicio únicamente con fines personales y educativos, conforme a estos Términos.
@@ -235,36 +235,36 @@ Está expresamente prohibido:
 - Copiar, reproducir, distribuir o publicar cualquier componente de la plataforma.
 - Realizar ingeniería inversa, descompilar o desensamblar el código fuente.
 - Crear productos derivados basados en la plataforma o sus algoritmos.
-- Usar la marca "TrackFocus" o los logotipos asociados sin autorización escrita.
+- Usar la marca "TrackNara" o los logotipos asociados sin autorización escrita.
 - Explotar comercialmente cualquier parte del Servicio.
 - Revender o redistribuir el acceso a la plataforma.
 
 ### 12.4 Datos del usuario
-Los datos de las sesiones de estudio, materiales cargados y configuraciones personales pertenecen al usuario. TrackFocus los utiliza únicamente para prestar el Servicio, conforme a la Política de Privacidad.
+Los datos de las sesiones de estudio, materiales cargados y configuraciones personales pertenecen al usuario. TrackNara los utiliza únicamente para prestar el Servicio, conforme a la Política de Privacidad.
 
 ---
 
 ## 13. Contenido generado por usuarios
 
 ### 13.1 Responsabilidad del usuario
-El usuario es el único responsable por el contenido que carga en la plataforma (archivos, comentarios, materias personalizadas). TrackFocus no revisa ni modera el contenido antes de su procesamiento.
+El usuario es el único responsable por el contenido que carga en la plataforma (archivos, comentarios, materias personalizadas). TrackNara no revisa ni modera el contenido antes de su procesamiento.
 
 ### 13.2 Licencia implícita
-Al cargar contenido, el usuario otorga a TrackFocus una licencia limitada para procesar dicho contenido con el único propósito de prestar el Servicio (incluyendo su transmisión a Google Gemini para análisis).
+Al cargar contenido, el usuario otorga a TrackNara una licencia limitada para procesar dicho contenido con el único propósito de prestar el Servicio (incluyendo su transmisión a Google Gemini para análisis).
 
 ### 13.3 Limitación de responsabilidad por archivos
-**TrackFocus no garantiza la conservación permanente de los archivos cargados.** Los archivos existen únicamente en la memoria del navegador durante la sesión activa. Los metadatos se almacenan en la base de datos, pero el contenido puede perderse al recargar la página, cerrar el navegador o durante fallos técnicos. TrackFocus no se hace responsable por la pérdida de archivos, materiales de estudio u otro contenido cargado por el usuario.
+**TrackNara no garantiza la conservación permanente de los archivos cargados.** Los archivos existen únicamente en la memoria del navegador durante la sesión activa. Los metadatos se almacenan en la base de datos, pero el contenido puede perderse al recargar la página, cerrar el navegador o durante fallos técnicos. TrackNara no se hace responsable por la pérdida de archivos, materiales de estudio u otro contenido cargado por el usuario.
 
 ### 13.4 Propiedad del contenido cargado
-El usuario declara que tiene los derechos necesarios sobre el contenido que carga o que está autorizado a usarlo. TrackFocus no se hace responsable por infracciones de propiedad intelectual originadas en el contenido subido por usuarios.
+El usuario declara que tiene los derechos necesarios sobre el contenido que carga o que está autorizado a usarlo. TrackNara no se hace responsable por infracciones de propiedad intelectual originadas en el contenido subido por usuarios.
 
 ---
 
 ## 14. Disponibilidad del Servicio
 
-TrackFocus se esfuerza por mantener el Servicio disponible, pero no garantiza una disponibilidad continua, ininterrumpida ni libre de errores.
+TrackNara se esfuerza por mantener el Servicio disponible, pero no garantiza una disponibilidad continua, ininterrumpida ni libre de errores.
 
-El Servicio depende de terceros cuya disponibilidad TrackFocus no controla, incluyendo:
+El Servicio depende de terceros cuya disponibilidad TrackNara no controla, incluyendo:
 
 | Servicio | Proveedor | Función |
 |---|---|---|
@@ -273,7 +273,7 @@ El Servicio depende de terceros cuya disponibilidad TrackFocus no controla, incl
 | Autenticación | Google OAuth | Inicio de sesión |
 | IA | Google Gemini API | Tutor de IA |
 
-**TrackFocus no asume responsabilidad por interrupciones del Servicio causadas por fallos, mantenimientos o modificaciones en los servicios de terceros mencionados.**
+**TrackNara no asume responsabilidad por interrupciones del Servicio causadas por fallos, mantenimientos o modificaciones en los servicios de terceros mencionados.**
 
 Ante la no disponibilidad del servicio de IA (Google Gemini), la plataforma activará automáticamente respuestas de reserva (*fallback*) para mantener una experiencia mínima de uso. Estas respuestas son generadas localmente y no equivalen en calidad ni en profundidad a las respuestas del tutor con IA activa. Véase la sección 16.4 para el detalle de las limitaciones frente a interrupciones de terceros.
 
@@ -282,7 +282,7 @@ Ante la no disponibilidad del servicio de IA (Google Gemini), la plataforma acti
 ## 15. Errores técnicos y fallos
 
 ### 15.1 Pérdida de datos
-TrackFocus no garantiza la integridad ni la conservación permanente de los datos del usuario en todos los escenarios técnicos posibles. Pueden ocurrir pérdidas de datos en situaciones tales como:
+TrackNara no garantiza la integridad ni la conservación permanente de los datos del usuario en todos los escenarios técnicos posibles. Pueden ocurrir pérdidas de datos en situaciones tales como:
 
 - Fallos de sincronización entre el caché local y Supabase.
 - Interrupciones de red durante el guardado de una sesión.
@@ -295,7 +295,7 @@ Se recomienda al usuario exportar periódicamente sus datos mediante la función
 Los errores en las respuestas del tutor de IA no constituyen un fallo del Servicio. Son una limitación inherente de los modelos de lenguaje.
 
 ### 15.3 Compatibilidad
-TrackFocus está optimizado para navegadores web modernos. No garantizamos compatibilidad con versiones antiguas de navegadores, sistemas operativos obsoletos o dispositivos con recursos muy limitados.
+TrackNara está optimizado para navegadores web modernos. No garantizamos compatibilidad con versiones antiguas de navegadores, sistemas operativos obsoletos o dispositivos con recursos muy limitados.
 
 ---
 
@@ -303,7 +303,7 @@ TrackFocus está optimizado para navegadores web modernos. No garantizamos compa
 
 ### 16.1 Arquitectura de proxy seguro
 
-TrackFocus implementa una arquitectura de proxy de servidor que garantiza que ninguna credencial privada sea accesible desde el navegador del usuario. Toda comunicación con servicios externos que requiera autenticación se realiza servidor a servidor, a través de funciones serverless alojadas en Vercel, sin que el dispositivo del usuario intervenga como intermediario de ninguna clave de acceso.
+TrackNara implementa una arquitectura de proxy de servidor que garantiza que ninguna credencial privada sea accesible desde el navegador del usuario. Toda comunicación con servicios externos que requiera autenticación se realiza servidor a servidor, a través de funciones serverless alojadas en Vercel, sin que el dispositivo del usuario intervenga como intermediario de ninguna clave de acceso.
 
 El flujo de una solicitud al tutor de IA es el siguiente:
 
@@ -311,56 +311,56 @@ El flujo de una solicitud al tutor de IA es el siguiente:
 Navegador del usuario
         │  (HTTPS — sin credenciales privadas)
         ▼
-Servidor de TrackFocus  [Vercel Serverless /api/*]
+Servidor de TrackNara  [Vercel Serverless /api/*]
         │  (HTTPS — credencial inyectada desde variable de entorno del servidor)
         ▼
 Servicio externo  (p. ej. Google Gemini API)
 ```
 
-El usuario interactúa exclusivamente con las rutas internas de TrackFocus (`/api/*`). El servidor de TrackFocus es el único emisor de solicitudes autenticadas hacia los servicios externos.
+El usuario interactúa exclusivamente con las rutas internas de TrackNara (`/api/*`). El servidor de TrackNara es el único emisor de solicitudes autenticadas hacia los servicios externos.
 
 ### 16.2 Protección de credenciales
 
-Las claves de acceso a los servicios externos utilizadas por TrackFocus:
+Las claves de acceso a los servicios externos utilizadas por TrackNara:
 
 - Se almacenan exclusivamente como **variables de entorno del servidor** en la infraestructura de Vercel.
 - **Nunca se incluyen** en el código JavaScript enviado al navegador del usuario ni en ningún recurso descargable por el cliente.
 - **Nunca son accesibles** mediante herramientas de inspección del navegador (DevTools), `localStorage`, `sessionStorage` ni ningún otro mecanismo del lado del cliente.
 - **No pueden ser observadas, extraídas ni reutilizadas** por el usuario ni por terceros que analicen el tráfico de red del navegador.
 
-Este diseño elimina una clase completa de vulnerabilidades de seguridad relacionadas con la exposición de credenciales en el cliente. TrackFocus no garantiza seguridad absoluta, pero sí que las credenciales de los servicios externos no se transmiten ni almacenan en el dispositivo del usuario.
+Este diseño elimina una clase completa de vulnerabilidades de seguridad relacionadas con la exposición de credenciales en el cliente. TrackNara no garantiza seguridad absoluta, pero sí que las credenciales de los servicios externos no se transmiten ni almacenan en el dispositivo del usuario.
 
 ### 16.3 Control de origen (CORS)
 
-Los endpoints del servidor de TrackFocus implementan verificación de origen mediante cabeceras HTTP (`Access-Control-Allow-Origin`). Las solicitudes provenientes de dominios no incluidos en la lista de orígenes autorizados son rechazadas con un error HTTP 403 antes de ser procesadas.
+Los endpoints del servidor de TrackNara implementan verificación de origen mediante cabeceras HTTP (`Access-Control-Allow-Origin`). Las solicitudes provenientes de dominios no incluidos en la lista de orígenes autorizados son rechazadas con un error HTTP 403 antes de ser procesadas.
 
-Esta medida cumple la función de impedir que sitios web de terceros realicen solicitudes en nombre del usuario hacia la API interna de TrackFocus sin su conocimiento.
+Esta medida cumple la función de impedir que sitios web de terceros realicen solicitudes en nombre del usuario hacia la API interna de TrackNara sin su conocimiento.
 
 ### 16.4 Limitaciones frente a interrupciones de servicios externos
 
-El funcionamiento del tutor de IA y otras funciones que dependan de servicios externos (Google Gemini API, Supabase, Vercel) puede verse afectado por interrupciones, degradaciones, cambios de versión de API o modificaciones unilaterales en dichos servicios, ninguno de los cuales está bajo el control de TrackFocus.
+El funcionamiento del tutor de IA y otras funciones que dependan de servicios externos (Google Gemini API, Supabase, Vercel) puede verse afectado por interrupciones, degradaciones, cambios de versión de API o modificaciones unilaterales en dichos servicios, ninguno de los cuales está bajo el control de TrackNara.
 
 Ante estas situaciones:
 
-- El servidor de TrackFocus no podrá completar las solicitudes que requieran el servicio afectado.
+- El servidor de TrackNara no podrá completar las solicitudes que requieran el servicio afectado.
 - La plataforma activará automáticamente respuestas de reserva (*fallback*) cuando sea técnicamente posible, para mantener una experiencia mínima de uso sin recurrir al servicio externo no disponible.
-- TrackFocus no podrá garantizar la restauración del servicio en ningún plazo determinado, al depender de la resolución unilateral del proveedor externo.
-- La indisponibilidad de un servicio externo no constituye incumplimiento contractual por parte de TrackFocus.
+- TrackNara no podrá garantizar la restauración del servicio en ningún plazo determinado, al depender de la resolución unilateral del proveedor externo.
+- La indisponibilidad de un servicio externo no constituye incumplimiento contractual por parte de TrackNara.
 
-**TrackFocus no asume responsabilidad alguna por interrupciones, errores, cambios de interfaz de programación (API), modificaciones de condiciones de uso o discontinuación de los servicios de terceros de los que depende la plataforma.**
+**TrackNara no asume responsabilidad alguna por interrupciones, errores, cambios de interfaz de programación (API), modificaciones de condiciones de uso o discontinuación de los servicios de terceros de los que depende la plataforma.**
 
 ### 16.5 Protección contra acceso no autorizado
 
-TrackFocus implementa las siguientes medidas técnicas y organizativas para proteger los datos de los usuarios frente a accesos no autorizados:
+TrackNara implementa las siguientes medidas técnicas y organizativas para proteger los datos de los usuarios frente a accesos no autorizados:
 
 | Medida | Descripción |
 |---|---|
 | **Row-Level Security (RLS)** | Las reglas de acceso a la base de datos en Supabase garantizan que cada usuario pueda leer y modificar exclusivamente sus propios datos. No es posible acceder a datos de otros usuarios mediante solicitudes directas a la base de datos. |
-| **Autenticación vía Google OAuth** | TrackFocus no almacena contraseñas. La autenticación es gestionada íntegramente por Google, eliminando el riesgo asociado a contraseñas débiles o expuestas en la propia plataforma. |
-| **HTTPS/TLS en todo el tráfico** | Toda comunicación entre el navegador del usuario y los servidores de TrackFocus, Supabase y Vercel ocurre mediante protocolos de cifrado en tránsito. |
+| **Autenticación vía Google OAuth** | TrackNara no almacena contraseñas. La autenticación es gestionada íntegramente por Google, eliminando el riesgo asociado a contraseñas débiles o expuestas en la propia plataforma. |
+| **HTTPS/TLS en todo el tráfico** | Toda comunicación entre el navegador del usuario y los servidores de TrackNara, Supabase y Vercel ocurre mediante protocolos de cifrado en tránsito. |
 | **Sesión con expiración automática** | Las sesiones de usuario expiran automáticamente. Al cerrar sesión, la información de sesión y la caché local del estado se eliminan del dispositivo. |
 
-A pesar de estas medidas, ningún sistema puede garantizar seguridad absoluta frente a todas las amenazas posibles. TrackFocus adoptará las medidas razonables disponibles para proteger los datos, pero no puede garantizar la invulnerabilidad total ante ataques externos, vulnerabilidades no conocidas en los servicios de terceros ni errores derivados del acceso del usuario a su propia cuenta de Google.
+A pesar de estas medidas, ningún sistema puede garantizar seguridad absoluta frente a todas las amenazas posibles. TrackNara adoptará las medidas razonables disponibles para proteger los datos, pero no puede garantizar la invulnerabilidad total ante ataques externos, vulnerabilidades no conocidas en los servicios de terceros ni errores derivados del acceso del usuario a su propia cuenta de Google.
 
 ---
 
@@ -369,7 +369,7 @@ A pesar de estas medidas, ningún sistema puede garantizar seguridad absoluta fr
 **EN LA MÁXIMA MEDIDA PERMITIDA POR LA LEGISLACIÓN PERUANA APLICABLE:**
 
 ### 16.1 Herramienta de apoyo educativo
-TrackFocus es una herramienta de apoyo al estudio. **No garantiza, bajo ninguna circunstancia:**
+TrackNara es una herramienta de apoyo al estudio. **No garantiza, bajo ninguna circunstancia:**
 
 - Mejoras en el rendimiento académico del usuario.
 - Mejores calificaciones, notas o resultados en evaluaciones.
@@ -381,26 +381,26 @@ TrackFocus es una herramienta de apoyo al estudio. **No garantiza, bajo ninguna 
 El progreso académico depende exclusivamente del esfuerzo, dedicación y contexto personal del estudiante.
 
 ### 16.2 Responsabilidad por la IA
-TrackFocus no se hace responsable por daños, perjuicios o consecuencias derivadas del uso o confianza en las respuestas del tutor de inteligencia artificial, incluyendo errores de concepto, información desactualizada o recomendaciones inapropiadas.
+TrackNara no se hace responsable por daños, perjuicios o consecuencias derivadas del uso o confianza en las respuestas del tutor de inteligencia artificial, incluyendo errores de concepto, información desactualizada o recomendaciones inapropiadas.
 
 ### 16.3 Pérdida de archivos
-TrackFocus no se hace responsable por la pérdida, corrupción o inaccesibilidad de archivos o materiales de estudio cargados por el usuario en la plataforma.
+TrackNara no se hace responsable por la pérdida, corrupción o inaccesibilidad de archivos o materiales de estudio cargados por el usuario en la plataforma.
 
 ### 16.4 Interrupciones del servicio
-TrackFocus no se hace responsable por daños derivados de interrupciones, latencias, errores técnicos o falta de disponibilidad del Servicio.
+TrackNara no se hace responsable por daños derivados de interrupciones, latencias, errores técnicos o falta de disponibilidad del Servicio.
 
 ### 16.5 Uso indebido por terceros
-TrackFocus no se hace responsable por acciones realizadas por terceros que hayan obtenido acceso a la cuenta del usuario.
+TrackNara no se hace responsable por acciones realizadas por terceros que hayan obtenido acceso a la cuenta del usuario.
 
 ### 16.6 Daños indirectos
-En ningún caso TrackFocus será responsable por daños indirectos, incidentales, especiales, consecuentes o punitivos, incluyendo pérdida de datos, pérdida de oportunidades o daño reputacional.
+En ningún caso TrackNara será responsable por daños indirectos, incidentales, especiales, consecuentes o punitivos, incluyendo pérdida de datos, pérdida de oportunidades o daño reputacional.
 
 ---
 
 ## 18. Suspensión o cancelación de cuentas
 
-### 17.1 Suspensión por TrackFocus
-TrackFocus se reserva el derecho de suspender o cancelar temporal o permanentemente una cuenta, sin previo aviso, en los siguientes casos:
+### 17.1 Suspensión por TrackNara
+TrackNara se reserva el derecho de suspender o cancelar temporal o permanentemente una cuenta, sin previo aviso, en los siguientes casos:
 
 - Incumplimiento de estos Términos.
 - Uso fraudulento, abusivo o ilegal del Servicio.
@@ -416,14 +416,14 @@ La suspensión o cancelación de una cuenta implica la pérdida de acceso al Ser
 El usuario puede solicitar la cancelación de su cuenta y la eliminación de sus datos escribiendo a **trackfocus.support@gmail.com**. Los datos del piloto educativo, al estar anonimizados, no podrán ser eliminados individualmente.
 
 ### 17.4 Apelación
-Si el usuario considera que la suspensión fue injustificada, puede escribir a **trackfocus.support@gmail.com** para solicitar revisión. TrackFocus evaluará el caso y responderá en un plazo de 30 días hábiles.
+Si el usuario considera que la suspensión fue injustificada, puede escribir a **trackfocus.support@gmail.com** para solicitar revisión. TrackNara evaluará el caso y responderá en un plazo de 30 días hábiles.
 
 ---
 
 ## 19. Servicios de terceros
 
 ### 18.1 Servicios integrados
-TrackFocus integra los siguientes servicios de terceros:
+TrackNara integra los siguientes servicios de terceros:
 
 | Servicio | Proveedor | Política propia |
 |---|---|---|
@@ -435,40 +435,40 @@ TrackFocus integra los siguientes servicios de terceros:
 | jsDelivr CDN | ProspectOne Sp. z o.o. | [jsdelivr.com/terms/privacy-policy-jsdelivr-net](https://www.jsdelivr.com/terms/privacy-policy-jsdelivr-net) |
 
 ### 18.2 Responsabilidad por terceros
-TrackFocus no controla las políticas, prácticas ni disponibilidad de los servicios de terceros. El uso de estos servicios está sujeto a sus propias condiciones de uso y políticas de privacidad. TrackFocus no se hace responsable por las acciones u omisiones de dichos proveedores.
+TrackNara no controla las políticas, prácticas ni disponibilidad de los servicios de terceros. El uso de estos servicios está sujeto a sus propias condiciones de uso y políticas de privacidad. TrackNara no se hace responsable por las acciones u omisiones de dichos proveedores.
 
 ### 18.3 Cambios en servicios de terceros
-Si un proveedor externo modifica sus condiciones de forma que afecte materialmente al Servicio, TrackFocus informará a los usuarios con la mayor antelación posible.
+Si un proveedor externo modifica sus condiciones de forma que afecte materialmente al Servicio, TrackNara informará a los usuarios con la mayor antelación posible.
 
 ---
 
 ## 20. Futuras funciones de pago
 
 ### 19.1 Estado actual
-**A la fecha de entrada en vigor de estos Términos (24/06/2026), TrackFocus es completamente gratuito. No existe ningún sistema de pago activo en la plataforma.** No hay planes de suscripción, licencias de pago ni funciones premium implementadas.
+**A la fecha de entrada en vigor de estos Términos (24/06/2026), TrackNara es completamente gratuito. No existe ningún sistema de pago activo en la plataforma.** No hay planes de suscripción, licencias de pago ni funciones premium implementadas.
 
 ### 19.2 Planes futuros
-En el futuro, TrackFocus podría incorporar funcionalidades adicionales bajo un modelo de pago, que podrían incluir:
+En el futuro, TrackNara podría incorporar funcionalidades adicionales bajo un modelo de pago, que podrían incluir:
 
 - Planes institucionales para colegios, universidades u otras organizaciones educativas.
 - Planes personales con funcionalidades avanzadas para estudiantes individuales.
 - Licencias para docentes o coordinadores académicos.
 
 ### 19.3 Notificación previa
-Antes de introducir cualquier función de pago, TrackFocus:
+Antes de introducir cualquier función de pago, TrackNara:
 
 - Notificará a todos los usuarios activos mediante un aviso dentro de la aplicación y/o por correo electrónico.
 - Publicará los nuevos Términos con suficiente antelación.
 - Requerirá una nueva aceptación explícita antes de activar cualquier cobro.
 
 ### 19.4 Sin cobros no autorizados
-TrackFocus no realizará ningún cargo a los usuarios sin una aceptación explícita previa y documentada de las condiciones económicas aplicables.
+TrackNara no realizará ningún cargo a los usuarios sin una aceptación explícita previa y documentada de las condiciones económicas aplicables.
 
 ---
 
 ## 21. Modificaciones del Servicio
 
-TrackFocus se reserva el derecho de modificar, suspender, descontinuar o actualizar cualquier aspecto del Servicio en cualquier momento, incluyendo:
+TrackNara se reserva el derecho de modificar, suspender, descontinuar o actualizar cualquier aspecto del Servicio en cualquier momento, incluyendo:
 
 - Funcionalidades existentes.
 - Diseño e interfaz.
@@ -476,16 +476,16 @@ TrackFocus se reserva el derecho de modificar, suspender, descontinuar o actuali
 - Integraciones con servicios de terceros.
 - Estructura de datos o base de datos.
 
-TrackFocus procurará notificar los cambios significativos dentro de la aplicación. Sin embargo, algunos cambios de mantenimiento o mejoras menores pueden aplicarse sin notificación previa.
+TrackNara procurará notificar los cambios significativos dentro de la aplicación. Sin embargo, algunos cambios de mantenimiento o mejoras menores pueden aplicarse sin notificación previa.
 
 ---
 
 ## 22. Modificaciones de los términos
 
-TrackFocus se reserva el derecho de actualizar estos Términos cuando sea necesario. Los cambios se publicarán en la plataforma con la fecha de la nueva versión.
+TrackNara se reserva el derecho de actualizar estos Términos cuando sea necesario. Los cambios se publicarán en la plataforma con la fecha de la nueva versión.
 
 ### 21.1 Cambios sustanciales
-Para modificaciones que afecten materialmente los derechos del usuario (por ejemplo, introducción de pagos, cambios en el tratamiento de datos, nuevas restricciones de uso), TrackFocus:
+Para modificaciones que afecten materialmente los derechos del usuario (por ejemplo, introducción de pagos, cambios en el tratamiento de datos, nuevas restricciones de uso), TrackNara:
 
 - Notificará a los usuarios con un mínimo de 15 días de antelación.
 - Mostrará un aviso visible dentro de la aplicación.
@@ -504,7 +504,7 @@ Estos Términos se rigen por las leyes de la **República del Perú**. En partic
 - **Ley N.° 27291** — Ley que modifica el Código Civil sobre la manifestación de voluntad mediante medios electrónicos (contratos digitales).
 - **Código Civil peruano** — para la interpretación de contratos de adhesión.
 
-Cualquier controversia derivada del uso del Servicio que no pueda resolverse amigablemente mediante comunicación con TrackFocus será sometida a los tribunales competentes de la **ciudad de Lima, Perú**.
+Cualquier controversia derivada del uso del Servicio que no pueda resolverse amigablemente mediante comunicación con TrackNara será sometida a los tribunales competentes de la **ciudad de Lima, Perú**.
 
 ---
 
@@ -523,5 +523,5 @@ Si consideras que el tratamiento de tus datos no cumple con la normativa vigente
 
 ---
 
-*Términos y Condiciones — TrackFocus · Versión 1.1 · Fecha de vigencia: 24/06/2026*
+*Términos y Condiciones — TrackNara · Versión 1.1 · Fecha de vigencia: 24/06/2026*
 *Responsable: Slater Quevedo · trackfocus.support@gmail.com · Perú*

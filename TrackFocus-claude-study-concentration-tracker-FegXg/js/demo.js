@@ -7,8 +7,8 @@ const Demo = (() => {
 
   const SUBJECTS = ['Matemática', 'Comunicación', 'Ciencia y Tecnología', 'Ciencias Sociales', 'Inglés', 'Arte y Cultura', 'Educación Física', 'Tutoría', 'Educación para el Trabajo', 'Desarrollo Personal, Ciudadanía y Cívica'];
   const ACTS = ['comer', 'ejercicio', 'cafe', 'descanso', 'redes'];
-  const TEACHER = 'demo.teacher@trackfocus.demo';
-  const PARENT  = 'demo.padre@trackfocus.demo';
+  const TEACHER = 'demo.teacher@tracknara.demo';
+  const PARENT  = 'demo.padre@tracknara.demo';
   const SCHOOL = 'demo-school';
   const CR = 'demo-cr';
 
@@ -16,42 +16,42 @@ const Demo = (() => {
   // scoreRange: [min, max] para generación de calificaciones en el bimestre
   const STUDENTS = [
     // ── Logro Destacado AD (18-20) ─────────────────────────────────────────
-    { id: 'demo.lucia@trackfocus.demo',       name: 'Lucía Ramírez',      xp: 1240, level: 8,  streak: 12, badges: ['primera_sesion','racha_3','racha_7','maestro_enfoque','madrugador'],  studentCode: 'ARV-STU-DEMO0001', scoreRange: [17,20] },
-    { id: 'demo.sofia@trackfocus.demo',       name: 'Sofía Castro',       xp: 1520, level: 9,  streak: 21, badges: ['primera_sesion','racha_3','racha_7','racha_30','maratonista'],        studentCode: 'ARV-STU-DEMO0003', scoreRange: [18,20] },
-    { id: 'demo.camila@trackfocus.demo',      name: 'Camila Torres',      xp: 1380, level: 9,  streak: 18, badges: ['primera_sesion','racha_3','racha_7','maestro_enfoque'],               studentCode: 'ARV-STU-DEMO0007', scoreRange: [17,20] },
-    { id: 'demo.andrea@trackfocus.demo',      name: 'Andrea Paredes',     xp: 1190, level: 8,  streak: 15, badges: ['primera_sesion','racha_3','racha_7','multimaterias','madrugador'],    studentCode: 'ARV-STU-DEMO0008', scoreRange: [17,19] },
-    { id: 'demo.valcruz@trackfocus.demo',     name: 'Valentina Cruz',     xp: 1060, level: 7,  streak: 14, badges: ['primera_sesion','racha_3','racha_7','noctambulo'],                   studentCode: 'ARV-STU-DEMO0009', scoreRange: [17,20] },
+    { id: 'demo.lucia@tracknara.demo',       name: 'Lucía Ramírez',      xp: 1240, level: 8,  streak: 12, badges: ['primera_sesion','racha_3','racha_7','maestro_enfoque','madrugador'],  studentCode: 'ARV-STU-DEMO0001', scoreRange: [17,20] },
+    { id: 'demo.sofia@tracknara.demo',       name: 'Sofía Castro',       xp: 1520, level: 9,  streak: 21, badges: ['primera_sesion','racha_3','racha_7','racha_30','maratonista'],        studentCode: 'ARV-STU-DEMO0003', scoreRange: [18,20] },
+    { id: 'demo.camila@tracknara.demo',      name: 'Camila Torres',      xp: 1380, level: 9,  streak: 18, badges: ['primera_sesion','racha_3','racha_7','maestro_enfoque'],               studentCode: 'ARV-STU-DEMO0007', scoreRange: [17,20] },
+    { id: 'demo.andrea@tracknara.demo',      name: 'Andrea Paredes',     xp: 1190, level: 8,  streak: 15, badges: ['primera_sesion','racha_3','racha_7','multimaterias','madrugador'],    studentCode: 'ARV-STU-DEMO0008', scoreRange: [17,19] },
+    { id: 'demo.valcruz@tracknara.demo',     name: 'Valentina Cruz',     xp: 1060, level: 7,  streak: 14, badges: ['primera_sesion','racha_3','racha_7','noctambulo'],                   studentCode: 'ARV-STU-DEMO0009', scoreRange: [17,20] },
     // ── Logro Previsto A (14-17) ───────────────────────────────────────────
-    { id: 'demo.mateo@trackfocus.demo',       name: 'Mateo Flores',       xp: 980,  level: 7,  streak: 5,  badges: ['primera_sesion','racha_3','multimaterias'],                          studentCode: 'ARV-STU-DEMO0002', scoreRange: [14,17] },
-    { id: 'demo.valentina@trackfocus.demo',   name: 'Valentina Ríos',     xp: 760,  level: 6,  streak: 7,  badges: ['primera_sesion','racha_3','racha_7','noctambulo'],                   studentCode: 'ARV-STU-DEMO0005', scoreRange: [14,17] },
-    { id: 'demo.sebastian@trackfocus.demo',   name: 'Sebastián Rojas',    xp: 870,  level: 6,  streak: 8,  badges: ['primera_sesion','racha_3','racha_7'],                               studentCode: 'ARV-STU-DEMO0010', scoreRange: [14,16] },
-    { id: 'demo.mariana@trackfocus.demo',     name: 'Mariana López',      xp: 820,  level: 6,  streak: 6,  badges: ['primera_sesion','racha_3','multimaterias'],                          studentCode: 'ARV-STU-DEMO0011', scoreRange: [14,17] },
-    { id: 'demo.carlos@trackfocus.demo',      name: 'Carlos Mendoza',     xp: 790,  level: 6,  streak: 4,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0012', scoreRange: [14,16] },
-    { id: 'demo.gabriela@trackfocus.demo',    name: 'Gabriela Soto',      xp: 940,  level: 7,  streak: 9,  badges: ['primera_sesion','racha_3','racha_7','madrugador'],                   studentCode: 'ARV-STU-DEMO0013', scoreRange: [15,17] },
-    { id: 'demo.eduardo@trackfocus.demo',     name: 'Eduardo Rivera',     xp: 710,  level: 5,  streak: 5,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0014', scoreRange: [14,17] },
-    { id: 'demo.paula@trackfocus.demo',       name: 'Paula Villanueva',   xp: 850,  level: 6,  streak: 7,  badges: ['primera_sesion','racha_3','racha_7'],                               studentCode: 'ARV-STU-DEMO0015', scoreRange: [14,16] },
-    { id: 'demo.rodrigo@trackfocus.demo',     name: 'Rodrigo Díaz',       xp: 680,  level: 5,  streak: 4,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0016', scoreRange: [14,17] },
-    { id: 'demo.isabella@trackfocus.demo',    name: 'Isabella Vargas',    xp: 910,  level: 7,  streak: 10, badges: ['primera_sesion','racha_3','racha_7','multimaterias'],                studentCode: 'ARV-STU-DEMO0017', scoreRange: [15,17] },
-    { id: 'demo.fernando@trackfocus.demo',    name: 'Fernando Quispe',    xp: 730,  level: 5,  streak: 6,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0018', scoreRange: [14,16] },
-    { id: 'demo.alejandra@trackfocus.demo',   name: 'Alejandra Ramos',    xp: 800,  level: 6,  streak: 5,  badges: ['primera_sesion','racha_3','racha_7'],                               studentCode: 'ARV-STU-DEMO0019', scoreRange: [14,17] },
-    { id: 'demo.natalia@trackfocus.demo',     name: 'Natalia Cárdenas',   xp: 860,  level: 6,  streak: 8,  badges: ['primera_sesion','racha_3','madrugador'],                             studentCode: 'ARV-STU-DEMO0020', scoreRange: [15,17] },
+    { id: 'demo.mateo@tracknara.demo',       name: 'Mateo Flores',       xp: 980,  level: 7,  streak: 5,  badges: ['primera_sesion','racha_3','multimaterias'],                          studentCode: 'ARV-STU-DEMO0002', scoreRange: [14,17] },
+    { id: 'demo.valentina@tracknara.demo',   name: 'Valentina Ríos',     xp: 760,  level: 6,  streak: 7,  badges: ['primera_sesion','racha_3','racha_7','noctambulo'],                   studentCode: 'ARV-STU-DEMO0005', scoreRange: [14,17] },
+    { id: 'demo.sebastian@tracknara.demo',   name: 'Sebastián Rojas',    xp: 870,  level: 6,  streak: 8,  badges: ['primera_sesion','racha_3','racha_7'],                               studentCode: 'ARV-STU-DEMO0010', scoreRange: [14,16] },
+    { id: 'demo.mariana@tracknara.demo',     name: 'Mariana López',      xp: 820,  level: 6,  streak: 6,  badges: ['primera_sesion','racha_3','multimaterias'],                          studentCode: 'ARV-STU-DEMO0011', scoreRange: [14,17] },
+    { id: 'demo.carlos@tracknara.demo',      name: 'Carlos Mendoza',     xp: 790,  level: 6,  streak: 4,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0012', scoreRange: [14,16] },
+    { id: 'demo.gabriela@tracknara.demo',    name: 'Gabriela Soto',      xp: 940,  level: 7,  streak: 9,  badges: ['primera_sesion','racha_3','racha_7','madrugador'],                   studentCode: 'ARV-STU-DEMO0013', scoreRange: [15,17] },
+    { id: 'demo.eduardo@tracknara.demo',     name: 'Eduardo Rivera',     xp: 710,  level: 5,  streak: 5,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0014', scoreRange: [14,17] },
+    { id: 'demo.paula@tracknara.demo',       name: 'Paula Villanueva',   xp: 850,  level: 6,  streak: 7,  badges: ['primera_sesion','racha_3','racha_7'],                               studentCode: 'ARV-STU-DEMO0015', scoreRange: [14,16] },
+    { id: 'demo.rodrigo@tracknara.demo',     name: 'Rodrigo Díaz',       xp: 680,  level: 5,  streak: 4,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0016', scoreRange: [14,17] },
+    { id: 'demo.isabella@tracknara.demo',    name: 'Isabella Vargas',    xp: 910,  level: 7,  streak: 10, badges: ['primera_sesion','racha_3','racha_7','multimaterias'],                studentCode: 'ARV-STU-DEMO0017', scoreRange: [15,17] },
+    { id: 'demo.fernando@tracknara.demo',    name: 'Fernando Quispe',    xp: 730,  level: 5,  streak: 6,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0018', scoreRange: [14,16] },
+    { id: 'demo.alejandra@tracknara.demo',   name: 'Alejandra Ramos',    xp: 800,  level: 6,  streak: 5,  badges: ['primera_sesion','racha_3','racha_7'],                               studentCode: 'ARV-STU-DEMO0019', scoreRange: [14,17] },
+    { id: 'demo.natalia@tracknara.demo',     name: 'Natalia Cárdenas',   xp: 860,  level: 6,  streak: 8,  badges: ['primera_sesion','racha_3','madrugador'],                             studentCode: 'ARV-STU-DEMO0020', scoreRange: [15,17] },
     // ── En Proceso B (11-13) ──────────────────────────────────────────────
-    { id: 'demo.diego@trackfocus.demo',       name: 'Diego Huamán',       xp: 460,  level: 4,  streak: 3,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0004', scoreRange: [11,14] },
-    { id: 'demo.miguelangel@trackfocus.demo', name: 'Miguel Ángel Castro', xp: 410, level: 4,  streak: 2,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0021', scoreRange: [11,13] },
-    { id: 'demo.kevin@trackfocus.demo',       name: 'Kevin Huanca',       xp: 380,  level: 3,  streak: 2,  badges: ['primera_sesion'],                                                    studentCode: 'ARV-STU-DEMO0022', scoreRange: [11,13] },
-    { id: 'demo.daniela@trackfocus.demo',     name: 'Daniela Morales',    xp: 490,  level: 4,  streak: 3,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0023', scoreRange: [11,13] },
-    { id: 'demo.christian@trackfocus.demo',   name: 'Christian Paucar',   xp: 350,  level: 3,  streak: 1,  badges: ['primera_sesion'],                                                    studentCode: 'ARV-STU-DEMO0024', scoreRange: [10,13] },
-    { id: 'demo.rocio@trackfocus.demo',       name: 'Rocío Mamani',       xp: 430,  level: 4,  streak: 3,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0025', scoreRange: [11,13] },
-    { id: 'demo.marco@trackfocus.demo',       name: 'Marco Gutierrez',    xp: 400,  level: 4,  streak: 2,  badges: ['primera_sesion'],                                                    studentCode: 'ARV-STU-DEMO0026', scoreRange: [11,13] },
-    { id: 'demo.melissa@trackfocus.demo',     name: 'Melissa Condori',    xp: 470,  level: 4,  streak: 4,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0027', scoreRange: [12,14] },
-    { id: 'demo.jhon@trackfocus.demo',        name: 'Jhon Ccallo',        xp: 320,  level: 3,  streak: 2,  badges: ['primera_sesion'],                                                    studentCode: 'ARV-STU-DEMO0028', scoreRange: [11,13] },
-    { id: 'demo.milagros@trackfocus.demo',    name: 'Milagros Quispe',    xp: 510,  level: 4,  streak: 3,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0029', scoreRange: [12,14] },
+    { id: 'demo.diego@tracknara.demo',       name: 'Diego Huamán',       xp: 460,  level: 4,  streak: 3,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0004', scoreRange: [11,14] },
+    { id: 'demo.miguelangel@tracknara.demo', name: 'Miguel Ángel Castro', xp: 410, level: 4,  streak: 2,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0021', scoreRange: [11,13] },
+    { id: 'demo.kevin@tracknara.demo',       name: 'Kevin Huanca',       xp: 380,  level: 3,  streak: 2,  badges: ['primera_sesion'],                                                    studentCode: 'ARV-STU-DEMO0022', scoreRange: [11,13] },
+    { id: 'demo.daniela@tracknara.demo',     name: 'Daniela Morales',    xp: 490,  level: 4,  streak: 3,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0023', scoreRange: [11,13] },
+    { id: 'demo.christian@tracknara.demo',   name: 'Christian Paucar',   xp: 350,  level: 3,  streak: 1,  badges: ['primera_sesion'],                                                    studentCode: 'ARV-STU-DEMO0024', scoreRange: [10,13] },
+    { id: 'demo.rocio@tracknara.demo',       name: 'Rocío Mamani',       xp: 430,  level: 4,  streak: 3,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0025', scoreRange: [11,13] },
+    { id: 'demo.marco@tracknara.demo',       name: 'Marco Gutierrez',    xp: 400,  level: 4,  streak: 2,  badges: ['primera_sesion'],                                                    studentCode: 'ARV-STU-DEMO0026', scoreRange: [11,13] },
+    { id: 'demo.melissa@tracknara.demo',     name: 'Melissa Condori',    xp: 470,  level: 4,  streak: 4,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0027', scoreRange: [12,14] },
+    { id: 'demo.jhon@tracknara.demo',        name: 'Jhon Ccallo',        xp: 320,  level: 3,  streak: 2,  badges: ['primera_sesion'],                                                    studentCode: 'ARV-STU-DEMO0028', scoreRange: [11,13] },
+    { id: 'demo.milagros@tracknara.demo',    name: 'Milagros Quispe',    xp: 510,  level: 4,  streak: 3,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0029', scoreRange: [12,14] },
     // ── En Inicio C (7-11) ────────────────────────────────────────────────
-    { id: 'demo.joaquin@trackfocus.demo',     name: 'Joaquín Mendoza',    xp: 300,  level: 3,  streak: 1,  badges: ['primera_sesion'],                                                    studentCode: 'ARV-STU-DEMO0006', scoreRange: [7,12]  },
-    { id: 'demo.angel@trackfocus.demo',       name: 'Ángel Huaylla',      xp: 210,  level: 2,  streak: 1,  badges: ['primera_sesion'],                                                    studentCode: 'ARV-STU-DEMO0030', scoreRange: [7,11]  },
-    { id: 'demo.luis@trackfocus.demo',        name: 'Luis Ccorimanya',    xp: 180,  level: 2,  streak: 0,  badges: ['primera_sesion'],                                                    studentCode: 'ARV-STU-DEMO0031', scoreRange: [7,10]  },
-    { id: 'demo.rafael@trackfocus.demo',      name: 'Rafael Ticona',      xp: 240,  level: 2,  streak: 1,  badges: ['primera_sesion'],                                                    studentCode: 'ARV-STU-DEMO0032', scoreRange: [8,11]  },
-    { id: 'demo.xiomara@trackfocus.demo',     name: 'Xiomara Apaza',      xp: 270,  level: 3,  streak: 2,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0033', scoreRange: [8,12]  },
+    { id: 'demo.joaquin@tracknara.demo',     name: 'Joaquín Mendoza',    xp: 300,  level: 3,  streak: 1,  badges: ['primera_sesion'],                                                    studentCode: 'ARV-STU-DEMO0006', scoreRange: [7,12]  },
+    { id: 'demo.angel@tracknara.demo',       name: 'Ángel Huaylla',      xp: 210,  level: 2,  streak: 1,  badges: ['primera_sesion'],                                                    studentCode: 'ARV-STU-DEMO0030', scoreRange: [7,11]  },
+    { id: 'demo.luis@tracknara.demo',        name: 'Luis Ccorimanya',    xp: 180,  level: 2,  streak: 0,  badges: ['primera_sesion'],                                                    studentCode: 'ARV-STU-DEMO0031', scoreRange: [7,10]  },
+    { id: 'demo.rafael@tracknara.demo',      name: 'Rafael Ticona',      xp: 240,  level: 2,  streak: 1,  badges: ['primera_sesion'],                                                    studentCode: 'ARV-STU-DEMO0032', scoreRange: [8,11]  },
+    { id: 'demo.xiomara@tracknara.demo',     name: 'Xiomara Apaza',      xp: 270,  level: 3,  streak: 2,  badges: ['primera_sesion','racha_3'],                                          studentCode: 'ARV-STU-DEMO0033', scoreRange: [8,12]  },
   ];
 
   // PRNG simple y determinista (demo reproducible).
@@ -119,7 +119,7 @@ const Demo = (() => {
         const d = new Date(today);
         d.setDate(today.getDate() - daysAgo);
         d.setHours(range(7, 22), range(0, 59), 0, 0);
-        // Concentración según perfil académico + tendencia temporal (efecto TrackFocus).
+        // Concentración según perfil académico + tendencia temporal (efecto TrackNara).
         const _sr = st.scoreRange || [10, 16];
         const _concMin = _sr[0] >= 17 ? 3 : _sr[0] >= 14 ? 2 : _sr[0] >= 11 ? 2 : 1;
         const _concMax = _sr[0] >= 17 ? 5 : _sr[0] >= 14 ? 4 : _sr[0] >= 11 ? 3 : 3;
@@ -237,7 +237,7 @@ const Demo = (() => {
             // Ligera variación dentro del perfil del estudiante
             var lo = profile[0], hi = profile[1];
             var score = Math.max(0, Math.min(20, range(lo, hi)));
-            // Segunda evaluación puede mejorar (efecto TrackFocus)
+            // Segunda evaluación puede mejorar (efecto TrackNara)
             if (e === 2 && bimId === BIM2) score = Math.min(20, score + range(0, 2));
             var scale = score >= 18 ? 'AD' : score >= 14 ? 'A' : score >= 11 ? 'B' : 'C';
             var evalDate = new Date(today);

@@ -1,4 +1,4 @@
-# robots.txt — TrackFocus
+# robots.txt — TrackNara
 # https://trackfocus.vercel.app/
 
 User-agent: *

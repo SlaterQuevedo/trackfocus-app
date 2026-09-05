@@ -1,5 +1,5 @@
 // api/youtube-search.js — Serverless Vercel function
-// Busca videos de YouTube relevantes para el Tutor IA de TrackFocus.
+// Busca videos de YouTube relevantes para el Tutor IA de TrackNara.
 
 import { applyCors, checkRateLimit, searchYouTubeCandidates } from './_lib.js';
 

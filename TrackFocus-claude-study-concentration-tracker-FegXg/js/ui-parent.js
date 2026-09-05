@@ -106,7 +106,7 @@ const ParentUI = (() => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'trackfocus-' + (student.name || 'estudiante').replace(/\s+/g, '-') + '-sesiones.csv';
+    a.download = 'tracknara-' + (student.name || 'estudiante').replace(/\s+/g, '-') + '-sesiones.csv';
     document.body.appendChild(a);
     a.click();
     setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
@@ -129,7 +129,7 @@ const ParentUI = (() => {
 
     const win = window.open('', '_blank');
     if (!win) { UI.flash('Activa las ventanas emergentes para generar el PDF.', 'error'); return; }
-    win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Reporte TrackFocus — ${student.name}</title>
+    win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Reporte TrackNara — ${student.name}</title>
 <style>
   body{font-family:Arial,sans-serif;padding:32px;color:#1a1a1a;max-width:700px;margin:auto;}
   h1{color:#c8a06e;font-size:22px;border-bottom:2px solid #c8a06e;padding-bottom:8px;}
@@ -145,7 +145,7 @@ const ParentUI = (() => {
   li{margin:4px 0;font-size:13px;}
   .footer{margin-top:32px;font-size:11px;color:#999;text-align:center;}
 </style></head><body>
-<h1>Reporte de progreso — TrackFocus</h1>
+<h1>Reporte de progreso — TrackNara</h1>
 <p><strong>Estudiante:</strong> ${student.name || '—'} &nbsp;|&nbsp; <strong>Código:</strong> ${student.studentCode || '—'}</p>
 <p><strong>Generado:</strong> ${date}</p>
 <div class="kpi-row">
@@ -162,7 +162,7 @@ const ParentUI = (() => {
 <h2>Últimas 10 sesiones</h2>
 <table><thead><tr><th>Fecha</th><th>Materia</th><th>Concentración</th><th>Duración</th></tr></thead>
 <tbody>${sessRows || '<tr><td colspan="4">Sin sesiones registradas.</td></tr>'}</tbody></table>
-<div class="footer">Generado por TrackFocus — Plataforma de aprendizaje adaptativo</div>
+<div class="footer">Generado por TrackNara — Plataforma de aprendizaje adaptativo</div>
 <script>window.onload = () => { window.print(); }<\/script>
 </body></html>`);
     win.document.close();
@@ -268,7 +268,7 @@ const ParentUI = (() => {
           <div class="par-empty">
             <div style="font-size:48px;margin-bottom:16px;">👨‍👩‍👧</div>
             <h3>Aún no tienes estudiantes vinculados</h3>
-            <p class="muted">Vincula a tu hijo o hija usando su código de identidad TrackFocus para ver su progreso.</p>
+            <p class="muted">Vincula a tu hijo o hija usando su código de identidad TrackNara para ver su progreso.</p>
             <button class="primary" id="parGoLink" style="margin-top:16px;">Vincular estudiante</button>
           </div>
         </div>`;

@@ -1,11 +1,11 @@
-// Service Worker — TrackFocus
+// Service Worker — TrackNara
 // Estrategia: cache-first para assets estáticos (JS, CSS, imágenes, fuentes).
 // HTML siempre desde la red para garantizar versión más reciente.
 // API calls (/api/, Supabase, Gemini) nunca interceptadas.
 //
 // IMPORTANTE: Actualizar CACHE_VERSION en cada deploy para invalidar caché.
 
-const CACHE_VERSION = 'trackfocus-v74';
+const CACHE_VERSION = 'tracknara-v75';
 
 // Extensiones estáticas que se almacenan en caché
 const STATIC_EXTS = /\.(js|css|svg|png|ico|webmanifest|woff|woff2|ttf)(\?.*)?$/;

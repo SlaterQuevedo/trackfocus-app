@@ -1,4 +1,4 @@
-// js/institutions.js — Catálogo de instituciones peruanas para TrackFocus
+// js/institutions.js — Catálogo de instituciones peruanas para TrackNara
 window.Institutions = (() => {
 
   const MALLAS = {

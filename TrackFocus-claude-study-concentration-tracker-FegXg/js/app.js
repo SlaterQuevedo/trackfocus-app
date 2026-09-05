@@ -799,7 +799,7 @@ const App = (() => {
           'Tu patrón de estudio mejora semana a semana.',
           'La comprensión profunda llega con la práctica constante.',
           'Un día difícil no borra una semana de progreso.',
-          'TrackFocus detecta tus mejores horas. Confía en el proceso.',
+          'TrackNara detecta tus mejores horas. Confía en el proceso.',
           'Tu futuro se construye con cada sesión de hoy.'
         ];
 
@@ -808,7 +808,7 @@ const App = (() => {
           + '<span class="lp-prev-dot lp-prev-dot--r"></span>'
           + '<span class="lp-prev-dot lp-prev-dot--y"></span>'
           + '<span class="lp-prev-dot lp-prev-dot--g"></span>'
-          + '<span class="lp-prev-label">TrackFocus · Panel Personal</span>'
+          + '<span class="lp-prev-label">TrackNara · Panel Personal</span>'
           + '</div>'
           + '<div class="lp-prev-body">'
           + '<div class="lp-prev-hero-row">'
@@ -842,7 +842,7 @@ const App = (() => {
         const firstName = (user.name || user.firstName || 'estudiante').split(' ')[0];
         const NEW_TIPS = [
           'La primera sesión es la más importante. Empieza hoy.',
-          'Define tu meta y TrackFocus hará el resto.',
+          'Define tu meta y TrackNara hará el resto.',
           'El primer paso siempre es el más difícil. Tú ya lo diste.',
           'Una sesión registrada ya te pone por delante de ayer.',
           'Tu concentración mejora cada vez que la practicas.',
@@ -854,7 +854,7 @@ const App = (() => {
           + '<span class="lp-prev-dot lp-prev-dot--r"></span>'
           + '<span class="lp-prev-dot lp-prev-dot--y"></span>'
           + '<span class="lp-prev-dot lp-prev-dot--g"></span>'
-          + '<span class="lp-prev-label">TrackFocus · ' + firstName + '\'s Panel</span>'
+          + '<span class="lp-prev-label">TrackNara · ' + firstName + '\'s Panel</span>'
           + '</div>'
           + '<div class="lp-prev-body">'
           + '<div class="lp-prev-hero-row">'
@@ -868,7 +868,7 @@ const App = (() => {
           + '<div class="lp-prev-mission">'
           + '<div class="lp-prev-mission-label">PRIMER PASO</div>'
           + '<div class="lp-prev-mission-sub">Tu primera sesión</div>'
-          + '<div class="lp-prev-mission-reason">Registra hoy y TrackFocus empieza a aprender contigo.</div>'
+          + '<div class="lp-prev-mission-reason">Registra hoy y TrackNara empieza a aprender contigo.</div>'
           + '<div class="lp-prev-mission-btn">Iniciar primera sesión →</div>'
           + '</div>'
           + '<div class="lp-prev-chips">'
@@ -887,7 +887,7 @@ const App = (() => {
       const TIPS = [0,1,2,3,4,5,6].map(i => I18N.t('landing.tips.'+i, [
         'La concentración no se improvisa. Se entrena sesión a sesión.',
         'Estudiar 30 min con foco vale más que 3 horas con distracción.',
-        'Tu mejor hora para estudiar es la que descubrirás con TrackFocus.',
+        'Tu mejor hora para estudiar es la que descubrirás con TrackNara.',
         'Cada sesión registrada es evidencia real de que estás avanzando.',
         'La constancia supera al talento. Empieza hoy.',
         'Un objetivo claro convierte el esfuerzo en progreso medible.',
@@ -897,8 +897,8 @@ const App = (() => {
         'La constancia supera al talento. Una sesión a la vez.',
         'Cada sesión registrada es evidencia real de que estás avanzando.',
         'El aprendizaje profundo no es acumulación. Es comprensión.',
-        'Tu mejor hora para estudiar es la que descubrirás con TrackFocus.',
-        'No hay dos estudiantes iguales. TrackFocus se adapta a ti.',
+        'Tu mejor hora para estudiar es la que descubrirás con TrackNara.',
+        'No hay dos estudiantes iguales. TrackNara se adapta a ti.',
         'El progreso se construye en silencio, sesión a sesión.',
         'El foco no se improvisa. Se entrena.'
       ][i]));
@@ -908,7 +908,7 @@ const App = (() => {
         + '<span class="lp-prev-dot lp-prev-dot--r"></span>'
         + '<span class="lp-prev-dot lp-prev-dot--y"></span>'
         + '<span class="lp-prev-dot lp-prev-dot--g"></span>'
-        + '<span class="lp-prev-label">' + I18N.t('landing.preview.label','TrackFocus · Vista previa') + '</span>'
+        + '<span class="lp-prev-label">' + I18N.t('landing.preview.label','TrackNara · Vista previa') + '</span>'
         + '</div>'
         + '<div class="lp-prev-body">'
         + '<div class="lp-prev-hero-row">'
@@ -946,8 +946,8 @@ const App = (() => {
       <!-- ── HEADER ── -->
       <header class="lp-header">
         <div class="lp-brand">
-          <img src="assets/logo.svg" class="lp-brand-img" alt="TrackFocus">
-          <span>TrackFocus</span>
+          <img src="assets/logo.svg" class="lp-brand-img" alt="TrackNara">
+          <span>TrackNara</span>
         </div>
         <nav class="lp-nav" aria-label="Navegación principal">
           <a class="lp-nav-link" href="#lpSolutions">${I18N.t('landing.nav.solutions','Soluciones')}</a>
@@ -965,7 +965,7 @@ const App = (() => {
             ${I18N.t('landing.hero.pill','Plataforma educativa con IA · Perú')}
           </div>
           <h1 class="lp-hero-title">${I18N.t('landing.hero.title1','No estudies de más.')}<br><span class="lp-hero-title-accent">${I18N.t('landing.hero.title2','Estudia mejor.')}</span></h1>
-          <p class="lp-hero-sub">${I18N.t('landing.hero.sub','TrackFocus convierte cada hora de estudio en evidencia real de aprendizaje mediante inteligencia artificial, ayudándote a demostrar que realmente estás avanzando.')}</p>
+          <p class="lp-hero-sub">${I18N.t('landing.hero.sub','TrackNara convierte cada hora de estudio en evidencia real de aprendizaje mediante inteligencia artificial, ayudándote a demostrar que realmente estás avanzando.')}</p>
           <div class="lp-hero-actions">
             <button class="lp-btn-main" id="lpHeroCta">${I18N.t('landing.hero.cta','Comenzar')}</button>
             <a href="?demo=1" class="lp-btn-ghost-main">${I18N.t('landing.hero.demo','Demo en vivo')}</a>
@@ -980,7 +980,7 @@ const App = (() => {
       <section class="lp-section lp-prob-section" id="lpSolutions">
         <div class="lp-section-label">${I18N.t('landing.problem.label','El problema')}</div>
         <h2 class="lp-section-title">${I18N.t('landing.problem.title','Estudiar duro no siempre significa aprender.')}</h2>
-        <p class="lp-section-sub">${I18N.t('landing.problem.sub','Cada perfil enfrenta su propio obstáculo. TrackFocus los resuelve a todos.')}</p>
+        <p class="lp-section-sub">${I18N.t('landing.problem.sub','Cada perfil enfrenta su propio obstáculo. TrackNara los resuelve a todos.')}</p>
         <div class="lp-prob-grid">
           <div class="lp-prob-card">
             <div class="lp-prob-tag lp-prob-tag--gold">${I18N.t('landing.problem.card1.tag','Uso Personal')}</div>
@@ -1012,13 +1012,13 @@ const App = (() => {
       <!-- ── SOLUCIÓN EN 3 PASOS ── -->
       <section class="lp-section lp-steps-section" id="lpHow">
         <div class="lp-section-label">${I18N.t('landing.solution.label','La solución')}</div>
-        <h2 class="lp-section-title">${I18N.t('landing.solution.title','TrackFocus transforma cómo aprendes en 3 pasos simples.')}</h2>
+        <h2 class="lp-section-title">${I18N.t('landing.solution.title','TrackNara transforma cómo aprendes en 3 pasos simples.')}</h2>
         <div class="lp-steps-v2">
           <div class="lp-step-v2">
             <div class="lp-step-v2-num">1</div>
             <div class="lp-step-v2-icon">${_lpIco.target}</div>
             <h4>${I18N.t('landing.solution.step1.title','Define tu meta')}</h4>
-            <p>${I18N.t('landing.solution.step1.desc','Universidad, curso o objetivo institucional. TrackFocus construye tu ruta desde el primer día.')}</p>
+            <p>${I18N.t('landing.solution.step1.desc','Universidad, curso o objetivo institucional. TrackNara construye tu ruta desde el primer día.')}</p>
             <div class="lp-step-v2-chips">
               <span>${I18N.t('landing.solution.step1.chip1','Universidad')}</span><span>${I18N.t('landing.solution.step1.chip2','Carrera')}</span><span>${I18N.t('landing.solution.step1.chip3','Institución')}</span>
             </div>
@@ -1049,7 +1049,7 @@ const App = (() => {
       <!-- ── ECOSISTEMA ── -->
       <section class="lp-section lp-ecosystem" id="lpEcosystem">
         <div class="lp-section-label">${I18N.t('landing.ecosystem.label','Un solo ecosistema')}</div>
-        <h2 class="lp-section-title">${I18N.t('landing.ecosystem.title','TrackFocus acompaña a todos en el proceso educativo.')}</h2>
+        <h2 class="lp-section-title">${I18N.t('landing.ecosystem.title','TrackNara acompaña a todos en el proceso educativo.')}</h2>
         <p class="lp-section-sub">${I18N.t('landing.ecosystem.sub','No es una app para un perfil. Es una plataforma para todo el ecosistema.')}</p>
         <div class="lp-eco-grid">
           <div class="lp-eco-card lp-eco-card--gold">
@@ -1079,7 +1079,7 @@ const App = (() => {
       <section class="lp-section lp-differ">
         <div class="lp-section-label">${I18N.t('landing.differ.label','La diferencia')}</div>
         <h2 class="lp-section-title">${I18N.t('landing.differ.title','Lo que no se mide, no se puede mejorar.')}</h2>
-        <p class="lp-section-sub">${I18N.t('landing.differ.sub','TrackFocus no mide solo cuánto tiempo estudias. Mide evidencia real de aprendizaje.')}</p>
+        <p class="lp-section-sub">${I18N.t('landing.differ.sub','TrackNara no mide solo cuánto tiempo estudias. Mide evidencia real de aprendizaje.')}</p>
         <div class="lp-differ-grid">
           <div class="lp-differ-item">
             <div class="lp-differ-icon">⏱</div>
@@ -1126,7 +1126,7 @@ const App = (() => {
       </section>
 
       <footer class="lp-footer">
-        <span>© 2026 TrackFocus</span>
+        <span>© 2026 TrackNara</span>
         <span class="lp-footer-sep">·</span>
         <span>${I18N.t('landing.footer.text','Datos sincronizados de forma segura en la nube')}</span>
       </footer>
@@ -1143,7 +1143,7 @@ const App = (() => {
     const svgArrow    = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
     return `
       <div class="lp-section-label">${I18N.t('wizard.step0.label','Elige tu acceso')}</div>
-      <h2 class="lp-section-title">${I18N.t('wizard.step0.title','¿Cómo utilizarás TrackFocus?')}</h2>
+      <h2 class="lp-section-title">${I18N.t('wizard.step0.title','¿Cómo utilizarás TrackNara?')}</h2>
       <p class="lp-wizard-sub">${I18N.t('wizard.step0.sub','Elige la experiencia que mejor se adapte a tu forma de aprender o gestionar el aprendizaje.')}</p>
       <div class="lp-cards lp-cards--2col">
         <div class="lp-card lp-card--gold" data-access="personal">
@@ -1324,7 +1324,7 @@ const App = (() => {
         <h3 style="margin:0 0 8px;font-size:18px;">Ya tienes una cuenta</h3>
         <p style="margin:0 0 20px;color:var(--muted-2,#71717a);font-size:14px;line-height:1.5;">
           El correo <strong>${email}</strong> ya está registrado con Google.<br>
-          ¿Cómo quieres que te llamemos en TrackFocus?
+          ¿Cómo quieres que te llamemos en TrackNara?
         </p>
 
         <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
@@ -1402,7 +1402,7 @@ const App = (() => {
   }
 
   // Modal: el nombre de la cuenta de Google que inició sesión difiere del
-  // nombre guardado en TrackFocus (ej: otra persona usó esta cuenta con su
+  // nombre guardado en TrackNara (ej: otra persona usó esta cuenta con su
   // propio nombre durante la feria). No se cambia nada solo — se ofrece
   // mantener el nombre actual o actualizarlo al de la cuenta de Google.
   // No bloquea la carga de la app: aparece encima del panel ya cargado.
@@ -1418,7 +1418,7 @@ const App = (() => {
                   border-radius:16px;padding:28px;max-width:440px;width:100%;">
         <h3 style="margin:0 0 8px;font-size:18px;">${GOOGLE_SVG} <span style="vertical-align:middle;">Detectamos un nombre distinto</span></h3>
         <p style="margin:0 0 20px;color:var(--muted-2,#71717a);font-size:14px;line-height:1.5;">
-          Tu cuenta de Google se llama <strong>${googleName}</strong>, pero en TrackFocus figuras como <strong>${currentName}</strong>.
+          Tu cuenta de Google se llama <strong>${googleName}</strong>, pero en TrackNara figuras como <strong>${currentName}</strong>.
           ¿Qué nombre quieres usar?
         </p>
 
@@ -1612,7 +1612,7 @@ const App = (() => {
         <h2 style="margin:0 0 8px;">¡Bienvenido${u.name ? ', ' + u.name.split(' ')[0] : ''}!</h2>
         ${isNew ? `
         <div id="pobRoleChoice">
-          <p class="muted" style="margin:0 0 20px;">¿Cómo vas a usar TrackFocus?</p>
+          <p class="muted" style="margin:0 0 20px;">¿Cómo vas a usar TrackNara?</p>
           <div style="display:flex;gap:12px;flex-wrap:wrap;">
             <button class="primary" id="pobIsStudent" style="flex:1;padding:16px;font-size:15px;">Soy Estudiante</button>
             <button class="secondary" id="pobIsParent" style="flex:1;padding:16px;font-size:15px;">Soy Padre / Tutor</button>
@@ -1674,7 +1674,7 @@ const App = (() => {
         <h2 style="margin:0 0 8px;">Consentimiento de privacidad</h2>
         <p class="muted" style="margin:0 0 16px;">Hola${nombre ? ', ' + nombre : ''}. Antes de empezar necesitamos la autorización de tu padre, madre o tutor, como exige la Ley de Protección de Datos Personales del Perú para personas menores de edad.</p>
         <div class="consent-box">
-          <p><strong>¿Qué datos registra TrackFocus?</strong></p>
+          <p><strong>¿Qué datos registra TrackNara?</strong></p>
           <ul>
             <li>Tus sesiones de estudio (materia, duración y nivel de concentración).</li>
             <li>Tu progreso de aprendizaje (logros, XP y rachas).</li>
@@ -1690,7 +1690,7 @@ const App = (() => {
         <form id="consentForm" style="margin-top:18px;">
           <label class="consent-check">
             <input type="checkbox" id="consentCheck" required>
-            <span>Confirmo que mi padre, madre o tutor leyó esta información y <strong>autoriza</strong> mi uso de TrackFocus y el registro de estos datos.</span>
+            <span>Confirmo que mi padre, madre o tutor leyó esta información y <strong>autoriza</strong> mi uso de TrackNara y el registro de estos datos.</span>
           </label>
           <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">
             <button class="primary" type="submit">Acepto y continúo</button>
@@ -1744,7 +1744,7 @@ const App = (() => {
       <div style="max-width:680px;margin:32px auto;padding:0 16px;">
         <div style="margin-bottom:24px;">
           <h2 style="margin:0 0 6px;">Centro Legal</h2>
-          <p class="muted" style="margin:0;">${nombre ? 'Hola, ' + nombre + '. Aquí' : 'Aquí'} encontrarás los documentos legales de TrackFocus.</p>
+          <p class="muted" style="margin:0;">${nombre ? 'Hola, ' + nombre + '. Aquí' : 'Aquí'} encontrarás los documentos legales de TrackNara.</p>
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;">
 
@@ -1876,7 +1876,7 @@ const App = (() => {
     return `
       <div class="card" style="max-width:520px;margin:48px auto;">
         <h2 style="margin:0 0 8px;">Verificación de director</h2>
-        <p class="muted" style="margin:0 0 22px;">Ingresa el código de tu colegio para acceder como director. Si no lo tienes, contáctate con el administrador de TrackFocus.</p>
+        <p class="muted" style="margin:0 0 22px;">Ingresa el código de tu colegio para acceder como director. Si no lo tienes, contáctate con el administrador de TrackNara.</p>
         <form id="adminPromoteForm">
           <label>Código del colegio</label>
           <input name="schoolCode" maxlength="6" required placeholder="6 caracteres" style="text-transform:uppercase;" />
@@ -1948,7 +1948,7 @@ const App = (() => {
   }
 
   // Aplica/retira la política de autocompletado en el formulario de auth.
-  // Cuando auto-login está OFF: usa valores no estándar (trackfocus-*) que los
+  // Cuando auto-login está OFF: usa valores no estándar (tracknara-*) que los
   // navegadores no reconocen como campos de credenciales, y new-password para
   // contraseñas (el valor más respetado universalmente por Chrome/Safari/Firefox).
   // Cuando está ON: restaura los valores semánticos originales.
@@ -1960,9 +1960,9 @@ const App = (() => {
     if (secure) {
       form.setAttribute('autocomplete', 'off');
       const fields = {
-        firstName:       'trackfocus-given-name',
-        lastName:        'trackfocus-family-name',
-        email:           'trackfocus-email',
+        firstName:       'tracknara-given-name',
+        lastName:        'tracknara-family-name',
+        email:           'tracknara-email',
         password:        'new-password',
         confirmPassword: 'new-password'
       };
@@ -2026,13 +2026,13 @@ const App = (() => {
           <div class="arv-sec-ico">🛡️</div>
           <div>
             <div class="arv-sec-title">Seguridad de la sesión</div>
-            <div class="arv-sec-sub">Controla cómo TrackFocus recuerda tu cuenta en este dispositivo</div>
+            <div class="arv-sec-sub">Controla cómo TrackNara recuerda tu cuenta en este dispositivo</div>
           </div>
         </div>
         <div class="arv-sec-row">
           <div class="arv-sec-row-info">
             <div class="arv-sec-row-title">Inicio de sesión automático</div>
-            <div class="arv-sec-row-desc">Permite que TrackFocus recuerde tu sesión al volver a abrir el sitio. Desactívalo en equipos compartidos como los de un colegio.</div>
+            <div class="arv-sec-row-desc">Permite que TrackNara recuerde tu sesión al volver a abrir el sitio. Desactívalo en equipos compartidos como los de un colegio.</div>
           </div>
           <label class="arv-toggle" aria-label="Inicio de sesión automático">
             <input type="checkbox" id="arvAlChk"${isOn ? ' checked' : ''}>
@@ -2043,7 +2043,7 @@ const App = (() => {
           ${isOn ? '⚠️ Sesión guardada — no recomendado en equipos compartidos' : '✅ Modo seguro activo — recomendado para colegios'}
         </div>
         <div id="arvSecConfirm" class="arv-sec-confirm hidden">
-          <p class="arv-sec-confirm-txt">Esta opción está pensada únicamente para dispositivos personales. Si la activas en un equipo compartido, otras personas podrían acceder a tu cuenta. TrackFocus no se hace responsable del acceso no autorizado derivado de esta configuración.</p>
+          <p class="arv-sec-confirm-txt">Esta opción está pensada únicamente para dispositivos personales. Si la activas en un equipo compartido, otras personas podrían acceder a tu cuenta. TrackNara no se hace responsable del acceso no autorizado derivado de esta configuración.</p>
           <div class="arv-sec-confirm-btns">
             <button class="arv-sec-btn-cancel" id="arvSecCancel">Cancelar</button>
             <button class="arv-sec-btn-ok primary" id="arvSecOk">Entiendo, activar</button>

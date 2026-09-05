@@ -1,4 +1,4 @@
-# Política de Privacidad — TrackFocus
+# Política de Privacidad — TrackNara
 
 **Última actualización:** 24/06/2026
 **Versión:** 1.1
@@ -14,7 +14,7 @@
 Recopilamos tu correo electrónico y nombre (cuando inicias sesión con Google), información sobre tus sesiones de estudio (materia, duración, concentración) y, si eres menor de edad y cuentas con autorización de tu tutor, datos anonimizados de tu progreso para un piloto educativo.
 
 **¿Por qué los recopilamos?**
-Para que puedas usar TrackFocus: registrar tus sesiones, ver tu progreso, interactuar con el tutor de inteligencia artificial y, si formas parte de una institución, permitir que tus docentes acompañen tu aprendizaje.
+Para que puedas usar TrackNara: registrar tus sesiones, ver tu progreso, interactuar con el tutor de inteligencia artificial y, si formas parte de una institución, permitir que tus docentes acompañen tu aprendizaje.
 
 **¿Con quién se comparten?**
 Tus datos se almacenan en Supabase (base de datos en la nube). Cuando usas el tutor de IA, tu conversación viaja a Google Gemini a través de un servidor intermediario seguro. Utilizamos Google para que puedas iniciar sesión. No vendemos ni cedemos tus datos a terceros con fines comerciales.
@@ -23,7 +23,7 @@ Tus datos se almacenan en Supabase (base de datos en la nube). Cuando usas el tu
 
 ## 1. Introducción
 
-TrackFocus es una plataforma educativa digital cuyo propósito es ayudar a los estudiantes a evidenciar su progreso de aprendizaje y fortalecer sus hábitos de estudio.
+TrackNara es una plataforma educativa digital cuyo propósito es ayudar a los estudiantes a evidenciar su progreso de aprendizaje y fortalecer sus hábitos de estudio.
 
 Esta Política de Privacidad describe de forma transparente qué datos personales recopilamos, cómo los usamos, con quién los compartimos y qué derechos tienes como usuario o como tutor legal de un menor.
 
@@ -36,19 +36,19 @@ Esta Política de Privacidad describe de forma transparente qué datos personale
 | Correo electrónico de privacidad | trackfocus.support@gmail.com |
 | Plataforma | trackfocus.vercel.app |
 
-Esta política aplica a todos los usuarios de TrackFocus:
+Esta política aplica a todos los usuarios de TrackNara:
 - Estudiantes (incluyendo menores de edad con consentimiento parental)
 - Padres de familia y tutores legales
 - Docentes
 - Directivos e instituciones educativas
 
-Al utilizar TrackFocus, aceptas los términos de esta política. Si no estás de acuerdo, debes abstenerte de usar la plataforma.
+Al utilizar TrackNara, aceptas los términos de esta política. Si no estás de acuerdo, debes abstenerte de usar la plataforma.
 
 ---
 
 ## 2. Datos que recopilamos
 
-TrackFocus recopila únicamente los datos necesarios para prestar el servicio. A continuación se detalla cada categoría.
+TrackNara recopila únicamente los datos necesarios para prestar el servicio. A continuación se detalla cada categoría.
 
 ### 2.1 Datos de identidad (obtenidos mediante Google OAuth)
 
@@ -97,11 +97,11 @@ Cuando el estudiante carga un archivo para analizarlo con el tutor de IA:
 | Nombre del archivo | Base de datos (Supabase) | Nombre original tal como fue cargado. |
 | Tipo de archivo | Base de datos (Supabase) | Formato MIME (PDF, imagen, audio, etc.). |
 | Tamaño del archivo | Base de datos (Supabase) | En bytes. |
-| Contenido del archivo | Solo memoria RAM del navegador | El contenido binario del archivo **no se almacena de forma permanente** en servidores de TrackFocus. Se convierte a base64 en el dispositivo del usuario y se envía a Google Gemini para el análisis, luego se descarta. |
+| Contenido del archivo | Solo memoria RAM del navegador | El contenido binario del archivo **no se almacena de forma permanente** en servidores de TrackNara. Se convierte a base64 en el dispositivo del usuario y se envía a Google Gemini para el análisis, luego se descarta. |
 
 ### 2.6 Datos del piloto científico (anonimizados)
 
-El piloto científico de TrackFocus recopila métricas de aprendizaje de forma anónima. Solo se activa si el usuario (o su tutor, en el caso de menores) ha otorgado consentimiento explícito.
+El piloto científico de TrackNara recopila métricas de aprendizaje de forma anónima. Solo se activa si el usuario (o su tutor, en el caso de menores) ha otorgado consentimiento explícito.
 
 | Dato | Descripción |
 |---|---|
@@ -119,7 +119,7 @@ El piloto científico de TrackFocus recopila métricas de aprendizaje de forma a
 |---|---|---|
 | Caché local del estado | localStorage del navegador | Copia temporal del estado de la cuenta. Se elimina automáticamente al cerrar sesión. |
 | Registro de errores | localStorage del navegador | Últimos 50 eventos de error técnico. No se transmiten a servidores externos. Se eliminan al cerrar sesión. |
-| Dirección IP | Vercel (servidor) / Supabase | Capturada automáticamente por el servidor al recibir solicitudes. No se almacena explícitamente en la base de datos de TrackFocus. |
+| Dirección IP | Vercel (servidor) / Supabase | Capturada automáticamente por el servidor al recibir solicitudes. No se almacena explícitamente en la base de datos de TrackNara. |
 | User-Agent del navegador | Vercel Web Analytics | Sistema operativo y navegador del usuario. |
 | Cookie de sesión | Supabase Auth | Cookie técnica necesaria para mantener la sesión activa. |
 
@@ -143,7 +143,7 @@ El piloto científico de TrackFocus recopila métricas de aprendizaje de forma a
 
 ## 4. Base legal del tratamiento
 
-El tratamiento de datos personales en TrackFocus se fundamenta en la **Ley N.° 29733 — Ley de Protección de Datos Personales del Perú** y su Reglamento aprobado por Decreto Supremo N.° 003-2013-JUS.
+El tratamiento de datos personales en TrackNara se fundamenta en la **Ley N.° 29733 — Ley de Protección de Datos Personales del Perú** y su Reglamento aprobado por Decreto Supremo N.° 003-2013-JUS.
 
 | Tratamiento | Base legal |
 |---|---|
@@ -157,13 +157,13 @@ El tratamiento de datos personales en TrackFocus se fundamenta en la **Ley N.° 
 
 ## 5. Uso de Inteligencia Artificial (Google Gemini)
 
-TrackFocus integra el modelo de inteligencia artificial **Google Gemini** como tutor digital. A continuación se detalla cómo opera este sistema y qué datos intervienen.
+TrackNara integra el modelo de inteligencia artificial **Google Gemini** como tutor digital. A continuación se detalla cómo opera este sistema y qué datos intervienen.
 
 ### ¿Cómo funciona?
 
-Cuando el estudiante interactúa con el tutor de IA, la solicitud **no va directamente desde el navegador a Google**. En cambio, pasa por un servidor intermediario seguro operado por TrackFocus en Vercel, donde se añade la clave de acceso a la API. Esto significa que la clave de la API de Gemini **nunca es visible en el navegador del usuario**.
+Cuando el estudiante interactúa con el tutor de IA, la solicitud **no va directamente desde el navegador a Google**. En cambio, pasa por un servidor intermediario seguro operado por TrackNara en Vercel, donde se añade la clave de acceso a la API. Esto significa que la clave de la API de Gemini **nunca es visible en el navegador del usuario**.
 
-Este diseño es parte de la arquitectura de seguridad de credenciales descrita en la sección 14 de esta política. En ningún punto del flujo el usuario recibe, transmite ni almacena la clave de acceso a Gemini; la comunicación entre el servidor de TrackFocus y Google Gemini es siempre servidor a servidor (server-to-server).
+Este diseño es parte de la arquitectura de seguridad de credenciales descrita en la sección 14 de esta política. En ningún punto del flujo el usuario recibe, transmite ni almacena la clave de acceso a Gemini; la comunicación entre el servidor de TrackNara y Google Gemini es siempre servidor a servidor (server-to-server).
 
 ### Datos que se envían a Google Gemini
 
@@ -179,7 +179,7 @@ Este diseño es parte de la arquitectura de seguridad de credenciales descrita e
 
 ### ¿Se almacenan las conversaciones?
 
-Las conversaciones con el tutor de IA **no se almacenan de forma permanente** en los servidores de TrackFocus ni en la base de datos de Supabase. El historial de la conversación existe únicamente en la memoria del navegador del usuario durante la sesión activa y se descarta al cerrar o recargar la aplicación.
+Las conversaciones con el tutor de IA **no se almacenan de forma permanente** en los servidores de TrackNara ni en la base de datos de Supabase. El historial de la conversación existe únicamente en la memoria del navegador del usuario durante la sesión activa y se descarta al cerrar o recargar la aplicación.
 
 Google, como proveedor de Gemini, puede procesar y retener los datos enviados conforme a sus propias políticas. Se recomienda revisar la [Política de privacidad de Google](https://policies.google.com/privacy).
 
@@ -187,7 +187,7 @@ Google, como proveedor de Gemini, puede procesar y retener los datos enviados co
 
 ## 6. Uso de servicios externos
 
-TrackFocus utiliza los siguientes servicios de terceros. Cada uno recibe únicamente los datos necesarios para cumplir su función específica.
+TrackNara utiliza los siguientes servicios de terceros. Cada uno recibe únicamente los datos necesarios para cumplir su función específica.
 
 | Servicio | Proveedor | Propósito | Datos que recibe | Política de privacidad |
 |---|---|---|---|---|
@@ -198,19 +198,19 @@ TrackFocus utiliza los siguientes servicios de terceros. Cada uno recibe únicam
 | Google Fonts CDN | Google LLC (USA) | Tipografía de la interfaz (fuente Inter) | Dirección IP, User-Agent, referrer | [policies.google.com/privacy](https://policies.google.com/privacy) |
 | jsDelivr CDN | ProspectOne (Global) | Librería de gráficos (Chart.js) — carga diferida | Dirección IP, User-Agent | [jsdelivr.com/about](https://www.jsdelivr.com/about) |
 
-> **Nota sobre el flujo de datos hacia servicios de IA:** Las solicitudes a Google Gemini API no son iniciadas por el navegador del usuario sino por el servidor de TrackFocus (Vercel). El usuario no interviene como intermediario de la credencial y no puede observar, interceptar ni reutilizar la clave de acceso. Véase la sección 14 para el detalle técnico de esta arquitectura.
+> **Nota sobre el flujo de datos hacia servicios de IA:** Las solicitudes a Google Gemini API no son iniciadas por el navegador del usuario sino por el servidor de TrackNara (Vercel). El usuario no interviene como intermediario de la credencial y no puede observar, interceptar ni reutilizar la clave de acceso. Véase la sección 14 para el detalle técnico de esta arquitectura.
 
 ---
 
 ## 7. Uso de Stripe (pagos)
 
-**TrackFocus no utiliza Stripe ni ningún otro servicio o pasarela de pago.** La plataforma no procesa, almacena ni transmite datos de tarjetas de crédito, cuentas bancarias ni información financiera de ningún tipo.
+**TrackNara no utiliza Stripe ni ningún otro servicio o pasarela de pago.** La plataforma no procesa, almacena ni transmite datos de tarjetas de crédito, cuentas bancarias ni información financiera de ningún tipo.
 
 ---
 
 ## 8. Uso de Supabase
 
-Supabase es el proveedor de base de datos y autenticación de TrackFocus. Todos los datos personales listados en la sección 2 se almacenan en Supabase.
+Supabase es el proveedor de base de datos y autenticación de TrackNara. Todos los datos personales listados en la sección 2 se almacenan en Supabase.
 
 **Región del servidor:** West US (North California, Estados Unidos) — us-west-1
 
@@ -219,13 +219,13 @@ Supabase es el proveedor de base de datos y autenticación de TrackFocus. Todos 
 - **Row-Level Security (RLS):** Cada usuario solo puede acceder a sus propios datos. Un estudiante no puede ver los datos de otro estudiante. Los docentes solo pueden ver los datos de los estudiantes de su aula o institución.
 - **Cifrado en tránsito:** Toda comunicación entre la aplicación y Supabase ocurre mediante HTTPS/TLS.
 - **Backups automáticos:** Supabase realiza copias de seguridad automáticas de la base de datos conforme a los términos de su plan de servicio.
-- **Autenticación delegada:** Las contraseñas de los usuarios nunca se almacenan en TrackFocus. La autenticación se delega completamente a Google OAuth a través de Supabase Auth.
+- **Autenticación delegada:** Las contraseñas de los usuarios nunca se almacenan en TrackNara. La autenticación se delega completamente a Google OAuth a través de Supabase Auth.
 
 ---
 
 ## 9. Uso de Analytics (métricas de rendimiento)
 
-TrackFocus utiliza **Vercel Web Analytics**, incluido automáticamente en el alojamiento de Vercel, únicamente en el entorno de producción. Esta herramienta no se activa en entornos de desarrollo local.
+TrackNara utiliza **Vercel Web Analytics**, incluido automáticamente en el alojamiento de Vercel, únicamente en el entorno de producción. Esta herramienta no se activa en entornos de desarrollo local.
 
 **¿Qué datos recopila Vercel Web Analytics?**
 
@@ -238,7 +238,7 @@ TrackFocus utiliza **Vercel Web Analytics**, incluido automáticamente en el alo
 
 Vercel Web Analytics **no establece cookies de rastreo de terceros** y no identifica a los usuarios de forma nominal. Los datos se procesan de forma agregada para evaluar el rendimiento de la plataforma.
 
-TrackFocus **no utiliza** Google Analytics, Meta Pixel, Hotjar, Segment ni ninguna otra herramienta de analítica comercial.
+TrackNara **no utiliza** Google Analytics, Meta Pixel, Hotjar, Segment ni ninguna otra herramienta de analítica comercial.
 
 ---
 
@@ -248,7 +248,7 @@ TrackFocus **no utiliza** Google Analytics, Meta Pixel, Hotjar, Segment ni ningu
 |---|---|
 | Datos de identidad y perfil (tabla `users`) | Hasta que el usuario elimine su cuenta o solicite la supresión de sus datos. |
 | Sesiones de estudio (tabla `study_sessions`) | Hasta que el usuario elimine su cuenta. Al eliminar la cuenta, las sesiones se eliminan en cascada. |
-| Archivos multimedia (metadata en tabla `uploaded_files`) | Hasta que el usuario elimine el archivo o su cuenta. El contenido binario del archivo no se almacena permanentemente en servidores de TrackFocus. |
+| Archivos multimedia (metadata en tabla `uploaded_files`) | Hasta que el usuario elimine el archivo o su cuenta. El contenido binario del archivo no se almacena permanentemente en servidores de TrackNara. |
 | Datos del piloto científico (tabla `pilot_analytics`) | Conservados de forma indefinida en formato anonimizado (sin dato personal reversible). No se eliminan al cerrar la cuenta porque no contienen información identificable. |
 | Caché local (localStorage) | Se elimina automáticamente al cerrar sesión (`logout`). |
 | Backups de Supabase | Según la política de retención del plan de servicio contratado con Supabase. |
@@ -261,23 +261,23 @@ TrackFocus **no utiliza** Google Analytics, Meta Pixel, Hotjar, Segment ni ningu
 
 Conforme a la Ley N.° 29733 y su Reglamento, tienes los siguientes derechos sobre tus datos personales:
 
-| Derecho | Descripción | Cómo ejercerlo en TrackFocus |
+| Derecho | Descripción | Cómo ejercerlo en TrackNara |
 |---|---|---|
-| **Acceso** | Conocer qué datos personales tuyos tiene TrackFocus y para qué se usan. | Puedes ver tu información en tu perfil dentro de la aplicación. Para un informe completo, envía una solicitud a trackfocus.support@gmail.com. |
+| **Acceso** | Conocer qué datos personales tuyos tiene TrackNara y para qué se usan. | Puedes ver tu información en tu perfil dentro de la aplicación. Para un informe completo, envía una solicitud a trackfocus.support@gmail.com. |
 | **Rectificación** | Corregir datos inexactos o incompletos. | Desde el panel de perfil de la aplicación o mediante solicitud escrita al correo de privacidad. |
 | **Cancelación / Supresión** | Solicitar que se eliminen tus datos personales. | Disponible en la configuración de cuenta. También puedes solicitarlo por correo. Los datos del piloto científico, al estar anonimizados (sin identificador personal reversible), no pueden ser eliminados de forma individual. |
 | **Oposición** | Oponerte al tratamiento de tus datos para una finalidad específica. | Mediante solicitud escrita al correo de privacidad. |
 
-**Plazo de respuesta:** TrackFocus responderá a tus solicitudes en un plazo máximo de **30 días hábiles** contados desde la recepción de la solicitud, conforme al art. 24 de la Ley N.° 29733.
+**Plazo de respuesta:** TrackNara responderá a tus solicitudes en un plazo máximo de **30 días hábiles** contados desde la recepción de la solicitud, conforme al art. 24 de la Ley N.° 29733.
 
 Para ejercer cualquiera de estos derechos, escribe a: **trackfocus.support@gmail.com**
-Incluye en tu solicitud: nombre completo, correo electrónico registrado en TrackFocus, derecho que deseas ejercer y descripción de tu solicitud.
+Incluye en tu solicitud: nombre completo, correo electrónico registrado en TrackNara, derecho que deseas ejercer y descripción de tu solicitud.
 
 ---
 
 ## 12. Derechos de menores de edad
 
-TrackFocus puede ser utilizado por estudiantes menores de edad únicamente cuando se cumplan las siguientes condiciones:
+TrackNara puede ser utilizado por estudiantes menores de edad únicamente cuando se cumplan las siguientes condiciones:
 
 **Consentimiento parental obligatorio:**
 Antes de acceder al panel principal de la aplicación, el menor (o su tutor legal) debe aceptar expresamente los términos de uso y esta política de privacidad a través de una pantalla de consentimiento integrada en la aplicación. Este consentimiento queda registrado en la base de datos con la fecha y hora exactas.
@@ -301,20 +301,20 @@ La revocación del consentimiento no afecta a los datos del piloto científico y
 
 ## 13. Seguridad
 
-TrackFocus implementa las siguientes medidas técnicas y organizativas para proteger los datos personales:
+TrackNara implementa las siguientes medidas técnicas y organizativas para proteger los datos personales:
 
 | Medida | Descripción |
 |---|---|
-| **Cifrado en tránsito (HTTPS/TLS)** | Toda comunicación entre el navegador del usuario y los servidores de TrackFocus, Supabase y Vercel ocurre mediante protocolos cifrados. |
-| **Autenticación delegada (Google OAuth)** | TrackFocus no almacena contraseñas. La autenticación es gestionada íntegramente por Google. |
+| **Cifrado en tránsito (HTTPS/TLS)** | Toda comunicación entre el navegador del usuario y los servidores de TrackNara, Supabase y Vercel ocurre mediante protocolos cifrados. |
+| **Autenticación delegada (Google OAuth)** | TrackNara no almacena contraseñas. La autenticación es gestionada íntegramente por Google. |
 | **Row-Level Security (RLS)** | Las reglas de acceso a la base de datos en Supabase garantizan que cada usuario solo pueda leer y modificar sus propios datos. |
-| **Proxy serverless para servicios externos** | Las claves de acceso a APIs externas (Google Gemini y otros servicios que requieran autenticación) se almacenan como variables de entorno del servidor en Vercel. Nunca se incluyen en el código JavaScript enviado al navegador, ni son accesibles mediante herramientas de desarrollo (DevTools), localStorage, sessionStorage u otro mecanismo del cliente. El navegador solo interactúa con rutas internas de TrackFocus (`/api/*`), nunca directamente con servicios externos. |
-| **Control de origen (CORS)** | Los endpoints del servidor de TrackFocus validan la cabecera `Origin` de cada solicitud entrante. Las peticiones provenientes de dominios no autorizados son rechazadas con HTTP 403 antes de ser procesadas. |
+| **Proxy serverless para servicios externos** | Las claves de acceso a APIs externas (Google Gemini y otros servicios que requieran autenticación) se almacenan como variables de entorno del servidor en Vercel. Nunca se incluyen en el código JavaScript enviado al navegador, ni son accesibles mediante herramientas de desarrollo (DevTools), localStorage, sessionStorage u otro mecanismo del cliente. El navegador solo interactúa con rutas internas de TrackNara (`/api/*`), nunca directamente con servicios externos. |
+| **Control de origen (CORS)** | Los endpoints del servidor de TrackNara validan la cabecera `Origin` de cada solicitud entrante. Las peticiones provenientes de dominios no autorizados son rechazadas con HTTP 403 antes de ser procesadas. |
 | **Anonimización criptográfica** | Los datos del piloto científico se asocian a un hash SHA-256 del correo electrónico, proceso matemáticamente irreversible. |
 | **Eliminación de caché al cerrar sesión** | Al finalizar la sesión, la copia local del estado (localStorage) se elimina del dispositivo automáticamente. |
 | **Modo de demostración aislado** | El modo de demostración (`?demo=1`) opera con datos ficticios precargados y nunca lee, escribe ni modifica datos reales. |
 
-A pesar de estas medidas, ningún sistema de transmisión o almacenamiento de datos puede garantizar seguridad absoluta. TrackFocus adoptará las medidas razonables para proteger los datos, pero no puede garantizar la invulnerabilidad total ante ataques externos.
+A pesar de estas medidas, ningún sistema de transmisión o almacenamiento de datos puede garantizar seguridad absoluta. TrackNara adoptará las medidas razonables para proteger los datos, pero no puede garantizar la invulnerabilidad total ante ataques externos.
 
 ---
 
@@ -331,13 +331,13 @@ Todas las claves de acceso a servicios externos —incluidas la API de Google Ge
 
 ### 14.2 Arquitectura Backend Proxy
 
-TrackFocus emplea una arquitectura de proxy de servidor que interpone una capa de seguridad controlada entre el navegador del usuario y los servicios externos:
+TrackNara emplea una arquitectura de proxy de servidor que interpone una capa de seguridad controlada entre el navegador del usuario y los servicios externos:
 
 ```
 Navegador del usuario
         │  (HTTPS — sin credenciales privadas)
         ▼
-API interna TrackFocus  [Vercel Serverless /api/*]
+API interna TrackNara  [Vercel Serverless /api/*]
         │  (HTTPS — credencial inyectada desde variable de entorno del servidor)
         ▼
 Servicio externo  (Google Gemini API, etc.)
@@ -345,9 +345,9 @@ Servicio externo  (Google Gemini API, etc.)
 
 Bajo este diseño:
 
-1. **El navegador** realiza solicitudes únicamente a rutas internas de TrackFocus (p. ej. `/api/ai-chat`, `/api/gemini`, `/api/audio-transcribe`). Estas rutas no exigen ni aceptan credenciales por parte del cliente.
-2. **El servidor de TrackFocus** recibe la solicitud, la valida mediante verificación de origen (CORS), incorpora la credencial privada almacenada en el entorno del servidor y reenvía la petición al servicio externo.
-3. **El servicio externo** (p. ej. Google Gemini) devuelve la respuesta al servidor de TrackFocus.
+1. **El navegador** realiza solicitudes únicamente a rutas internas de TrackNara (p. ej. `/api/ai-chat`, `/api/gemini`, `/api/audio-transcribe`). Estas rutas no exigen ni aceptan credenciales por parte del cliente.
+2. **El servidor de TrackNara** recibe la solicitud, la valida mediante verificación de origen (CORS), incorpora la credencial privada almacenada en el entorno del servidor y reenvía la petición al servicio externo.
+3. **El servicio externo** (p. ej. Google Gemini) devuelve la respuesta al servidor de TrackNara.
 4. **El servidor** retransmite la respuesta al navegador del usuario sin incluir ninguna credencial ni metadato interno del servidor.
 
 ### 14.3 Eliminación de mecanismos de acceso directo previos
@@ -360,38 +360,38 @@ Con anterioridad a junio de 2026 existían mecanismos de desarrollo que permití
 | Clave `tf_gemini_dev_key` en `localStorage` | Permitía inyectar una clave de API mediante el almacenamiento local del navegador. | **Eliminado** |
 | Funciones de llamada directa en el frontend | Funciones JavaScript que contactaban directamente a `generativelanguage.googleapis.com` como alternativa al proxy. | **Eliminadas** |
 
-Desde la versión 1.1, el frontend de TrackFocus **no contiene ni puede contener** ninguna ruta de acceso directo a servicios externos que requieran credenciales privadas.
+Desde la versión 1.1, el frontend de TrackNara **no contiene ni puede contener** ninguna ruta de acceso directo a servicios externos que requieran credenciales privadas.
 
 ### 14.4 Protección CORS (Control de Origen)
 
-Los endpoints del servidor de TrackFocus implementan una lista de orígenes autorizados explícitamente (`Access-Control-Allow-Origin`). Cualquier solicitud HTTP que incluya una cabecera `Origin` correspondiente a un dominio no autorizado es rechazada con un error HTTP 403 (Forbidden) antes de ser procesada. Esta medida impide que sitios web de terceros realicen solicitudes en nombre del usuario hacia la API interna de TrackFocus.
+Los endpoints del servidor de TrackNara implementan una lista de orígenes autorizados explícitamente (`Access-Control-Allow-Origin`). Cualquier solicitud HTTP que incluya una cabecera `Origin` correspondiente a un dominio no autorizado es rechazada con un error HTTP 403 (Forbidden) antes de ser procesada. Esta medida impide que sitios web de terceros realicen solicitudes en nombre del usuario hacia la API interna de TrackNara.
 
 ### 14.5 Garantía al usuario
 
-Como resultado de esta arquitectura, el usuario de TrackFocus:
+Como resultado de esta arquitectura, el usuario de TrackNara:
 
 - **Nunca recibe** ninguna credencial privada de los servicios externos utilizados por la plataforma.
 - **No puede acceder** a la clave de API de Google Gemini, ni a ningún otro secreto de servidor, mediante ninguna herramienta del navegador.
-- **Interactúa** con los servicios de inteligencia artificial y almacenamiento únicamente a través de interfaces validadas y controladas por el servidor de TrackFocus.
+- **Interactúa** con los servicios de inteligencia artificial y almacenamiento únicamente a través de interfaces validadas y controladas por el servidor de TrackNara.
 
 ---
 
 ## 15. Transferencias internacionales de datos
 
-Al utilizar TrackFocus, tus datos personales pueden ser transferidos y procesados fuera del Perú por los siguientes proveedores:
+Al utilizar TrackNara, tus datos personales pueden ser transferidos y procesados fuera del Perú por los siguientes proveedores:
 
 | Proveedor | País | Datos transferidos | Base legal de la transferencia |
 |---|---|---|---|
 | Google LLC (OAuth) | Estados Unidos | Datos de autenticación (correo electrónico, nombre, avatar) | Consentimiento del usuario; cláusulas contractuales estándar de Google. |
-| Google LLC (Gemini API) | Estados Unidos | Historial de conversación con IA, metadata de sesión, archivos adjuntos — **transferencia iniciada desde el servidor de TrackFocus, no desde el navegador del usuario** | Consentimiento del usuario; cláusulas contractuales estándar de Google. |
+| Google LLC (Gemini API) | Estados Unidos | Historial de conversación con IA, metadata de sesión, archivos adjuntos — **transferencia iniciada desde el servidor de TrackNara, no desde el navegador del usuario** | Consentimiento del usuario; cláusulas contractuales estándar de Google. |
 | Supabase Inc. | Estados Unidos (us-west-1, North California) | Todos los datos de la base de datos | Acuerdo de procesamiento de datos (DPA) con Supabase. |
 | Vercel Inc. | Estados Unidos | Logs de servidor, IP, User-Agent, métricas; actúa como intermediario proxy para llamadas a servicios externos | Interés legítimo; política de privacidad de Vercel. |
 | Google LLC (Fonts CDN) | Estados Unidos | Dirección IP, User-Agent | Interés legítimo en la carga de recursos técnicos. |
 | ProspectOne (jsDelivr) | Global (CDN distribuida) | Dirección IP, User-Agent | Interés legítimo en la carga de recursos técnicos. |
 
-> **Nota sobre la transferencia a Google Gemini:** A diferencia de otros servicios en los que el navegador del usuario contacta directamente al proveedor externo, los datos enviados a Google Gemini son transferidos por el servidor de TrackFocus (Vercel) de forma directa y sin que el dispositivo del usuario actúe como intermediario. El usuario no inicia ni controla esta transmisión de forma técnica; únicamente proporciona el contenido de la consulta a través de la interfaz de TrackFocus.
+> **Nota sobre la transferencia a Google Gemini:** A diferencia de otros servicios en los que el navegador del usuario contacta directamente al proveedor externo, los datos enviados a Google Gemini son transferidos por el servidor de TrackNara (Vercel) de forma directa y sin que el dispositivo del usuario actúe como intermediario. El usuario no inicia ni controla esta transmisión de forma técnica; únicamente proporciona el contenido de la consulta a través de la interfaz de TrackNara.
 
-TrackFocus adoptará las salvaguardas razonables para garantizar que las transferencias internacionales cumplan con los principios de la Ley N.° 29733 (art. 15: flujo transfronterizo de datos personales).
+TrackNara adoptará las salvaguardas razonables para garantizar que las transferencias internacionales cumplan con los principios de la Ley N.° 29733 (art. 15: flujo transfronterizo de datos personales).
 
 ---
 
@@ -402,7 +402,7 @@ El usuario puede solicitar la eliminación de su cuenta y de sus datos personale
 **Proceso:**
 1. Enviar una solicitud al correo de privacidad: trackfocus.support@gmail.com.
 2. Indicar el correo electrónico registrado en la plataforma.
-3. TrackFocus confirmará la recepción y procesará la solicitud en un plazo máximo de 30 días hábiles.
+3. TrackNara confirmará la recepción y procesará la solicitud en un plazo máximo de 30 días hábiles.
 
 **Qué se elimina al cerrar la cuenta:**
 - Datos de identidad y perfil.
@@ -421,28 +421,28 @@ El usuario puede solicitar la eliminación de su cuenta y de sus datos personale
 Si deseas solicitar la eliminación de tus datos sin eliminar tu cuenta, o si eres tutor legal de un menor y deseas ejercer este derecho en su nombre, puedes hacerlo mediante los siguientes pasos:
 
 1. Escribe al correo: **trackfocus.support@gmail.com**
-2. Asunto del correo: `Solicitud de eliminación de datos — TrackFocus`
+2. Asunto del correo: `Solicitud de eliminación de datos — TrackNara`
 3. Incluye:
    - Nombre completo del titular (o del menor, si aplica).
-   - Correo electrónico registrado en TrackFocus.
+   - Correo electrónico registrado en TrackNara.
    - Descripción específica de los datos cuya eliminación solicitas.
    - Si actúas como tutor legal de un menor, indica tu relación y, si es posible, adjunta documento que acredite tu condición.
 
 **Plazo de respuesta:** 30 días hábiles desde la recepción de la solicitud.
 
-TrackFocus puede negar la eliminación de datos que sean necesarios para cumplir obligaciones legales o que estén anonimizados y no puedan asociarse a una persona.
+TrackNara puede negar la eliminación de datos que sean necesarios para cumplir obligaciones legales o que estén anonimizados y no puedan asociarse a una persona.
 
 ---
 
 ## 18. Cookies
 
-TrackFocus utiliza un número mínimo de cookies estrictamente necesarias para el funcionamiento del servicio.
+TrackNara utiliza un número mínimo de cookies estrictamente necesarias para el funcionamiento del servicio.
 
 | Tipo de cookie | Nombre / Origen | Propósito | ¿Requiere consentimiento? |
 |---|---|---|---|
 | **Cookie de sesión (técnica)** | Establecida por Supabase Auth | Mantiene la sesión del usuario autenticada entre recargas de página. | No (técnica/necesaria, exenta per Ley 29733 y RGPD). |
 
-**TrackFocus no utiliza:**
+**TrackNara no utiliza:**
 - Cookies de rastreo de comportamiento.
 - Cookies publicitarias.
 - Cookies de redes sociales.
@@ -463,7 +463,7 @@ Para consultas, solicitudes de derechos ARCO (Acceso, Rectificación, Cancelaci�
 | Responsable del tratamiento | Slater Quevedo |
 | País de domicilio | Perú |
 
-TrackFocus se compromete a responder todas las solicitudes relacionadas con privacidad en un plazo máximo de **30 días hábiles**.
+TrackNara se compromete a responder todas las solicitudes relacionadas con privacidad en un plazo máximo de **30 días hábiles**.
 
 Si consideras que el tratamiento de tus datos no es conforme a la normativa aplicable, tienes derecho a presentar una reclamación ante la **Autoridad Nacional de Protección de Datos Personales (ANPD)** del Ministerio de Justicia y Derechos Humanos del Perú.
 
@@ -471,17 +471,17 @@ Si consideras que el tratamiento de tus datos no es conforme a la normativa apli
 
 ## 20. Cambios futuros
 
-TrackFocus puede actualizar esta Política de Privacidad periódicamente para reflejar cambios en el servicio, en la legislación aplicable o en las prácticas de tratamiento de datos.
+TrackNara puede actualizar esta Política de Privacidad periódicamente para reflejar cambios en el servicio, en la legislación aplicable o en las prácticas de tratamiento de datos.
 
 **Cómo te notificaremos:**
 - Se publicará la nueva versión en la plataforma con la fecha de actualización visible al inicio del documento.
-- Para cambios sustanciales que afecten tus derechos, TrackFocus procurará notificarte directamente mediante un aviso dentro de la aplicación.
+- Para cambios sustanciales que afecten tus derechos, TrackNara procurará notificarte directamente mediante un aviso dentro de la aplicación.
 
 **Tu responsabilidad:**
-Te recomendamos revisar esta política periódicamente. El uso continuado de TrackFocus tras la publicación de una nueva versión implica la aceptación de los cambios.
+Te recomendamos revisar esta política periódicamente. El uso continuado de TrackNara tras la publicación de una nueva versión implica la aceptación de los cambios.
 
 La versión vigente siempre estará disponible en la plataforma.
 
 ---
 
-*Política de Privacidad — TrackFocus · Versión 1.1 · Fecha de vigencia: 24/06/2026*
+*Política de Privacidad — TrackNara · Versión 1.1 · Fecha de vigencia: 24/06/2026*

@@ -277,7 +277,7 @@ const UIStudent = (() => {
       : '<div class="dpv-mission dpv-mission-empty">'
         + '<div class="dpv-mission-label">MISIÓN DEL DÍA</div>'
         + '<div class="dpv-mission-subject">¿Por dónde comienzas hoy?</div>'
-        + '<div class="dpv-mission-reason">Registra tu primera sesión y TrackFocus aprende contigo.</div>'
+        + '<div class="dpv-mission-reason">Registra tu primera sesión y TrackNara aprende contigo.</div>'
         + '<div class="dpv-mission-actions">'
         + '<button class="dpv-mission-cta" data-go="new-session">Comenzar ahora →</button>'
         + '</div></div>';
@@ -869,7 +869,7 @@ const UIStudent = (() => {
     }
 
     // Ruta de aprendizaje (Panel Personal): carrera/meta + nivel de
-    // preparación general, ya existentes en TrackFocus (arv-academic-profile-v3
+    // preparación general, ya existentes en TrackNara (arv-academic-profile-v3
     // y _calcPrep) — se usan para calibrar la dificultad inicial de los
     // ejercicios desde el primer mensaje, sin esperar a estimarla en vivo.
     try {
@@ -889,11 +889,11 @@ const UIStudent = (() => {
       midDecoTriggered: false, // previene doble auto-trigger DECO
       quizResult: null        // resultado del quiz opcional (si el alumno lo usó)
     };
-    window._trackfocusChatCtx = { grade: metadata.grade, subject: metadata.subject, studyMode: metadata.studyMode, topicGoal: metadata.topicGoal || '', memoryContext: metadata.memoryContext || '' };
+    window._tracknaraChatCtx = { grade: metadata.grade, subject: metadata.subject, studyMode: metadata.studyMode, topicGoal: metadata.topicGoal || '', memoryContext: metadata.memoryContext || '' };
     // Referencia viva al historial: se acumula progresivamente a medida que
     // avanza la conversación (mismo array que _chatState.history, por referencia).
     // La usa youtube-recommender.js para recomendar en base a TODA la sesión.
-    window._trackfocusChatHistory = _chatState.history;
+    window._tracknaraChatHistory = _chatState.history;
     // El chat reemplaza el cuerpo de la pantalla actual. Funciona tanto en
     // 'ai-study' (#aiPanelBody) como en 'new-session' (.session-setup-wrap).
     const panelBody = document.getElementById('aiPanelBody')
@@ -2456,7 +2456,7 @@ const UIStudent = (() => {
       btn.addEventListener('click', () => {
         const cert = certs.find(c => c.id === btn.dataset.cert);
         if (!cert || !cert.eligible) return;
-        Exporter.printCertificate({ studentName: user.name, title: cert.title, subtitle: cert.subtitle, detail: cert.detail, school: school ? school.name : 'TrackFocus' });
+        Exporter.printCertificate({ studentName: user.name, title: cert.title, subtitle: cert.subtitle, detail: cert.detail, school: school ? school.name : 'TrackNara' });
       });
     });
   }
@@ -2530,7 +2530,7 @@ const UIStudent = (() => {
     const certs = [
       { id: 'constancia', icon: '🔥', title: 'Certificado de Constancia',
         subtitle: 'Por mantener una racha de estudio sostenida',
-        detail: `Por demostrar disciplina y constancia con una racha de ${gam.streak || 0} días consecutivos de estudio en TrackFocus.`,
+        detail: `Por demostrar disciplina y constancia con una racha de ${gam.streak || 0} días consecutivos de estudio en TrackNara.`,
         eligible: (gam.streak || 0) >= 7 },
       { id: 'disciplina', icon: '📚', title: 'Certificado de Disciplina',
         subtitle: 'Por dedicación al estudio',
@@ -2635,7 +2635,7 @@ const UIStudent = (() => {
       `<tr><td>${esc(w.label)}</td><td>${w.count}</td><td>${w.min} min</td><td>${w.conc || '—'}/5</td></tr>`).join('');
 
     const body = `
-      <h1>Mi reporte de progreso — TrackFocus</h1>
+      <h1>Mi reporte de progreso — TrackNara</h1>
       <p class="sub">${esc(user.name)} · generado el ${new Date().toLocaleDateString('es-PE')}</p>
       <h2>Resumen</h2>
       <div class="kpis">
@@ -2650,7 +2650,7 @@ const UIStudent = (() => {
         sorted.length >= 4 ? ` (${delta >= 0 ? '+' : ''}${delta.toFixed(1)}).` : '.'}</p>
       <h2>Evolución semanal</h2>
       <table><thead><tr><th>Semana</th><th>Sesiones</th><th>Tiempo</th><th>Concentración</th></tr></thead><tbody>${weeklyRows}</tbody></table>`;
-    Exporter.printHTML('Mi reporte de progreso — TrackFocus', body);
+    Exporter.printHTML('Mi reporte de progreso — TrackNara', body);
   }
 
   function wireAchievements() {
@@ -2674,7 +2674,7 @@ const UIStudent = (() => {
           title: cert.title,
           subtitle: cert.subtitle,
           detail: cert.detail,
-          school: school ? school.name : 'TrackFocus'
+          school: school ? school.name : 'TrackNara'
         });
       });
     });
@@ -3760,7 +3760,7 @@ const UIStudent = (() => {
           <button class="ghost pp-account-btn" id="ppDiagBtn">Exportar registro de errores</button>
           <button class="primary pp-account-btn" id="ppLogoutBtn">Cerrar sesión</button>
         </div>
-        <div class="pp-version-info">TrackFocus · Todos los datos guardados localmente</div>
+        <div class="pp-version-info">TrackNara · Todos los datos guardados localmente</div>
       </div>`;
 
     // ── Panel: Preferencias ──
@@ -4198,7 +4198,7 @@ const UIStudent = (() => {
           <button class="ghost pp-account-btn" id="ppDiagBtn">Exportar registro de errores</button>
           <button class="primary pp-account-btn" id="ppLogoutBtn">Cerrar sesión</button>
         </div>
-        <div class="pp-version-info">TrackFocus · Datos sincronizados en la nube</div>
+        <div class="pp-version-info">TrackNara · Datos sincronizados en la nube</div>
       </div>`;
 
     return `
@@ -4783,7 +4783,7 @@ const UIStudent = (() => {
     });
     r().querySelector('#ppExportBtn')?.addEventListener('click', () => {
       try {
-        Exporter.backupJSON('trackfocus-backup-' + new Date().toISOString().slice(0, 10) + '.json');
+        Exporter.backupJSON('tracknara-backup-' + new Date().toISOString().slice(0, 10) + '.json');
         UI.flash('Backup exportado correctamente.', 'success');
       } catch (_) { UI.flash('Error al exportar. Intenta de nuevo.', 'error'); }
     });
@@ -4848,8 +4848,8 @@ const UIStudent = (() => {
 
     r().querySelector('#shareStudent')?.addEventListener('click', () => {
       if (!_url2) return;
-      const text = `Mi perfil en TrackFocus · ${_code2}: ${_url2}`;
-      if (navigator.share) navigator.share({ title: 'TrackFocus — Identidad Digital', text, url: _url2 }).catch(() => {});
+      const text = `Mi perfil en TrackNara · ${_code2}: ${_url2}`;
+      if (navigator.share) navigator.share({ title: 'TrackNara — Identidad Digital', text, url: _url2 }).catch(() => {});
       else navigator.clipboard?.writeText(_url2).then(() => UI.flash('Enlace copiado.', 'success'));
     });
 
@@ -4858,7 +4858,7 @@ const UIStudent = (() => {
       if (!canvas) return UI.flash('QR no disponible aún.', 'error');
       const a = document.createElement('a');
       a.href = canvas.toDataURL('image/png');
-      a.download = `trackfocus-id-${_code2}.png`;
+      a.download = `tracknara-id-${_code2}.png`;
       a.click();
     });
   }

@@ -1,4 +1,4 @@
--- Migration: Identidad robusta TrackFocus
+-- Migration: Identidad robusta TrackNara
 -- Ejecutar en: Supabase Dashboard → SQL Editor
 -- Es idempotente: se puede ejecutar más de una vez sin error.
 

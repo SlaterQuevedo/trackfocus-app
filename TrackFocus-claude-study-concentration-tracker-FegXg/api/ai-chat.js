@@ -303,7 +303,7 @@ const _DECO_LEVEL_HINTS = {
 };
 
 // performanceBand ('low' | 'high' | null) se calcula en handleMessage a
-// partir de señales YA existentes en TrackFocus (índice de aprendizaje en
+// partir de señales YA existentes en TrackNara (índice de aprendizaje en
 // vivo, resultados DECO parciales) — nunca se inventa, y nunca se le dice
 // al alumno el número: solo cambia CÓMO se enseña.
 const _PERF_BAND_HINTS = {
@@ -328,7 +328,7 @@ function buildSystemPrompt(metadata, decoDue) {
   // Calibración inicial (Panel Personal + selector de dificultad en el setup):
   // meta/carrera + nivel de preparación general o nivel elegido explícitamente
   // por el alumno. Nada de esto se inventa — career/prepPct ya existían en
-  // TrackFocus, difficultyPreset es una elección directa del alumno antes de
+  // TrackNara, difficultyPreset es una elección directa del alumno antes de
   // empezar. Si el alumno eligió un nivel explícito, ese manda sobre el
   // cálculo automático de prepPct (pero career sigue aplicando).
   const calibParts = [];
@@ -359,7 +359,7 @@ function buildSystemPrompt(metadata, decoDue) {
     ? `\nCierra esta respuesta con UNA comprobación breve de comprensión, en una frase natural integrada al texto (sin encabezado, sin separadores): pide ${decoHint}.`
     : '';
 
-  return `Eres TrackTutor, el tutor de IA de TrackFocus, para un estudiante de ${grade} de secundaria peruana. Enseñas ${subject}.
+  return `Eres TrackTutor, el tutor de IA de TrackNara, para un estudiante de ${grade} de secundaria peruana. Enseñas ${subject}.
 ${memoryBlock}${calibBlock}${modeBlock}${perfBlock}
 CÓMO ENSEÑAS:
 - Ve directo a enseñar. Nada de saludos largos, frases motivacionales genéricas, recapitulaciones de sesiones pasadas ni relleno. Un saludo de una frase está bien solo si es el primer mensaje de la sesión.
@@ -471,7 +471,7 @@ async function handleMessage(req, res) {
   const decoDue = userTurnNumber % 3 === 0;
 
   // Banda de desempeño reciente ('low'/'high'/null) desde señales que
-  // TrackFocus YA calcula client-side (índice de aprendizaje en vivo,
+  // TrackNara YA calcula client-side (índice de aprendizaje en vivo,
   // _estimateLiveLI en ui-student.js) — no se inventa ninguna métrica nueva.
   // Cambia CÓMO enseña el prompt, nunca se le dice el número al alumno.
   let performanceBand = null;

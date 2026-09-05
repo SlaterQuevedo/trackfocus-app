@@ -1,4 +1,4 @@
-// Sistema de internacionalización de TrackFocus.
+// Sistema de internacionalización de TrackNara.
 // Español es el idioma de fábrica (no requiere diccionario: el propio texto
 // en el sitio ES el valor por defecto). El usuario cambia de idioma desde
 // Ajustes; la preferencia se guarda en localStorage y se aplica recargando
@@ -60,12 +60,12 @@ const I18N = (function () {
       'landing.hero.pill': 'AI-powered education platform · Peru',
       'landing.hero.title1': "Don't study more.",
       'landing.hero.title2': 'Study better.',
-      'landing.hero.sub': 'TrackFocus turns every study hour into real evidence of learning through artificial intelligence, helping you prove you are truly making progress.',
+      'landing.hero.sub': 'TrackNara turns every study hour into real evidence of learning through artificial intelligence, helping you prove you are truly making progress.',
       'landing.hero.cta': 'Get started',
       'landing.hero.demo': 'Live demo',
 
       // Landing — hero preview mockup (guest state)
-      'landing.preview.label': 'TrackFocus · Preview',
+      'landing.preview.label': 'TrackNara · Preview',
       'landing.preview.greeting': 'Hi, future student',
       'landing.preview.goal': 'Your university · Your career',
       'landing.preview.adviceOf': 'TIP OF',
@@ -77,7 +77,7 @@ const I18N = (function () {
 
       'landing.tips.0': 'Concentration is not improvised. It is trained session by session.',
       'landing.tips.1': 'Studying 30 focused minutes is worth more than 3 hours distracted.',
-      'landing.tips.2': "TrackFocus helps you discover your best time to study.",
+      'landing.tips.2': "TrackNara helps you discover your best time to study.",
       'landing.tips.3': 'Every logged session is real evidence that you are making progress.',
       'landing.tips.4': 'Consistency beats talent. Start today.',
       'landing.tips.5': 'A clear goal turns effort into measurable progress.',
@@ -86,15 +86,15 @@ const I18N = (function () {
       'landing.aiIntros.0': 'Consistency beats talent. One session at a time.',
       'landing.aiIntros.1': 'Every logged session is real evidence that you are making progress.',
       'landing.aiIntros.2': 'Deep learning is not accumulation. It is understanding.',
-      'landing.aiIntros.3': 'TrackFocus helps you discover your best time to study.',
-      'landing.aiIntros.4': 'No two students are alike. TrackFocus adapts to you.',
+      'landing.aiIntros.3': 'TrackNara helps you discover your best time to study.',
+      'landing.aiIntros.4': 'No two students are alike. TrackNara adapts to you.',
       'landing.aiIntros.5': 'Progress is built quietly, session by session.',
       'landing.aiIntros.6': 'Focus is not improvised. It is trained.',
 
       // Landing — problem section
       'landing.problem.label': 'The problem',
       'landing.problem.title': "Studying hard doesn't always mean learning.",
-      'landing.problem.sub': 'Every profile faces its own obstacle. TrackFocus solves them all.',
+      'landing.problem.sub': 'Every profile faces its own obstacle. TrackNara solves them all.',
       'landing.problem.card1.tag': 'Personal Use',
       'landing.problem.card1.title': 'No path to university',
       'landing.problem.card1.desc': "You study alone and don't know if what you're doing truly brings you closer to the career you want.",
@@ -110,9 +110,9 @@ const I18N = (function () {
 
       // Landing — solution section
       'landing.solution.label': 'The solution',
-      'landing.solution.title': 'TrackFocus transforms how you learn in 3 simple steps.',
+      'landing.solution.title': 'TrackNara transforms how you learn in 3 simple steps.',
       'landing.solution.step1.title': 'Define your goal',
-      'landing.solution.step1.desc': 'University, course, or institutional goal. TrackFocus builds your path from day one.',
+      'landing.solution.step1.desc': 'University, course, or institutional goal. TrackNara builds your path from day one.',
       'landing.solution.step1.chip1': 'University',
       'landing.solution.step1.chip2': 'Career',
       'landing.solution.step1.chip3': 'Institution',
@@ -129,7 +129,7 @@ const I18N = (function () {
 
       // Landing — ecosystem section
       'landing.ecosystem.label': 'One single ecosystem',
-      'landing.ecosystem.title': 'TrackFocus supports everyone in the educational process.',
+      'landing.ecosystem.title': 'TrackNara supports everyone in the educational process.',
       'landing.ecosystem.sub': "It's not an app for one profile. It's a platform for the whole ecosystem.",
       'landing.ecosystem.card1.label': 'Personal Use',
       'landing.ecosystem.card1.desc': 'Prepare for university at your own pace, with AI as your mentor.',
@@ -143,7 +143,7 @@ const I18N = (function () {
       // Landing — differentiator section
       'landing.differ.label': 'The difference',
       'landing.differ.title': "What isn't measured can't be improved.",
-      'landing.differ.sub': "TrackFocus doesn't just measure how long you study. It measures real evidence of learning.",
+      'landing.differ.sub': "TrackNara doesn't just measure how long you study. It measures real evidence of learning.",
       'landing.differ.item1.name': 'Habits',
       'landing.differ.item1.desc': 'Streaks, frequency, and optimal schedule detected by AI.',
       'landing.differ.item2.name': 'Comprehension',
@@ -166,7 +166,7 @@ const I18N = (function () {
 
       // Wizard de acceso — paso 0
       'wizard.step0.label': 'Choose your access',
-      'wizard.step0.title': 'How will you use TrackFocus?',
+      'wizard.step0.title': 'How will you use TrackNara?',
       'wizard.step0.sub': 'Choose the experience that best fits how you learn or manage learning.',
       'wizard.step0.personal.title': 'PERSONAL USE',
       'wizard.step0.personal.desc': 'Study at your own pace, build habits, and improve your comprehension.',
@@ -254,11 +254,11 @@ const I18N = (function () {
       'landing.hero.pill': 'Plataforma educacional com IA · Peru',
       'landing.hero.title1': 'Não estude mais.',
       'landing.hero.title2': 'Estude melhor.',
-      'landing.hero.sub': 'O TrackFocus transforma cada hora de estudo em evidência real de aprendizagem por meio de inteligência artificial, ajudando você a comprovar que está realmente avançando.',
+      'landing.hero.sub': 'O TrackNara transforma cada hora de estudo em evidência real de aprendizagem por meio de inteligência artificial, ajudando você a comprovar que está realmente avançando.',
       'landing.hero.cta': 'Começar',
       'landing.hero.demo': 'Demo ao vivo',
 
-      'landing.preview.label': 'TrackFocus · Prévia',
+      'landing.preview.label': 'TrackNara · Prévia',
       'landing.preview.greeting': 'Olá, futuro estudante',
       'landing.preview.goal': 'Sua universidade · Sua carreira',
       'landing.preview.adviceOf': 'DICA DE',
@@ -270,7 +270,7 @@ const I18N = (function () {
 
       'landing.tips.0': 'A concentração não se improvisa. Ela se treina sessão após sessão.',
       'landing.tips.1': 'Estudar 30 min com foco vale mais que 3 horas distraído.',
-      'landing.tips.2': 'O TrackFocus ajuda você a descobrir seu melhor horário para estudar.',
+      'landing.tips.2': 'O TrackNara ajuda você a descobrir seu melhor horário para estudar.',
       'landing.tips.3': 'Cada sessão registrada é evidência real de que você está avançando.',
       'landing.tips.4': 'A constância vence o talento. Comece hoje.',
       'landing.tips.5': 'Um objetivo claro transforma esforço em progresso mensurável.',
@@ -279,14 +279,14 @@ const I18N = (function () {
       'landing.aiIntros.0': 'A constância vence o talento. Uma sessão de cada vez.',
       'landing.aiIntros.1': 'Cada sessão registrada é evidência real de que você está avançando.',
       'landing.aiIntros.2': 'Aprendizado profundo não é acúmulo. É compreensão.',
-      'landing.aiIntros.3': 'O TrackFocus ajuda você a descobrir seu melhor horário para estudar.',
-      'landing.aiIntros.4': 'Não existem dois estudantes iguais. O TrackFocus se adapta a você.',
+      'landing.aiIntros.3': 'O TrackNara ajuda você a descobrir seu melhor horário para estudar.',
+      'landing.aiIntros.4': 'Não existem dois estudantes iguais. O TrackNara se adapta a você.',
       'landing.aiIntros.5': 'O progresso se constrói em silêncio, sessão após sessão.',
       'landing.aiIntros.6': 'O foco não se improvisa. Ele se treina.',
 
       'landing.problem.label': 'O problema',
       'landing.problem.title': 'Estudar duro nem sempre significa aprender.',
-      'landing.problem.sub': 'Cada perfil enfrenta seu próprio obstáculo. O TrackFocus resolve todos eles.',
+      'landing.problem.sub': 'Cada perfil enfrenta seu próprio obstáculo. O TrackNara resolve todos eles.',
       'landing.problem.card1.tag': 'Uso Pessoal',
       'landing.problem.card1.title': 'Sem rota até a universidade',
       'landing.problem.card1.desc': 'Você estuda sozinho e não sabe se o que faz realmente te aproxima da carreira que deseja.',
@@ -301,9 +301,9 @@ const I18N = (function () {
       'landing.problem.card4.desc': 'Os relatórios chegam atrasados e não refletem o que realmente acontece no aprendizado diário.',
 
       'landing.solution.label': 'A solução',
-      'landing.solution.title': 'O TrackFocus transforma como você aprende em 3 passos simples.',
+      'landing.solution.title': 'O TrackNara transforma como você aprende em 3 passos simples.',
       'landing.solution.step1.title': 'Defina sua meta',
-      'landing.solution.step1.desc': 'Universidade, curso ou objetivo institucional. O TrackFocus constrói sua rota desde o primeiro dia.',
+      'landing.solution.step1.desc': 'Universidade, curso ou objetivo institucional. O TrackNara constrói sua rota desde o primeiro dia.',
       'landing.solution.step1.chip1': 'Universidade',
       'landing.solution.step1.chip2': 'Carreira',
       'landing.solution.step1.chip3': 'Instituição',
@@ -319,7 +319,7 @@ const I18N = (function () {
       'landing.solution.step3.chip3': 'XP',
 
       'landing.ecosystem.label': 'Um único ecossistema',
-      'landing.ecosystem.title': 'O TrackFocus acompanha todos no processo educacional.',
+      'landing.ecosystem.title': 'O TrackNara acompanha todos no processo educacional.',
       'landing.ecosystem.sub': 'Não é um app para um perfil. É uma plataforma para todo o ecossistema.',
       'landing.ecosystem.card1.label': 'Uso Pessoal',
       'landing.ecosystem.card1.desc': 'Prepare-se para a universidade no seu ritmo, com a IA como mentora.',
@@ -332,7 +332,7 @@ const I18N = (function () {
 
       'landing.differ.label': 'A diferença',
       'landing.differ.title': 'O que não se mede, não se pode melhorar.',
-      'landing.differ.sub': 'O TrackFocus não mede apenas quanto tempo você estuda. Mede evidência real de aprendizagem.',
+      'landing.differ.sub': 'O TrackNara não mede apenas quanto tempo você estuda. Mede evidência real de aprendizagem.',
       'landing.differ.item1.name': 'Hábitos',
       'landing.differ.item1.desc': 'Sequências, frequência e horário ideal detectados pela IA.',
       'landing.differ.item2.name': 'Compreensão',
@@ -353,7 +353,7 @@ const I18N = (function () {
       'landing.footer.text': 'Dados sincronizados com segurança na nuvem',
 
       'wizard.step0.label': 'Escolha seu acesso',
-      'wizard.step0.title': 'Como você vai usar o TrackFocus?',
+      'wizard.step0.title': 'Como você vai usar o TrackNara?',
       'wizard.step0.sub': 'Escolha a experiência que melhor se adapta à sua forma de aprender ou gerenciar o aprendizado.',
       'wizard.step0.personal.title': 'USO PESSOAL',
       'wizard.step0.personal.desc': 'Estude no seu ritmo, desenvolva hábitos e melhore sua compreensão.',
@@ -438,11 +438,11 @@ const I18N = (function () {
       'landing.hero.pill': 'Piattaforma educativa con IA · Perù',
       'landing.hero.title1': 'Non studiare di più.',
       'landing.hero.title2': 'Studia meglio.',
-      'landing.hero.sub': "TrackFocus trasforma ogni ora di studio in prove reali di apprendimento tramite l'intelligenza artificiale, aiutandoti a dimostrare che stai davvero progredendo.",
+      'landing.hero.sub': "TrackNara trasforma ogni ora di studio in prove reali di apprendimento tramite l'intelligenza artificiale, aiutandoti a dimostrare che stai davvero progredendo.",
       'landing.hero.cta': 'Inizia',
       'landing.hero.demo': 'Demo dal vivo',
 
-      'landing.preview.label': 'TrackFocus · Anteprima',
+      'landing.preview.label': 'TrackNara · Anteprima',
       'landing.preview.greeting': 'Ciao, futuro studente',
       'landing.preview.goal': 'La tua università · Il tuo percorso',
       'landing.preview.adviceOf': 'CONSIGLIO DI',
@@ -454,7 +454,7 @@ const I18N = (function () {
 
       'landing.tips.0': 'La concentrazione non si improvvisa. Si allena sessione dopo sessione.',
       'landing.tips.1': 'Studiare 30 minuti concentrati vale più di 3 ore distratti.',
-      'landing.tips.2': 'TrackFocus ti aiuta a scoprire il tuo momento migliore per studiare.',
+      'landing.tips.2': 'TrackNara ti aiuta a scoprire il tuo momento migliore per studiare.',
       'landing.tips.3': 'Ogni sessione registrata è una prova reale che stai progredendo.',
       'landing.tips.4': 'La costanza batte il talento. Inizia oggi.',
       'landing.tips.5': 'Un obiettivo chiaro trasforma lo sforzo in progresso misurabile.',
@@ -463,14 +463,14 @@ const I18N = (function () {
       'landing.aiIntros.0': 'La costanza batte il talento. Una sessione alla volta.',
       'landing.aiIntros.1': 'Ogni sessione registrata è una prova reale che stai progredendo.',
       'landing.aiIntros.2': "L'apprendimento profondo non è accumulo. È comprensione.",
-      'landing.aiIntros.3': 'TrackFocus ti aiuta a scoprire il tuo momento migliore per studiare.',
-      'landing.aiIntros.4': 'Non esistono due studenti uguali. TrackFocus si adatta a te.',
+      'landing.aiIntros.3': 'TrackNara ti aiuta a scoprire il tuo momento migliore per studiare.',
+      'landing.aiIntros.4': 'Non esistono due studenti uguali. TrackNara si adatta a te.',
       'landing.aiIntros.5': 'Il progresso si costruisce in silenzio, sessione dopo sessione.',
       'landing.aiIntros.6': 'Il focus non si improvvisa. Si allena.',
 
       'landing.problem.label': 'Il problema',
       'landing.problem.title': 'Studiare duramente non significa sempre imparare.',
-      'landing.problem.sub': 'Ogni profilo affronta il proprio ostacolo. TrackFocus li risolve tutti.',
+      'landing.problem.sub': 'Ogni profilo affronta il proprio ostacolo. TrackNara li risolve tutti.',
       'landing.problem.card1.tag': 'Uso Personale',
       'landing.problem.card1.title': "Nessun percorso verso l'università",
       'landing.problem.card1.desc': "Studi da solo e non sai se quello che fai ti avvicina davvero alla carriera che vuoi.",
@@ -485,9 +485,9 @@ const I18N = (function () {
       'landing.problem.card4.desc': "I report arrivano in ritardo e non riflettono ciò che accade davvero nell'apprendimento quotidiano.",
 
       'landing.solution.label': 'La soluzione',
-      'landing.solution.title': 'TrackFocus trasforma il tuo modo di imparare in 3 semplici passi.',
+      'landing.solution.title': 'TrackNara trasforma il tuo modo di imparare in 3 semplici passi.',
       'landing.solution.step1.title': 'Definisci il tuo obiettivo',
-      'landing.solution.step1.desc': "Università, corso o obiettivo istituzionale. TrackFocus costruisce il tuo percorso fin dal primo giorno.",
+      'landing.solution.step1.desc': "Università, corso o obiettivo istituzionale. TrackNara costruisce il tuo percorso fin dal primo giorno.",
       'landing.solution.step1.chip1': 'Università',
       'landing.solution.step1.chip2': 'Percorso',
       'landing.solution.step1.chip3': 'Istituzione',
@@ -503,7 +503,7 @@ const I18N = (function () {
       'landing.solution.step3.chip3': 'XP',
 
       'landing.ecosystem.label': 'Un unico ecosistema',
-      'landing.ecosystem.title': 'TrackFocus accompagna tutti nel processo educativo.',
+      'landing.ecosystem.title': 'TrackNara accompagna tutti nel processo educativo.',
       'landing.ecosystem.sub': "Non è un'app per un solo profilo. È una piattaforma per l'intero ecosistema.",
       'landing.ecosystem.card1.label': 'Uso Personale',
       'landing.ecosystem.card1.desc': "Preparati per l'università al tuo ritmo, con l'IA come mentore.",
@@ -516,7 +516,7 @@ const I18N = (function () {
 
       'landing.differ.label': 'La differenza',
       'landing.differ.title': 'Ciò che non si misura non si può migliorare.',
-      'landing.differ.sub': 'TrackFocus non misura solo quanto tempo studi. Misura prove reali di apprendimento.',
+      'landing.differ.sub': 'TrackNara non misura solo quanto tempo studi. Misura prove reali di apprendimento.',
       'landing.differ.item1.name': 'Abitudini',
       'landing.differ.item1.desc': "Serie, frequenza e orario ottimale rilevati dall'IA.",
       'landing.differ.item2.name': 'Comprensione',
@@ -537,7 +537,7 @@ const I18N = (function () {
       'landing.footer.text': 'Dati sincronizzati in modo sicuro sul cloud',
 
       'wizard.step0.label': 'Scegli il tuo accesso',
-      'wizard.step0.title': 'Come userai TrackFocus?',
+      'wizard.step0.title': 'Come userai TrackNara?',
       'wizard.step0.sub': 'Scegli l\'esperienza più adatta al tuo modo di imparare o gestire l\'apprendimento.',
       'wizard.step0.personal.title': 'USO PERSONALE',
       'wizard.step0.personal.desc': 'Studia al tuo ritmo, sviluppa abitudini e migliora la tua comprensione.',
@@ -622,11 +622,11 @@ const I18N = (function () {
       'landing.hero.pill': "Plateforme éducative avec IA · Pérou",
       'landing.hero.title1': "N'étudie pas plus.",
       'landing.hero.title2': 'Étudie mieux.',
-      'landing.hero.sub': "TrackFocus transforme chaque heure d'étude en preuve réelle d'apprentissage grâce à l'intelligence artificielle, en t'aidant à démontrer que tu progresses vraiment.",
+      'landing.hero.sub': "TrackNara transforme chaque heure d'étude en preuve réelle d'apprentissage grâce à l'intelligence artificielle, en t'aidant à démontrer que tu progresses vraiment.",
       'landing.hero.cta': 'Commencer',
       'landing.hero.demo': 'Démo en direct',
 
-      'landing.preview.label': 'TrackFocus · Aperçu',
+      'landing.preview.label': 'TrackNara · Aperçu',
       'landing.preview.greeting': 'Salut, futur étudiant',
       'landing.preview.goal': 'Ton université · Ta filière',
       'landing.preview.adviceOf': 'CONSEIL DU',
@@ -638,7 +638,7 @@ const I18N = (function () {
 
       'landing.tips.0': 'La concentration ne s\'improvise pas. Elle s\'entraîne séance après séance.',
       'landing.tips.1': "Étudier 30 minutes concentré vaut mieux que 3 heures distrait.",
-      'landing.tips.2': 'TrackFocus t\'aide à découvrir ton meilleur moment pour étudier.',
+      'landing.tips.2': 'TrackNara t\'aide à découvrir ton meilleur moment pour étudier.',
       'landing.tips.3': 'Chaque séance enregistrée est une preuve réelle que tu progresses.',
       'landing.tips.4': 'La régularité l\'emporte sur le talent. Commence aujourd\'hui.',
       'landing.tips.5': 'Un objectif clair transforme l\'effort en progrès mesurable.',
@@ -647,14 +647,14 @@ const I18N = (function () {
       'landing.aiIntros.0': 'La régularité l\'emporte sur le talent. Une séance à la fois.',
       'landing.aiIntros.1': 'Chaque séance enregistrée est une preuve réelle que tu progresses.',
       'landing.aiIntros.2': "L'apprentissage profond n'est pas une accumulation. C'est de la compréhension.",
-      'landing.aiIntros.3': 'TrackFocus t\'aide à découvrir ton meilleur moment pour étudier.',
-      'landing.aiIntros.4': 'Il n\'y a pas deux étudiants identiques. TrackFocus s\'adapte à toi.',
+      'landing.aiIntros.3': 'TrackNara t\'aide à découvrir ton meilleur moment pour étudier.',
+      'landing.aiIntros.4': 'Il n\'y a pas deux étudiants identiques. TrackNara s\'adapte à toi.',
       'landing.aiIntros.5': 'Le progrès se construit en silence, séance après séance.',
       'landing.aiIntros.6': 'Le focus ne s\'improvise pas. Il s\'entraîne.',
 
       'landing.problem.label': 'Le problème',
       'landing.problem.title': "Étudier dur ne signifie pas toujours apprendre.",
-      'landing.problem.sub': 'Chaque profil affronte son propre obstacle. TrackFocus les résout tous.',
+      'landing.problem.sub': 'Chaque profil affronte son propre obstacle. TrackNara les résout tous.',
       'landing.problem.card1.tag': 'Usage Personnel',
       'landing.problem.card1.title': "Aucune voie vers l'université",
       'landing.problem.card1.desc': "Tu étudies seul et tu ne sais pas si ce que tu fais te rapproche vraiment de la filière que tu veux.",
@@ -669,9 +669,9 @@ const I18N = (function () {
       'landing.problem.card4.desc': "Les rapports arrivent en retard et ne reflètent pas ce qui se passe réellement dans l'apprentissage quotidien.",
 
       'landing.solution.label': 'La solution',
-      'landing.solution.title': "TrackFocus transforme ta façon d'apprendre en 3 étapes simples.",
+      'landing.solution.title': "TrackNara transforme ta façon d'apprendre en 3 étapes simples.",
       'landing.solution.step1.title': 'Définis ton objectif',
-      'landing.solution.step1.desc': "Université, cours ou objectif institutionnel. TrackFocus construit ton parcours dès le premier jour.",
+      'landing.solution.step1.desc': "Université, cours ou objectif institutionnel. TrackNara construit ton parcours dès le premier jour.",
       'landing.solution.step1.chip1': 'Université',
       'landing.solution.step1.chip2': 'Filière',
       'landing.solution.step1.chip3': 'Institution',
@@ -687,7 +687,7 @@ const I18N = (function () {
       'landing.solution.step3.chip3': 'XP',
 
       'landing.ecosystem.label': 'Un seul écosystème',
-      'landing.ecosystem.title': "TrackFocus accompagne tout le monde dans le processus éducatif.",
+      'landing.ecosystem.title': "TrackNara accompagne tout le monde dans le processus éducatif.",
       'landing.ecosystem.sub': "Ce n'est pas une application pour un seul profil. C'est une plateforme pour tout l'écosystème.",
       'landing.ecosystem.card1.label': 'Usage Personnel',
       'landing.ecosystem.card1.desc': "Prépare-toi à l'université à ton rythme, avec l'IA comme mentor.",
@@ -700,7 +700,7 @@ const I18N = (function () {
 
       'landing.differ.label': 'La différence',
       'landing.differ.title': "Ce qui ne se mesure pas ne peut pas s'améliorer.",
-      'landing.differ.sub': "TrackFocus ne mesure pas seulement combien de temps tu étudies. Il mesure des preuves réelles d'apprentissage.",
+      'landing.differ.sub': "TrackNara ne mesure pas seulement combien de temps tu étudies. Il mesure des preuves réelles d'apprentissage.",
       'landing.differ.item1.name': 'Habitudes',
       'landing.differ.item1.desc': "Séries, fréquence et horaire optimal détectés par l'IA.",
       'landing.differ.item2.name': 'Compréhension',
@@ -721,7 +721,7 @@ const I18N = (function () {
       'landing.footer.text': 'Données synchronisées en toute sécurité dans le cloud',
 
       'wizard.step0.label': 'Choisis ton accès',
-      'wizard.step0.title': 'Comment vas-tu utiliser TrackFocus ?',
+      'wizard.step0.title': 'Comment vas-tu utiliser TrackNara ?',
       'wizard.step0.sub': "Choisis l'expérience qui correspond le mieux à ta façon d'apprendre ou de gérer l'apprentissage.",
       'wizard.step0.personal.title': 'USAGE PERSONNEL',
       'wizard.step0.personal.desc': 'Étudie à ton rythme, développe des habitudes et améliore ta compréhension.',

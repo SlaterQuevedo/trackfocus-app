@@ -72,7 +72,7 @@ const Auth = (() => {
 
     // Detección de nombre distinto (caso "otra persona usó mi cuenta con su
     // nombre"): si el nombre actual de la cuenta de Google logueada difiere
-    // del nombre guardado en TrackFocus, se ofrece al usuario elegir cuál
+    // del nombre guardado en TrackNara, se ofrece al usuario elegir cuál
     // mantener — nunca se cambia el nombre solo, y no se vuelve a preguntar
     // por el mismo nombre de Google una vez que el usuario decide (por
     // dispositivo, vía localStorage).
