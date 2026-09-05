@@ -3248,7 +3248,8 @@ html[data-theme="light"] .dp-prep-bar-wrap, html[data-theme="light"] .dp-route-b
    al costado izquierdo de la foto, foto grande con lápiz de edición, acciones
    en íconos circulares con etiqueta debajo), con la identidad de TrackNara. */
 .pp-avatar-modal-add {
-  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+  position: absolute; top: 50%; left: -58px; transform: translateY(-50%);
+  width: 40px; height: 40px; border-radius: 50%;
   border: 2px dashed rgba(255,255,255,.4); background: rgba(255,255,255,.06);
   display: flex; align-items: center; justify-content: center;
   font-size: 22px; font-weight: 300; color: rgba(255,255,255,.7);
@@ -3261,7 +3262,8 @@ html[data-theme="light"] .dp-prep-bar-wrap, html[data-theme="light"] .dp-route-b
   display: flex; flex-direction: column; align-items: center;
   justify-content: center; gap: 28px; padding: 80px 20px 40px;
 }
-.pp-avatar-modal-avatar-row { display: flex; align-items: center; gap: 18px; }
+/* El avatar queda centrado de verdad: "+" y el lápiz son overlays absolutos
+   sobre .pp-avatar-modal-main-wrap, no elementos que empujen el layout. */
 .pp-avatar-modal-main-wrap { position: relative; }
 .pp-avatar-modal-main {
   width: min(260px, 62vw); height: min(260px, 62vw); border-radius: 50%;

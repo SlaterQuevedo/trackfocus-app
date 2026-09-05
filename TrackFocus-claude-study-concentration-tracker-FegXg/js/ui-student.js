@@ -74,14 +74,12 @@ const UIStudent = (() => {
     modal.innerHTML = `
       <button id="pp-avatar-modal-close" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px;z-index:2;">✕</button>
       <div class="pp-avatar-modal-center">
-        <div class="pp-avatar-modal-avatar-row">
+        <div class="pp-avatar-modal-main-wrap">
           <div class="pp-avatar-modal-add" id="ppModalAddBtn" title="Agregar foto">+</div>
-          <div class="pp-avatar-modal-main-wrap">
-            <div class="pp-avatar-modal-main" id="ppModalMain" style="${!mainUrl ? `background:${esc(avatarColor)};` : ''}">
-              ${mainUrl ? `<img src="${esc(mainUrl)}" class="pp-avatar-modal-img" id="ppModalMainImg" alt="">` : esc(initials)}
-            </div>
-            <button class="pp-avatar-modal-edit" id="ppModalEditBtn" title="Cambiar foto principal">${_icoPencil}</button>
+          <div class="pp-avatar-modal-main" id="ppModalMain" style="${!mainUrl ? `background:${esc(avatarColor)};` : ''}">
+            ${mainUrl ? `<img src="${esc(mainUrl)}" class="pp-avatar-modal-img" id="ppModalMainImg" alt="">` : esc(initials)}
           </div>
+          <button class="pp-avatar-modal-edit" id="ppModalEditBtn" title="Cambiar foto principal">${_icoPencil}</button>
         </div>
         ${sideUrls.length ? `<div class="pp-avatar-modal-side">${sideUrls.map(u => `<img class="pp-lightbox-side-img" src="${esc(u)}" alt="">`).join('')}</div>` : ''}
         <div class="pp-avatar-modal-actions">
