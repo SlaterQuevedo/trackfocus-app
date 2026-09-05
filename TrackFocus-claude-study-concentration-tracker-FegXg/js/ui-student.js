@@ -4432,6 +4432,8 @@ const UIStudent = (() => {
   // en cada una (nunca coexisten en el DOM al mismo tiempo).
   function _wireProfileIdentity(user) {
     const r = () => root();
+    let _pendingUploadPos = null;
+    const photoInput = r().querySelector('#ppPhotoInput');
 
     r().querySelector('#ppNickEditBtn')?.addEventListener('click', () => {
       const input = r().querySelector('#ppNickInput');
@@ -4480,16 +4482,22 @@ const UIStudent = (() => {
       r().querySelector('#ppMsgEdit').style.display = 'none';
     });
 
-    // Foto principal: click → galería ampliada (principal + secundarias que
-    // existan, sin huecos). Solo si el usuario tiene al menos una foto.
-    r().querySelectorAll('.pp-avatar-big img.pp-avatar-img, .ps-avatar-big img.pp-avatar-img, .ph2-id-avatar img.pp-avatar-img').forEach(img => {
-      img.addEventListener('click', () => _openProfileLightbox(user.id));
+    // Círculo de avatar (hero, sidebar, Identidad Digital): con foto → abre la
+    // galería ampliada; sin foto (solo iniciales) → abre el selector de subida
+    // directamente en la posición principal, sin obligar a ir a Cuenta primero.
+    r().querySelectorAll('.pp-avatar-big, .ps-avatar-big, .ph2-id-avatar').forEach(el => {
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', () => {
+        if (el.querySelector('img.pp-avatar-img')) {
+          _openProfileLightbox(user.id);
+        } else {
+          _pendingUploadPos = 0;
+          photoInput?.click();
+        }
+      });
     });
 
     // ── Gestión de fotos (panel Cuenta) ──
-    let _pendingUploadPos = null;
-    const photoInput = r().querySelector('#ppPhotoInput');
-
     function _refreshAccountPanel() {
       sessionStorage.setItem('arv-profile-panel', 'account');
       App.go('profile');
