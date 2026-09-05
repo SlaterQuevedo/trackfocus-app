@@ -78,6 +78,10 @@ const App = (() => {
   function go(route, params = {}) {
     performance.mark?.('go:' + route + ':start');
     Charts.destroyAll();
+    // Cierra overlays de Compañeros (perfil público / chat) que viven fuera de
+    // #app — si no, quedan atascados sobre la pantalla al navegar a otra ruta
+    // sin usar su propio botón "← Volver".
+    if (typeof UICompanions !== 'undefined') UICompanions.closeOverlays();
     if (_landingScrollHandler) {
       window.removeEventListener('scroll', _landingScrollHandler);
       _landingScrollHandler = null;

@@ -171,11 +171,16 @@ const UICompanions = (() => {
     bubble.className = 'cp-msg-bubble ' + (m.sender_id === myId ? 'cp-msg-mine' : 'cp-msg-theirs');
     bubble.textContent = m.body;
     listEl.appendChild(bubble);
+    return bubble;
   }
 
   // Ventana de chat 1:1 en tiempo real: historial + canal Realtime dedicado
   // filtrado por conversation_id (no el canal global 'tracknara-sync').
-  async function _openChatWindow(conversationId, otherId, myId) {
+  // "blocked": si viene de la pestaña Mensajes con una conversación cuyo otro
+  // participante está bloqueado (en cualquier dirección), deshabilita el
+  // envío en vez de dejar que el usuario escriba y falle recién al enviar
+  // (el server ya lo rechaza vía RLS, pero esto evita la sorpresa).
+  async function _openChatWindow(conversationId, otherId, myId, blocked = false) {
     const existing = document.getElementById('cp-chat-page');
     if (existing) existing.remove();
     if (_chatChannel) { Chat.unsubscribe(_chatChannel); _chatChannel = null; }
@@ -203,11 +208,19 @@ const UICompanions = (() => {
     };
     page.querySelector('#cp-chat-back').onclick = closeChat;
 
-    const [profiles, photos, messages] = await Promise.all([
-      Companions.getPublicProfiles([otherId]),
-      Companions.getPrimaryPhotos([otherId]),
-      Chat.listMessages(conversationId)
-    ]);
+    let profiles, photos, messages;
+    try {
+      [profiles, photos, messages] = await Promise.all([
+        Companions.getPublicProfiles([otherId]),
+        Companions.getPrimaryPhotos([otherId]),
+        Chat.listMessages(conversationId)
+      ]);
+    } catch (err) {
+      if (!document.body.contains(page)) return; // se cerró mientras cargaba
+      page.querySelector('#cpChatMessages').innerHTML = `<div class="cp-empty">No se pudo cargar la conversación. Intenta de nuevo.</div>`;
+      UI.flash(err?.message || 'No se pudo cargar la conversación.', 'error');
+      return;
+    }
     if (!document.body.contains(page)) return; // se cerró mientras cargaba
 
     const other = profiles[otherId] || { id: otherId, name: 'Estudiante' };
@@ -233,17 +246,29 @@ const UICompanions = (() => {
 
     const input = page.querySelector('#cpChatInput');
     const sendBtn = page.querySelector('#cpChatSendBtn');
+
+    if (blocked) {
+      input.disabled = true;
+      sendBtn.disabled = true;
+      input.placeholder = 'Ya no pueden enviarse mensajes.';
+    }
+
     async function doSend() {
       const body = input.value.trim();
       if (!body) return;
       input.value = '';
       listEl.querySelector('.cp-empty')?.remove();
       const optimistic = { id: 'tmp-' + Date.now(), sender_id: myId, body, created_at: new Date().toISOString() };
-      _appendMessageBubble(listEl, optimistic, myId);
+      const bubble = _appendMessageBubble(listEl, optimistic, myId);
       listEl.scrollTop = listEl.scrollHeight;
       try {
         await Chat.sendMessage(conversationId, myId, body);
       } catch (err) {
+        // El envío falló (bloqueado, red caída, etc.) — quitar la burbuja
+        // optimista para no mostrar como enviado algo que no se guardó, y
+        // devolver el texto al campo para que se pueda reintentar.
+        bubble.remove();
+        input.value = body;
         UI.flash(err?.message || 'No se pudo enviar el mensaje.', 'error');
       }
     }
@@ -410,16 +435,16 @@ const UICompanions = (() => {
       box.innerHTML = convs.map(c => {
         const photoUrl = photos[c.other_id];
         return `
-          <div class="cp-row cp-conv-row" data-conv-id="${esc(c.conversation_id)}" data-other-id="${esc(c.other_id)}">
+          <div class="cp-row cp-conv-row" data-conv-id="${esc(c.conversation_id)}" data-other-id="${esc(c.other_id)}" data-blocked="${c.blocked ? '1' : ''}">
             <div class="cp-row-avatar" style="background:${esc(_colorFor(c.other_id))};">${photoUrl ? `<img src="${esc(photoUrl)}" alt="">` : esc(initials(c.other_name))}</div>
             <div class="cp-row-info">
               <div class="cp-row-name">${esc(c.other_name || 'Estudiante')}</div>
-              <div class="cp-row-sub">${c.last_body ? esc(c.last_body).slice(0, 60) : 'Sin mensajes todavía'}</div>
+              <div class="cp-row-sub">${c.blocked ? 'Bloqueado' : (c.last_body ? esc(c.last_body).slice(0, 60) : 'Sin mensajes todavía')}</div>
             </div>
           </div>`;
       }).join('');
       box.querySelectorAll('.cp-conv-row').forEach(row => {
-        row.addEventListener('click', () => _openChatWindow(row.dataset.convId, row.dataset.otherId, myId));
+        row.addEventListener('click', () => _openChatWindow(row.dataset.convId, row.dataset.otherId, myId, row.dataset.blocked === '1'));
       });
     }
 
@@ -429,5 +454,18 @@ const UICompanions = (() => {
     _renderMessages();
   }
 
-  return { screens: { companions: { render: screenCompanions, wire: wireCompanions } } };
+  // Cierra cualquier overlay de Compañeros (perfil público / chat) que haya
+  // quedado abierto. Estos overlays se agregan a document.body (no dentro de
+  // #app) para poder cubrir toda la pantalla, así que el router NO los limpia
+  // al navegar — App.go() debe llamar esto en cada navegación, o si el
+  // usuario sale de "Compañeros" tocando otro botón del menú en vez de
+  // "← Volver", el overlay queda atascado sobre toda la app y el canal
+  // Realtime del chat sigue suscrito para siempre.
+  function closeOverlays() {
+    document.getElementById('cp-chat-page')?.remove();
+    document.getElementById('cp-profile-modal')?.remove();
+    if (_chatChannel) { Chat.unsubscribe(_chatChannel); _chatChannel = null; }
+  }
+
+  return { screens: { companions: { render: screenCompanions, wire: wireCompanions } }, closeOverlays };
 })();
