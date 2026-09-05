@@ -21,45 +21,120 @@ const UIStudent = (() => {
     return String(name || '').split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase() || '?';
   }
 
-  // Lightbox de foto de perfil a pantalla completa (mismo idioma visual/z-index
-  // que QRScanner.openQRModal). mainUrl = foto principal ampliada; sideUrls =
-  // SOLO las fotos secundarias que realmente existen (0 a 3, nunca huecos
-  // vacíos) — se muestran al costado y al hacer click reemplazan la foto grande.
-  function _openImageLightbox(mainUrl, sideUrls = []) {
-    const existing = document.getElementById('pp-img-lightbox');
+  // Genera (si falta) y persiste el código de estudiante de un usuario, y
+  // devuelve { code, url } listo para compartir/copiar/QR. Compartido por la
+  // tarjeta "Identidad Digital" (solo cuentas personales) y el modal de avatar
+  // (ambas variantes) para no duplicar la lógica de generación.
+  function _ensureStudentCode(user) {
+    const s = Storage.get();
+    const u = s.users[user.id];
+    let code = u?.studentCode || '';
+    if (!code && u) {
+      code = Storage.genStudentCode();
+      Storage.set(st => { if (st.users[u.id]) st.users[u.id].studentCode = code; });
+    }
+    const url = code ? 'https://tracknara.vercel.app/s/' + code : '';
+    return { code, url };
+  }
+
+  // Ventana de foto de perfil: muestra la foto principal ampliada (o un
+  // círculo grande con iniciales si todavía no hay ninguna), un círculo "+"
+  // a la izquierda para agregar otra foto, las fotos secundarias que existan
+  // como miniaturas al costado (click → pasan a ser la foto grande dentro de
+  // la misma ventana), y las acciones de identidad digital (enlace/QR/compartir).
+  async function _openAvatarModal(user) {
+    const existing = document.getElementById('pp-avatar-modal');
     if (existing) existing.remove();
+    if (typeof ProfilePhotos === 'undefined') return;
+
+    const s = Storage.get();
+    const freshUser = s.users[user.id] || user;
+    const initials = _userInitials(freshUser.name);
+    const acadProfile = JSON.parse(localStorage.getItem('arv-academic-profile-v3') || '{}');
+    const avatarColor = acadProfile.avatarColor || '#C89B6D';
+
+    const photos = ProfilePhotos.listFor(freshUser.id);
+    const primary = photos.find(p => p.position === 0) || null;
+    const secondaries = photos.filter(p => p.position !== 0);
+    const [mainUrl, ...secUrls] = await Promise.all([
+      primary ? ProfilePhotos.getSignedUrl(primary.storagePath) : Promise.resolve(null),
+      ...secondaries.map(p => ProfilePhotos.getSignedUrl(p.storagePath).catch(() => null))
+    ]);
+    const sideUrls = secUrls.filter(Boolean);
+    const { code, url } = _ensureStudentCode(freshUser);
+
     const modal = document.createElement('div');
-    modal.id = 'pp-img-lightbox';
-    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:990;display:flex;align-items:center;justify-content:center;padding:20px;';
-    const sideHtml = sideUrls.map(u => `<img class="pp-lightbox-side-img" src="${esc(u)}" alt="">`).join('');
+    modal.id = 'pp-avatar-modal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:990;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:20px;overflow:auto;';
     modal.innerHTML = `
-      <button id="pp-img-lightbox-close" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px;">✕</button>
-      <div class="pp-lightbox-row">
-        <img id="pp-lightbox-main-img" src="${esc(mainUrl)}" style="max-width:70vw;max-height:85vh;border-radius:12px;object-fit:contain;" alt="">
-        ${sideHtml ? `<div class="pp-lightbox-side-col">${sideHtml}</div>` : ''}
+      <button id="pp-avatar-modal-close" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px;">✕</button>
+      <div class="pp-avatar-modal-row">
+        <div class="pp-avatar-modal-add" id="ppModalAddBtn" title="Agregar foto">+</div>
+        <div class="pp-avatar-modal-main" id="ppModalMain" style="${!mainUrl ? `background:${esc(avatarColor)};` : ''}">
+          ${mainUrl ? `<img src="${esc(mainUrl)}" class="pp-avatar-modal-img" id="ppModalMainImg" alt="">` : esc(initials)}
+        </div>
+        <div class="pp-avatar-modal-side">${sideUrls.map(u => `<img class="pp-lightbox-side-img" src="${esc(u)}" alt="">`).join('')}</div>
+      </div>
+      <div class="pp-avatar-modal-actions">
+        <button class="ghost pp-account-btn" id="ppModalCopyLink">🔗 Copiar enlace</button>
+        <button class="ghost pp-account-btn" id="ppModalQR">▦ Código QR</button>
+        <button class="ghost pp-account-btn" id="ppModalShare">↗ Compartir perfil</button>
+        <button class="ghost pp-account-btn" id="ppModalAddPhoto">➕ Agregar foto de perfil</button>
       </div>
     `;
     document.body.appendChild(modal);
-    modal.querySelector('#pp-img-lightbox-close').onclick = () => modal.remove();
+
+    modal.querySelector('#pp-avatar-modal-close').onclick = () => modal.remove();
     modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+
     modal.querySelectorAll('.pp-lightbox-side-img').forEach(img => {
       img.addEventListener('click', () => {
-        const mainImg = modal.querySelector('#pp-lightbox-main-img');
-        if (mainImg) mainImg.src = img.src;
+        const mainImg = modal.querySelector('#ppModalMainImg');
+        const mainBox = modal.querySelector('#ppModalMain');
+        if (mainImg) { mainImg.src = img.src; }
+        else if (mainBox) { mainBox.style.background = ''; mainBox.innerHTML = `<img src="${img.src}" class="pp-avatar-modal-img" id="ppModalMainImg" alt="">`; }
       });
     });
-  }
 
-  // Abre el lightbox de un usuario resolviendo sus fotos reales (principal +
-  // secundarias existentes, sin huecos) al momento del click.
-  async function _openProfileLightbox(userId) {
-    if (typeof ProfilePhotos === 'undefined') return;
-    const photos = ProfilePhotos.listFor(userId);
-    if (!photos.length) return;
-    const urls = await Promise.all(photos.map(p => ProfilePhotos.getSignedUrl(p.storagePath).catch(() => null)));
-    const valid = urls.filter(Boolean);
-    if (!valid.length) return;
-    _openImageLightbox(valid[0], valid.slice(1));
+    // Input de archivo compartido por el "+" y el botón "Agregar foto de perfil".
+    // Sin posición fija: ProfilePhotos.upload() ocupa el primer hueco libre.
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = 'file';
+    hiddenInput.accept = 'image/jpeg,image/png,image/webp';
+    hiddenInput.style.display = 'none';
+    modal.appendChild(hiddenInput);
+    hiddenInput.addEventListener('change', async () => {
+      const file = hiddenInput.files?.[0];
+      hiddenInput.value = '';
+      if (!file) return;
+      try {
+        await ProfilePhotos.upload(file);
+        UI.flash('Foto agregada.', 'success');
+      } catch (err) {
+        UI.flash(err?.message || 'No se pudo subir la foto.', 'error');
+      }
+      modal.remove();
+      const activePanel = root().querySelector('.pp-panel.active, .ps-panel.active')?.dataset.panel;
+      if (activePanel) sessionStorage.setItem('arv-profile-panel', activePanel);
+      App.go('profile');
+    });
+    modal.querySelector('#ppModalAddBtn').addEventListener('click', () => hiddenInput.click());
+    modal.querySelector('#ppModalAddPhoto').addEventListener('click', () => hiddenInput.click());
+
+    modal.querySelector('#ppModalCopyLink').addEventListener('click', () => {
+      if (!url) return;
+      navigator.clipboard?.writeText(url).then(() => UI.flash('Enlace copiado.', 'success'))
+        .catch(() => UI.flash('No se pudo copiar.', 'error'));
+    });
+    modal.querySelector('#ppModalQR').addEventListener('click', () => {
+      if (url && typeof QRScanner !== 'undefined') QRScanner.openQRModalUrl(url, 'Mi Perfil', code);
+    });
+    modal.querySelector('#ppModalShare').addEventListener('click', () => {
+      if (!url) return;
+      const text = `Mi perfil en TrackNara${code ? ' · ' + code : ''}: ${url}`;
+      if (navigator.share) navigator.share({ title: 'TrackNara — Mi Perfil', text, url }).catch(() => {});
+      else navigator.clipboard?.writeText(url).then(() => UI.flash('Enlace copiado.', 'success'));
+    });
   }
 
   // Resuelve las URLs firmadas (bucket privado) de todas las fotos de perfil
@@ -4482,19 +4557,12 @@ const UIStudent = (() => {
       r().querySelector('#ppMsgEdit').style.display = 'none';
     });
 
-    // Círculo de avatar (hero, sidebar, Identidad Digital): con foto → abre la
-    // galería ampliada; sin foto (solo iniciales) → abre el selector de subida
-    // directamente en la posición principal, sin obligar a ir a Cuenta primero.
+    // Círculo de avatar (hero, sidebar, Identidad Digital): siempre abre la
+    // ventana de foto de perfil (ampliada si hay foto, iniciales grandes si
+    // no), con opción de agregar foto y las acciones de identidad digital.
     r().querySelectorAll('.pp-avatar-big, .ps-avatar-big, .ph2-id-avatar').forEach(el => {
       el.style.cursor = 'pointer';
-      el.addEventListener('click', () => {
-        if (el.querySelector('img.pp-avatar-img')) {
-          _openProfileLightbox(user.id);
-        } else {
-          _pendingUploadPos = 0;
-          photoInput?.click();
-        }
-      });
+      el.addEventListener('click', () => _openAvatarModal(user));
     });
 
     // ── Gestión de fotos (panel Cuenta) ──
@@ -5046,22 +5114,17 @@ const UIStudent = (() => {
     });
 
     // ── Identidad Digital ──
-    // Generar código aquí (wire, no render) para evitar el bucle Realtime.
-    // Si no existe todavía, lo generamos, persistimos, y actualizamos el DOM sin llamar go().
+    // _ensureStudentCode genera y persiste el código si falta; el DOM se
+    // parcha directamente (sin App.go) para no disparar el bucle Realtime.
     const _s2 = Storage.get();
     const _u2 = _s2.users[_s2.currentUserId];
-    let _code2 = _u2?.studentCode || '';
-    if (!_code2 && _u2) {
-      _code2 = Storage.genStudentCode();
-      Storage.set(st => { if (st.users[_u2.id]) st.users[_u2.id].studentCode = _code2; });
-      // Actualizar DOM directamente sin re-render para no disparar el bucle
+    const { code: _code2, url: _url2 } = _u2 ? _ensureStudentCode(_u2) : { code: '', url: '' };
+    if (_code2) {
       const codeEl = r()?.querySelector('.ph2-id-code');
       const urlEl  = r()?.querySelector('.ph2-id-url');
-      if (codeEl) codeEl.textContent = _code2;
-      const _newUrl = 'https://tracknara.vercel.app/s/' + _code2;
-      if (urlEl)  { urlEl.textContent = _newUrl; urlEl.title = _newUrl; }
+      if (codeEl && codeEl.textContent !== _code2) codeEl.textContent = _code2;
+      if (urlEl && urlEl.textContent !== _url2) { urlEl.textContent = _url2; urlEl.title = _url2; }
     }
-    const _url2 = _code2 ? 'https://tracknara.vercel.app/s/' + _code2 : '';
 
     if (_code2 && typeof QRScanner !== 'undefined') {
       QRScanner.generateQRUrl(_url2, 'studentQRCode', { size: 180, dark: '#1a1a1a', light: '#ffffff' });
