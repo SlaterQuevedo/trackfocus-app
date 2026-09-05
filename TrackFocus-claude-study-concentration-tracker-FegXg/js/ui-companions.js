@@ -54,6 +54,73 @@ const UICompanions = (() => {
     }
   }
 
+  // Click en cualquier fila (búsqueda, solicitudes, mis compañeros) abre el
+  // perfil público de esa persona — excepto si el click fue sobre un botón
+  // de acción (Agregar/Aceptar/Rechazar/Eliminar/Bloquear), que ya tiene su
+  // propio comportamiento.
+  function _wireRowClicks(container, myId) {
+    container.querySelectorAll('.cp-row').forEach(row => {
+      row.addEventListener('click', (e) => {
+        if (e.target.closest('.cp-row-action')) return;
+        _openPublicProfileModal(row.dataset.userId, myId);
+      });
+    });
+  }
+
+  // Ventana de perfil público: foto, nombre, apodo, bio y progreso público
+  // (nivel/XP/racha) de otro usuario, con la misma acción de compañero que
+  // ya se muestra en las listas.
+  async function _openPublicProfileModal(userId, myId) {
+    const existing = document.getElementById('cp-profile-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'cp-profile-modal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(10,8,14,.96);z-index:990;overflow:auto;';
+    modal.innerHTML = `
+      <button id="cp-profile-modal-close" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px;z-index:2;">✕</button>
+      <div class="cp-profile-center"><div class="cp-empty">Cargando…</div></div>
+    `;
+    document.body.appendChild(modal);
+    modal.querySelector('#cp-profile-modal-close').onclick = () => modal.remove();
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+
+    const [profiles, photos] = await Promise.all([
+      Companions.getPublicProfiles([userId]),
+      Companions.getPrimaryPhotos([userId])
+    ]);
+    if (!document.body.contains(modal)) return; // se cerró mientras cargaba
+    const p = profiles[userId] || { id: userId, name: 'Estudiante' };
+    const photoUrl = photos[userId] || null;
+    const status = Companions.statusWith(myId, userId);
+
+    const center = modal.querySelector('.cp-profile-center');
+    center.innerHTML = `
+      <div class="cp-profile-avatar">${photoUrl ? `<img src="${esc(photoUrl)}" alt="">` : esc(initials(p.name))}</div>
+      <div class="cp-profile-name">${esc(p.name)}</div>
+      ${p.nickname ? `<div class="cp-profile-nick">@${esc(p.nickname)}</div>` : ''}
+      ${p.bio ? `<div class="cp-profile-bio">${esc(p.bio)}</div>` : ''}
+      <div class="cp-profile-stats">
+        <div class="cp-profile-stat"><div class="cp-profile-stat-icon">🎓</div><div class="cp-profile-stat-lbl">Nivel</div><div class="cp-profile-stat-val">${p.level ?? 1}</div></div>
+        <div class="cp-profile-stat"><div class="cp-profile-stat-icon">⭐</div><div class="cp-profile-stat-lbl">XP</div><div class="cp-profile-stat-val">${(p.xp ?? 0).toLocaleString()}</div></div>
+        <div class="cp-profile-stat"><div class="cp-profile-stat-icon">🔥</div><div class="cp-profile-stat-lbl">Racha</div><div class="cp-profile-stat-val">${p.streak ?? 0} días</div></div>
+      </div>
+      <div class="cp-profile-action" id="cpProfileActionSlot">${_actionForStatus(status, userId)}</div>
+    `;
+    center.querySelector('.cp-add-btn')?.addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      try {
+        await Companions.sendRequest(myId, userId);
+        UI.flash('Solicitud enviada.', 'success');
+        document.getElementById('cpProfileActionSlot').innerHTML = _actionForStatus('pending_sent', userId);
+      } catch (err) {
+        UI.flash(err?.message || 'No se pudo enviar la solicitud.', 'error');
+        btn.disabled = false;
+      }
+    });
+  }
+
   async function wireCompanions() {
     const r = () => root();
     const s = Storage.get();
@@ -84,6 +151,7 @@ const UICompanions = (() => {
         return _rowHtml(p, photos[p.id], _actionForStatus(status, p.id));
       }).join('');
       _wireAddButtons();
+      _wireRowClicks(resultsBox, myId);
     }
     function _wireAddButtons() {
       resultsBox.querySelectorAll('.cp-add-btn').forEach(btn => {
@@ -140,6 +208,7 @@ const UICompanions = (() => {
         }).join('');
       }
       box.innerHTML = html;
+      _wireRowClicks(box, myId);
 
       box.querySelectorAll('.cp-accept-btn').forEach(btn => btn.addEventListener('click', async () => {
         btn.disabled = true;
@@ -173,6 +242,7 @@ const UICompanions = (() => {
           <button class="cp-btn cp-btn-ghost cp-block-btn" data-conn="${esc(c.id)}">Bloquear</button>`;
         return _rowHtml(p, photos[otherId], actions);
       }).join('');
+      _wireRowClicks(box, myId);
 
       box.querySelectorAll('.cp-remove-btn').forEach(btn => btn.addEventListener('click', async () => {
         if (!confirm('¿Eliminar a este compañero?')) return;

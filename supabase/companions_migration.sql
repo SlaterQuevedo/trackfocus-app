@@ -46,8 +46,10 @@ create policy "connections_parties_delete" on public.connections
 -- mismo y a cualquier par con relación "blocked" en cualquier dirección.
 -- SECURITY DEFINER: puede leer la tabla users completa internamente, pero
 -- solo devuelve columnas públicas — nunca email ni otros campos sensibles.
-create or replace function public.search_users(search_query text)
-returns table (id text, name text, nickname text, bio text)
+-- Incluye xp/level/streak (progreso público) para la ventana de "ver perfil".
+drop function if exists public.search_users(text);
+create function public.search_users(search_query text)
+returns table (id text, name text, nickname text, bio text, xp integer, level integer, streak integer)
 language sql security definer stable
 set search_path = public, pg_temp
 as $$
@@ -55,7 +57,10 @@ as $$
     u.id,
     coalesce(nullif(trim(u.display_first_name || ' ' || coalesce(u.display_last_name, '')), ''), u.name) as name,
     u.nickname,
-    u.bio
+    u.bio,
+    u.xp,
+    u.level,
+    u.streak
   from public.users u
   where u.id <> current_email()
     and length(trim(search_query)) >= 2
@@ -73,10 +78,11 @@ $$;
 revoke all on function public.search_users(text) from public;
 grant execute on function public.search_users(text) to authenticated;
 
--- Perfiles públicos por lista de IDs (para mostrar nombre/apodo/bio de
--- solicitudes y compañeros ya existentes, sin exponer el resto de la fila).
-create or replace function public.get_public_profiles(user_ids text[])
-returns table (id text, name text, nickname text, bio text)
+-- Perfiles públicos por lista de IDs (solicitudes, compañeros y ventana de
+-- "ver perfil"). Mismo criterio: nunca email ni otros campos sensibles.
+drop function if exists public.get_public_profiles(text[]);
+create function public.get_public_profiles(user_ids text[])
+returns table (id text, name text, nickname text, bio text, xp integer, level integer, streak integer)
 language sql security definer stable
 set search_path = public, pg_temp
 as $$
@@ -84,7 +90,10 @@ as $$
     u.id,
     coalesce(nullif(trim(u.display_first_name || ' ' || coalesce(u.display_last_name, '')), ''), u.name) as name,
     u.nickname,
-    u.bio
+    u.bio,
+    u.xp,
+    u.level,
+    u.streak
   from public.users u
   where u.id = any(user_ids);
 $$;

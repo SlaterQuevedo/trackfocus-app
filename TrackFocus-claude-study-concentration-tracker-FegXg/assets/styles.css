@@ -5343,10 +5343,11 @@ html[data-theme="light"] .ph-sidebar .pp-nav-item.active {
 .cp-section-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin: 10px 2px 2px; }
 
 .cp-row {
-  display: flex; align-items: center; gap: 12px;
+  display: flex; align-items: center; gap: 12px; cursor: pointer;
   background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-sm);
-  padding: 10px 12px;
+  padding: 10px 12px; transition: border-color .15s;
 }
+.cp-row:hover { border-color: var(--primary); }
 .cp-row-avatar {
   width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
   display: flex; align-items: center; justify-content: center;
@@ -5375,6 +5376,32 @@ html[data-theme="light"] .ph-sidebar .pp-nav-item.active {
   .cp-row { flex-wrap: wrap; }
   .cp-row-action { width: 100%; justify-content: flex-end; margin-top: 6px; }
 }
+
+/* Ventana de perfil público (click en una fila de Compañeros) */
+.cp-profile-center {
+  width: 100%; min-height: 100%; box-sizing: border-box;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 14px; padding: 80px 20px 40px; text-align: center;
+}
+.cp-profile-avatar {
+  width: 120px; height: 120px; border-radius: 50%; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--primary); color: #fff; font-weight: 800; font-size: 40px;
+  border: 3px solid rgba(255,255,255,.15);
+}
+.cp-profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.cp-profile-name { font-size: 20px; font-weight: 800; color: #fff; }
+.cp-profile-nick { font-size: 14px; font-weight: 600; color: var(--primary); margin-top: -8px; }
+.cp-profile-bio { font-size: 13px; color: rgba(255,255,255,.7); max-width: 320px; font-style: italic; }
+.cp-profile-stats { display: flex; gap: 14px; margin-top: 4px; }
+.cp-profile-stat {
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+  border-radius: var(--radius-sm); padding: 10px 16px; min-width: 76px;
+}
+.cp-profile-stat-icon { font-size: 18px; }
+.cp-profile-stat-lbl { font-size: 10px; color: rgba(255,255,255,.5); margin-top: 2px; }
+.cp-profile-stat-val { font-size: 15px; font-weight: 700; color: #fff; }
+.cp-profile-action { margin-top: 6px; }
 
 /* ── cm-* Classroom Manage Dashboard ─────────────────────────────────────── */
 
