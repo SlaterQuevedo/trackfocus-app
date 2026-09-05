@@ -251,17 +251,17 @@ const App = (() => {
 
     if (user.role === 'student') {
       navButtons = `
-        <button data-route="dashboard">Dashboard</button>
+        <button data-route="dashboard">Inicio</button>
         <button data-route="ai-study">${I18N.t('nav.student.aiStudy','TrackTutor')}</button>
-        <button data-route="stats">${I18N.t('nav.student.stats','Estadísticas')}</button>
-        <button data-route="leaderboard">${I18N.t('nav.student.leaderboard','Ranking')}</button>
-        <button data-route="profile">${I18N.t('nav.student.profile','Perfil')}</button>`;
+        <button data-route="stats">${I18N.t('nav.student.stats','Progreso')}</button>
+        <button data-route="leaderboard">${I18N.t('nav.student.leaderboard','Rankings')}</button>
+        <button data-route="profile">${I18N.t('nav.student.profile','Cuenta')}</button>`;
       bottomItems = [
         { route: 'dashboard',   icon: '🏠', label: I18N.t('bn.home','Inicio') },
-        { route: 'ai-study',    icon: '🧠', label: I18N.t('bn.ai','IA') },
+        { route: 'ai-study',    icon: '🧠', label: I18N.t('bn.ai','TrackTutor') },
         { route: 'stats',       icon: '📊', label: I18N.t('bn.progress','Progreso') },
-        { route: 'leaderboard', icon: '🏆', label: I18N.t('bn.ranking','Ranking') },
-        { route: 'profile',     icon: '👤', label: I18N.t('nav.student.profile','Perfil') }
+        { route: 'leaderboard', icon: '🏆', label: I18N.t('bn.ranking','Rankings') },
+        { route: 'profile',     icon: '👤', label: I18N.t('nav.student.profile','Cuenta') }
       ];
     } else if (user.role === 'teacher') {
       navButtons = `

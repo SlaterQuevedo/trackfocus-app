@@ -422,7 +422,7 @@ const UIStudent = (() => {
           <div class="ds-hub-card" data-go="leaderboard">
             <div class="ds-hub-icon">🏆</div>
             <div class="ds-hub-body">
-              <div class="ds-hub-title">Ranking</div>
+              <div class="ds-hub-title">Rankings</div>
               <div class="ds-hub-sub">${rankText} ${rankSub}</div>
             </div>
             <div class="ds-hub-arrow">→</div>
@@ -430,7 +430,7 @@ const UIStudent = (() => {
           <div class="ds-hub-card" data-go="profile">
             <div class="ds-hub-icon">👤</div>
             <div class="ds-hub-body">
-              <div class="ds-hub-title">Mi Perfil</div>
+              <div class="ds-hub-title">Mi Cuenta</div>
               <div class="ds-hub-sub">${examsCount > 0 ? `${examsCount} evaluación${examsCount !== 1 ? 'es' : ''} próxima${examsCount !== 1 ? 's' : ''}` : 'Evaluaciones · Materias · Ajustes'}</div>
             </div>
             <div class="ds-hub-arrow">→</div>
@@ -2140,7 +2140,7 @@ const UIStudent = (() => {
     return `<div class="sv3">
       <div class="sv3-header">
         <div class="sv3-header-left">
-          <h1 class="sv3-title">Estadísticas</h1>
+          <h1 class="sv3-title">Progreso</h1>
           <p class="sv3-sub">Tu centro de comando personal</p>
         </div>
         <nav class="sv3-tabs" id="sv3-tabs">
@@ -2895,7 +2895,7 @@ const UIStudent = (() => {
 
       <!-- ── Top bar ── -->
       <div class="lbv2-topbar">
-        <h1 class="lbv2-heading">Ranking <span class="lbv2-scope-name">${esc(scopeLabel)}</span></h1>
+        <h1 class="lbv2-heading">Rankings <span class="lbv2-scope-name">${esc(scopeLabel)}</span></h1>
         <div class="lbv2-tabs">${scopeOptions}</div>
       </div>
 
@@ -3389,7 +3389,7 @@ const UIStudent = (() => {
                   <div class="ph2-planner-row">Conc. Promedio: ${avgConc}%</div>
                 </div>
               </div>
-              <button class="primary" data-go="stats" style="width:100%;margin-top:14px;">Ver Estadísticas</button>
+              <button class="primary" data-go="stats" style="width:100%;margin-top:14px;">Ver Progreso</button>
             </div>
 
           </div>
@@ -4016,7 +4016,7 @@ const UIStudent = (() => {
     }
     const panelRanking = `
       <div class="ps-panel" data-panel="ranking">
-        <h2 class="pp-section-title">Ranking</h2>
+        <h2 class="pp-section-title">Rankings</h2>
         ${rankingInner}
       </div>`;
 
@@ -4209,7 +4209,7 @@ const UIStudent = (() => {
             <button class="ps-nav-item active" data-panel="profile">👤 Mi Perfil</button>
             <button class="ps-nav-item" data-panel="evals">📅 Evaluaciones</button>
             <button class="ps-nav-item" data-panel="courses">Mis Materias</button>
-            <button class="ps-nav-item" data-panel="ranking">🏆 Ranking</button>
+            <button class="ps-nav-item" data-panel="ranking">🏆 Rankings</button>
             <button class="ps-nav-item" data-panel="cognitive">Perfil Cognitivo</button>
             <button class="ps-nav-item" data-panel="institution">Institución</button>
             <button class="ps-nav-item" data-panel="prefs">⚙️ ${I18N.t('settings.nav.label','Ajustes')}</button>
