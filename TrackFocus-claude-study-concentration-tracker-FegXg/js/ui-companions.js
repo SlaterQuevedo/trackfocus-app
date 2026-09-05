@@ -321,7 +321,14 @@ const UICompanions = (() => {
   // vivo (Supabase Realtime Presence, canal dedicado por sala). Sin chat ni
   // mensajería propia todavía (eso ya existe por separado en "Mensajes"); la
   // Fase 5 agrega TrackTutor compartido dentro de esta misma ventana.
-  async function _openStudyRoom(roomId, otherId, myId) {
+  // "blocked": igual criterio que el chat — si el otro participante está
+  // bloqueado, no se une a la presencia (no tiene sentido mostrar "en línea"
+  // para una relación bloqueada) y se explica en vez de abrir la sala igual.
+  async function _openStudyRoom(roomId, otherId, myId, blocked = false) {
+    if (blocked) {
+      UI.flash('Esta sala ya no está disponible: bloqueaste a este usuario o te bloqueó a ti.', 'error');
+      return;
+    }
     const existing = document.getElementById('cp-room-page');
     if (existing) existing.remove();
     if (_roomChannel) { StudyRooms.leavePresence(_roomChannel); _roomChannel = null; }
@@ -349,12 +356,11 @@ const UICompanions = (() => {
     };
     page.querySelector('#cp-room-back').onclick = closeRoom;
 
-    let profiles, photos, myProfile;
+    let profiles, photos;
     try {
-      [profiles, photos, myProfile] = await Promise.all([
-        Companions.getPublicProfiles([otherId]),
-        Companions.getPrimaryPhotos([otherId, myId]),
-        Companions.getPublicProfiles([myId]).then(m => m[myId])
+      [profiles, photos] = await Promise.all([
+        Companions.getPublicProfiles([otherId, myId]),
+        Companions.getPrimaryPhotos([otherId, myId])
       ]);
     } catch (err) {
       if (!document.body.contains(page)) return;
@@ -365,7 +371,7 @@ const UICompanions = (() => {
     if (!document.body.contains(page)) return; // se cerró mientras cargaba
 
     const other = profiles[otherId] || { id: otherId, name: 'Estudiante' };
-    const me = myProfile || { id: myId, name: 'Tú' };
+    const me = profiles[myId] || { id: myId, name: 'Tú' };
     const cardsEl = page.querySelector('#cpRoomCards');
 
     const renderCards = (onlineSet) => {
@@ -568,16 +574,16 @@ const UICompanions = (() => {
       box.innerHTML = rooms.map(rm => {
         const photoUrl = photos[rm.other_id];
         return `
-          <div class="cp-row cp-room-row" data-room-id="${esc(rm.room_id)}" data-other-id="${esc(rm.other_id)}">
+          <div class="cp-row cp-room-row" data-room-id="${esc(rm.room_id)}" data-other-id="${esc(rm.other_id)}" data-blocked="${rm.blocked ? '1' : ''}">
             <div class="cp-row-avatar" style="background:${esc(_colorFor(rm.other_id))};">${photoUrl ? `<img src="${esc(photoUrl)}" alt="">` : esc(initials(rm.other_name))}</div>
             <div class="cp-row-info">
               <div class="cp-row-name">${esc(rm.other_name || 'Estudiante')}</div>
-              <div class="cp-row-sub">Sala de estudio</div>
+              <div class="cp-row-sub">${rm.blocked ? 'Bloqueado' : 'Sala de estudio'}</div>
             </div>
           </div>`;
       }).join('');
       box.querySelectorAll('.cp-room-row').forEach(row => {
-        row.addEventListener('click', () => _openStudyRoom(row.dataset.roomId, row.dataset.otherId, myId));
+        row.addEventListener('click', () => _openStudyRoom(row.dataset.roomId, row.dataset.otherId, myId, row.dataset.blocked === '1'));
       });
     }
 

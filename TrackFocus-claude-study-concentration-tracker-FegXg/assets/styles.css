@@ -18,6 +18,13 @@
   --muted-2: #9CA3AF;
   --muted-3: #52525B;
 
+  /* Alias: --text-primary/--text-secondary se usan en varias pantallas
+     (Mi Perfil, Compañeros, Chat, Salas) pero nunca se definían — siempre
+     caían al valor de fallback fijo (#F1F0EC), casi invisible sobre fondo
+     blanco en tema claro. Apuntan a --text/--muted para seguir el tema. */
+  --text-primary: var(--text);
+  --text-secondary: var(--muted);
+
   /* Surfaces */
   --surface: #FFFFFF;
   --surface-text: #111827;
@@ -5384,7 +5391,7 @@ html[data-theme="light"] .ph-sidebar .pp-nav-item.active {
   position: fixed; inset: 0; z-index: 990; overflow: auto;
   background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(200,155,109,0.06) 0%, transparent 60%),
               radial-gradient(ellipse 60% 40% at 80% 80%, rgba(139,92,246,0.04) 0%, transparent 60%),
-              #060A0F;
+              var(--bg, #060A0F);
 }
 .cp-profile-page-topbar { max-width: 560px; margin: 0 auto; padding: 20px 16px 0; }
 .cp-profile-back-btn {
@@ -5405,7 +5412,7 @@ html[data-theme="light"] .ph-sidebar .pp-nav-item.active {
   display: flex; flex-direction: column;
   background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(200,155,109,0.06) 0%, transparent 60%),
               radial-gradient(ellipse 60% 40% at 80% 80%, rgba(139,92,246,0.04) 0%, transparent 60%),
-              #060A0F;
+              var(--bg, #060A0F);
 }
 .cp-chat-topbar {
   display: flex; align-items: center; gap: 12px;
@@ -5451,7 +5458,7 @@ html[data-theme="light"] .ph-sidebar .pp-nav-item.active {
 .cp-room-presence-dot {
   position: absolute; bottom: 2px; right: 2px;
   width: 14px; height: 14px; border-radius: 50%;
-  border: 2px solid #060A0F;
+  border: 2px solid var(--bg);
 }
 .cp-room-online { background: #22C55E; }
 .cp-room-offline { background: #6B7280; }

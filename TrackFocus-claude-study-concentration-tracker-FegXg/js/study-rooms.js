@@ -29,6 +29,8 @@ const StudyRooms = (() => {
     channel.subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
         await channel.track({ online_at: new Date().toISOString() });
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+        window.Monitor?.log?.('study-rooms', 'Presencia no disponible', status);
       }
     });
     return channel;
