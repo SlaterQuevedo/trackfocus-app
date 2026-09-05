@@ -21,22 +21,45 @@ const UIStudent = (() => {
     return String(name || '').split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase() || '?';
   }
 
-  // Lightbox genérico de imagen a pantalla completa (mismo idioma visual/z-index
-  // que QRScanner.openQRModal: crea, remueve cualquier instancia previa, cierra
-  // con click en el fondo o en la X).
-  function _openImageLightbox(url) {
+  // Lightbox de foto de perfil a pantalla completa (mismo idioma visual/z-index
+  // que QRScanner.openQRModal). mainUrl = foto principal ampliada; sideUrls =
+  // SOLO las fotos secundarias que realmente existen (0 a 3, nunca huecos
+  // vacíos) — se muestran al costado y al hacer click reemplazan la foto grande.
+  function _openImageLightbox(mainUrl, sideUrls = []) {
     const existing = document.getElementById('pp-img-lightbox');
     if (existing) existing.remove();
     const modal = document.createElement('div');
     modal.id = 'pp-img-lightbox';
     modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:990;display:flex;align-items:center;justify-content:center;padding:20px;';
+    const sideHtml = sideUrls.map(u => `<img class="pp-lightbox-side-img" src="${esc(u)}" alt="">`).join('');
     modal.innerHTML = `
       <button id="pp-img-lightbox-close" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px;">✕</button>
-      <img src="${esc(url)}" style="max-width:100%;max-height:85vh;border-radius:12px;object-fit:contain;" />
+      <div class="pp-lightbox-row">
+        <img id="pp-lightbox-main-img" src="${esc(mainUrl)}" style="max-width:70vw;max-height:85vh;border-radius:12px;object-fit:contain;" alt="">
+        ${sideHtml ? `<div class="pp-lightbox-side-col">${sideHtml}</div>` : ''}
+      </div>
     `;
     document.body.appendChild(modal);
     modal.querySelector('#pp-img-lightbox-close').onclick = () => modal.remove();
     modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+    modal.querySelectorAll('.pp-lightbox-side-img').forEach(img => {
+      img.addEventListener('click', () => {
+        const mainImg = modal.querySelector('#pp-lightbox-main-img');
+        if (mainImg) mainImg.src = img.src;
+      });
+    });
+  }
+
+  // Abre el lightbox de un usuario resolviendo sus fotos reales (principal +
+  // secundarias existentes, sin huecos) al momento del click.
+  async function _openProfileLightbox(userId) {
+    if (typeof ProfilePhotos === 'undefined') return;
+    const photos = ProfilePhotos.listFor(userId);
+    if (!photos.length) return;
+    const urls = await Promise.all(photos.map(p => ProfilePhotos.getSignedUrl(p.storagePath).catch(() => null)));
+    const valid = urls.filter(Boolean);
+    if (!valid.length) return;
+    _openImageLightbox(valid[0], valid.slice(1));
   }
 
   // Resuelve las URLs firmadas (bucket privado) de todas las fotos de perfil
@@ -3278,7 +3301,6 @@ const UIStudent = (() => {
     const bio = user.bio || acadProfile.message || 'Cada sesión te acerca a tu objetivo.';
     const nickname = user.nickname || '';
     const primaryPhoto = (typeof ProfilePhotos !== 'undefined') ? ProfilePhotos.getPrimary(user.id) : null;
-    const secondaryPhotos = (typeof ProfilePhotos !== 'undefined') ? ProfilePhotos.listFor(user.id).filter(p => p.position !== 0) : [];
     const _photosByPos = {};
     (typeof ProfilePhotos !== 'undefined' ? ProfilePhotos.listFor(user.id) : []).forEach(p => { _photosByPos[p.position] = p; });
     const photoManageHtml = [0, 1, 2, 3].map(pos => {
@@ -3294,12 +3316,6 @@ const UIStudent = (() => {
             ${p && pos !== 0 ? `<button class="ghost pp-photo-slot-btn pp-photo-primary-btn" data-photo-id="${esc(p.id)}">Hacer principal</button>` : ''}
           </div>
         </div>`;
-    }).join('');
-    const photoBubblesHtml = [0, 1, 2].map(i => {
-      const p = secondaryPhotos[i];
-      return p
-        ? `<div class="pp-avatar-bubble" data-photo-id="${esc(p.id)}"><img data-photo-path="${esc(p.storagePath)}" alt=""></div>`
-        : `<div class="pp-avatar-bubble pp-avatar-bubble-empty"></div>`;
     }).join('');
     const prepPct = _calcPrep(user, sessions, acadProfile);
     const nowMs = Date.now();
@@ -3358,7 +3374,6 @@ const UIStudent = (() => {
           <div class="ph2-hero-main">
             <div class="ph2-avatar-wrap">
               <div class="pp-avatar-big ph2-avatar" id="ppAvatarBig" style="background:${esc(avatarColor)};">${primaryPhoto ? `<img data-photo-path="${esc(primaryPhoto.storagePath)}" alt="" class="pp-avatar-img">` : esc(initials)}</div>
-              <div class="pp-photo-bubbles">${photoBubblesHtml}</div>
             </div>
             <div class="ph2-hero-info">
               <div class="ph2-hero-name">${esc(user.name)}</div>
@@ -4010,7 +4025,6 @@ const UIStudent = (() => {
     const bio = user.bio || '';
     const nickname = user.nickname || '';
     const primaryPhoto = (typeof ProfilePhotos !== 'undefined') ? ProfilePhotos.getPrimary(user.id) : null;
-    const secondaryPhotos = (typeof ProfilePhotos !== 'undefined') ? ProfilePhotos.listFor(user.id).filter(p => p.position !== 0) : [];
     const _photosByPos = {};
     (typeof ProfilePhotos !== 'undefined' ? ProfilePhotos.listFor(user.id) : []).forEach(p => { _photosByPos[p.position] = p; });
     const photoManageHtml = [0, 1, 2, 3].map(pos => {
@@ -4027,12 +4041,6 @@ const UIStudent = (() => {
           </div>
         </div>`;
     }).join('');
-    const photoBubblesHtml = [0, 1, 2].map(i => {
-      const p = secondaryPhotos[i];
-      return p
-        ? `<div class="pp-avatar-bubble" data-photo-id="${esc(p.id)}"><img data-photo-path="${esc(p.storagePath)}" alt=""></div>`
-        : `<div class="pp-avatar-bubble pp-avatar-bubble-empty"></div>`;
-    }).join('');
 
     // ── Panel: Mi Perfil ──
     const panelProfile = `
@@ -4040,7 +4048,6 @@ const UIStudent = (() => {
         <h2 class="pp-section-title">Mi Perfil</h2>
         <div class="pp-avatar-row">
           <div class="ps-avatar-big">${primaryPhoto ? `<img data-photo-path="${esc(primaryPhoto.storagePath)}" alt="" class="pp-avatar-img">` : esc(initials)}</div>
-          <div class="pp-photo-bubbles">${photoBubblesHtml}</div>
           <div class="pp-profile-info" style="margin-left:16px;">
             <div class="pp-name">${esc(user.name)}</div>
             <div class="pp-nick-display" id="ppNickDisplay">
@@ -4473,13 +4480,10 @@ const UIStudent = (() => {
       r().querySelector('#ppMsgEdit').style.display = 'none';
     });
 
-    // Burbujas de fotos secundarias: click en una foto con imagen → ampliar.
-    r().querySelectorAll('.pp-avatar-bubble:not(.pp-avatar-bubble-empty) img').forEach(img => {
-      img.addEventListener('click', () => { if (img.src) _openImageLightbox(img.src); });
-    });
-    // Foto principal: click → ampliar (si tiene foto).
+    // Foto principal: click → galería ampliada (principal + secundarias que
+    // existan, sin huecos). Solo si el usuario tiene al menos una foto.
     r().querySelectorAll('.pp-avatar-big img.pp-avatar-img, .ps-avatar-big img.pp-avatar-img, .ph2-id-avatar img.pp-avatar-img').forEach(img => {
-      img.addEventListener('click', () => { if (img.src) _openImageLightbox(img.src); });
+      img.addEventListener('click', () => _openProfileLightbox(user.id));
     });
 
     // ── Gestión de fotos (panel Cuenta) ──
