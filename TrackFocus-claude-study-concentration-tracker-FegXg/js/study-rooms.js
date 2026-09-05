@@ -40,5 +40,50 @@ const StudyRooms = (() => {
     if (channel && window.SB) window.SB.removeChannel(channel);
   }
 
-  return { getOrCreateRoom, listRooms, joinPresence, leavePresence };
+  // ── TrackTutor compartido (Fase 5) ──────────────────────────────────
+  // Tabla propia room_messages (no reutiliza 'messages' de compañeros ni el
+  // _chatState individual de TrackTutor). 'sender' es el email de un
+  // participante o el literal 'assistant'.
+  async function listRoomMessages(roomId) {
+    const { data, error } = await window.SB
+      .from('room_messages')
+      .select('*')
+      .eq('room_id', roomId)
+      .order('created_at', { ascending: true })
+      .limit(200);
+    if (error) throw error;
+    return data || [];
+  }
+
+  async function sendRoomMessage(roomId, sender, body) {
+    const trimmed = String(body || '').trim();
+    if (!trimmed) return null;
+    const { data, error } = await window.SB
+      .from('room_messages')
+      .insert({ room_id: roomId, sender, body: trimmed })
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  }
+
+  function subscribeRoomMessages(roomId, onInsert) {
+    if (!window.SB) return null;
+    return window.SB
+      .channel('room-chat:' + roomId)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'room_messages',
+        filter: `room_id=eq.${roomId}`
+      }, onInsert)
+      .subscribe();
+  }
+
+  function unsubscribeRoomMessages(channel) {
+    if (channel && window.SB) window.SB.removeChannel(channel);
+  }
+
+  return {
+    getOrCreateRoom, listRooms, joinPresence, leavePresence,
+    listRoomMessages, sendRoomMessage, subscribeRoomMessages, unsubscribeRoomMessages
+  };
 })();

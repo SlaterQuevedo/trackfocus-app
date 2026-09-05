@@ -12,6 +12,7 @@ const UICompanions = (() => {
   };
   let _chatChannel = null;
   let _roomChannel = null;
+  let _roomMsgChannel = null;
 
   function screenCompanions() {
     return `
@@ -346,6 +347,18 @@ const UICompanions = (() => {
           <div><div class="ph-panel-title">Sala de estudio</div><div class="ph-panel-sub">La presencia se actualiza en vivo mientras ambos tengan la sala abierta</div></div>
         </div>
         <div class="cp-room-cards" id="cpRoomCards"><div class="cp-empty">Cargando…</div></div>
+
+        <div class="ph-panel-hdr" style="margin:24px 0 12px;">
+          <div class="ph-panel-hdr-icon">🤖</div>
+          <div><div class="ph-panel-title">TrackTutor compartido</div><div class="ph-panel-sub">Ambos ven la misma conversación con el tutor</div></div>
+        </div>
+        <div class="cp-room-tutor">
+          <div class="cp-chat-messages cp-room-tutor-messages" id="cpRoomTutorMessages"><div class="cp-empty">Cargando…</div></div>
+          <div class="cp-chat-inputbar cp-room-tutor-inputbar">
+            <input type="text" id="cpRoomTutorInput" class="cp-chat-input" maxlength="2000" placeholder="Pregúntale algo a TrackTutor..." autocomplete="off">
+            <button id="cpRoomTutorSendBtn" class="cp-btn cp-btn-primary cp-chat-send-btn">Enviar</button>
+          </div>
+        </div>
       </div>
     `;
     document.body.appendChild(page);
@@ -353,6 +366,7 @@ const UICompanions = (() => {
     const closeRoom = () => {
       page.remove();
       if (_roomChannel) { StudyRooms.leavePresence(_roomChannel); _roomChannel = null; }
+      if (_roomMsgChannel) { StudyRooms.unsubscribeRoomMessages(_roomMsgChannel); _roomMsgChannel = null; }
     };
     page.querySelector('#cp-room-back').onclick = closeRoom;
 
@@ -385,6 +399,106 @@ const UICompanions = (() => {
       if (!document.body.contains(page)) return;
       renderCards(onlineSet);
     });
+
+    // ── TrackTutor compartido ──
+    // Reutiliza AiChatProxy (mismo cliente que las sesiones individuales de
+    // TrackTutor) sin tocar el _chatState individual: aquí el "historial" es
+    // room_messages, una tabla propia, visible para ambos participantes.
+    const tutorListEl = page.querySelector('#cpRoomTutorMessages');
+    const tutorInput = page.querySelector('#cpRoomTutorInput');
+    const tutorSendBtn = page.querySelector('#cpRoomTutorSendBtn');
+    const seenMsgIds = new Set();
+    let roomHistory = [];
+
+    try {
+      const msgs = await StudyRooms.listRoomMessages(roomId);
+      if (!document.body.contains(page)) return;
+      roomHistory = msgs;
+      tutorListEl.innerHTML = msgs.length ? '' : '<div class="cp-empty">Escríbanle algo a TrackTutor para empezar a estudiar juntos.</div>';
+      msgs.forEach(m => { seenMsgIds.add(m.id); _appendRoomBubble(tutorListEl, m, myId); });
+      tutorListEl.scrollTop = tutorListEl.scrollHeight;
+    } catch (err) {
+      if (!document.body.contains(page)) return;
+      tutorListEl.innerHTML = '<div class="cp-empty">No se pudo cargar la conversación con TrackTutor.</div>';
+    }
+
+    _roomMsgChannel = StudyRooms.subscribeRoomMessages(roomId, (payload) => {
+      if (!document.body.contains(page)) return;
+      const m = payload.new;
+      if (seenMsgIds.has(m.id)) return; // ya renderizado (propio o eco de nuestra propia inserción)
+      seenMsgIds.add(m.id);
+      roomHistory.push(m);
+      tutorListEl.querySelector('.cp-empty')?.remove();
+      _appendRoomBubble(tutorListEl, m, myId);
+      tutorListEl.scrollTop = tutorListEl.scrollHeight;
+    });
+
+    async function doSendTutor() {
+      const body = tutorInput.value.trim();
+      if (!body) return;
+      tutorInput.value = '';
+      tutorListEl.querySelector('.cp-empty')?.remove();
+
+      let ownMsg;
+      try {
+        ownMsg = await StudyRooms.sendRoomMessage(roomId, myId, body);
+      } catch (err) {
+        tutorInput.value = body;
+        UI.flash(err?.message || 'No se pudo enviar el mensaje.', 'error');
+        return;
+      }
+      seenMsgIds.add(ownMsg.id);
+      roomHistory.push(ownMsg);
+      _appendRoomBubble(tutorListEl, ownMsg, myId);
+      tutorListEl.scrollTop = tutorListEl.scrollHeight;
+
+      const thinking = document.createElement('div');
+      thinking.className = 'cp-msg-bubble cp-msg-assistant cp-msg-thinking';
+      thinking.textContent = 'TrackTutor está escribiendo…';
+      tutorListEl.appendChild(thinking);
+      tutorListEl.scrollTop = tutorListEl.scrollHeight;
+
+      const historyForAI = roomHistory.slice(0, -1).map(m => ({
+        role: m.sender === 'assistant' ? 'model' : 'user',
+        content: m.body
+      }));
+      const metadata = { subject: 'la sesión de estudio compartida', grade: 'secundaria' };
+      let fullText = '';
+      let firstChunk = true;
+      try {
+        fullText = await AiChatProxy.sendMessage(metadata, historyForAI, body, (chunk) => {
+          if (firstChunk) { thinking.textContent = ''; firstChunk = false; }
+          thinking.textContent += chunk;
+          tutorListEl.scrollTop = tutorListEl.scrollHeight;
+        });
+      } catch (err) {
+        thinking.remove();
+        UI.flash('TrackTutor no pudo responder. Intenta de nuevo.', 'error');
+        return;
+      }
+      thinking.classList.remove('cp-msg-thinking');
+      thinking.textContent = fullText;
+
+      try {
+        const savedAssistant = await StudyRooms.sendRoomMessage(roomId, 'assistant', fullText);
+        seenMsgIds.add(savedAssistant.id);
+        roomHistory.push(savedAssistant);
+      } catch (err) {
+        // La respuesta ya se ve localmente aunque falle el guardado; el otro
+        // participante no la verá hasta que alguien vuelva a preguntar algo.
+        window.Monitor?.log?.('study-rooms', 'No se pudo guardar respuesta de TrackTutor', err?.message);
+      }
+    }
+    tutorSendBtn.addEventListener('click', doSendTutor);
+    tutorInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSendTutor(); });
+  }
+
+  function _appendRoomBubble(listEl, m, myId) {
+    const bubble = document.createElement('div');
+    bubble.className = 'cp-msg-bubble ' + (m.sender === 'assistant' ? 'cp-msg-assistant' : (m.sender === myId ? 'cp-msg-mine' : 'cp-msg-theirs'));
+    bubble.textContent = m.body;
+    listEl.appendChild(bubble);
+    return bubble;
   }
 
   async function wireCompanions() {
@@ -607,6 +721,7 @@ const UICompanions = (() => {
     document.getElementById('cp-room-page')?.remove();
     if (_chatChannel) { Chat.unsubscribe(_chatChannel); _chatChannel = null; }
     if (_roomChannel) { StudyRooms.leavePresence(_roomChannel); _roomChannel = null; }
+    if (_roomMsgChannel) { StudyRooms.unsubscribeRoomMessages(_roomMsgChannel); _roomMsgChannel = null; }
   }
 
   return { screens: { companions: { render: screenCompanions, wire: wireCompanions } }, closeOverlays };

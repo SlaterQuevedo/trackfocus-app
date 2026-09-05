@@ -5465,6 +5465,24 @@ html[data-theme="light"] .ph-sidebar .pp-nav-item.active {
 .cp-room-card-name { font-weight: 700; font-size: 14px; color: var(--text-primary, #F1F0EC); margin-top: 4px; }
 .cp-room-card-status { font-size: 12px; color: var(--text-secondary, rgba(241,240,236,.55)); }
 
+/* TrackTutor compartido dentro de la sala (Fase 5). */
+.cp-room-tutor {
+  border: 1px solid rgba(255,255,255,.08); border-radius: 14px;
+  background: rgba(255,255,255,.02); padding: 12px;
+}
+[data-theme="light"] .cp-room-tutor { background: rgba(0,0,0,.02); border-color: rgba(0,0,0,.08); }
+.cp-room-tutor-messages {
+  min-height: 140px; max-height: 360px; overflow-y: auto;
+  flex: none; width: auto; max-width: none; margin: 0; padding: 0 0 10px;
+}
+.cp-room-tutor-inputbar { max-width: none; width: 100%; margin: 0; padding: 0; }
+.cp-msg-assistant {
+  align-self: center; max-width: 92%;
+  background: rgba(139,92,246,.12); border: 1px solid rgba(139,92,246,.25); color: var(--text);
+}
+[data-theme="light"] .cp-msg-assistant { background: rgba(139,92,246,.08); border-color: rgba(139,92,246,.2); }
+.cp-msg-thinking { opacity: .7; font-style: italic; }
+
 /* ── cm-* Classroom Manage Dashboard ─────────────────────────────────────── */
 
 .cm-layout {
