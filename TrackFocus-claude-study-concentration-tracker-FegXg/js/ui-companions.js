@@ -4,6 +4,12 @@ const UICompanions = (() => {
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c =>
     ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
   const initials = (name) => String(name || '').split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase() || '?';
+  const AVATAR_COLORS = ['#C89B6D','#8B5CF6','#3B82F6','#22C55E','#EF4444','#F59E0B'];
+  const _colorFor = (id) => {
+    let h = 0;
+    for (let i = 0; i < String(id).length; i++) h = (h * 31 + String(id).charCodeAt(i)) >>> 0;
+    return AVATAR_COLORS[h % AVATAR_COLORS.length];
+  };
 
   function screenCompanions() {
     return `
@@ -67,23 +73,25 @@ const UICompanions = (() => {
     });
   }
 
-  // Ventana de perfil público: foto, nombre, apodo, bio y progreso público
-  // (nivel/XP/racha) de otro usuario, con la misma acción de compañero que
-  // ya se muestra en las listas.
+  // Página de perfil público: foto, nombre, apodo, bio y progreso público
+  // (nivel/XP/racha) de otro usuario, con el mismo estilo de tarjeta que el
+  // propio "Mi Perfil" (ph2-hero + ph2-kpi-bar), no una ventana suelta vacía.
+  // Incluye la misma acción de compañero que ya se muestra en las listas.
   async function _openPublicProfileModal(userId, myId) {
     const existing = document.getElementById('cp-profile-modal');
     if (existing) existing.remove();
 
     const modal = document.createElement('div');
     modal.id = 'cp-profile-modal';
-    modal.style.cssText = 'position:fixed;inset:0;background:rgba(10,8,14,.96);z-index:990;overflow:auto;';
+    modal.className = 'cp-profile-page';
     modal.innerHTML = `
-      <button id="cp-profile-modal-close" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px;z-index:2;">✕</button>
-      <div class="cp-profile-center"><div class="cp-empty">Cargando…</div></div>
+      <div class="cp-profile-page-topbar">
+        <button id="cp-profile-modal-back" class="cp-profile-back-btn">← Volver</button>
+      </div>
+      <div class="cp-profile-page-inner"><div class="cp-empty">Cargando…</div></div>
     `;
     document.body.appendChild(modal);
-    modal.querySelector('#cp-profile-modal-close').onclick = () => modal.remove();
-    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+    modal.querySelector('#cp-profile-modal-back').onclick = () => modal.remove();
 
     const [profiles, photos] = await Promise.all([
       Companions.getPublicProfiles([userId]),
@@ -94,20 +102,30 @@ const UICompanions = (() => {
     const photoUrl = photos[userId] || null;
     const status = Companions.statusWith(myId, userId);
 
-    const center = modal.querySelector('.cp-profile-center');
-    center.innerHTML = `
-      <div class="cp-profile-avatar">${photoUrl ? `<img src="${esc(photoUrl)}" alt="">` : esc(initials(p.name))}</div>
-      <div class="cp-profile-name">${esc(p.name)}</div>
-      ${p.nickname ? `<div class="cp-profile-nick">@${esc(p.nickname)}</div>` : ''}
-      ${p.bio ? `<div class="cp-profile-bio">${esc(p.bio)}</div>` : ''}
-      <div class="cp-profile-stats">
-        <div class="cp-profile-stat"><div class="cp-profile-stat-icon">🎓</div><div class="cp-profile-stat-lbl">Nivel</div><div class="cp-profile-stat-val">${p.level ?? 1}</div></div>
-        <div class="cp-profile-stat"><div class="cp-profile-stat-icon">⭐</div><div class="cp-profile-stat-lbl">XP</div><div class="cp-profile-stat-val">${(p.xp ?? 0).toLocaleString()}</div></div>
-        <div class="cp-profile-stat"><div class="cp-profile-stat-icon">🔥</div><div class="cp-profile-stat-lbl">Racha</div><div class="cp-profile-stat-val">${p.streak ?? 0} días</div></div>
+    const inner = modal.querySelector('.cp-profile-page-inner');
+    inner.innerHTML = `
+      <div class="ph2-hero cp-profile-hero">
+        <div class="ph2-hero-main">
+          <div class="ph2-avatar-wrap">
+            <div class="pp-avatar-big ph2-avatar" style="background:${esc(_colorFor(p.id))};">${photoUrl ? `<img src="${esc(photoUrl)}" alt="" class="pp-avatar-img">` : esc(initials(p.name))}</div>
+          </div>
+          <div class="ph2-hero-info">
+            <div class="ph2-hero-name">${esc(p.name)}</div>
+            ${p.nickname ? `<div class="pp-nick-text">@${esc(p.nickname)}</div>` : ''}
+            <div class="ph2-hero-msg">
+              <span class="ph2-motto">${p.bio ? esc(p.bio) : 'Este usuario aún no escribió una biografía.'}</span>
+            </div>
+          </div>
+        </div>
+        <div class="ph2-kpi-bar cp-profile-kpi-bar">
+          <div class="ph2-kpi-card"><div class="ph2-kpi-icon">🎓</div><div class="ph2-kpi-lbl">Nivel</div><div class="ph2-kpi-val">${p.level ?? 1}</div></div>
+          <div class="ph2-kpi-card"><div class="ph2-kpi-icon">⭐</div><div class="ph2-kpi-lbl">XP Total</div><div class="ph2-kpi-val">${(p.xp ?? 0).toLocaleString()}</div></div>
+          <div class="ph2-kpi-card"><div class="ph2-kpi-icon">🔥</div><div class="ph2-kpi-lbl">Racha Actual</div><div class="ph2-kpi-val">${p.streak ?? 0} días</div></div>
+        </div>
       </div>
-      <div class="cp-profile-action" id="cpProfileActionSlot">${_actionForStatus(status, userId)}</div>
+      <div class="cp-profile-actions" id="cpProfileActionSlot">${_actionForStatus(status, userId)}</div>
     `;
-    center.querySelector('.cp-add-btn')?.addEventListener('click', async (e) => {
+    inner.querySelector('.cp-add-btn')?.addEventListener('click', async (e) => {
       const btn = e.currentTarget;
       btn.disabled = true;
       try {
