@@ -15,6 +15,45 @@ const UIStudent = (() => {
     return false;
   }
 
+  // Iniciales del avatar (fallback cuando no hay foto de perfil). Centraliza la
+  // fórmula que antes estaba duplicada en 3 lugares distintos.
+  function _userInitials(name) {
+    return String(name || '').split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase() || '?';
+  }
+
+  // Lightbox genérico de imagen a pantalla completa (mismo idioma visual/z-index
+  // que QRScanner.openQRModal: crea, remueve cualquier instancia previa, cierra
+  // con click en el fondo o en la X).
+  function _openImageLightbox(url) {
+    const existing = document.getElementById('pp-img-lightbox');
+    if (existing) existing.remove();
+    const modal = document.createElement('div');
+    modal.id = 'pp-img-lightbox';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:990;display:flex;align-items:center;justify-content:center;padding:20px;';
+    modal.innerHTML = `
+      <button id="pp-img-lightbox-close" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px;">✕</button>
+      <img src="${esc(url)}" style="max-width:100%;max-height:85vh;border-radius:12px;object-fit:contain;" />
+    `;
+    document.body.appendChild(modal);
+    modal.querySelector('#pp-img-lightbox-close').onclick = () => modal.remove();
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+  }
+
+  // Resuelve las URLs firmadas (bucket privado) de todas las fotos de perfil
+  // renderizadas como placeholders <img data-photo-path> dentro de la raíz dada,
+  // y las aplica una vez resueltas. Se llama desde wireProfile() tras insertar
+  // el HTML, ya que las URLs firmadas requieren una llamada async a Supabase.
+  async function _hydratePhotoAvatars(rootEl) {
+    if (typeof ProfilePhotos === 'undefined' || !rootEl) return;
+    const nodes = Array.from(rootEl.querySelectorAll('img[data-photo-path]'));
+    await Promise.all(nodes.map(async (img) => {
+      const path = img.dataset.photoPath;
+      if (!path) return;
+      const url = await ProfilePhotos.getSignedUrl(path).catch(() => null);
+      if (url) img.src = url;
+    }));
+  }
+
   function formatGrade(g) {
     if (!g) return '';
     const n = parseInt(g, 10);
@@ -3234,9 +3273,34 @@ const UIStudent = (() => {
     const acadProfile = JSON.parse(localStorage.getItem('arv-academic-profile-v3') || '{}');
     const schedule = JSON.parse(localStorage.getItem('arv-weekly-schedule') || '{}');
     const prefs = JSON.parse(localStorage.getItem('arv-prefs') || '{}');
-    const initials = user.name.split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    const initials = _userInitials(user.name);
     const avatarColor = acadProfile.avatarColor || '#C89B6D';
-    const message = acadProfile.message || 'Cada sesión te acerca a tu objetivo.';
+    const bio = user.bio || acadProfile.message || 'Cada sesión te acerca a tu objetivo.';
+    const nickname = user.nickname || '';
+    const primaryPhoto = (typeof ProfilePhotos !== 'undefined') ? ProfilePhotos.getPrimary(user.id) : null;
+    const secondaryPhotos = (typeof ProfilePhotos !== 'undefined') ? ProfilePhotos.listFor(user.id).filter(p => p.position !== 0) : [];
+    const _photosByPos = {};
+    (typeof ProfilePhotos !== 'undefined' ? ProfilePhotos.listFor(user.id) : []).forEach(p => { _photosByPos[p.position] = p; });
+    const photoManageHtml = [0, 1, 2, 3].map(pos => {
+      const p = _photosByPos[pos];
+      const label = pos === 0 ? 'Principal' : `Foto ${pos + 1}`;
+      return `
+        <div class="pp-photo-slot" data-pos="${pos}">
+          <div class="pp-photo-slot-preview">${p ? `<img data-photo-path="${esc(p.storagePath)}" alt="">` : '<span class="pp-photo-slot-empty">+</span>'}</div>
+          <div class="pp-photo-slot-label">${label}</div>
+          <div class="pp-photo-slot-actions">
+            <button class="ghost pp-photo-slot-btn pp-photo-upload-btn" data-pos="${pos}">${p ? 'Reemplazar' : 'Subir'}</button>
+            ${p ? `<button class="ghost pp-photo-slot-btn pp-photo-del-btn" data-photo-id="${esc(p.id)}">Eliminar</button>` : ''}
+            ${p && pos !== 0 ? `<button class="ghost pp-photo-slot-btn pp-photo-primary-btn" data-photo-id="${esc(p.id)}">Hacer principal</button>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+    const photoBubblesHtml = [0, 1, 2].map(i => {
+      const p = secondaryPhotos[i];
+      return p
+        ? `<div class="pp-avatar-bubble" data-photo-id="${esc(p.id)}"><img data-photo-path="${esc(p.storagePath)}" alt=""></div>`
+        : `<div class="pp-avatar-bubble pp-avatar-bubble-empty"></div>`;
+    }).join('');
     const prepPct = _calcPrep(user, sessions, acadProfile);
     const nowMs = Date.now();
     const nearestExam = (acadProfile.examDates || [])
@@ -3293,17 +3357,30 @@ const UIStudent = (() => {
         <div class="ph2-hero">
           <div class="ph2-hero-main">
             <div class="ph2-avatar-wrap">
-              <div class="pp-avatar-big ph2-avatar" id="ppAvatarBig" style="background:${esc(avatarColor)};">${esc(initials)}</div>
+              <div class="pp-avatar-big ph2-avatar" id="ppAvatarBig" style="background:${esc(avatarColor)};">${primaryPhoto ? `<img data-photo-path="${esc(primaryPhoto.storagePath)}" alt="" class="pp-avatar-img">` : esc(initials)}</div>
+              <div class="pp-photo-bubbles">${photoBubblesHtml}</div>
             </div>
             <div class="ph2-hero-info">
               <div class="ph2-hero-name">${esc(user.name)}</div>
+              <div class="pp-nick-display" id="ppNickDisplay">
+                <span class="pp-nick-text" id="ppNickText">${nickname ? '@' + esc(nickname) : ''}</span>
+                <button class="pp-msg-edit-btn ph2-edit-btn" id="ppNickEditBtn">✏️</button>
+              </div>
+              <div id="ppNickEdit" style="display:none;align-items:center;gap:6px;margin-top:4px;">
+                <span style="opacity:.6;">@</span>
+                <input type="text" class="pp-nick-input" id="ppNickInput" maxlength="20" placeholder="apodo" value="${esc(nickname)}">
+                <button class="primary pp-msg-edit-btn" id="ppNickSaveBtn" style="padding:5px 14px;font-size:12px;">Guardar</button>
+              </div>
               <div class="pp-msg-display ph2-hero-msg" id="ppMsgDisplay">
-                <span class="pp-msg-text ph2-motto" id="ppMsgText">${esc(message)}</span>
+                <span class="pp-msg-text ph2-motto" id="ppMsgText">${esc(bio)}</span>
                 <button class="pp-msg-edit-btn ph2-edit-btn" id="ppMsgEditBtn">✏️</button>
               </div>
               <div id="ppMsgEdit" style="display:none;flex-direction:column;gap:6px;margin-top:6px;">
-                <textarea class="pp-msg-textarea" id="ppMsgInput" maxlength="100">${esc(message)}</textarea>
-                <button class="primary pp-msg-edit-btn" id="ppMsgSaveBtn" style="align-self:flex-end;padding:5px 14px;font-size:12px;">Guardar</button>
+                <textarea class="pp-msg-textarea" id="ppMsgInput" maxlength="160">${esc(bio)}</textarea>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span id="ppBioCounter" style="font-size:11px;opacity:.6;">${bio.length}/160</span>
+                  <button class="primary pp-msg-edit-btn" id="ppMsgSaveBtn" style="padding:5px 14px;font-size:12px;">Guardar</button>
+                </div>
               </div>
             </div>
           </div>
@@ -3510,7 +3587,7 @@ const UIStudent = (() => {
                 <span class="ph2-id-status">● Activo</span>
               </div>
               <div class="ph2-id-header">
-                <div class="ph2-id-avatar" style="background:${esc(avatarColor)};">${esc(_idInitial)}</div>
+                <div class="ph2-id-avatar" style="background:${esc(avatarColor)};">${primaryPhoto ? `<img data-photo-path="${esc(primaryPhoto.storagePath)}" alt="" class="pp-avatar-img">` : esc(_idInitial)}</div>
                 <div class="ph2-id-info">
                   <div class="ph2-id-name">${esc(user.name)}</div>
                   <div class="ph2-id-code">${esc(_studentCode)}</div>
@@ -3751,6 +3828,12 @@ const UIStudent = (() => {
           <div class="pp-account-email">${esc(user.email || '—')}</div>
           <div class="pp-account-role">Modo: ${_roleLabel(user)}</div>
         </div>
+        <div class="pp-photo-manage">
+          <div class="pp-photo-manage-title">Fotos de perfil</div>
+          <div class="pp-photo-manage-sub">Hasta 4 fotos. La "Principal" reemplaza tus iniciales en todo TrackNara.</div>
+          <input type="file" id="ppPhotoInput" accept="image/jpeg,image/png,image/webp" style="display:none;" />
+          <div class="pp-photo-slots">${photoManageHtml}</div>
+        </div>
         <div class="pp-account-actions">
           <button class="ghost pp-account-btn" id="ppLegalBtn">⚖️ Información legal</button>
           <button class="ghost pp-account-btn pp-security-trigger">🔒 Seguridad de sesión</button>
@@ -3855,7 +3938,7 @@ const UIStudent = (() => {
       <div class="pp-layout">
         <aside class="pp-sidebar ph-sidebar">
           <div class="ph-sidebar-hero">
-            <div class="pp-avatar-big ph-sidebar-avatar" style="background:${esc(avatarColor)};">${esc(initials)}</div>
+            <div class="pp-avatar-big ph-sidebar-avatar" style="background:${esc(avatarColor)};">${primaryPhoto ? `<img data-photo-path="${esc(primaryPhoto.storagePath)}" alt="" class="pp-avatar-img">` : esc(initials)}</div>
             <div class="ph-sidebar-user-info">
               <div class="ph-sidebar-user-name">${esc(user.name.split(' ')[0])}</div>
               <div class="ph-sidebar-user-level">${esc(levelInfo.current.title)}</div>
@@ -3919,20 +4002,67 @@ const UIStudent = (() => {
     const classroom = user.classroomId ? s.classrooms[user.classroomId] : null;
     const schoolProfile = JSON.parse(localStorage.getItem('arv-school-profile-v1') || '{}');
     const prefs = JSON.parse(localStorage.getItem('arv-prefs') || '{}');
-    const initials = user.name.split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    const initials = _userInitials(user.name);
     const nowMs = Date.now();
     const exams = (schoolProfile.exams || [])
       .map((e, i) => ({ ...e, _i: i, days: Math.ceil((new Date(e.date) - nowMs) / 86400000) }))
       .filter(e => e.days > 0).sort((a, b) => a.days - b.days);
+    const bio = user.bio || '';
+    const nickname = user.nickname || '';
+    const primaryPhoto = (typeof ProfilePhotos !== 'undefined') ? ProfilePhotos.getPrimary(user.id) : null;
+    const secondaryPhotos = (typeof ProfilePhotos !== 'undefined') ? ProfilePhotos.listFor(user.id).filter(p => p.position !== 0) : [];
+    const _photosByPos = {};
+    (typeof ProfilePhotos !== 'undefined' ? ProfilePhotos.listFor(user.id) : []).forEach(p => { _photosByPos[p.position] = p; });
+    const photoManageHtml = [0, 1, 2, 3].map(pos => {
+      const p = _photosByPos[pos];
+      const label = pos === 0 ? 'Principal' : `Foto ${pos + 1}`;
+      return `
+        <div class="pp-photo-slot" data-pos="${pos}">
+          <div class="pp-photo-slot-preview">${p ? `<img data-photo-path="${esc(p.storagePath)}" alt="">` : '<span class="pp-photo-slot-empty">+</span>'}</div>
+          <div class="pp-photo-slot-label">${label}</div>
+          <div class="pp-photo-slot-actions">
+            <button class="ghost pp-photo-slot-btn pp-photo-upload-btn" data-pos="${pos}">${p ? 'Reemplazar' : 'Subir'}</button>
+            ${p ? `<button class="ghost pp-photo-slot-btn pp-photo-del-btn" data-photo-id="${esc(p.id)}">Eliminar</button>` : ''}
+            ${p && pos !== 0 ? `<button class="ghost pp-photo-slot-btn pp-photo-primary-btn" data-photo-id="${esc(p.id)}">Hacer principal</button>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+    const photoBubblesHtml = [0, 1, 2].map(i => {
+      const p = secondaryPhotos[i];
+      return p
+        ? `<div class="pp-avatar-bubble" data-photo-id="${esc(p.id)}"><img data-photo-path="${esc(p.storagePath)}" alt=""></div>`
+        : `<div class="pp-avatar-bubble pp-avatar-bubble-empty"></div>`;
+    }).join('');
 
     // ── Panel: Mi Perfil ──
     const panelProfile = `
       <div class="ps-panel active" data-panel="profile">
         <h2 class="pp-section-title">Mi Perfil</h2>
         <div class="pp-avatar-row">
-          <div class="ps-avatar-big">${esc(initials)}</div>
+          <div class="ps-avatar-big">${primaryPhoto ? `<img data-photo-path="${esc(primaryPhoto.storagePath)}" alt="" class="pp-avatar-img">` : esc(initials)}</div>
+          <div class="pp-photo-bubbles">${photoBubblesHtml}</div>
           <div class="pp-profile-info" style="margin-left:16px;">
             <div class="pp-name">${esc(user.name)}</div>
+            <div class="pp-nick-display" id="ppNickDisplay">
+              <span class="pp-nick-text" id="ppNickText">${nickname ? '@' + esc(nickname) : ''}</span>
+              <button class="pp-msg-edit-btn ph2-edit-btn" id="ppNickEditBtn">✏️</button>
+            </div>
+            <div id="ppNickEdit" style="display:none;align-items:center;gap:6px;margin-top:4px;">
+              <span style="opacity:.6;">@</span>
+              <input type="text" class="pp-nick-input" id="ppNickInput" maxlength="20" placeholder="apodo" value="${esc(nickname)}">
+              <button class="primary pp-msg-edit-btn" id="ppNickSaveBtn" style="padding:5px 14px;font-size:12px;">Guardar</button>
+            </div>
+            <div class="pp-msg-display" id="ppMsgDisplay">
+              <span class="pp-msg-text" id="ppMsgText">${esc(bio)}</span>
+              <button class="pp-msg-edit-btn ph2-edit-btn" id="ppMsgEditBtn">✏️</button>
+            </div>
+            <div id="ppMsgEdit" style="display:none;flex-direction:column;gap:6px;margin-top:6px;">
+              <textarea class="pp-msg-textarea" id="ppMsgInput" maxlength="160">${esc(bio)}</textarea>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span id="ppBioCounter" style="font-size:11px;opacity:.6;">${bio.length}/160</span>
+                <button class="primary pp-msg-edit-btn" id="ppMsgSaveBtn" style="padding:5px 14px;font-size:12px;">Guardar</button>
+              </div>
+            </div>
             <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;">
               ${classroom ? `<span class="ps-pill">${esc(classroom.name)}</span>` : ''}
               ${school ? `<span class="ps-pill">🏛️ ${esc(school.name)}</span>` : ''}
@@ -4189,6 +4319,12 @@ const UIStudent = (() => {
           <div class="pp-account-email">${esc(user.email || '—')}</div>
           <div class="pp-account-role">Rol: ${user.role === 'teacher' ? 'Docente' : 'Estudiante'} institucional</div>
         </div>
+        <div class="pp-photo-manage">
+          <div class="pp-photo-manage-title">Fotos de perfil</div>
+          <div class="pp-photo-manage-sub">Hasta 4 fotos. La "Principal" reemplaza tus iniciales en todo TrackNara.</div>
+          <input type="file" id="ppPhotoInput" accept="image/jpeg,image/png,image/webp" style="display:none;" />
+          <div class="pp-photo-slots">${photoManageHtml}</div>
+        </div>
         <div class="pp-account-actions">
           <button class="ghost pp-account-btn" id="ppLegalBtn">⚖️ Información legal</button>
           <button class="ghost pp-account-btn pp-security-trigger">🔒 Seguridad de sesión</button>
@@ -4204,7 +4340,7 @@ const UIStudent = (() => {
     return `
       <div class="ps-layout">
         <aside class="ps-sidebar">
-          <div class="ps-avatar-big">${esc(initials)}</div>
+          <div class="ps-avatar-big">${primaryPhoto ? `<img data-photo-path="${esc(primaryPhoto.storagePath)}" alt="" class="pp-avatar-img">` : esc(initials)}</div>
           <nav class="ps-nav">
             <button class="ps-nav-item active" data-panel="profile">👤 Mi Perfil</button>
             <button class="ps-nav-item" data-panel="evals">📅 Evaluaciones</button>
@@ -4255,7 +4391,9 @@ const UIStudent = (() => {
     if (pending) { sessionStorage.removeItem('arv-profile-panel'); _activatePanel(pending); }
 
     _wireClassroomForms(user);
+    _wireProfileIdentity(user);
     if (isPersonal) _wireProfilePersonal(user); else _wireProfileStudent(user);
+    _hydratePhotoAvatars(root());
   }
 
   function _wireClassroomForms(user) {
@@ -4282,6 +4420,111 @@ const UIStudent = (() => {
     });
   }
 
+  // Apodo, bio y burbujas de fotos secundarias: compartido por ambas variantes
+  // de perfil (personal e institucional), ya que el markup usa los mismos IDs
+  // en cada una (nunca coexisten en el DOM al mismo tiempo).
+  function _wireProfileIdentity(user) {
+    const r = () => root();
+
+    r().querySelector('#ppNickEditBtn')?.addEventListener('click', () => {
+      const input = r().querySelector('#ppNickInput');
+      if (input) input.value = (r().querySelector('#ppNickText')?.textContent || '').replace(/^@/, '');
+      r().querySelector('#ppNickDisplay').style.display = 'none';
+      r().querySelector('#ppNickEdit').style.display = 'flex';
+      r().querySelector('#ppNickInput')?.focus();
+    });
+    r().querySelector('#ppNickSaveBtn')?.addEventListener('click', async () => {
+      const val = (r().querySelector('#ppNickInput')?.value || '').trim().replace(/^@/, '');
+      if (val && !/^[a-zA-Z0-9_]{2,20}$/.test(val)) {
+        return UI.flash('El apodo solo puede tener letras, números y guion bajo (2-20 caracteres).', 'error');
+      }
+      if (window.SB_READY && window.SB) {
+        const { error } = await window.SB.from('users').update({ nickname: val || null }).eq('id', user.id);
+        if (error) {
+          const msg = error.code === '23505' ? 'Ese apodo ya está en uso. Elige otro.' : 'No se pudo guardar el apodo. Intenta de nuevo.';
+          window.Monitor?.log?.('photos', 'Fallo al guardar apodo', error.message);
+          return UI.flash(msg, 'error');
+        }
+      }
+      Storage.set(st => { st.users[user.id].nickname = val || null; });
+      const textEl = r().querySelector('#ppNickText');
+      if (textEl) textEl.textContent = val ? '@' + val : '';
+      r().querySelector('#ppNickDisplay').style.display = '';
+      r().querySelector('#ppNickEdit').style.display = 'none';
+    });
+
+    r().querySelector('#ppMsgEditBtn')?.addEventListener('click', () => {
+      const input = r().querySelector('#ppMsgInput');
+      if (input) input.value = r().querySelector('#ppMsgText')?.textContent || '';
+      r().querySelector('#ppMsgDisplay').style.display = 'none';
+      r().querySelector('#ppMsgEdit').style.display = 'flex';
+      r().querySelector('#ppMsgInput')?.focus();
+    });
+    r().querySelector('#ppMsgInput')?.addEventListener('input', (e) => {
+      const counter = r().querySelector('#ppBioCounter');
+      if (counter) counter.textContent = `${e.target.value.length}/160`;
+    });
+    r().querySelector('#ppMsgSaveBtn')?.addEventListener('click', () => {
+      const val = (r().querySelector('#ppMsgInput')?.value || '').trim().slice(0, 160);
+      Storage.set(st => { st.users[user.id].bio = val || null; });
+      const textEl = r().querySelector('#ppMsgText');
+      if (textEl) textEl.textContent = val;
+      r().querySelector('#ppMsgDisplay').style.display = '';
+      r().querySelector('#ppMsgEdit').style.display = 'none';
+    });
+
+    // Burbujas de fotos secundarias: click en una foto con imagen → ampliar.
+    r().querySelectorAll('.pp-avatar-bubble:not(.pp-avatar-bubble-empty) img').forEach(img => {
+      img.addEventListener('click', () => { if (img.src) _openImageLightbox(img.src); });
+    });
+    // Foto principal: click → ampliar (si tiene foto).
+    r().querySelectorAll('.pp-avatar-big img.pp-avatar-img, .ps-avatar-big img.pp-avatar-img, .ph2-id-avatar img.pp-avatar-img').forEach(img => {
+      img.addEventListener('click', () => { if (img.src) _openImageLightbox(img.src); });
+    });
+
+    // ── Gestión de fotos (panel Cuenta) ──
+    let _pendingUploadPos = null;
+    const photoInput = r().querySelector('#ppPhotoInput');
+
+    function _refreshAccountPanel() {
+      sessionStorage.setItem('arv-profile-panel', 'account');
+      App.go('profile');
+    }
+
+    r().querySelectorAll('.pp-photo-upload-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        _pendingUploadPos = parseInt(btn.dataset.pos, 10);
+        photoInput?.click();
+      });
+    });
+    photoInput?.addEventListener('change', async () => {
+      const file = photoInput.files?.[0];
+      photoInput.value = '';
+      if (!file || _pendingUploadPos === null) return;
+      try {
+        await ProfilePhotos.upload(file, _pendingUploadPos);
+        UI.flash('Foto actualizada.', 'success');
+      } catch (err) {
+        UI.flash(err?.message || 'No se pudo subir la foto.', 'error');
+      }
+      _refreshAccountPanel();
+    });
+    r().querySelectorAll('.pp-photo-del-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        await ProfilePhotos.remove(btn.dataset.photoId);
+        UI.flash('Foto eliminada.', 'success');
+        _refreshAccountPanel();
+      });
+    });
+    r().querySelectorAll('.pp-photo-primary-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        await ProfilePhotos.setPrimary(btn.dataset.photoId);
+        UI.flash('Foto principal actualizada.', 'success');
+        _refreshAccountPanel();
+      });
+    });
+  }
+
   function _wireProfilePersonal(user) {
     const r = () => root();
     const acadProfile = JSON.parse(localStorage.getItem('arv-academic-profile-v3') || '{}');
@@ -4297,23 +4540,6 @@ const UIStudent = (() => {
       });
     });
 
-    r().querySelector('#ppMsgEditBtn')?.addEventListener('click', () => {
-      const input = r().querySelector('#ppMsgInput');
-      if (input) input.value = r().querySelector('#ppMsgText')?.textContent || '';
-      r().querySelector('#ppMsgDisplay').style.display = 'none';
-      r().querySelector('#ppMsgEdit').style.display = 'flex';
-      r().querySelector('#ppMsgInput')?.focus();
-    });
-    r().querySelector('#ppMsgSaveBtn')?.addEventListener('click', () => {
-      const val = r().querySelector('#ppMsgInput')?.value.trim() || '';
-      const profile = JSON.parse(localStorage.getItem('arv-academic-profile-v3') || '{}');
-      profile.message = val;
-      localStorage.setItem('arv-academic-profile-v3', JSON.stringify(profile));
-      const textEl = r().querySelector('#ppMsgText');
-      if (textEl) textEl.textContent = val;
-      r().querySelector('#ppMsgDisplay').style.display = '';
-      r().querySelector('#ppMsgEdit').style.display = 'none';
-    });
 
     r().querySelector('#ppGoToMeta')?.addEventListener('click', () => {
       sessionStorage.setItem('arv-profile-panel', 'university');

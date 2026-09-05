@@ -36,7 +36,8 @@ const Storage = (() => {
     // Sistema académico de calificaciones (Fases 1–4)
     subjectAssignments: {},
     bimesters:          {},
-    grades:             {}
+    grades:             {},
+    profilePhotos:      {}
   };
 
   function _clone(x) {
@@ -213,6 +214,9 @@ const Storage = (() => {
     }
     for (const [id, r] of Object.entries(state.classroomRequests || {})) {
       if (r.studentId === uid) scoped.classroomRequests[id] = r;
+    }
+    for (const [id, p] of Object.entries(state.profilePhotos || {})) {
+      if (p.userId === uid) scoped.profilePhotos[id] = p;
     }
 
     try {

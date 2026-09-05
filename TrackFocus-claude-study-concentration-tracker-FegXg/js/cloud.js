@@ -34,6 +34,8 @@ const Cloud = (() => {
       display_last_name:    u.displayLastName  || null,
       profile_source:       u.profileSource    || null,
       google_linked:        !!u.googleLinked,
+      nickname:             u.nickname || null,
+      bio:                  u.bio || null,
       updated_at:           new Date().toISOString()
     }),
     school: s => ({
@@ -85,6 +87,13 @@ const Cloud = (() => {
       classroom_id: f.classroomId || null,
       metadata: f.metadata || {},
       created_at: f.createdAt
+    }),
+    profilePhoto: p => ({
+      id: p.id,
+      user_id: p.userId,
+      storage_path: p.storagePath,
+      position: p.position,
+      created_at: p.createdAt
     })
   };
 
@@ -158,6 +167,8 @@ const Cloud = (() => {
         displayLastName:  r.display_last_name  || null,
         profileSource:    r.profile_source     || 'google',
         googleLinked:     !!r.google_linked,
+        nickname:         r.nickname || null,
+        bio:              r.bio || null,
         gamification: {
           xp: r.xp || 0,
           level: r.level || 1,
@@ -218,6 +229,13 @@ const Cloud = (() => {
       metadata: r.metadata || {},
       createdAt: r.created_at
     }),
+    profilePhoto: r => ({
+      id: r.id,
+      userId: r.user_id,
+      storagePath: r.storage_path,
+      position: r.position,
+      createdAt: r.created_at
+    }),
     subjectAssignment: r => ({
       id:           r.id,
       teacherId:    r.teacher_id,
@@ -266,7 +284,7 @@ const Cloud = (() => {
     if (!window.SB) throw new Error('Supabase no está configurado.');
 
     const [usersR, schoolsR, classroomsR, sessionsR, customR, requestsR, filesR,
-           assignR, bimestersR, gradesR] = await Promise.all([
+           assignR, bimestersR, gradesR, photosR] = await Promise.all([
       window.SB.from('users').select('*'),
       window.SB.from('schools').select('*'),
       window.SB.from('classrooms').select('*'),
@@ -276,15 +294,16 @@ const Cloud = (() => {
       window.SB.from('uploaded_files').select('*'),
       window.SB.from('subject_assignments').select('*'),
       window.SB.from('bimesters').select('*'),
-      window.SB.from('grades').select('*').order('created_at', { ascending: false }).limit(2000)
+      window.SB.from('grades').select('*').order('created_at', { ascending: false }).limit(2000),
+      window.SB.from('profile_photos').select('*')
     ]);
 
     for (const r of [usersR, schoolsR, classroomsR, sessionsR, customR, requestsR, filesR]) {
       if (r.error) throw new Error('Cloud bootstrap: ' + r.error.message);
     }
-    // Las tablas académicas pueden no existir todavía si la migración no se ha aplicado
-    for (const [label, r] of [['subject_assignments', assignR], ['bimesters', bimestersR], ['grades', gradesR]]) {
-      if (r.error) console.warn(`[Cloud] bootstrap: tabla ${label} no disponible (${r.error.message}). Aplica grades_migration.sql.`);
+    // Las tablas académicas/sociales pueden no existir todavía si la migración no se ha aplicado
+    for (const [label, r] of [['subject_assignments', assignR], ['bimesters', bimestersR], ['grades', gradesR], ['profile_photos', photosR]]) {
+      if (r.error) console.warn(`[Cloud] bootstrap: tabla ${label} no disponible (${r.error.message}). Aplica la migración correspondiente.`);
     }
 
     const state = {
@@ -301,7 +320,8 @@ const Cloud = (() => {
       classroomRequests: {},
       subjectAssignments: {},
       bimesters: {},
-      grades: {}
+      grades: {},
+      profilePhotos: {}
     };
 
     (usersR.data      || []).forEach(r => { state.users[r.id]      = fromDb.user(r); });
@@ -318,6 +338,7 @@ const Cloud = (() => {
     (!assignR.error   ? assignR.data   : []).forEach(r => { state.subjectAssignments[r.id] = fromDb.subjectAssignment(r); });
     (!bimestersR.error ? bimestersR.data : []).forEach(r => { state.bimesters[r.id]         = fromDb.bimester(r); });
     (!gradesR.error   ? gradesR.data   : []).forEach(r => { state.grades[r.id]             = fromDb.grade(r); });
+    (!photosR.error   ? photosR.data   : []).forEach(r => { state.profilePhotos[r.id]      = fromDb.profilePhoto(r); });
 
     return state;
   }
@@ -394,6 +415,11 @@ const Cloud = (() => {
     diffMap(before.bimesters || {}, after.bimesters || {},
       row => ops.push(window.SB.from('bimesters').upsert(toDb.bimester(row))),
       id  => ops.push(window.SB.from('bimesters').delete().eq('id', id)));
+
+    // PROFILE PHOTOS
+    diffMap(before.profilePhotos || {}, after.profilePhotos || {},
+      row => ops.push(window.SB.from('profile_photos').upsert(toDb.profilePhoto(row))),
+      id  => ops.push(window.SB.from('profile_photos').delete().eq('id', id)));
 
     // GRADES
     diffMap(before.grades || {}, after.grades || {},

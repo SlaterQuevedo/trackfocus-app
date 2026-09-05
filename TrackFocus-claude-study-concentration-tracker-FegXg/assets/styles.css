@@ -3230,6 +3230,46 @@ html[data-theme="light"] .dp-prep-bar-wrap, html[data-theme="light"] .dp-route-b
 .pp-avatar-big { cursor: pointer; transition: transform 0.15s; }
 .pp-avatar-big:hover { transform: scale(1.06); }
 .ps-avatar-big { background: var(--blue); }
+
+/* Fotos de perfil (Fase 1 — social) */
+.pp-avatar-img {
+  width: 100%; height: 100%; border-radius: 50%;
+  object-fit: cover; cursor: zoom-in;
+}
+.pp-photo-bubbles { display: flex; gap: 8px; margin-top: 8px; justify-content: center; }
+.pp-avatar-bubble {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 2px solid var(--border-strong); overflow: hidden;
+  background: var(--panel-2); flex-shrink: 0;
+}
+.pp-avatar-bubble img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; display: block; }
+.pp-avatar-bubble-empty { border-style: dashed; opacity: .35; }
+
+.pp-nick-display { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+.pp-nick-text { font-size: 13px; font-weight: 700; color: var(--primary); }
+.pp-nick-input {
+  background: var(--panel); border: 1px solid var(--primary); border-radius: var(--radius-sm);
+  color: var(--text); font-size: 13px; font-family: inherit; padding: 5px 8px; flex: 1; min-width: 0;
+}
+
+.pp-photo-manage { margin: 16px 0; padding: 14px; background: var(--panel-2); border-radius: var(--radius-sm); }
+.pp-photo-manage-title { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+.pp-photo-manage-sub { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+.pp-photo-slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.pp-photo-slot { text-align: center; }
+.pp-photo-slot-preview {
+  width: 100%; aspect-ratio: 1; border-radius: 12px; overflow: hidden;
+  background: var(--panel); display: flex; align-items: center; justify-content: center;
+  border: 1px dashed var(--border-strong);
+}
+.pp-photo-slot-preview img { width: 100%; height: 100%; object-fit: cover; }
+.pp-photo-slot-empty { font-size: 22px; color: var(--muted); }
+.pp-photo-slot-label { font-size: 10px; color: var(--muted); margin: 6px 0 4px; }
+.pp-photo-slot-actions { display: flex; flex-direction: column; gap: 3px; }
+.pp-photo-slot-btn { font-size: 10px; padding: 3px 4px; line-height: 1.3; }
+@media (max-width: 480px) {
+  .pp-photo-slots { grid-template-columns: repeat(2, 1fr); }
+}
 .pp-nav, .ps-nav { display: flex; flex-direction: column; gap: 2px; }
 .pp-nav-item, .ps-nav-item {
   width: 100%; text-align: left; padding: 9px 12px; border-radius: 10px;
