@@ -66,7 +66,6 @@ const UIStudent = (() => {
     const _icoShare = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>`;
     const _icoLink = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`;
     const _icoQR = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM19 14h2v2h-2zM14 19h2v2h-2zM19 19h2v2h-2z"/></svg>`;
-    const _icoAddPhoto = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v7"/><circle cx="8" cy="9" r="1.5"/><path d="m3 17 4-4a2 2 0 0 1 2.83 0L14 17"/><path d="M17 15v6M14 18h6"/></svg>`;
     const _icoPencil = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>`;
 
     const modal = document.createElement('div');
@@ -74,22 +73,21 @@ const UIStudent = (() => {
     modal.style.cssText = 'position:fixed;inset:0;background:rgba(10,8,14,.96);z-index:990;overflow:auto;';
     modal.innerHTML = `
       <button id="pp-avatar-modal-close" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px;z-index:2;">✕</button>
-      <div class="pp-avatar-modal-topleft">
-        <div class="pp-avatar-modal-add" id="ppModalAddBtn" title="Agregar foto">+</div>
-      </div>
       <div class="pp-avatar-modal-center">
-        <div class="pp-avatar-modal-main-wrap">
-          <div class="pp-avatar-modal-main" id="ppModalMain" style="${!mainUrl ? `background:${esc(avatarColor)};` : ''}">
-            ${mainUrl ? `<img src="${esc(mainUrl)}" class="pp-avatar-modal-img" id="ppModalMainImg" alt="">` : esc(initials)}
+        <div class="pp-avatar-modal-avatar-row">
+          <div class="pp-avatar-modal-add" id="ppModalAddBtn" title="Agregar foto">+</div>
+          <div class="pp-avatar-modal-main-wrap">
+            <div class="pp-avatar-modal-main" id="ppModalMain" style="${!mainUrl ? `background:${esc(avatarColor)};` : ''}">
+              ${mainUrl ? `<img src="${esc(mainUrl)}" class="pp-avatar-modal-img" id="ppModalMainImg" alt="">` : esc(initials)}
+            </div>
+            <button class="pp-avatar-modal-edit" id="ppModalEditBtn" title="Cambiar foto principal">${_icoPencil}</button>
           </div>
-          <button class="pp-avatar-modal-edit" id="ppModalEditBtn" title="Cambiar foto principal">${_icoPencil}</button>
         </div>
         ${sideUrls.length ? `<div class="pp-avatar-modal-side">${sideUrls.map(u => `<img class="pp-lightbox-side-img" src="${esc(u)}" alt="">`).join('')}</div>` : ''}
         <div class="pp-avatar-modal-actions">
           <button class="pp-avatar-modal-action" id="ppModalShare"><span class="pp-avatar-modal-action-icon">${_icoShare}</span><span>Compartir perfil</span></button>
           <button class="pp-avatar-modal-action" id="ppModalCopyLink"><span class="pp-avatar-modal-action-icon">${_icoLink}</span><span>Copiar enlace</span></button>
           <button class="pp-avatar-modal-action" id="ppModalQR"><span class="pp-avatar-modal-action-icon">${_icoQR}</span><span>Código QR</span></button>
-          <button class="pp-avatar-modal-action" id="ppModalAddPhoto"><span class="pp-avatar-modal-action-icon">${_icoAddPhoto}</span><span>Agregar foto</span></button>
         </div>
       </div>
     `;
@@ -107,9 +105,9 @@ const UIStudent = (() => {
       });
     });
 
-    // Input de archivo compartido por "+", el lápiz y "Agregar foto". _targetPos
-    // null = ProfilePhotos.upload() ocupa el primer hueco libre (agregar);
-    // 0 = reemplaza específicamente la foto principal (lápiz sobre el avatar).
+    // Input de archivo compartido por "+" y el lápiz. _targetPos null =
+    // ProfilePhotos.upload() ocupa el primer hueco libre (agregar); 0 =
+    // reemplaza específicamente la foto principal (lápiz sobre el avatar).
     let _targetPos = null;
     const hiddenInput = document.createElement('input');
     hiddenInput.type = 'file';
@@ -132,7 +130,6 @@ const UIStudent = (() => {
       App.go('profile');
     });
     modal.querySelector('#ppModalAddBtn').addEventListener('click', () => { _targetPos = null; hiddenInput.click(); });
-    modal.querySelector('#ppModalAddPhoto').addEventListener('click', () => { _targetPos = null; hiddenInput.click(); });
     modal.querySelector('#ppModalEditBtn').addEventListener('click', () => { _targetPos = 0; hiddenInput.click(); });
 
     modal.querySelector('#ppModalCopyLink').addEventListener('click', () => {
