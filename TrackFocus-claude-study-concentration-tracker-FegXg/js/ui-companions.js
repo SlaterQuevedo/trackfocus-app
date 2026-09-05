@@ -10,6 +10,7 @@ const UICompanions = (() => {
     for (let i = 0; i < String(id).length; i++) h = (h * 31 + String(id).charCodeAt(i)) >>> 0;
     return AVATAR_COLORS[h % AVATAR_COLORS.length];
   };
+  let _chatChannel = null;
 
   function screenCompanions() {
     return `
@@ -22,6 +23,7 @@ const UICompanions = (() => {
           <button class="cp-tab active" data-tab="search">Buscar</button>
           <button class="cp-tab" data-tab="requests">Solicitudes</button>
           <button class="cp-tab" data-tab="mine">Mis Compañeros</button>
+          <button class="cp-tab" data-tab="messages">Mensajes</button>
         </nav>
         <div class="cp-panel active" data-tab="search">
           <input type="text" id="cpSearchInput" class="cp-search-input" placeholder="Buscar por nombre o apodo (mínimo 2 letras)..." maxlength="40" autocomplete="off">
@@ -32,6 +34,9 @@ const UICompanions = (() => {
         </div>
         <div class="cp-panel" data-tab="mine">
           <div id="cpMineList" class="cp-list"><div class="cp-empty">Cargando…</div></div>
+        </div>
+        <div class="cp-panel" data-tab="messages">
+          <div id="cpMessagesList" class="cp-list"><div class="cp-empty">Cargando…</div></div>
         </div>
       </div>`;
   }
@@ -54,7 +59,7 @@ const UICompanions = (() => {
       case 'none':             return `<button class="cp-btn cp-btn-primary cp-add-btn" data-id="${esc(userId)}">Agregar compañero</button>`;
       case 'pending_sent':     return `<span class="cp-status-label">Solicitud enviada</span>`;
       case 'pending_received': return `<span class="cp-status-label">Te envió una solicitud</span>`;
-      case 'accepted':         return `<span class="cp-status-label cp-status-ok">✓ Compañeros</span>`;
+      case 'accepted':         return `<span class="cp-status-label cp-status-ok">✓ Compañeros</span><button class="cp-btn cp-btn-primary cp-msg-btn" data-id="${esc(userId)}">Mensaje</button>`;
       case 'blocked':          return `<span class="cp-status-label">Bloqueado</span>`;
       default:                 return '';
     }
@@ -137,6 +142,113 @@ const UICompanions = (() => {
         btn.disabled = false;
       }
     });
+    _wireMsgButtons(inner, myId);
+  }
+
+  // Wire del botón "Mensaje" en filas/perfil (solo aparece con status
+  // 'accepted'): obtiene o crea la conversación 1:1 con esa persona y abre
+  // la ventana de chat.
+  function _wireMsgButtons(container, myId) {
+    container.querySelectorAll('.cp-msg-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const otherId = btn.dataset.id;
+        btn.disabled = true;
+        try {
+          const convId = await Chat.getOrCreateConversation(otherId);
+          _openChatWindow(convId, otherId, myId);
+        } catch (err) {
+          UI.flash(err?.message || 'No se pudo abrir el chat.', 'error');
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    });
+  }
+
+  function _appendMessageBubble(listEl, m, myId) {
+    const bubble = document.createElement('div');
+    bubble.className = 'cp-msg-bubble ' + (m.sender_id === myId ? 'cp-msg-mine' : 'cp-msg-theirs');
+    bubble.textContent = m.body;
+    listEl.appendChild(bubble);
+  }
+
+  // Ventana de chat 1:1 en tiempo real: historial + canal Realtime dedicado
+  // filtrado por conversation_id (no el canal global 'tracknara-sync').
+  async function _openChatWindow(conversationId, otherId, myId) {
+    const existing = document.getElementById('cp-chat-page');
+    if (existing) existing.remove();
+    if (_chatChannel) { Chat.unsubscribe(_chatChannel); _chatChannel = null; }
+
+    const page = document.createElement('div');
+    page.id = 'cp-chat-page';
+    page.className = 'cp-chat-page';
+    page.innerHTML = `
+      <div class="cp-chat-topbar">
+        <button id="cp-chat-back" class="cp-profile-back-btn">← Volver</button>
+        <div class="cp-chat-avatar" id="cpChatAvatar">?</div>
+        <div class="cp-chat-name" id="cpChatName">Cargando…</div>
+      </div>
+      <div class="cp-chat-messages" id="cpChatMessages"><div class="cp-empty">Cargando…</div></div>
+      <div class="cp-chat-inputbar">
+        <input type="text" id="cpChatInput" class="cp-chat-input" maxlength="2000" placeholder="Escribe un mensaje..." autocomplete="off">
+        <button id="cpChatSendBtn" class="cp-btn cp-btn-primary cp-chat-send-btn">Enviar</button>
+      </div>
+    `;
+    document.body.appendChild(page);
+
+    const closeChat = () => {
+      page.remove();
+      if (_chatChannel) { Chat.unsubscribe(_chatChannel); _chatChannel = null; }
+    };
+    page.querySelector('#cp-chat-back').onclick = closeChat;
+
+    const [profiles, photos, messages] = await Promise.all([
+      Companions.getPublicProfiles([otherId]),
+      Companions.getPrimaryPhotos([otherId]),
+      Chat.listMessages(conversationId)
+    ]);
+    if (!document.body.contains(page)) return; // se cerró mientras cargaba
+
+    const other = profiles[otherId] || { id: otherId, name: 'Estudiante' };
+    const photoUrl = photos[otherId] || null;
+
+    const avatarEl = page.querySelector('#cpChatAvatar');
+    avatarEl.style.background = _colorFor(other.id);
+    avatarEl.innerHTML = photoUrl ? `<img src="${esc(photoUrl)}" alt="" class="pp-avatar-img">` : esc(initials(other.name));
+    page.querySelector('#cpChatName').textContent = other.name || 'Estudiante';
+
+    const listEl = page.querySelector('#cpChatMessages');
+    listEl.innerHTML = messages.length ? '' : '<div class="cp-empty">Aún no hay mensajes. ¡Escribe el primero!</div>';
+    messages.forEach(m => _appendMessageBubble(listEl, m, myId));
+    listEl.scrollTop = listEl.scrollHeight;
+
+    _chatChannel = Chat.subscribe(conversationId, (payload) => {
+      const m = payload.new;
+      if (m.sender_id === myId) return; // ya se agregó de forma optimista al enviar
+      listEl.querySelector('.cp-empty')?.remove();
+      _appendMessageBubble(listEl, m, myId);
+      listEl.scrollTop = listEl.scrollHeight;
+    });
+
+    const input = page.querySelector('#cpChatInput');
+    const sendBtn = page.querySelector('#cpChatSendBtn');
+    async function doSend() {
+      const body = input.value.trim();
+      if (!body) return;
+      input.value = '';
+      listEl.querySelector('.cp-empty')?.remove();
+      const optimistic = { id: 'tmp-' + Date.now(), sender_id: myId, body, created_at: new Date().toISOString() };
+      _appendMessageBubble(listEl, optimistic, myId);
+      listEl.scrollTop = listEl.scrollHeight;
+      try {
+        await Chat.sendMessage(conversationId, myId, body);
+      } catch (err) {
+        UI.flash(err?.message || 'No se pudo enviar el mensaje.', 'error');
+      }
+    }
+    sendBtn.addEventListener('click', doSend);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSend(); });
   }
 
   async function wireCompanions() {
@@ -170,6 +282,7 @@ const UICompanions = (() => {
       }).join('');
       _wireAddButtons();
       _wireRowClicks(resultsBox, myId);
+      _wireMsgButtons(resultsBox, myId);
     }
     function _wireAddButtons() {
       resultsBox.querySelectorAll('.cp-add-btn').forEach(btn => {
@@ -259,11 +372,13 @@ const UICompanions = (() => {
         const otherId = Companions.otherIdOf(c, myId);
         const p = profiles[otherId] || { id: otherId, name: 'Estudiante' };
         const actions = `
+          <button class="cp-btn cp-btn-primary cp-msg-btn" data-id="${esc(otherId)}">Mensaje</button>
           <button class="cp-btn cp-btn-ghost cp-remove-btn" data-conn="${esc(c.id)}">Eliminar</button>
           <button class="cp-btn cp-btn-ghost cp-block-btn" data-conn="${esc(c.id)}">Bloquear</button>`;
         return _rowHtml(p, photos[otherId], actions);
       }).join('');
       _wireRowClicks(box, myId);
+      _wireMsgButtons(box, myId);
 
       box.querySelectorAll('.cp-remove-btn').forEach(btn => btn.addEventListener('click', async (e) => {
         e.stopPropagation();
@@ -283,9 +398,35 @@ const UICompanions = (() => {
       }));
     }
 
+    // ── Mensajes ──
+    async function _renderMessages() {
+      const box = r().querySelector('#cpMessagesList');
+      if (!box) return;
+      let convs = [];
+      try { convs = await Chat.listConversations(); } catch (_) { convs = []; }
+      if (!convs.length) { box.innerHTML = '<div class="cp-empty">Todavía no tienes conversaciones. Escríbele a un compañero desde "Mis Compañeros".</div>'; return; }
+
+      const photos = await Companions.getPrimaryPhotos(convs.map(c => c.other_id));
+      box.innerHTML = convs.map(c => {
+        const photoUrl = photos[c.other_id];
+        return `
+          <div class="cp-row cp-conv-row" data-conv-id="${esc(c.conversation_id)}" data-other-id="${esc(c.other_id)}">
+            <div class="cp-row-avatar" style="background:${esc(_colorFor(c.other_id))};">${photoUrl ? `<img src="${esc(photoUrl)}" alt="">` : esc(initials(c.other_name))}</div>
+            <div class="cp-row-info">
+              <div class="cp-row-name">${esc(c.other_name || 'Estudiante')}</div>
+              <div class="cp-row-sub">${c.last_body ? esc(c.last_body).slice(0, 60) : 'Sin mensajes todavía'}</div>
+            </div>
+          </div>`;
+      }).join('');
+      box.querySelectorAll('.cp-conv-row').forEach(row => {
+        row.addEventListener('click', () => _openChatWindow(row.dataset.convId, row.dataset.otherId, myId));
+      });
+    }
+
     resultsBox.innerHTML = '<div class="cp-empty">Escribe un nombre o apodo para empezar a buscar.</div>';
     _renderRequests();
     _renderMine();
+    _renderMessages();
   }
 
   return { screens: { companions: { render: screenCompanions, wire: wireCompanions } } };
