@@ -155,7 +155,8 @@ const UICompanions = (() => {
     }
     function _wireAddButtons() {
       resultsBox.querySelectorAll('.cp-add-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
           btn.disabled = true;
           try {
             await Companions.sendRequest(myId, btn.dataset.id);
@@ -210,13 +211,15 @@ const UICompanions = (() => {
       box.innerHTML = html;
       _wireRowClicks(box, myId);
 
-      box.querySelectorAll('.cp-accept-btn').forEach(btn => btn.addEventListener('click', async () => {
+      box.querySelectorAll('.cp-accept-btn').forEach(btn => btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
         btn.disabled = true;
         await Companions.respond(btn.dataset.conn, true);
         UI.flash('Ahora son compañeros.', 'success');
         _renderRequests(); _renderMine();
       }));
-      box.querySelectorAll('.cp-reject-btn, .cp-cancel-btn').forEach(btn => btn.addEventListener('click', async () => {
+      box.querySelectorAll('.cp-reject-btn, .cp-cancel-btn').forEach(btn => btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
         btn.disabled = true;
         await Companions.respond(btn.dataset.conn, false);
         UI.flash('Solicitud eliminada.', 'success');
@@ -244,14 +247,16 @@ const UICompanions = (() => {
       }).join('');
       _wireRowClicks(box, myId);
 
-      box.querySelectorAll('.cp-remove-btn').forEach(btn => btn.addEventListener('click', async () => {
+      box.querySelectorAll('.cp-remove-btn').forEach(btn => btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
         if (!confirm('¿Eliminar a este compañero?')) return;
         btn.disabled = true;
         await Companions.remove(btn.dataset.conn);
         UI.flash('Compañero eliminado.', 'success');
         _renderMine();
       }));
-      box.querySelectorAll('.cp-block-btn').forEach(btn => btn.addEventListener('click', async () => {
+      box.querySelectorAll('.cp-block-btn').forEach(btn => btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
         if (!confirm('¿Bloquear a este usuario? Ya no podrá contactarte ni encontrarte en la búsqueda.')) return;
         btn.disabled = true;
         await Companions.block(btn.dataset.conn, myId);
