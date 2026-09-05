@@ -41,7 +41,6 @@ const I18N = (function () {
   const DICT = {
     en: {
       // Navegación (estudiante)
-      'nav.student.dashboard': 'Dashboard',
       'nav.student.aiStudy': 'TrackTutor',
       'nav.student.stats': 'Statistics',
       'nav.student.leaderboard': 'Leaderboard',
@@ -237,7 +236,6 @@ const I18N = (function () {
     },
 
     pt: {
-      'nav.student.dashboard': 'Painel',
       'nav.student.aiStudy': 'TrackTutor',
       'nav.student.stats': 'Estatísticas',
       'nav.student.leaderboard': 'Ranking',
@@ -421,7 +419,6 @@ const I18N = (function () {
     },
 
     it: {
-      'nav.student.dashboard': 'Pannello',
       'nav.student.aiStudy': 'TrackTutor',
       'nav.student.stats': 'Statistiche',
       'nav.student.leaderboard': 'Classifica',
@@ -605,7 +602,6 @@ const I18N = (function () {
     },
 
     fr: {
-      'nav.student.dashboard': 'Tableau de bord',
       'nav.student.aiStudy': 'TrackTutor',
       'nav.student.stats': 'Statistiques',
       'nav.student.leaderboard': 'Classement',

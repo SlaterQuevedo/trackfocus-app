@@ -251,7 +251,7 @@ const App = (() => {
 
     if (user.role === 'student') {
       navButtons = `
-        <button data-route="dashboard">${I18N.t('nav.student.dashboard','Panel')}</button>
+        <button data-route="dashboard">Dashboard</button>
         <button data-route="ai-study">${I18N.t('nav.student.aiStudy','TrackTutor')}</button>
         <button data-route="stats">${I18N.t('nav.student.stats','Estadísticas')}</button>
         <button data-route="leaderboard">${I18N.t('nav.student.leaderboard','Ranking')}</button>
