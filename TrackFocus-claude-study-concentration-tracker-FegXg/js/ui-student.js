@@ -3224,7 +3224,7 @@ const UIStudent = (() => {
     // Identidad Digital: leer código (la generación ocurre en _wireProfilePersonal, NO aquí,
     // para evitar el bucle Realtime: render → Storage.set → Supabase → re-render → loop).
     const _studentCode = user.studentCode || '';
-    const _studentUrl = _studentCode ? 'https://trackfocus.vercel.app/s/' + _studentCode : '';
+    const _studentUrl = _studentCode ? 'https://tracknara.vercel.app/s/' + _studentCode : '';
     const _createdYear = user.createdAt ? new Date(user.createdAt).getFullYear() : new Date().getFullYear();
     const _idInitial = user.name ? user.name.trim()[0].toUpperCase() : '?';
 
@@ -4820,10 +4820,10 @@ const UIStudent = (() => {
       const codeEl = r()?.querySelector('.ph2-id-code');
       const urlEl  = r()?.querySelector('.ph2-id-url');
       if (codeEl) codeEl.textContent = _code2;
-      const _newUrl = 'https://trackfocus.vercel.app/s/' + _code2;
+      const _newUrl = 'https://tracknara.vercel.app/s/' + _code2;
       if (urlEl)  { urlEl.textContent = _newUrl; urlEl.title = _newUrl; }
     }
-    const _url2 = _code2 ? 'https://trackfocus.vercel.app/s/' + _code2 : '';
+    const _url2 = _code2 ? 'https://tracknara.vercel.app/s/' + _code2 : '';
 
     if (_code2 && typeof QRScanner !== 'undefined') {
       QRScanner.generateQRUrl(_url2, 'studentQRCode', { size: 180, dark: '#1a1a1a', light: '#ffffff' });

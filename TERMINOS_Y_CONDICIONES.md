@@ -5,7 +5,7 @@
 **Responsable:** Slater Quevedo
 **Correo de contacto:** trackfocus.support@gmail.com
 **País de domicilio del responsable:** Perú
-**Plataforma:** trackfocus.vercel.app
+**Plataforma:** tracknara.vercel.app
 
 ---
 
@@ -25,11 +25,11 @@
 
 TrackNara es una plataforma educativa digital cuyo propósito es ayudar a estudiantes a evidenciar su progreso de aprendizaje mediante el registro de sesiones de estudio, gamificación del esfuerzo y apoyo de un tutor de inteligencia artificial.
 
-Estos Términos y Condiciones (en adelante, "los Términos") regulan el acceso y uso de la plataforma TrackNara (trackfocus.vercel.app), sus funcionalidades, interfaces y servicios asociados (en adelante, "el Servicio").
+Estos Términos y Condiciones (en adelante, "los Términos") regulan el acceso y uso de la plataforma TrackNara (tracknara.vercel.app), sus funcionalidades, interfaces y servicios asociados (en adelante, "el Servicio").
 
 Al registrarte o utilizar el Servicio, aceptas íntegramente estos Términos. Si no estás de acuerdo con alguna disposición, debes abstenerte de usar la plataforma.
 
-Estos Términos deben leerse en conjunto con nuestra **Política de Privacidad**, disponible en [trackfocus.vercel.app/privacy.html](https://trackfocus.vercel.app/privacy.html), que forma parte integrante del acuerdo entre el usuario y TrackNara.
+Estos Términos deben leerse en conjunto con nuestra **Política de Privacidad**, disponible en [tracknara.vercel.app/privacy.html](https://tracknara.vercel.app/privacy.html), que forma parte integrante del acuerdo entre el usuario y TrackNara.
 
 ---
 

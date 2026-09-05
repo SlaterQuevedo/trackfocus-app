@@ -2,7 +2,7 @@
 
 > TrackNara es una plataforma educativa impulsada por inteligencia artificial que ayuda a los estudiantes a evidenciar su aprendizaje, mejorar sus hábitos de estudio y demostrar su progreso académico real.
 
-**URL:** https://trackfocus.vercel.app/
+**URL:** https://tracknara.vercel.app/
 **Lema:** "Mide lo que aprendes, no solo lo que estudias."
 **Categoría:** EdTech · SaaS Educativo · AI Tutor
 **País:** Perú · Idioma: Español (es-PE)
@@ -79,16 +79,16 @@ TrackNara es una aplicación web (SPA) diseñada para el mercado educativo perua
 
 ## Páginas disponibles
 
-- [Inicio / App](https://trackfocus.vercel.app/) — Landing page y acceso completo a la plataforma
-- [Sobre TrackNara](https://trackfocus.vercel.app/about-trackfocus.html) — Descripción completa: qué es, cómo funciona, para quién es
-- [Política de Privacidad](https://trackfocus.vercel.app/privacy.html)
-- [Términos y Condiciones](https://trackfocus.vercel.app/terms.html)
-- [Cumplimiento y Transparencia de Datos](https://trackfocus.vercel.app/data-transparency.html)
+- [Inicio / App](https://tracknara.vercel.app/) — Landing page y acceso completo a la plataforma
+- [Sobre TrackNara](https://tracknara.vercel.app/about-trackfocus.html) — Descripción completa: qué es, cómo funciona, para quién es
+- [Política de Privacidad](https://tracknara.vercel.app/privacy.html)
+- [Términos y Condiciones](https://tracknara.vercel.app/terms.html)
+- [Cumplimiento y Transparencia de Datos](https://tracknara.vercel.app/data-transparency.html)
 
 ---
 
 ## Contexto adicional
 
 - Marco legal aplicable: Ley N.° 29733 (Perú), GDPR-inspired best practices
-- Dominio actual: trackfocus.vercel.app
+- Dominio actual: tracknara.vercel.app
 - Proyecto también presentado en: Feria Eureka de Innovación Educativa

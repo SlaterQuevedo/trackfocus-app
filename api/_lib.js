@@ -10,18 +10,20 @@ export function geminiHeaders(apiKey) {
 
 // ── CORS ─────────────────────────────────────────────────────────────────────
 // Orígenes explícitamente permitidos para llamar a los endpoints de la API.
-// Producción: https://trackfocus.vercel.app
-// Preview Vercel: https://trackfocus-*.vercel.app
+// Producción: https://tracknara.vercel.app (y el dominio previo, mientras se
+// termina la migración: https://trackfocus.vercel.app)
+// Preview Vercel: https://tracknara-*.vercel.app / https://trackfocus-*.vercel.app
 // Dev local: localhost:3000 y :5173 (Vite/live-server), equivalente con 127.0.0.1
 const _ALLOWED_ORIGINS = new Set([
+  'https://tracknara.vercel.app',
   'https://trackfocus.vercel.app',
   'http://localhost:3000',
   'http://localhost:5173',
   'http://127.0.0.1:3000',
   'http://127.0.0.1:5173',
 ]);
-// Patrón para previews de Vercel (trackfocus-*)
-const _PREVIEW_RE = /^https:\/\/trackfocus[-a-z0-9]*\.vercel\.app$/;
+// Patrón para previews de Vercel (tracknara-* / trackfocus-*)
+const _PREVIEW_RE = /^https:\/\/(tracknara|trackfocus)[-a-z0-9]*\.vercel\.app$/;
 
 /**
  * Aplica headers CORS al response según el origin de la petición.

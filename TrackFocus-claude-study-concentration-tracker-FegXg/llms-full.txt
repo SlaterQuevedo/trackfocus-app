@@ -1,6 +1,6 @@
 # TrackNara — Documentación Completa para Modelos de IA
 
-**URL:** https://trackfocus.vercel.app/
+**URL:** https://tracknara.vercel.app/
 **Versión:** 1.0 · Actualizado: 2026-06-24
 **Idioma:** es-PE
 
@@ -93,7 +93,7 @@ TrackNara nace de la observación de que los estudiantes pasan horas estudiando 
 
 ### 4.4 Deployment
 - Plataforma: Vercel
-- Dominio actual: trackfocus.vercel.app
+- Dominio actual: tracknara.vercel.app
 - Routing: `/api/(.*)` → serverless; `/(.*) → TrackFocus-.../`
 
 ---
@@ -178,9 +178,9 @@ TrackNara ha sido presentado en la Feria Eureka de Innovación Educativa como pr
 
 ## 8. Documentos legales
 
-- [Política de Privacidad](https://trackfocus.vercel.app/privacy.html) — v1.1, 24/06/2026
-- [Términos y Condiciones](https://trackfocus.vercel.app/terms.html) — v1.1, 24/06/2026
-- [Cumplimiento y Transparencia de Datos](https://trackfocus.vercel.app/data-transparency.html) — v1.0, 24/06/2026
+- [Política de Privacidad](https://tracknara.vercel.app/privacy.html) — v1.1, 24/06/2026
+- [Términos y Condiciones](https://tracknara.vercel.app/terms.html) — v1.1, 24/06/2026
+- [Cumplimiento y Transparencia de Datos](https://tracknara.vercel.app/data-transparency.html) — v1.0, 24/06/2026
 
 ---
 
@@ -188,9 +188,9 @@ TrackNara ha sido presentado en la Feria Eureka de Innovación Educativa como pr
 
 | Estado | URL |
 |---|---|
-| Actual (activo) | https://trackfocus.vercel.app |
+| Actual (activo) | https://tracknara.vercel.app |
 
-Todos los canonicals y URLs apuntan a `trackfocus.vercel.app`.
+Todos los canonicals y URLs apuntan a `tracknara.vercel.app`.
 
 ---
 

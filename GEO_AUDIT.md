@@ -29,7 +29,7 @@ El objetivo fue elevar a TrackNara al máximo nivel posible de descubribilidad, 
 - `description` mejorada para incluir hábitos de estudio y progreso
 
 **WebSite schema — NUEVO:**
-- `@id: "https://trackfocus.vercel.app/#website"`
+- `@id: "https://tracknara.vercel.app/#website"`
 - Vincula a Organization via `publisher: {"@id": ".../#org"}`
 - Completa el grafo de entidades: WebSite → Organization → SoftwareApplication
 
@@ -42,7 +42,7 @@ Bots añadidos:
 
 ### 2.3 sitemap.xml — actualizado
 
-Añadida URL: `https://trackfocus.vercel.app/about-trackfocus.html` (priority: 0.8, changefreq: monthly)
+Añadida URL: `https://tracknara.vercel.app/about-trackfocus.html` (priority: 0.8, changefreq: monthly)
 
 ### 2.4 llms.txt — actualizado
 
@@ -81,7 +81,7 @@ Esta es la página GEO más importante creada. Contiene:
 
 **SEO:**
 - `meta description` ≤155 chars
-- `canonical` a trackfocus.vercel.app
+- `canonical` a tracknara.vercel.app
 - Open Graph + Twitter Cards completos
 - `og:type: "website"`, `inLanguage: "es-PE"`
 
@@ -144,9 +144,9 @@ FAQPage (about-trackfocus.html) — 7 preguntas GEO sobre DECO, IA, diferenciado
 | Riesgo | Severidad | Estado |
 |---|---|---|
 | Email `trackfocus.support@gmail.com` en 3 páginas públicas — señal de marca residual | **Medio** | ⚠️ Pendiente de decisión de negocio |
-| Canonical apunta a trackfocus.vercel.app mientras el sitio está en trackfocus.vercel.app | **Medio** | ⚠️ Intencional — se resolverá al activar el dominio |
+| Canonical apunta a tracknara.vercel.app mientras el sitio está en tracknara.vercel.app | **Medio** | ⚠️ Intencional — se resolverá al activar el dominio |
 | Páginas blog/eureka/investigacion con noindex — no contribuyen a autoridad aún | **Bajo** | ⚠️ Esperado — son placeholders |
-| Sin 301 redirect configurado en trackfocus.vercel.app | **Bajo** | ⚠️ Pendiente hasta activación de trackfocus.vercel.app |
+| Sin 301 redirect configurado en tracknara.vercel.app | **Bajo** | ⚠️ Pendiente hasta activación de tracknara.vercel.app |
 | `sameAs` vacío en Organization — débil para Knowledge Panel | **Bajo** | ❌ Requiere perfiles sociales verificados |
 | Imagen OG/Twitter 512×512px | **Bajo** | ⚠️ Funciona pero no óptima para redes sociales |
 
@@ -162,7 +162,7 @@ FAQPage (about-trackfocus.html) — 7 preguntas GEO sobre DECO, IA, diferenciado
 ### Corto plazo (1-4 semanas post-lanzamiento)
 4. Publicar al menos 3 artículos reales en `/blog/` con `BlogPosting` schema — topic authority en EdTech
 5. Crear página estática completa en `/eureka/` con hipótesis, metodología y resultados del proyecto
-6. Activar dominio `trackfocus.vercel.app` y configurar redirecciones 301 desde `trackfocus.vercel.app`
+6. Activar dominio `tracknara.vercel.app` y configurar redirecciones 301 desde `tracknara.vercel.app`
 7. Verificar dominio en Google Search Console y enviar sitemap
 8. Implementar IndexNow para Bing Webmaster Tools
 
@@ -197,14 +197,14 @@ FAQPage (about-trackfocus.html) — 7 preguntas GEO sobre DECO, IA, diferenciado
 
 | URL | Priority | Schema | noindex |
 |---|---|---|---|
-| `https://trackfocus.vercel.app/` | 1.0 | SoftwareApplication + Organization + FAQPage + WebSite | No |
-| `https://trackfocus.vercel.app/about-trackfocus.html` | 0.8 | AboutPage + FAQPage + Speakable + BreadcrumbList | No |
-| `https://trackfocus.vercel.app/privacy.html` | 0.5 | WebPage + BreadcrumbList | No |
-| `https://trackfocus.vercel.app/terms.html` | 0.5 | WebPage + BreadcrumbList | No |
-| `https://trackfocus.vercel.app/data-transparency.html` | 0.5 | WebPage + BreadcrumbList | No |
-| `https://trackfocus.vercel.app/blog/` | — | Blog | Sí (placeholder) |
-| `https://trackfocus.vercel.app/eureka/` | — | WebPage | Sí (placeholder) |
-| `https://trackfocus.vercel.app/investigacion/` | — | WebPage | Sí (placeholder) |
+| `https://tracknara.vercel.app/` | 1.0 | SoftwareApplication + Organization + FAQPage + WebSite | No |
+| `https://tracknara.vercel.app/about-trackfocus.html` | 0.8 | AboutPage + FAQPage + Speakable + BreadcrumbList | No |
+| `https://tracknara.vercel.app/privacy.html` | 0.5 | WebPage + BreadcrumbList | No |
+| `https://tracknara.vercel.app/terms.html` | 0.5 | WebPage + BreadcrumbList | No |
+| `https://tracknara.vercel.app/data-transparency.html` | 0.5 | WebPage + BreadcrumbList | No |
+| `https://tracknara.vercel.app/blog/` | — | Blog | Sí (placeholder) |
+| `https://tracknara.vercel.app/eureka/` | — | WebPage | Sí (placeholder) |
+| `https://tracknara.vercel.app/investigacion/` | — | WebPage | Sí (placeholder) |
 
 ---
 

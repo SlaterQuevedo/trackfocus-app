@@ -34,7 +34,7 @@ Esta Política de Privacidad describe de forma transparente qué datos personale
 | Nombre / razón social | Slater Quevedo |
 | País de domicilio | Perú |
 | Correo electrónico de privacidad | trackfocus.support@gmail.com |
-| Plataforma | trackfocus.vercel.app |
+| Plataforma | tracknara.vercel.app |
 
 Esta política aplica a todos los usuarios de TrackNara:
 - Estudiantes (incluyendo menores de edad con consentimiento parental)

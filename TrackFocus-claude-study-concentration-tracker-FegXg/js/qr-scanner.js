@@ -2,7 +2,7 @@
 // Genera QRs reales con URL de invitación; escanea con cámara del dispositivo.
 const QRScanner = (() => {
 
-  const BASE_URL = 'https://trackfocus.vercel.app';
+  const BASE_URL = 'https://tracknara.vercel.app';
 
   // Genera la URL de invitación para un código de aula
   function inviteUrl(code) {

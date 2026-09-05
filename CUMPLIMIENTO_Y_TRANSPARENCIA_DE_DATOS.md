@@ -4,7 +4,7 @@
 **Fecha:** 24/06/2026
 **Responsable del tratamiento:** Slater Quevedo
 **Correo de privacidad:** trackfocus.support@gmail.com
-**Plataforma:** trackfocus.vercel.app
+**Plataforma:** tracknara.vercel.app
 
 > Este documento es un complemento de la [Política de Privacidad](POLITICA_DE_PRIVACIDAD.md) (v1.1) y los [Términos y Condiciones](TERMINOS_Y_CONDICIONES.md) (v1.1) de TrackNara. No los reemplaza. Su propósito es ofrecer una vista consolidada y de lectura rápida sobre cómo se manejan los datos en la plataforma, con base exclusivamente en el código auditado y las funcionalidades reales implementadas.
 
@@ -354,14 +354,15 @@ Los siguientes dominios están explícitamente autorizados en `api/_lib.js` para
 
 | Dominio | Tipo |
 |---|---|
-| `https://trackfocus.vercel.app` | Producción |
-| `https://trackfocus.vercel.app` | Producción |
+| `https://tracknara.vercel.app` | Producción |
+| `https://tracknara.vercel.app` | Producción |
+| `https://trackfocus.vercel.app` | Producción (dominio anterior, transición) |
 | `http://localhost:3000` | Desarrollo local |
 | `http://localhost:5173` | Desarrollo local (Vite) |
 | `http://127.0.0.1:3000` | Desarrollo local |
 | `http://127.0.0.1:5173` | Desarrollo local (Vite) |
-| `https://trackfocus-*.vercel.app` | Previews de Vercel (patrón regex) |
-| `https://trackfocus-*.vercel.app` | Previews de Vercel (patrón regex) |
+| `https://tracknara-*.vercel.app` | Previews de Vercel (patrón regex) |
+| `https://trackfocus-*.vercel.app` | Previews de Vercel (patrón regex, dominio anterior) |
 
 Cualquier dominio que no figure en esta lista recibe HTTP 403 antes de que la solicitud sea procesada.
 
