@@ -2516,6 +2516,7 @@ body.pom-active .container { padding-top: 0; }
    que "Estudio con TrackTutor" a la izquierda, en vez de flotar sin marco. */
 .ai-metrics-header {
   min-height: 96px;
+  margin-bottom: 22px;
   box-sizing: border-box;
 }
 .ai-metrics-title {
