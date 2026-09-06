@@ -5313,6 +5313,7 @@ const UIStudent = (() => {
           </div>
           <!-- Sección Progreso -->
           <div class="ai-metrics-col">
+          <h3 class="ai-metrics-title">Tu progreso</h3>
           <div class="study-progress-grid">
             <div class="progress-card">
               <div class="prog-head"><span class="prog-icon">${_icoFlame}</span><span class="prog-label">Racha</span></div>

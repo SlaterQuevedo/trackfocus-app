@@ -78,14 +78,15 @@ const Subjects = (() => {
     return s.users[email]?.lastSubject || null;
   }
 
-  // Genera el HTML de las <option> con emojis, con pre-selección y opción "Otro curso"
+  // Genera el HTML de las <option>, con pre-selección y opción "Otro curso".
+  // Sin emoji: un <option> nativo no puede llevar un ícono lineal (limitación
+  // del navegador), así que se deja texto plano en vez de mezclar estilos.
   function renderOptions(subjects, selectedValue) {
     const opts = subjects.map(name => {
-      const icon = getIcon(name);
       const sel = name === selectedValue ? ' selected' : '';
-      return `<option value="${name}"${sel}>${icon} ${name}</option>`;
+      return `<option value="${name}"${sel}>${name}</option>`;
     });
-    opts.push(`<option value="__otro__">➕ Otra materia…</option>`);
+    opts.push(`<option value="__otro__">Otra materia…</option>`);
     return opts.join('');
   }
 
