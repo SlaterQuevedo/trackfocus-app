@@ -226,6 +226,11 @@ const Storage = (() => {
     }
 
     try {
+      // Igual que Storage.set(): esta escritura va directo a Supabase, así
+      // que hay que marcarla para que el guard anti-loopback de Realtime en
+      // app.js la reconozca como propia (si no, su eco fuerza un re-render
+      // completo de pantalla unos segundos después de reconectar).
+      _lastWriteAt = Date.now();
       await Cloud.syncDiff(_clone(DEFAULT_STATE), snapshot(scoped));
       _syncDirty = false;
       window.Monitor?.log?.('sync', 'resync OK tras reconexión');

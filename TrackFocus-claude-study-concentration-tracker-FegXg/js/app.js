@@ -662,6 +662,13 @@ const App = (() => {
     ]);
 
     Storage.bindRealtime(() => {
+      // DIAGNÓSTICO TEMPORAL: reporta en consola cada vez que un evento de
+      // Realtime llega y qué guard lo detiene (o no) — para identificar el
+      // origen exacto del "doble re-render" reportado. Quitar una vez resuelto.
+      const _sinceWrite = Date.now() - Storage.lastWriteAt();
+      const _sinceInteraction = Date.now() - _lastInteraction;
+      console.info('[Realtime] evento recibido', { ruta: _current, msDesdeUltimoWrite: _sinceWrite, msDesdeInteraccion: _sinceInteraction });
+
       // El badge de Compañeros (solicitudes pendientes) y el refresco liviano
       // de sus listas no dependen de la ruta actual: Storage ya trae datos
       // frescos en cada evento de Realtime (bindRealtime hace bootstrap()
@@ -672,13 +679,14 @@ const App = (() => {
       if (typeof UIStudent !== 'undefined') UIStudent.liveRefreshSocialStats?.();
 
       // Guard 1: rutas donde un re-render COMPLETO es disruptivo y no aporta valor
-      if (!_current || _REALTIME_SKIP.has(_current)) return;
-      if (document.querySelector('.quiz-modal') || document.querySelector('.pom-modal:not(.hidden)')) return;
+      if (!_current || _REALTIME_SKIP.has(_current)) { console.info('[Realtime] bloqueado por guard 1 (ruta en skip list):', _current); return; }
+      if (document.querySelector('.quiz-modal') || document.querySelector('.pom-modal:not(.hidden)')) { console.info('[Realtime] bloqueado por guard (modal abierto)'); return; }
       // Guard 2: loopback — ignorar si este cliente escribió en los últimos 8 s.
       // Supabase tarda ~400-2000 ms en devolver el evento; 8 s cubre cualquier latencia.
-      if (Date.now() - Storage.lastWriteAt() < 8000) return;
+      if (_sinceWrite < 8000) { console.info('[Realtime] bloqueado por guard 2 (loopback, escritura propia reciente)'); return; }
       // Guard 3: interacción activa del usuario (click, tecla, touch)
-      if (Date.now() - _lastInteraction < 4000) return;
+      if (_sinceInteraction < 4000) { console.info('[Realtime] bloqueado por guard 3 (interacción reciente)'); return; }
+      console.info('[Realtime] DISPARANDO re-render completo de pantalla:', _current);
       _debouncedRefresh();
     });
 
