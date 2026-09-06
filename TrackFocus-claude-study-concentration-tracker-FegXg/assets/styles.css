@@ -2060,9 +2060,22 @@ body.pom-active .container { padding-top: 0; }
   padding-top: 0;
 }
 
-/* Panel IA Unificado (Fase 3) */
+/* Panel IA Unificado (Fase 3) — panel de configuración a la izquierda,
+   métricas del estudiante a la derecha (desktop); apiladas en móvil. */
+.ai-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+}
+.ai-setup-col { flex: 1 1 auto; min-width: 0; }
+.ai-metrics-col { width: 320px; flex-shrink: 0; }
+@media (max-width: 900px) {
+  .ai-layout { flex-direction: column; }
+  .ai-metrics-col { width: 100%; }
+}
+
 .ai-intro {
-  text-align: center;
+  text-align: left;
   margin-bottom: 22px;
 }
 .ai-intro h1 {
@@ -2070,13 +2083,17 @@ body.pom-active .container { padding-top: 0; }
 }
 .ai-intro p {
   max-width: 560px;
-  margin: 0 auto;
+  margin: 0;
   font-size: 14px;
 }
 .ai-config-card {
-  max-width: 620px;
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
 }
+/* Un poco más de aire entre Actividad previa / Modo de estudio / Nivel de
+   dificultad, sin volver la tarjeta demasiado alta. */
+.ai-field-spaced { margin-top: 22px; }
+
 /* Selector visual de nivel de dificultad inicial (pantalla de setup del chat) */
 .ai-diff-picker {
   display: grid;
@@ -2087,24 +2104,36 @@ body.pom-active .container { padding-top: 0; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 10px 6px;
+  gap: 4px;
+  padding: 12px 6px;
   border-radius: 12px;
   border: 1.5px solid var(--border);
   background: var(--panel, transparent);
-  color: var(--text);
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+  transition: border-color 0.15s, background 0.15s, color 0.15s, transform 0.1s;
   font-family: inherit;
 }
-.ai-diff-opt:hover { border-color: var(--accent, #D6A66B); transform: translateY(-1px); }
+.ai-diff-opt:hover { border-color: var(--brand, #D6A66B); color: var(--text); transform: translateY(-1px); }
 .ai-diff-opt.is-active {
-  border-color: var(--accent, #D6A66B);
-  background: rgba(214, 166, 107, 0.12);
+  border-color: var(--brand, #D6A66B);
+  background: rgba(214, 166, 107, 0.1);
+  color: var(--text-primary);
 }
-.ai-diff-ico { font-size: 18px; line-height: 1; }
+.ai-diff-ico { display: flex; line-height: 1; color: var(--text-secondary); }
+.ai-diff-opt.is-active .ai-diff-ico { color: var(--brand, #D6A66B); }
 .ai-diff-lbl { font-size: 12.5px; font-weight: 600; }
 .ai-diff-sub { font-size: 10px; color: var(--muted); text-align: center; line-height: 1.2; }
+
+/* Botón "Comenzar sesión": sigue siendo la acción principal (ancho completo),
+   pero un poco más compacto que el primary por defecto, para no dominar
+   toda la pantalla. */
+.ai-submit-row { margin-top: 22px; }
+.ai-submit-btn {
+  width: 100%;
+  padding: 12px 20px;
+  font-size: 14.5px;
+}
 @media (max-width: 480px) {
   .ai-diff-picker { grid-template-columns: repeat(2, 1fr); }
 }
@@ -2472,24 +2501,27 @@ body.pom-active .container { padding-top: 0; }
   transform: translateY(-2px);
 }
 
-/* Progress grid */
+/* Progress grid — 2 columnas dentro de la columna derecha, tarjetas
+   sobrias (un solo encabezado icono+etiqueta, sin repetir texto). */
 .study-progress-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
-  margin-top: 32px;
+}
+@media (max-width: 480px) {
+  .study-progress-grid { grid-template-columns: 1fr 1fr; }
 }
 
 .progress-card {
-  background: var(--bg-2);
+  background: var(--surface, var(--bg-2));
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 16px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 4px;
+  align-items: flex-start;
+  text-align: left;
+  gap: 6px;
   transition: transform .2s, box-shadow .2s;
 }
 
@@ -2498,33 +2530,44 @@ body.pom-active .container { padding-top: 0; }
   box-shadow: 0 8px 24px rgba(0,0,0,.2);
 }
 
+.prog-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Iconos neutros por defecto — el dorado se reserva para el botón principal,
+   las barras de progreso y los estados seleccionados, no para decorar cada
+   tarjeta de métrica. */
 .prog-icon {
-  font-size: 1.6rem;
+  display: flex;
+  color: var(--text-secondary, var(--muted));
+  flex-shrink: 0;
 }
 
 .prog-val {
-  font-size: 1.4rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--text);
 }
 
 .prog-label {
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--muted);
 }
 
 .prog-bar {
   width: 100%;
   height: 4px;
-  background: var(--border);
+  background: var(--track-background, var(--border));
   border-radius: 2px;
-  margin-top: 6px;
+  margin-top: 2px;
   overflow: hidden;
 }
 
 .prog-bar div {
   height: 100%;
-  background: var(--accent);
+  background: var(--brand, var(--accent));
   border-radius: 2px;
   transition: width .6s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -3638,29 +3681,30 @@ html[data-theme="light"] .pp-toggle:checked { background: var(--primary); }
 .act-chip {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 7px 13px;
-  border-radius: 20px;
-  border: 1.5px solid var(--border);
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
   cursor: pointer;
-  font-size: 13px;
-  line-height: 1.3;
-  color: var(--muted-2);
-  background: transparent;
+  font-size: 12.5px;
+  line-height: 1;
+  color: var(--text-secondary, var(--muted-2));
+  background: var(--surface, transparent);
   transition: background 150ms, border-color 150ms, color 150ms;
   -webkit-user-select: none;
   user-select: none;
   touch-action: manipulation;
 }
 .act-chip input[type="checkbox"] { display: none; }
-.act-chip:hover { border-color: var(--accent, #D6A66B); color: var(--text); }
+.act-chip:hover { border-color: var(--brand, #D6A66B); color: var(--text); }
 .act-chip.checked {
-  background: rgba(214, 166, 107, 0.14);
-  border-color: var(--accent, #D6A66B);
-  color: var(--accent, #D6A66B);
-  font-weight: 500;
+  background: rgba(214, 166, 107, 0.1);
+  border-color: var(--brand, #D6A66B);
+  color: var(--brand, #D6A66B);
+  font-weight: 600;
 }
-.act-chip--otra { border-style: dashed; }
 /* Manage overlay */
 .act-manage-overlay {
   position: fixed;

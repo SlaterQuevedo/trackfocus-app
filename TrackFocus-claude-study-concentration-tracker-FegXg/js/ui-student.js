@@ -796,18 +796,23 @@ const UIStudent = (() => {
 
   // ---- Helpers: Activity Picker ----
 
+  // Los emojis viven en Sessions.PREVIOUS_ACTIVITIES (dato compartido con el
+  // historial de sesiones y otras pantallas) — acá solo se ocultan al mostrar
+  // el chip, sin tocar el label guardado, para una identidad más sobria.
+  const _stripLeadingEmoji = (label) => String(label || '').replace(/^\p{Extended_Pictographic}️?\s*/u, '');
+
   function _renderActivityPicker(userId) {
     const customs = Sessions.getCustomActivities(userId);
     const all = [...Sessions.PREVIOUS_ACTIVITIES, ...customs];
     const chips = all.map(a =>
-      '<label class="act-chip"><input type="checkbox" name="previousActivity" value="' + esc(a.id) + '"><span>' + esc(a.label) + '</span></label>'
+      '<label class="act-chip"><input type="checkbox" name="previousActivity" value="' + esc(a.id) + '"><span>' + esc(_stripLeadingEmoji(a.label)) + '</span></label>'
     ).join('');
     const manageBtn = customs.length > 0
       ? '<button type="button" class="ghost act-manage-btn" style="font-size:12px;padding:4px 10px;margin-top:8px;">Administrar actividades personalizadas</button>'
       : '';
     return '<div class="act-grid">'
       + chips
-      + '<label class="act-chip act-chip--otra"><input type="checkbox" name="previousActivity" value="otra" class="act-otra-check"><span>➕ Otra...</span></label>'
+      + '<label class="act-chip act-chip--otra"><input type="checkbox" name="previousActivity" value="otra" class="act-otra-check"><span>+ Otra...</span></label>'
       + '</div>'
       + '<div class="act-otra-wrap" style="display:none;margin-top:8px;">'
       + '<input type="text" class="act-otra-input" placeholder="¿Qué actividad realizaste?"'
@@ -5193,11 +5198,25 @@ const UIStudent = (() => {
       ? (Math.round(sessions.reduce((sum, s) => sum + (s.concentration || 0), 0) / sessions.length * 10) / 10).toFixed(1)
       : 0;
 
+    // Iconos lineales (mismo estilo currentColor/stroke que el resto de la app)
+    // en vez de emojis, para una identidad más sobria y consistente.
+    const _icoFlame = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`;
+    const _icoClock = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+    const _icoStar = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+    const _icoTarget = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>`;
+    const _icoBarChart = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`;
+    const _icoTrendingUp = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`;
+    const _icoZap = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`;
+    const _icoLeaf = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>`;
+    const weekPct = Math.min(100, Math.round((weekSessions / 5) * 100));
+
     return `
       <!-- Panel IA Unificado (Fase 3): una sola experiencia de conversación.
            El chat del tutor reemplaza este cuerpo al iniciar la sesión. -->
       <div class="ai-unified-wrap">
         <div id="aiPanelBody">
+          <div class="ai-layout">
+          <div class="ai-setup-col">
 
           <div class="ai-intro">
             <h1>Estudio con TrackTutor</h1>
@@ -5229,17 +5248,17 @@ const UIStudent = (() => {
                 <input type="number" name="durationMin" min="5" max="240" value="30" required />
               </div>
             </div>
-            <div class="field">
+            <div class="field ai-field-spaced">
               <label>Actividad previa <span class="muted" style="font-size:11px;font-weight:400;">(selecciona una o más)</span></label>
               ${_renderActivityPicker(s.currentUserId)}
             </div>
-            <div class="row">
+            <div class="row ai-field-spaced">
               <div class="field" style="flex:1;">
                 <label>Modo de estudio</label>
                 <select name="studyMode" id="studyModeSelectAI">
-                  <option value="tutor">🦉 Aprendizaje guiado (Minerva + DECO)</option>
+                  <option value="tutor">Aprendizaje guiado (Minerva + DECO)</option>
                   <option value="exam-prep">Prepararme para un examen</option>
-                  <option value="topic-mastery">🎯 Mejorar en un tema específico</option>
+                  <option value="topic-mastery">Mejorar en un tema específico</option>
                 </select>
               </div>
             </div>
@@ -5255,26 +5274,26 @@ const UIStudent = (() => {
                 <input type="text" name="topicGoal" placeholder="Ej. Ecuaciones cuadráticas, Revolución Francesa, Fotosíntesis…" />
               </div>
             </div>
-            <div class="field">
+            <div class="field ai-field-spaced">
               <label>Nivel de dificultad inicial</label>
               <div class="ai-diff-picker" id="aiDiffPicker" role="radiogroup" aria-label="Nivel de dificultad inicial">
                 <button type="button" class="ai-diff-opt is-active" data-diff="auto" aria-pressed="true">
-                  <span class="ai-diff-ico">🎯</span>
+                  <span class="ai-diff-ico">${_icoTarget}</span>
                   <span class="ai-diff-lbl">Automático</span>
                   <span class="ai-diff-sub">Según tu nivel</span>
                 </button>
                 <button type="button" class="ai-diff-opt" data-diff="easy" aria-pressed="false">
-                  <span class="ai-diff-ico">🌱</span>
+                  <span class="ai-diff-ico">${_icoLeaf}</span>
                   <span class="ai-diff-lbl">Fácil</span>
                   <span class="ai-diff-sub">Repasar la base</span>
                 </button>
                 <button type="button" class="ai-diff-opt" data-diff="medium" aria-pressed="false">
-                  <span class="ai-diff-ico">⚡</span>
+                  <span class="ai-diff-ico">${_icoZap}</span>
                   <span class="ai-diff-lbl">Medio</span>
                   <span class="ai-diff-sub">Nivel esperado</span>
                 </button>
                 <button type="button" class="ai-diff-opt" data-diff="hard" aria-pressed="false">
-                  <span class="ai-diff-ico">🔥</span>
+                  <span class="ai-diff-ico">${_icoFlame}</span>
                   <span class="ai-diff-lbl">Difícil</span>
                   <span class="ai-diff-sub">Retarme más</span>
                 </button>
@@ -5283,47 +5302,47 @@ const UIStudent = (() => {
               <input type="hidden" name="difficulty" id="aiDiffInput" value="auto" />
             </div>
             <input type="hidden" name="datetime" value="${local}" />
-            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
-              <button class="primary" type="submit">Comenzar sesión</button>
+            <div class="ai-submit-row">
+              <button class="primary ai-submit-btn" type="submit">Comenzar sesión</button>
             </div>
           </form>
           <p class="muted" style="font-size:12px;margin-top:12px;text-align:center;">
             Método Minerva y Sistema DECO activos en toda sesión. TrackTutor te guía mientras aprendes.
           </p>
 
+          </div>
           <!-- Sección Progreso -->
+          <div class="ai-metrics-col">
           <div class="study-progress-grid">
             <div class="progress-card">
-              <span class="prog-icon">🔥</span>
-              <span class="prog-val" data-count="${streak}">${streak}</span>
-              <span class="prog-label">Racha actual</span>
+              <div class="prog-head"><span class="prog-icon">${_icoFlame}</span><span class="prog-label">Racha</span></div>
+              <span class="prog-val" data-count="${streak}" data-decimals="0" data-suffix=" días">${streak} días</span>
             </div>
             <div class="progress-card">
-              <span class="prog-icon">⏱</span>
-              <span class="prog-val" data-count="${hoursRound}" data-suffix="h">${hoursRound}h</span>
-              <span class="prog-label">Horas estudiadas</span>
+              <div class="prog-head"><span class="prog-icon">${_icoClock}</span><span class="prog-label">Tiempo estudiado</span></div>
+              <span class="prog-val" data-count="${hoursRound}" data-suffix=" h">${hoursRound} h</span>
             </div>
             <div class="progress-card">
-              <span class="prog-icon">⭐</span>
+              <div class="prog-head"><span class="prog-icon">${_icoStar}</span><span class="prog-label">Nivel actual</span></div>
               <span class="prog-val">Nv. ${levelInfo.current.level}</span>
-              <span class="prog-label">${esc(levelInfo.current.title)}</span>
               <div class="prog-bar"><div style="width:${levelInfo.progress}%"></div></div>
             </div>
             <div class="progress-card">
-              <span class="prog-icon">🎯</span>
+              <div class="prog-head"><span class="prog-icon">${_icoTarget}</span><span class="prog-label">Meta semanal</span></div>
               <span class="prog-val">${weekSessions}/5</span>
-              <span class="prog-label">Meta semanal</span>
+              <div class="prog-bar"><div style="width:${weekPct}%"></div></div>
             </div>
             <div class="progress-card">
-              <span class="prog-icon">📈</span>
+              <div class="prog-head"><span class="prog-icon">${_icoBarChart}</span><span class="prog-label">Concentración</span></div>
               <span class="prog-val" data-count="${avgConc}" data-suffix="/5">${avgConc}/5</span>
-              <span class="prog-label">Concentración</span>
             </div>
             <div class="progress-card">
-              <span class="prog-icon">🏛</span>
+              <div class="prog-head"><span class="prog-icon">${_icoTrendingUp}</span><span class="prog-label">Progreso del nivel</span></div>
               <span class="prog-val">${levelInfo.progress}%</span>
-              <span class="prog-label">Progreso nivel</span>
+              <div class="prog-bar"><div style="width:${levelInfo.progress}%"></div></div>
             </div>
+          </div>
+          </div>
           </div>
 
         </div>
@@ -5415,9 +5434,13 @@ const UIStudent = (() => {
     root().querySelectorAll('.prog-val[data-count]').forEach(el => {
       const target = parseFloat(el.dataset.count);
       const suffix = el.dataset.suffix || '';
-      if (reduced) { el.textContent = target + suffix; return; }
+      // data-decimals fuerza el formato (ej. racha siempre entera, "4 días"
+      // y no "4.0 días") en vez de la regla por defecto (1 decimal si target<10).
+      const decimals = el.dataset.decimals !== undefined ? parseInt(el.dataset.decimals, 10) : (target < 10 ? 1 : 0);
+      const fmt = (v) => decimals > 0 ? v.toFixed(decimals) : String(Math.round(v));
+      if (reduced) { el.textContent = fmt(target) + suffix; return; }
       if (typeof IntersectionObserver === 'undefined') {
-        el.textContent = target + suffix;
+        el.textContent = fmt(target) + suffix;
         return;
       }
       const observer = new IntersectionObserver(([entry]) => {
@@ -5428,8 +5451,7 @@ const UIStudent = (() => {
         (function step(now) {
           const t = Math.min((now - start) / dur, 1);
           const ease = 1 - Math.pow(1 - t, 3);
-          const val = target < 10 ? (ease * target).toFixed(1) : Math.round(ease * target);
-          el.textContent = val + suffix;
+          el.textContent = fmt(ease * target) + suffix;
           if (t < 1) requestAnimationFrame(step);
         })(start);
       }, { threshold: 0.5 });
