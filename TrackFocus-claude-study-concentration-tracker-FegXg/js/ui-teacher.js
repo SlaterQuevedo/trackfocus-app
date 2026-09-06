@@ -158,7 +158,7 @@ const UITeacher = (() => {
       if (m < 1) return 'Ahora'; if (m < 60) return `${m}m`; if (m < 1440) return `${Math.round(m/60)}h`; return `${Math.round(m/1440)}d`;
     }
     const _ini = n => (n || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-    const _clr = n => ['#C89B6D','#8B5CF6','#3B82F6','#10B981','#F59E0B'][(n || '').length % 5];
+    const _clr = n => ['#D6A66B','#C8CDD3','#7E8792','#9B7044'][(n || '').length % 4];
     const teacherIni = user.name ? user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : '?';
     const dateStr = new Date().toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long' });
     const inviteCode = primaryCr ? (primaryCr.inviteCode || '—') : '—';
@@ -247,7 +247,7 @@ const UITeacher = (() => {
                 stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${ringOff.toFixed(1)}"
                 stroke-linecap="round" transform="rotate(-90 ${cx} ${cy})" class="td-ring-prog"/>
               <defs><linearGradient id="tdG" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="#C89B6D"/><stop offset="100%" stop-color="#8B5CF6"/>
+                <stop offset="0%" stop-color="#D6A66B"/><stop offset="100%" stop-color="#9B7044"/>
               </linearGradient></defs>
             </svg>
             <div class="td-ring-ctr"><div class="td-ring-pct">${avgConcPct}%</div><div class="td-ring-sub">Conc.</div></div>
@@ -259,7 +259,7 @@ const UITeacher = (() => {
             <div class="td-met"><span class="td-met-l">Índice aprendizaje</span><div class="td-mbar"><div class="td-mf td-mf-gold" style="width:${avgLearningIndex || 0}%"></div></div><span class="td-met-v">${avgLearningIndex != null ? avgLearningIndex + '/100' : '—'}</span></div>
           </div>
         </div>
-        ${allCrSessions.length >= 3 ? `<div class="td-spark-row"><span class="td-spark-lbl">Concentración · 6 semanas</span><div class="td-sp-gold">${_spark(weeklyConc, 180, 30, '#C89B6D')}</div></div>` : ''}
+        ${allCrSessions.length >= 3 ? `<div class="td-spark-row"><span class="td-spark-lbl">Concentración · 6 semanas</span><div class="td-sp-gold">${_spark(weeklyConc, 180, 30, '#D6A66B')}</div></div>` : ''}
       </div>
 
       <div class="td-card td-top-stud">
@@ -816,7 +816,7 @@ const UITeacher = (() => {
               <div class="cm-sum-card">
                 <div class="cm-sum-top">
                   <span class="cm-sum-ico">👥</span>
-                  ${_spark(Array(7).fill(totalStudents), 44, 22, '#c8a06e')}
+                  ${_spark(Array(7).fill(totalStudents), 44, 22, '#D6A66B')}
                 </div>
                 <div class="cm-sum-v">${totalStudents}</div>
                 <div class="cm-sum-l">Alumnos</div>
@@ -840,7 +840,7 @@ const UITeacher = (() => {
               <div class="cm-sum-card">
                 <div class="cm-sum-top">
                   <span class="cm-sum-ico">⏱</span>
-                  ${_spark(dailyConc, 44, 22, '#a78bfa')}
+                  ${_spark(dailyConc, 44, 22, '#7E8792')}
                 </div>
                 <div class="cm-sum-v">${totalMin7 >= 60 ? Math.round(totalMin7 / 60) + 'h' : totalMin7 + 'm'}</div>
                 <div class="cm-sum-l">Tiempo (7d)</div>
@@ -856,7 +856,7 @@ const UITeacher = (() => {
               <div class="cm-sum-card">
                 <div class="cm-sum-top">
                   <span class="cm-sum-ico">📈</span>
-                  ${_spark(trendWeeks, 44, 22, '#38bdf8')}
+                  ${_spark(trendWeeks, 44, 22, '#C8CDD3')}
                 </div>
                 <div class="cm-sum-v">${avgIndex != null ? avgIndex : '—'}</div>
                 <div class="cm-sum-l">Índice apr.</div>
@@ -864,7 +864,7 @@ const UITeacher = (() => {
               <div class="cm-sum-card">
                 <div class="cm-sum-top">
                   <span class="cm-sum-ico">📝</span>
-                  ${_spark(dailyConc.map((_, i) => weekSessions.filter(se => se.datetime.slice(0, 10) === (() => { const d = new Date(); d.setDate(d.getDate() - (6 - i)); return d.toISOString().slice(0, 10); })()).length), 44, 22, '#c8a06e')}
+                  ${_spark(dailyConc.map((_, i) => weekSessions.filter(se => se.datetime.slice(0, 10) === (() => { const d = new Date(); d.setDate(d.getDate() - (6 - i)); return d.toISOString().slice(0, 10); })()).length), 44, 22, '#D6A66B')}
                 </div>
                 <div class="cm-sum-v">${weekActs}</div>
                 <div class="cm-sum-l">Sesiones (7d)</div>
@@ -1610,7 +1610,7 @@ const UITeacher = (() => {
     const subColors = subData.map(x => {
       if (!x.has) return 'rgba(113,113,122,0.35)';
       if (x.avg >= 4.0) return 'rgba(34,197,94,0.85)';
-      if (x.avg >= 3.0) return 'rgba(200,155,109,0.85)';
+      if (x.avg >= 3.0) return 'rgba(214,166,107,0.85)';
       if (x.avg >= 2.0) return 'rgba(245,158,11,0.85)';
       return 'rgba(239,68,68,0.82)';
     });
@@ -1958,7 +1958,7 @@ const UITeacher = (() => {
     function _groupLabel(idx, total) {
       if (sortMode === 'decimo') {
         const top = Math.max(1, Math.ceil(total * 0.1));
-        if (idx === 0) return `<tr><td colspan="99" style="padding:6px 14px;font-size:11px;font-weight:700;color:#a5b4fc;background:rgba(99,102,241,.1);text-transform:uppercase;letter-spacing:.05em;">Décimo Superior (top 10%)</td></tr>`;
+        if (idx === 0) return `<tr><td colspan="99" style="padding:6px 14px;font-size:11px;font-weight:700;color:#D6A66B;background:rgba(214,166,107,.12);text-transform:uppercase;letter-spacing:.05em;">Décimo Superior (top 10%)</td></tr>`;
         if (idx === top) return `<tr><td colspan="99" style="padding:6px 14px;font-size:11px;font-weight:600;color:rgba(255,255,255,.4);background:rgba(255,255,255,.03);text-transform:uppercase;letter-spacing:.05em;">Resto del aula</td></tr>`;
       }
       if (sortMode === 'tercio') {
@@ -2100,8 +2100,7 @@ const UITeacher = (() => {
       ...assigned.filter(x => !SUBJECT_ORDER.includes(x))
     ];
 
-    const AREA_COLORS = ['#a78bfa','#34d399','#fb923c','#60a5fa','#f472b6',
-                         '#fbbf24','#4ade80','#c084fc','#38bdf8','#f87171','#94a3b8'];
+    const AREA_COLORS = ['#D6A66B','#C8CDD3','#7E8792','#9B7044'];
     const SC = { AD:'#4ade80', A:'#60a5fa', B:'#fbbf24', C:'#f87171' };
     const SB = { AD:'rgba(34,197,94,.18)', A:'rgba(59,130,246,.18)', B:'rgba(245,158,11,.18)', C:'rgba(239,68,68,.18)' };
 

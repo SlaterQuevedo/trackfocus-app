@@ -8,13 +8,13 @@
   align-items: center;
   gap: 16px;
   background: var(--panel);
-  border: 1px solid rgba(200,155,109,0.18);
+  border: 1px solid rgba(214, 166, 107,0.18);
   border-radius: 20px;
   padding: 22px 24px;
   margin-bottom: 22px;
   flex-wrap: wrap;
   backdrop-filter: blur(14px);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(200,155,109,0.06);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(214, 166, 107,0.06);
 }
 
 .xp-section {
@@ -42,7 +42,7 @@
   text-align: center;
   flex-shrink: 0;
   line-height: 1.2;
-  box-shadow: 0 0 20px rgba(200,155,109,0.35), 0 0 40px rgba(139,92,246,0.12);
+  box-shadow: 0 0 20px rgba(214, 166, 107,0.35), 0 0 40px rgba(155, 112, 68,0.12);
 }
 
 .xp-bar-wrap {
@@ -58,7 +58,7 @@
   background: linear-gradient(90deg, var(--primary), var(--accent));
   border-radius: 999px;
   transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 10px rgba(200,155,109,0.4);
+  box-shadow: 0 0 10px rgba(214, 166, 107,0.4);
 }
 
 .xp-label {
@@ -116,8 +116,8 @@
 
 .badge-card:not(.locked):hover {
   transform: translateY(-4px);
-  border-color: rgba(200,155,109,0.4);
-  box-shadow: 0 8px 24px rgba(200,155,109,0.1);
+  border-color: rgba(214, 166, 107,0.4);
+  box-shadow: 0 8px 24px rgba(214, 166, 107,0.1);
 }
 
 .badge-card.locked {
@@ -177,11 +177,11 @@
 
 .leaderboard-table tr.self td,
 .leaderboard-table tr:has(td.self-row) td {
-  background: rgba(200,155,109,0.07);
+  background: rgba(214, 166, 107,0.07);
 }
 
-tr.self td { background: rgba(200,155,109,0.07) !important; }
-.self-row  { background: rgba(200,155,109,0.07); }
+tr.self td { background: rgba(214, 166, 107,0.07) !important; }
+.self-row  { background: rgba(214, 166, 107,0.07); }
 
 .rank-medal-1 { color: #FFD700; font-weight: 800; font-size: 16px; }
 .rank-medal-2 { color: #C0C0C0; font-weight: 800; font-size: 15px; }
@@ -234,9 +234,9 @@ tr.self td { background: rgba(200,155,109,0.07) !important; }
 }
 
 .active-filter {
-  border-color: rgba(200,155,109,0.5) !important;
+  border-color: rgba(214, 166, 107,0.5) !important;
   color: var(--primary) !important;
-  background: rgba(200,155,109,0.08) !important;
+  background: rgba(214, 166, 107,0.08) !important;
 }
 
 /* Pomodoro */
@@ -253,7 +253,7 @@ tr.self td { background: rgba(200,155,109,0.07) !important; }
   color: var(--primary);
   letter-spacing: -4px;
   margin: 24px 0 4px;
-  text-shadow: 0 0 40px rgba(200,155,109,0.3);
+  text-shadow: 0 0 40px rgba(214, 166, 107,0.3);
   line-height: 1;
 }
 
@@ -319,14 +319,14 @@ tr.self td { background: rgba(200,155,109,0.07) !important; }
   bottom: 28px;
   right: 28px;
   background: rgba(14,18,25,0.95);
-  border: 1px solid rgba(200,155,109,0.45);
+  border: 1px solid rgba(214, 166, 107,0.45);
   border-radius: 14px;
   padding: 14px 22px;
   z-index: 300;
   color: var(--text);
   font-size: 14px;
   font-family: 'Inter', sans-serif;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 24px rgba(200,155,109,0.15);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 24px rgba(214, 166, 107,0.15);
   animation: slideUp 0.3s ease, fadeOut 0.5s ease 2.3s forwards;
   min-width: 160px;
   line-height: 1.5;
@@ -344,7 +344,7 @@ tr.self td { background: rgba(200,155,109,0.07) !important; }
 
 html[data-theme="light"] .student-hero {
   background: #FFFFFF;
-  border-color: rgba(200, 155, 109, 0.15);
+  border-color: rgba(214, 166, 107, 0.15);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 
@@ -369,7 +369,7 @@ html[data-theme="light"] .rank-badge {
 
 html[data-theme="light"] .xp-toast {
   background: rgba(248, 250, 252, 0.95);
-  border-color: rgba(200, 155, 109, 0.2);
+  border-color: rgba(214, 166, 107, 0.2);
   color: #111827;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
 }
@@ -403,10 +403,10 @@ html[data-theme="light"] .xp-toast {
 
 /* Choice card activa */
 .active-choice {
-  border-color: rgba(200,155,109,0.65) !important;
-  background: rgba(200,155,109,0.06) !important;
+  border-color: rgba(214, 166, 107,0.65) !important;
+  background: rgba(214, 166, 107,0.06) !important;
   transform: translateY(-2px) !important;
-  box-shadow: 0 0 24px rgba(200,155,109,0.1) !important;
+  box-shadow: 0 0 24px rgba(214, 166, 107,0.1) !important;
 }
 
 /* Welcome */

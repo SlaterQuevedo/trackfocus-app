@@ -1,4 +1,4 @@
-// Centro de Monitoreo — Rol Padre de Familia
+﻿// Centro de Monitoreo — Rol Padre de Familia
 // Panel de supervisión de progreso estudiantil (solo lectura).
 // Vinculación mediante código ARV-STU-XXXXXXXX o escaneo QR.
 const ParentUI = (() => {
@@ -132,14 +132,14 @@ const ParentUI = (() => {
     win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Reporte TrackNara — ${student.name}</title>
 <style>
   body{font-family:Arial,sans-serif;padding:32px;color:#1a1a1a;max-width:700px;margin:auto;}
-  h1{color:#c8a06e;font-size:22px;border-bottom:2px solid #c8a06e;padding-bottom:8px;}
+  h1{color:#B07845;font-size:22px;border-bottom:2px solid #B07845;padding-bottom:8px;}
   h2{font-size:16px;margin-top:24px;color:#444;}
   table{width:100%;border-collapse:collapse;font-size:13px;}
-  th{background:#c8a06e;color:#fff;padding:6px 10px;text-align:left;}
+  th{background:#B07845;color:#fff;padding:6px 10px;text-align:left;}
   td{padding:5px 10px;border-bottom:1px solid #eee;}
   .kpi-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px;}
   .kpi{background:#f5f0e8;border-radius:8px;padding:10px 16px;min-width:120px;}
-  .kpi-val{font-size:22px;font-weight:700;color:#c8a06e;}
+  .kpi-val{font-size:22px;font-weight:700;color:#B07845;}
   .kpi-label{font-size:11px;color:#666;}
   ul{margin:8px 0;padding-left:20px;}
   li{margin:4px 0;font-size:13px;}
@@ -210,7 +210,7 @@ const ParentUI = (() => {
           <div>
             <div style="font-weight:700;">${student.name || '—'}</div>
             <div class="muted" style="font-size:13px;">${crName ? crName + ' · ' : ''}${schoolName || 'Sin colegio'}</div>
-            <div style="font-size:11px;font-family:monospace;color:var(--accent,#c8a06e);margin-top:2px;">${student.studentCode || ''}</div>
+            <div style="font-size:11px;font-family:monospace;color:var(--accent,#B07845);margin-top:2px;">${student.studentCode || ''}</div>
           </div>
         </div>`;
       preview.style.display = '';

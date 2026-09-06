@@ -1,4 +1,4 @@
-/* styles-grades.css — Sistema de Calificaciones TrackNara */
+﻿/* styles-grades.css — Sistema de Calificaciones TrackNara */
 
 /* ── Badges de escala ─────────────────────────────────────────────────────── */
 
@@ -90,10 +90,10 @@
 .grade-form-field select:focus,
 .grade-form-field textarea:focus {
   outline: none;
-  border-color: var(--accent, #6366f1);
+  border-color: var(--accent, #9B7044);
 }
 .grade-form-field select option {
-  background: #1e1e2e;
+  background: var(--surface-elevated, #191D23);
   color: #f0f0f0;
 }
 .grade-form-actions {
@@ -162,8 +162,8 @@
 }
 .student-tab-btn:hover { color: var(--text, #f0f0f0); }
 .student-tab-btn.active {
-  color: var(--accent, #818cf8);
-  border-bottom-color: var(--accent, #818cf8);
+  color: var(--accent, #9B7044);
+  border-bottom-color: var(--accent, #9B7044);
   font-weight: 600;
 }
 .student-tab-panel { display: none; }
@@ -185,7 +185,7 @@
   border-radius: 8px;
 }
 .grades-bimester-selector select option {
-  background: #1e1e2e;
+  background: var(--surface-elevated, #191D23);
 }
 .grade-subject-section {
   margin-bottom: 24px;
@@ -254,7 +254,7 @@
   border-radius: 6px;
 }
 .subject-assignment-actions select option {
-  background: #1e1e2e;
+  background: var(--surface-elevated, #191D23);
 }
 .subject-assigned-name { font-weight: 600; }
 

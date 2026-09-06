@@ -1340,14 +1340,14 @@ const App = (() => {
           <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;
                         border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:10px;
                         cursor:pointer;font-size:14px;" id="tfNameOptExisting">
-            <input type="radio" name="tfNameChoice" value="existing" checked style="accent-color:var(--accent,#a78bfa);" />
+            <input type="radio" name="tfNameChoice" value="existing" checked style="accent-color:var(--accent,#9B7044);" />
             <span>Mantener: <strong>${existingName || 'nombre de Google'}</strong></span>
           </label>
           ${newName ? `
           <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;
                         border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:10px;
                         cursor:pointer;font-size:14px;" id="tfNameOptNew">
-            <input type="radio" name="tfNameChoice" value="new" style="accent-color:var(--accent,#a78bfa);" />
+            <input type="radio" name="tfNameChoice" value="new" style="accent-color:var(--accent,#9B7044);" />
             <span>Actualizar a: <strong>${newName}</strong></span>
           </label>` : ''}
         </div>
@@ -1401,13 +1401,13 @@ const App = (() => {
       radio.addEventListener('change', () => {
         overlay.querySelectorAll('label[id^="tfNameOpt"]').forEach(l => l.style.borderColor = '');
         if (radio.checked) {
-          radio.closest('label').style.borderColor = 'var(--accent,#a78bfa)';
+          radio.closest('label').style.borderColor = 'var(--accent,#9B7044)';
         }
       });
     });
     // Resaltar el default
     const checkedRadio = overlay.querySelector('input[name="tfNameChoice"]:checked');
-    if (checkedRadio) checkedRadio.closest('label').style.borderColor = 'var(--accent,#a78bfa)';
+    if (checkedRadio) checkedRadio.closest('label').style.borderColor = 'var(--accent,#9B7044)';
   }
 
   // Modal: el nombre de la cuenta de Google que inició sesión difiere del
@@ -1435,20 +1435,20 @@ const App = (() => {
           <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;
                         border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:10px;
                         cursor:pointer;font-size:14px;" id="tfMismatchOptCurrent">
-            <input type="radio" name="tfMismatchChoice" value="current" checked style="accent-color:var(--accent,#a78bfa);" />
+            <input type="radio" name="tfMismatchChoice" value="current" checked style="accent-color:var(--accent,#9B7044);" />
             <span>Mantener: <strong>${currentName}</strong></span>
           </label>
           <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;
                         border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:10px;
                         cursor:pointer;font-size:14px;" id="tfMismatchOptGoogle">
-            <input type="radio" name="tfMismatchChoice" value="google" style="accent-color:var(--accent,#a78bfa);" />
+            <input type="radio" name="tfMismatchChoice" value="google" style="accent-color:var(--accent,#9B7044);" />
             <span>Actualizar a: <strong>${googleName}</strong></span>
           </label>
         </div>
 
         <button id="tfMismatchConfirm" style="
           width:100%;padding:12px 20px;border-radius:10px;border:none;cursor:pointer;
-          background:var(--accent,#a78bfa);color:#111;font-size:14px;font-weight:600;">
+          background:var(--brand,#D6A66B);color:#111;font-size:14px;font-weight:600;">
           Confirmar
         </button>
       </div>`;
@@ -1458,10 +1458,10 @@ const App = (() => {
     overlay.querySelectorAll('input[name="tfMismatchChoice"]').forEach(radio => {
       radio.addEventListener('change', () => {
         overlay.querySelectorAll('label[id^="tfMismatchOpt"]').forEach(l => l.style.borderColor = '');
-        if (radio.checked) radio.closest('label').style.borderColor = 'var(--accent,#a78bfa)';
+        if (radio.checked) radio.closest('label').style.borderColor = 'var(--accent,#9B7044)';
       });
     });
-    overlay.querySelector('input[name="tfMismatchChoice"]:checked').closest('label').style.borderColor = 'var(--accent,#a78bfa)';
+    overlay.querySelector('input[name="tfMismatchChoice"]:checked').closest('label').style.borderColor = 'var(--accent,#9B7044)';
 
     document.getElementById('tfMismatchConfirm').addEventListener('click', async () => {
       const choice = overlay.querySelector('input[name="tfMismatchChoice"]:checked')?.value;
@@ -1764,7 +1764,7 @@ const App = (() => {
             <div style="font-size:36px;margin-bottom:12px;">🔒</div>
             <h3 style="margin:0 0 8px;font-size:16px;">Política de Privacidad</h3>
             <p class="muted" style="font-size:13px;margin:0 0 16px;line-height:1.5;">Cómo recopilamos, usamos y protegemos tus datos personales. Incluye tus derechos ARCO y el uso de IA.</p>
-            <span style="font-size:13px;font-weight:600;color:var(--accent,#6c63ff);">Ver política →</span>
+            <span style="font-size:13px;font-weight:600;color:var(--accent,#9B7044);">Ver política →</span>
           </div>
 
           <div class="card" style="padding:24px;cursor:pointer;transition:transform .15s,box-shadow .15s;" id="legalCardTC"
@@ -1774,7 +1774,7 @@ const App = (() => {
             <div style="font-size:36px;margin-bottom:12px;">📋</div>
             <h3 style="margin:0 0 8px;font-size:16px;">Términos y Condiciones</h3>
             <p class="muted" style="font-size:13px;margin:0 0 16px;line-height:1.5;">Reglas de uso, limitaciones de responsabilidad, propiedad intelectual y futuras funciones de pago.</p>
-            <span style="font-size:13px;font-weight:600;color:var(--accent,#6c63ff);">Ver términos →</span>
+            <span style="font-size:13px;font-weight:600;color:var(--accent,#9B7044);">Ver términos →</span>
           </div>
 
           <div class="card" style="padding:24px;cursor:pointer;transition:transform .15s,box-shadow .15s;" id="legalCardDT"
@@ -1784,7 +1784,7 @@ const App = (() => {
             <div style="font-size:36px;margin-bottom:12px;">🛡️</div>
             <h3 style="margin:0 0 8px;font-size:16px;">Cumplimiento y Transparencia de Datos</h3>
             <p class="muted" style="font-size:13px;margin:0 0 16px;line-height:1.5;">Qué datos recopilamos, qué no recopilamos, cómo los protegemos y cómo funciona la IA con tus datos.</p>
-            <span style="font-size:13px;font-weight:600;color:var(--accent,#6c63ff);">Ver transparencia →</span>
+            <span style="font-size:13px;font-weight:600;color:var(--accent,#9B7044);">Ver transparencia →</span>
           </div>
 
         </div>

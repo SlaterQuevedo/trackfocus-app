@@ -1,4 +1,4 @@
-// QR Scanner & Generator — TrackNara
+﻿// QR Scanner & Generator — TrackNara
 // Genera QRs reales con URL de invitación; escanea con cámara del dispositivo.
 const QRScanner = (() => {
 
@@ -112,7 +112,7 @@ const QRScanner = (() => {
             color:var(--text,#fff);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;">✕</button>
         </div>
         ${crName ? `<div style="font-size:13px;color:var(--muted);margin-bottom:4px;">${crName}</div>` : ''}
-        <div style="font-size:22px;font-weight:800;letter-spacing:3px;color:#c8a06e;font-family:monospace;margin-bottom:16px;">${code}</div>
+        <div style="font-size:22px;font-weight:800;letter-spacing:3px;color:#D6A66B;font-family:monospace;margin-bottom:16px;">${code}</div>
         <div id="qr-modal-canvas-wrap" style="display:flex;align-items:center;justify-content:center;
              background:#fff;border-radius:12px;padding:16px;margin:0 auto 16px;width:fit-content;"></div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">
@@ -233,7 +233,7 @@ const QRScanner = (() => {
           <button id="qrModalClose" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);
             color:var(--text,#fff);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;">✕</button>
         </div>
-        ${displayCode ? `<div style="font-size:18px;font-weight:800;letter-spacing:3px;color:#c8a06e;font-family:monospace;margin-bottom:16px;">${displayCode}</div>` : ''}
+        ${displayCode ? `<div style="font-size:18px;font-weight:800;letter-spacing:3px;color:#D6A66B;font-family:monospace;margin-bottom:16px;">${displayCode}</div>` : ''}
         <div id="qr-modal-canvas-wrap" style="display:flex;align-items:center;justify-content:center;
              background:#fff;border-radius:12px;padding:16px;margin:0 auto 16px;width:fit-content;"></div>
         <div style="font-size:11px;color:var(--muted);word-break:break-all;margin-bottom:16px;">${url}</div>
@@ -326,11 +326,11 @@ const QRScanner = (() => {
       <div style="font-size:15px;font-weight:600;color:#fff;">Apunta al código QR</div>
       <div style="position:relative;width:280px;height:280px;">
         <video style="width:280px;height:280px;border-radius:16px;object-fit:cover;" playsinline muted></video>
-        <div style="position:absolute;inset:0;border:2px solid rgba(200,160,110,.7);border-radius:16px;pointer-events:none;"></div>
-        <div style="position:absolute;top:0;left:0;width:36px;height:36px;border-top:3px solid #c8a06e;border-left:3px solid #c8a06e;border-radius:4px 0 0 0;pointer-events:none;"></div>
-        <div style="position:absolute;top:0;right:0;width:36px;height:36px;border-top:3px solid #c8a06e;border-right:3px solid #c8a06e;border-radius:0 4px 0 0;pointer-events:none;"></div>
-        <div style="position:absolute;bottom:0;left:0;width:36px;height:36px;border-bottom:3px solid #c8a06e;border-left:3px solid #c8a06e;border-radius:0 0 0 4px;pointer-events:none;"></div>
-        <div style="position:absolute;bottom:0;right:0;width:36px;height:36px;border-bottom:3px solid #c8a06e;border-right:3px solid #c8a06e;border-radius:0 0 4px 0;pointer-events:none;"></div>
+        <div style="position:absolute;inset:0;border:2px solid rgba(214,166,107,.7);border-radius:16px;pointer-events:none;"></div>
+        <div style="position:absolute;top:0;left:0;width:36px;height:36px;border-top:3px solid #D6A66B;border-left:3px solid #D6A66B;border-radius:4px 0 0 0;pointer-events:none;"></div>
+        <div style="position:absolute;top:0;right:0;width:36px;height:36px;border-top:3px solid #D6A66B;border-right:3px solid #D6A66B;border-radius:0 4px 0 0;pointer-events:none;"></div>
+        <div style="position:absolute;bottom:0;left:0;width:36px;height:36px;border-bottom:3px solid #D6A66B;border-left:3px solid #D6A66B;border-radius:0 0 0 4px;pointer-events:none;"></div>
+        <div style="position:absolute;bottom:0;right:0;width:36px;height:36px;border-bottom:3px solid #D6A66B;border-right:3px solid #D6A66B;border-radius:0 0 4px 0;pointer-events:none;"></div>
       </div>
       <canvas id="qr-scan-canvas" style="display:none;"></canvas>
       <div style="color:rgba(255,255,255,.5);font-size:12px;text-align:center;max-width:280px;">Mantén el código QR dentro del recuadro con buena iluminación</div>

@@ -51,7 +51,7 @@ const UIStudent = (() => {
     const freshUser = s.users[user.id] || user;
     const initials = _userInitials(freshUser.name);
     const acadProfile = JSON.parse(localStorage.getItem('arv-academic-profile-v3') || '{}');
-    const avatarColor = acadProfile.avatarColor || '#C89B6D';
+    const avatarColor = acadProfile.avatarColor || '#D6A66B';
 
     const photos = ProfilePhotos.listFor(freshUser.id);
     const primary = photos.find(p => p.position === 0) || null;
@@ -2355,7 +2355,7 @@ const UIStudent = (() => {
               <div class="sv2-hm-legend">
                 <span>Menos</span>
                 <div class="sv2-hm-legend-cells">
-                  ${[0,1,2,3,4].map(v=>`<div class="sv2-hm-legend-cell" style="background:${v===0?'rgba(255,255,255,.04)':`rgba(139,92,246,${0.2+v*.16})`}"></div>`).join('')}
+                  ${[0,1,2,3,4].map(v=>`<div class="sv2-hm-legend-cell" style="background:${v===0?'rgba(255,255,255,.04)':`rgba(155,112,68,${0.2+v*.16})`}"></div>`).join('')}
                 </div>
                 <span>Más</span>
               </div>
@@ -2455,7 +2455,7 @@ const UIStudent = (() => {
             <div class="sv2-hm-legend">
               <span>Menos actividad</span>
               <div class="sv2-hm-legend-cells">
-                ${[0,1,2,3,4].map(v=>`<div class="sv2-hm-legend-cell" style="background:${v===0?'rgba(255,255,255,.04)':`rgba(139,92,246,${0.2+v*.16})`}"></div>`).join('')}
+                ${[0,1,2,3,4].map(v=>`<div class="sv2-hm-legend-cell" style="background:${v===0?'rgba(255,255,255,.04)':`rgba(155,112,68,${0.2+v*.16})`}"></div>`).join('')}
               </div>
               <span>Más actividad</span>
             </div>
@@ -2628,8 +2628,8 @@ const UIStudent = (() => {
     const moLabels = moKeys.map(k => { const [y,m] = k.split('-'); return new Date(y,m-1,1).toLocaleDateString('es-PE',{month:'short'}); });
     Charts.create('chartMonthly', {
       type: 'line',
-      data: { labels: moLabels, datasets: [{ label: 'Sesiones', data: moKeys.map(k=>moBuckets[k]), borderColor: 'rgba(139,92,246,0.85)', backgroundColor: 'rgba(139,92,246,0.12)', tension: 0.4, fill: true, pointBackgroundColor: 'rgba(139,92,246,0.85)', pointRadius: 4 }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#52525B' }, grid: { color: 'rgba(255,255,255,0.04)' } }, y: { ticks: { color: '#52525B', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true } } }
+      data: { labels: moLabels, datasets: [{ label: 'Sesiones', data: moKeys.map(k=>moBuckets[k]), borderColor: 'rgba(155,112,68,0.85)', backgroundColor: 'rgba(155,112,68,0.12)', tension: 0.4, fill: true, pointBackgroundColor: 'rgba(155,112,68,0.85)', pointRadius: 4 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#7E8792' }, grid: { color: '#232830' } }, y: { ticks: { color: '#7E8792', stepSize: 1 }, grid: { color: '#232830' }, beginAtZero: true } } }
     });
   }
 
@@ -2969,7 +2969,7 @@ const UIStudent = (() => {
     const top3 = enriched.slice(0, 3);
     const podiumSlots = [
       { data: top3[1], height: 70,  rank: 2, medal: '🥈', color: 'rgba(203,213,225,0.15)' },
-      { data: top3[0], height: 100, rank: 1, medal: '🥇', color: 'rgba(200,155,109,0.18)' },
+      { data: top3[0], height: 100, rank: 1, medal: '🥇', color: 'rgba(214,166,107,0.18)' },
       { data: top3[2], height: 50,  rank: 3, medal: '🥉', color: 'rgba(205,127,50,0.12)'  }
     ];
     const podiumHtml = podiumSlots.map(slot => {
@@ -3374,7 +3374,7 @@ const UIStudent = (() => {
     const schedule = JSON.parse(localStorage.getItem('arv-weekly-schedule') || '{}');
     const prefs = JSON.parse(localStorage.getItem('arv-prefs') || '{}');
     const initials = _userInitials(user.name);
-    const avatarColor = acadProfile.avatarColor || '#C89B6D';
+    const avatarColor = acadProfile.avatarColor || '#D6A66B';
     const bio = user.bio || acadProfile.message || 'Cada sesión te acerca a tu objetivo.';
     const nickname = user.nickname || '';
     const primaryPhoto = (typeof ProfilePhotos !== 'undefined') ? ProfilePhotos.getPrimary(user.id) : null;
@@ -3437,7 +3437,7 @@ const UIStudent = (() => {
     const uniDisplayDash = acadProfile.university === 'otro'
       ? (acadProfile.customUniversity || 'Mi institución') : (acadProfile.university || '—');
 
-    const AVATAR_COLORS = ['#C89B6D','#8B5CF6','#3B82F6','#22C55E','#EF4444','#F59E0B'];
+    const AVATAR_COLORS = ['#D6A66B','#C8CDD3','#7E8792','#9B7044'];
     const colorDotsHtml = AVATAR_COLORS.map(c =>
       `<div class="pp-color-dot${c === avatarColor ? ' active' : ''}" data-color="${esc(c)}" style="background:${esc(c)};"></div>`
     ).join('');
@@ -3688,7 +3688,7 @@ const UIStudent = (() => {
             <div class="ph-panel-hdr-icon">🎯</div>
             <div><div class="ph-panel-title">Meta Universitaria</div><div class="ph-panel-sub">Tu objetivo de ingreso</div></div>
           </div>
-          <div class="ph-meta-card card" style="border-color:rgba(200,155,109,.25);">
+          <div class="ph-meta-card card" style="border-color:rgba(214,166,107,.25);">
             <div style="font-size:17px;font-weight:800;margin-bottom:4px;color:var(--text);">${esc(uniDisplay)}</div>
             <div style="color:var(--primary);font-size:14px;font-weight:600;margin-bottom:12px;">${esc(acadProfile.career || '')}</div>
             <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Materias: ${(acadProfile.enabledSubjects || []).map(s => esc(s)).join(', ') || 'Ninguna'}</div>
@@ -5517,9 +5517,9 @@ const UIStudent = (() => {
 
         <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:20px;margin-bottom:20px;">
           <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
-            <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,rgba(200,160,110,.3),rgba(200,160,110,.1));
-                        border:1px solid rgba(200,160,110,.4);display:flex;align-items:center;justify-content:center;
-                        font-size:20px;font-weight:800;color:#c8a06e;flex-shrink:0;">${esc((cr.name || 'A')[0].toUpperCase())}</div>
+            <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,rgba(214,166,107,.3),rgba(214,166,107,.1));
+                        border:1px solid rgba(214,166,107,.4);display:flex;align-items:center;justify-content:center;
+                        font-size:20px;font-weight:800;color:#D6A66B;flex-shrink:0;">${esc((cr.name || 'A')[0].toUpperCase())}</div>
             <div>
               <div style="font-size:18px;font-weight:700;">${esc(cr.name)}</div>
               <div style="font-size:13px;color:var(--muted);">${esc(school.name || '')}</div>
@@ -5540,7 +5540,7 @@ const UIStudent = (() => {
             </div>
             <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px;">
               <div style="font-size:11px;color:var(--muted);margin-bottom:2px;">CÓDIGO</div>
-              <div style="font-size:13px;font-weight:600;font-family:monospace;letter-spacing:2px;color:#c8a06e;">${esc(code)}</div>
+              <div style="font-size:13px;font-weight:600;font-family:monospace;letter-spacing:2px;color:#D6A66B;">${esc(code)}</div>
             </div>
           </div>
         </div>

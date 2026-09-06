@@ -322,7 +322,7 @@ const GradeUI = (() => {
             ${canEdit ? `<button class="ghost grade-add-btn" data-subject="${_esc(sub)}"
               style="font-size:12px;padding:4px 12px;">+ Agregar</button>` : ''}
             ${showLocked ? '<span class="grade-locked-badge">🔒 Cerrado</span>' : ''}
-            ${isDemo && !bimOpen && activeBimester ? '<span class="grade-locked-badge" style="background:rgba(99,102,241,.2);color:#a5b4fc;">✏️ Demo</span>' : ''}
+            ${isDemo && !bimOpen && activeBimester ? '<span class="grade-locked-badge" style="background:rgba(155,112,68,.2);color:#E3B77D;">✏️ Demo</span>' : ''}
           </div>
           <div class="grade-form-area" id="gradeFormArea-${_esc(sub)}" style="display:none;"></div>
           ${renderGradeTable(subGrades, { editable: canEdit })}

@@ -57,28 +57,31 @@ const Charts = (() => {
     return null;
   }
 
+  // Paleta de gráficos: familia arena (marca) + grafito neutro. El morado y
+  // el azul decorativos se retiran — "accent"/"blue" ahora son tonos de la
+  // misma identidad (arena oscura / grafito), no una tonalidad nueva.
   const COLORS = {
-    primary:      'rgba(200,155,109,0.85)',
-    primaryLight: 'rgba(200,155,109,0.15)',
-    accent:       'rgba(139,92,246,0.85)',
-    accentLight:  'rgba(139,92,246,0.15)',
-    blue:         'rgba(59,130,246,0.85)',
-    blueLight:    'rgba(59,130,246,0.15)',
+    primary:      'rgba(214,166,107,0.9)',   // brand
+    primaryLight: 'rgba(214,166,107,0.15)',
+    accent:       'rgba(155,112,68,0.85)',   // brand-dark (reemplaza el morado)
+    accentLight:  'rgba(155,112,68,0.15)',
+    blue:         'rgba(126,135,146,0.85)',  // grafito-plata (reemplaza el azul decorativo)
+    blueLight:    'rgba(126,135,146,0.15)',
     good:         'rgba(34,197,94,0.8)',
     warn:         'rgba(245,158,11,0.8)',
     bad:          'rgba(239,68,68,0.8)',
-    muted:        'rgba(113,113,122,0.6)'
+    muted:        'rgba(126,135,146,0.6)'
   };
 
   const CHART_DEFAULTS = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { labels: { color: '#71717A', font: { size: 12, family: 'Inter, sans-serif' } } }
+      legend: { labels: { color: '#9CA3AD', font: { size: 12, family: 'Inter, sans-serif' } } }
     },
     scales: {
-      x: { ticks: { color: '#52525B' }, grid: { color: 'rgba(255,255,255,0.04)' } },
-      y: { ticks: { color: '#52525B' }, grid: { color: 'rgba(255,255,255,0.04)' } }
+      x: { ticks: { color: '#7E8792' }, grid: { color: '#232830' } },
+      y: { ticks: { color: '#7E8792' }, grid: { color: '#232830' } }
     }
   };
 
@@ -102,7 +105,7 @@ const Charts = (() => {
         ...CHART_DEFAULTS,
         plugins: {
           ...CHART_DEFAULTS.plugins,
-          title: title ? { display: true, text: title, color: '#E4E4E7', font: { family: 'Inter, sans-serif' } } : undefined
+          title: title ? { display: true, text: title, color: '#F4F1EA', font: { family: 'Inter, sans-serif' } } : undefined
         },
         scales: {
           ...CHART_DEFAULTS.scales,
@@ -148,7 +151,7 @@ const Charts = (() => {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 11 } } }
+          legend: { position: 'right', labels: { color: '#9CA3AD', font: { size: 11 } } }
         }
       }
     };

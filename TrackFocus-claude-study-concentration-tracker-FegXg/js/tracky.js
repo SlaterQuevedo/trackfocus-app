@@ -30,8 +30,8 @@ const Tracky = (() => {
       <svg viewBox="0 0 64 64" width="48" height="48" aria-hidden="true">
         <defs>
           <linearGradient id="tk-g" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="var(--accent-2, #A78BFA)"/>
-            <stop offset="1" stop-color="var(--primary, #C89B6D)"/>
+            <stop offset="0" stop-color="var(--brand-hover, #E3B77D)"/>
+            <stop offset="1" stop-color="var(--brand-dark, #9B7044)"/>
           </linearGradient>
         </defs>
         <ellipse cx="32" cy="34" rx="22" ry="24" fill="url(#tk-g)"/>
