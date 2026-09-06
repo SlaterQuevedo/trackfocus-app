@@ -567,18 +567,18 @@ const App = (() => {
     const _isAutoLogin = !sessionStorage.getItem('tf.loginInProgress');
     const authSession = await Auth.getSession();
 
-    // Limpiar cualquier "#" residual en la URL (de anclas de la landing, ej.
-    // #lpRolesSection, o del redirect de Google OAuth) — se hace DESPUÉS de
-    // Auth.getSession() porque Supabase necesita leer el token de sesión del
-    // hash antes de que lo borremos; limpiarlo antes rompe el login.
-    // Nota: supabase-js suele limpiar el hash con `location.hash = ''`, lo
-    // que en el navegador deja un "#" vacío pero visible — por eso no basta
-    // con chequear `location.hash` (ya está vacío); comparamos la URL completa.
-    {
-      const _cleanUrl = location.pathname + location.search;
-      if (location.href !== location.origin + _cleanUrl) {
-        history.replaceState(null, '', _cleanUrl);
-      }
+    // Limpiar el "#" vacío residual en la URL (de anclas de la landing, ej.
+    // #lpRolesSection tras navegar, o el que deja supabase-js con
+    // `location.hash = ''` al procesar el redirect de Google OAuth — eso
+    // vacía el hash pero el navegador deja el símbolo "#" visible).
+    // IMPORTANTE: sólo se limpia si el hash ya está vacío/solo "#". Si
+    // todavía trae contenido (ej. "#access_token=..."), NO se toca — eso
+    // significaría que supabase-js aún no terminó de procesarlo, y
+    // borrarlo nosotros antes rompería el login (pasó en un deploy previo).
+    if (location.hash && location.hash !== '#') {
+      // Hash con contenido real todavía sin procesar: no tocar.
+    } else if (location.hash === '#' || (location.href.endsWith('#') )) {
+      history.replaceState(null, '', location.pathname + location.search);
     }
 
     if (!authSession) return go('welcome');
