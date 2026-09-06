@@ -143,17 +143,6 @@ const App = (() => {
     if (typeof Tracky !== 'undefined') _ric(() => Tracky.checkContext(_current, Roles.current()));
     window.scrollTo({ top: 0, behavior: 'instant' });
     performance.measure?.('go:' + route, 'go:' + route + ':start');
-
-    // Persistir ruta para restaurar en recarga normal (no en hard refresh)
-    const _RESTORABLE = new Set(['dashboard','history','leaderboard','stats','profile','ai-study','teacher-dashboard','admin-dashboard','classroom']);
-    if (_RESTORABLE.has(route)) {
-      sessionStorage.setItem('arv_last_route', route);
-      if (route === 'classroom' && App._classroomId) {
-        sessionStorage.setItem('arv_last_classroom', App._classroomId);
-      } else {
-        sessionStorage.removeItem('arv_last_classroom');
-      }
-    }
   }
 
   // Abrevia el nombre del colegio a iniciales para el header, preservando un
@@ -707,12 +696,6 @@ const App = (() => {
     }
     console.log('[App] Current user:', { role: user.role });
 
-    // Snapshot de ruta a restaurar: solo en recarga normal con SW activo.
-    // null cuando el SW fue bypassed (Ctrl+Shift+R) → flujo normal sin restaurar.
-    const _swLastRoute = navigator.serviceWorker?.controller
-      ? sessionStorage.getItem('arv_last_route')
-      : null;
-
     // Auto-login: sesión restaurada automáticamente → saludo de bienvenida
     if (_isAutoLogin) {
       const firstName = (user.name || '').split(' ')[0] || 'de nuevo';
@@ -731,8 +714,9 @@ const App = (() => {
         });
       }
       if (!user.parentalConsent) return go('consent');
-      if (_swLastRoute === 'classroom') { const _c = sessionStorage.getItem('arv_last_classroom'); if (_c) App._classroomId = _c; }
-      return go(_swLastRoute || 'dashboard');
+      // Siempre a "Inicio": la app ya no restaura la última pantalla usada
+      // (por pedido explícito — entrar/recargar debe llevar siempre a Inicio).
+      return go('dashboard');
     }
 
     // Director pendiente de validar código de colegio
@@ -763,8 +747,9 @@ const App = (() => {
       }
     }
 
-    if (_swLastRoute === 'classroom') { const _c = sessionStorage.getItem('arv_last_classroom'); if (_c) App._classroomId = _c; }
-    return go(_swLastRoute || 'dashboard');
+    // Siempre a "Inicio": la app ya no restaura la última pantalla usada
+    // (por pedido explícito — entrar/recargar debe llevar siempre a Inicio).
+    return go('dashboard');
   }
 
   // ---- Pantalla de bienvenida rediseñada (institucional) ----
