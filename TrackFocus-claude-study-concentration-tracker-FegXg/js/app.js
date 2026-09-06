@@ -511,13 +511,6 @@ const App = (() => {
   }
 
   async function start() {
-    // Limpiar cualquier "#" residual en la URL (de los anclas de la landing,
-    // ej. #lpRolesSection, o del redirect de Google OAuth) — la app es SPA y
-    // nunca necesita usar el hash de la URL, así que no debe quedar visible.
-    if (location.hash) {
-      history.replaceState(null, '', location.pathname + location.search);
-    }
-
     bindGlobal();
     wirePomodoroBar();
 
@@ -573,6 +566,15 @@ const App = (() => {
     // 1. ¿Hay sesión activa? (persistida desde la última visita)
     const _isAutoLogin = !sessionStorage.getItem('tf.loginInProgress');
     const authSession = await Auth.getSession();
+
+    // Limpiar cualquier "#" residual en la URL (de anclas de la landing, ej.
+    // #lpRolesSection, o del redirect de Google OAuth) — se hace DESPUÉS de
+    // Auth.getSession() porque Supabase necesita leer el token de sesión del
+    // hash antes de que lo borremos; limpiarlo antes rompe el login.
+    if (location.hash) {
+      history.replaceState(null, '', location.pathname + location.search);
+    }
+
     if (!authSession) return go('welcome');
     // Bloquear auto-login si el usuario lo desactivó (equipos compartidos)
     if (_isAutoLogin && localStorage.getItem('arv_al') !== '1') {
