@@ -1309,6 +1309,17 @@ const App = (() => {
       });
     });
 
+    // Links de navegación del header (Soluciones/Cómo funciona/Instituciones):
+    // scroll suave a la sección SIN dejar el "#seccion" en la URL (preferencia
+    // de identidad visual — la URL siempre debe verse limpia).
+    root().querySelectorAll('.lp-nav-link[href^="#"]').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = root().querySelector(link.getAttribute('href'));
+        target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
     // Botón "Gestionar mi institución" de la sección institucional
     root().querySelector('.lp-btn-inst[data-role="admin"]')?.addEventListener('click', () => {
       authForm.classList.add('hidden');
