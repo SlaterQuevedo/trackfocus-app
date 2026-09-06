@@ -53,6 +53,11 @@ const Auth = (() => {
     if (user.profileSource === 'manual' && user.displayFirstName) {
       const correctedName = `${user.displayFirstName} ${user.displayLastName || ''}`.trim();
       if (user.name !== correctedName) {
+        // markExternalWrite: esta escritura no pasa por Storage.set(), así que
+        // sin esto el eco de Realtime llega ~1-2s después sin reconocerse
+        // como propio y fuerza un segundo re-render completo de la pantalla
+        // (se percibe como "la web recarga sola dos veces" al iniciar sesión).
+        Storage.markExternalWrite?.();
         window.SB.from('users').update({
           name: correctedName,
           updated_at: new Date().toISOString()
@@ -64,6 +69,7 @@ const Auth = (() => {
     // Marcar google_linked si accedió con Google y aún no está marcado
     const provider = session.user.app_metadata?.provider;
     if (provider === 'google' && !user.googleLinked) {
+      Storage.markExternalWrite?.();
       window.SB.from('users').update({
         google_linked: true,
         updated_at: new Date().toISOString()
@@ -298,6 +304,7 @@ const Auth = (() => {
     const firstName = nameParts[0] || '';
     const lastName  = nameParts.slice(1).join(' ') || '';
 
+    Storage.markExternalWrite?.();
     await Promise.allSettled([
       window.SB.from('users').upsert(
         { id: cleanEmail, email: cleanEmail, name: nombre, role: 'student',
@@ -323,6 +330,7 @@ const Auth = (() => {
     if (!window.SB) return;
     const cleanEmail = email.toLowerCase().trim();
     const displayName = `${firstName} ${lastName}`.trim();
+    Storage.markExternalWrite?.();
     await window.SB.from('users').update({
       display_first_name: firstName || null,
       display_last_name:  lastName  || null,

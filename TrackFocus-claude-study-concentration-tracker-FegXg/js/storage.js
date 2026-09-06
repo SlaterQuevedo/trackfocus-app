@@ -289,6 +289,11 @@ const Storage = (() => {
     genStudentCode: _genStudentCode,
     findUserByStudentCode,
     lastWriteAt: () => _lastWriteAt,
+    // Para escrituras que van directo a Supabase sin pasar por Storage.set()
+    // (ej. auth.js corrigiendo nombre/google_linked al iniciar sesión): sin
+    // esto, el eco de Realtime de esa escritura no se reconoce como propio y
+    // fuerza un segundo re-render completo de pantalla poco después de cargar.
+    markExternalWrite: () => { _lastWriteAt = Date.now(); },
     DEFAULT_STATE,
     isBooted: () => booted
   };
