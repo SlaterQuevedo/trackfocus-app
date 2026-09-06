@@ -2068,10 +2068,13 @@ body.pom-active .container { padding-top: 0; }
   gap: 28px;
 }
 .ai-setup-col { flex: 1 1 auto; min-width: 0; }
-.ai-metrics-col { width: 320px; flex-shrink: 0; }
+/* El panel de métricas es naturalmente más corto que el formulario — en vez
+   de forzar la misma altura (o dejar un vacío grande debajo al hacer scroll),
+   queda fijo mientras se recorre el formulario más largo. */
+.ai-metrics-col { width: 320px; flex-shrink: 0; position: sticky; top: 20px; }
 @media (max-width: 900px) {
   .ai-layout { flex-direction: column; }
-  .ai-metrics-col { width: 100%; }
+  .ai-metrics-col { width: 100%; position: static; }
 }
 
 .ai-intro {
