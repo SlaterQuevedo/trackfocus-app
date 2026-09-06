@@ -2077,9 +2077,15 @@ body.pom-active .container { padding-top: 0; }
   .ai-metrics-col { width: 100%; position: static; }
 }
 
+/* min-height reservado para que la caja del formulario y la primera
+   tarjeta de métricas empiecen exactamente en la misma línea, aunque los
+   títulos de arriba tengan alturas distintas (h1 grande vs. etiqueta
+   pequeña). .ai-metrics-header usa el mismo valor. */
 .ai-intro {
   text-align: left;
   margin-bottom: 22px;
+  min-height: 96px;
+  box-sizing: border-box;
 }
 .ai-intro h1 {
   margin: 0 0 6px;
@@ -2092,6 +2098,7 @@ body.pom-active .container { padding-top: 0; }
 .ai-config-card {
   max-width: none;
   margin: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,.15);
 }
 /* Un poco más de aire entre Actividad previa / Modo de estudio / Nivel de
    dificultad, sin volver la tarjeta demasiado alta. */
@@ -2122,6 +2129,7 @@ body.pom-active .container { padding-top: 0; }
   border-color: var(--brand, #D6A66B);
   background: rgba(214, 166, 107, 0.1);
   color: var(--text-primary);
+  box-shadow: 0 4px 14px rgba(214, 166, 107, 0.16);
 }
 .ai-diff-ico { display: flex; line-height: 1; color: var(--text-secondary); }
 .ai-diff-opt.is-active .ai-diff-ico { color: var(--brand, #D6A66B); }
@@ -2506,13 +2514,20 @@ body.pom-active .container { padding-top: 0; }
 
 /* Título de la columna de métricas — le da al panel el mismo peso visual
    que "Estudio con TrackTutor" a la izquierda, en vez de flotar sin marco. */
+.ai-metrics-header {
+  min-height: 96px;
+  box-sizing: border-box;
+}
 .ai-metrics-title {
-  margin: 0 0 12px;
+  margin: 0;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary, var(--muted));
   text-transform: uppercase;
   letter-spacing: .04em;
+}
+@media (max-width: 900px) {
+  .ai-metrics-header { min-height: 0; margin-bottom: 12px; }
 }
 
 /* Progress grid — una sola columna en el panel angosto de la derecha (las
@@ -2540,12 +2555,17 @@ body.pom-active .container { padding-top: 0; }
   justify-content: space-between;
   gap: 4px 10px;
   text-align: left;
+  /* Altura uniforme para las 6 tarjetas: sin esto, las 3 con barra de
+     progreso quedan más altas que las otras 3 y rompen el ritmo vertical. */
+  min-height: 60px;
+  box-sizing: border-box;
+  box-shadow: 0 1px 2px rgba(0,0,0,.12);
   transition: transform .2s, box-shadow .2s;
 }
 /* En 2 columnas (móvil/tablet) cada tarjeta vuelve a ser angosta: mejor
    apilar encabezado y valor en vez de forzarlos en una sola fila. */
 @media (max-width: 900px) {
-  .progress-card { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .progress-card { flex-direction: column; align-items: flex-start; gap: 6px; min-height: 0; }
 }
 
 .progress-card:hover {
@@ -2571,6 +2591,7 @@ body.pom-active .container { padding-top: 0; }
 .prog-val {
   font-size: 1.25rem;
   font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--text);
 }
 
