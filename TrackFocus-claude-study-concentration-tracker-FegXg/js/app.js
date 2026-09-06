@@ -511,6 +511,13 @@ const App = (() => {
   }
 
   async function start() {
+    // Limpiar cualquier "#" residual en la URL (de los anclas de la landing,
+    // ej. #lpRolesSection, o del redirect de Google OAuth) — la app es SPA y
+    // nunca necesita usar el hash de la URL, así que no debe quedar visible.
+    if (location.hash) {
+      history.replaceState(null, '', location.pathname + location.search);
+    }
+
     bindGlobal();
     wirePomodoroBar();
 
