@@ -261,14 +261,14 @@ const App = (() => {
         <button data-route="ai-study">${I18N.t('nav.student.aiStudy','TrackTutor')}</button>
         <button data-route="stats">${I18N.t('nav.student.stats','Progreso')}</button>
         <button data-route="leaderboard">${I18N.t('nav.student.leaderboard','Rankings')}</button>
-        <button data-route="companions">${I18N.t('nav.student.companions','Compañeros')}</button>
+        <button data-route="companions">${I18N.t('nav.student.companions','Compañeros')}<span class="nav-badge" id="navCompanionsBadge" hidden></span></button>
         <button data-route="profile">${I18N.t('nav.student.profile','Cuenta')}</button>`;
       bottomItems = [
         { route: 'dashboard',   icon: '🏠', label: I18N.t('bn.home','Inicio') },
         { route: 'ai-study',    icon: '🧠', label: I18N.t('bn.ai','TrackTutor') },
         { route: 'stats',       icon: '📊', label: I18N.t('bn.progress','Progreso') },
         { route: 'leaderboard', icon: '🏆', label: I18N.t('bn.ranking','Rankings') },
-        { route: 'companions',  icon: '👥', label: I18N.t('bn.companions','Compañeros') },
+        { route: 'companions',  icon: '👥', label: I18N.t('bn.companions','Compañeros'), badgeId: 'bnCompanionsBadge' },
         { route: 'profile',     icon: '👤', label: I18N.t('nav.student.profile','Cuenta') }
       ];
     } else if (user.role === 'teacher') {
@@ -308,7 +308,7 @@ const App = (() => {
     if (bottomnav) {
       bottomnav.innerHTML = bottomItems.map(it => `
         <button data-route="${it.route}" class="${it.route === _current ? 'active' : ''}">
-          <span class="bn-icon">${it.icon}</span>
+          <span class="bn-icon">${it.icon}${it.badgeId ? `<span class="nav-badge nav-badge-bn" id="${it.badgeId}" hidden></span>` : ''}</span>
           <span class="bn-label">${it.label}</span>
         </button>`).join('');
       bottomnav.classList.remove('hidden');
@@ -325,6 +325,25 @@ const App = (() => {
     if (_lnb) _lnb.classList.toggle('hidden', user.role === 'student');
     const _snb = document.getElementById('securityNavBtn');
     if (_snb) _snb.classList.toggle('hidden', user.role === 'student');
+
+    _updateCompanionsBadge();
+  }
+
+  // Punto rojo con contador en "Compañeros" (top nav + nav inferior móvil)
+  // para las solicitudes recibidas pendientes — visible en cualquier
+  // pantalla, se recalcula en cada navegación y en cada evento de Realtime
+  // (ver Storage.bindRealtime más abajo), sin depender de estar en esa ruta.
+  function _updateCompanionsBadge() {
+    if (typeof UICompanions === 'undefined') return;
+    const s = Storage.get();
+    const user = Roles.current();
+    if (!user || user.role !== 'student') return;
+    const count = UICompanions.pendingReceivedCount(s.currentUserId);
+    document.querySelectorAll('#navCompanionsBadge, #bnCompanionsBadge').forEach(el => {
+      if (!el) return;
+      el.hidden = count === 0;
+      el.textContent = count > 9 ? '9+' : String(count);
+    });
   }
 
   function _goWelcomeToRoles() {
@@ -654,7 +673,16 @@ const App = (() => {
     ]);
 
     Storage.bindRealtime(() => {
-      // Guard 1: rutas donde el Realtime es disruptivo y no aporta valor
+      // El badge de Compañeros (solicitudes pendientes) y el refresco liviano
+      // de sus listas no dependen de la ruta actual: Storage ya trae datos
+      // frescos en cada evento de Realtime (bindRealtime hace bootstrap()
+      // siempre) — _REALTIME_SKIP solo bloquea el re-render COMPLETO de
+      // pantalla más abajo, nunca el refetch de datos.
+      _updateCompanionsBadge();
+      if (typeof UICompanions !== 'undefined') UICompanions.liveRefresh();
+      if (typeof UIStudent !== 'undefined') UIStudent.liveRefreshSocialStats?.();
+
+      // Guard 1: rutas donde un re-render COMPLETO es disruptivo y no aporta valor
       if (!_current || _REALTIME_SKIP.has(_current)) return;
       if (document.querySelector('.quiz-modal') || document.querySelector('.pom-modal:not(.hidden)')) return;
       // Guard 2: loopback — ignorar si este cliente escribió en los últimos 8 s.

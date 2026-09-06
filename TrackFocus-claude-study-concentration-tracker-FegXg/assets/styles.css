@@ -172,6 +172,7 @@ html[data-theme="light"] body {
 }
 
 .topnav button {
+  position: relative;
   background: transparent;
   color: var(--muted);
   border: 1px solid transparent;
@@ -184,6 +185,25 @@ html[data-theme="light"] body {
   transition: all 0.18s ease;
   letter-spacing: -0.1px;
 }
+
+/* Punto/contador de solicitudes pendientes en "Compañeros" — visible en
+   cualquier pantalla, se actualiza en vivo (ver app.js _updateCompanionsBadge). */
+.nav-badge {
+  position: absolute;
+  top: -3px;
+  right: 2px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: var(--bad, #EF4444);
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 15px;
+  text-align: center;
+}
+.nav-badge-bn { position: absolute; top: -4px; right: -6px; }
 
 .topnav button:hover {
   color: var(--text);
@@ -2634,7 +2654,7 @@ body.pom-active .container { padding-top: 0; }
   padding: 6px 2px;
   transition: color .15s, background .15s;
 }
-.bottom-nav button .bn-icon  { font-size: 20px; line-height: 1; }
+.bottom-nav button .bn-icon  { position: relative; display: inline-block; font-size: 20px; line-height: 1; }
 .bottom-nav button .bn-label { font-size: 10px; font-weight: 600; letter-spacing: .02em; }
 .bottom-nav button.active {
   color: var(--accent);

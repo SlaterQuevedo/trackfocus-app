@@ -775,6 +775,19 @@ const UICompanions = (() => {
     _renderMessages();
     _renderRooms();
     _renderFollowing();
+
+    // Expuesto para refresco en tiempo real (ver app.js): Storage ya trae
+    // datos frescos vía el bootstrap de Realtime aunque esta pantalla esté
+    // en _REALTIME_SKIP (ese set solo bloquea el re-render completo de
+    // pantalla, no el refetch). Re-renderiza solo las listas de abajo —
+    // nunca el buscador — para no perder lo que el usuario esté escribiendo.
+    _liveRefreshers = { requests: _renderRequests, mine: _renderMine, messages: _renderMessages, rooms: _renderRooms, following: _renderFollowing };
+  }
+
+  let _liveRefreshers = null;
+  function liveRefresh() {
+    if (!_liveRefreshers || !document.getElementById('cpRequestsList')) return; // no estamos en Compañeros
+    Object.values(_liveRefreshers).forEach(fn => fn());
   }
 
   // Cierra cualquier overlay de Compañeros (perfil público / chat) que haya
@@ -793,5 +806,16 @@ const UICompanions = (() => {
     if (_roomMsgChannel) { StudyRooms.unsubscribeRoomMessages(_roomMsgChannel); _roomMsgChannel = null; }
   }
 
-  return { screens: { companions: { render: screenCompanions, wire: wireCompanions } }, closeOverlays };
+  // Compañeros pendientes que ME enviaron la solicitud — usado por el badge
+  // de la barra de navegación (visible en cualquier pantalla, no solo en
+  // Compañeros), calculado desde el estado ya sincronizado localmente.
+  function pendingReceivedCount(myId) {
+    if (!myId) return 0;
+    return Companions.listMine(myId).filter(c => c.status === 'pending' && c.requestedBy !== myId).length;
+  }
+
+  return {
+    screens: { companions: { render: screenCompanions, wire: wireCompanions } },
+    closeOverlays, liveRefresh, pendingReceivedCount
+  };
 })();

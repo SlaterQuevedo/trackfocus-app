@@ -4484,6 +4484,16 @@ const UIStudent = (() => {
     }
   }
 
+  // Refresco en tiempo real del conteo social en "Mi Perfil" (llamado desde
+  // app.js en cada evento de Realtime, sin importar la ruta actual — no
+  // hace nada si la tarjeta no está en pantalla).
+  function liveRefreshSocialStats() {
+    if (!document.getElementById('ppSocialStats')) return;
+    const s = Storage.get();
+    const user = s.users[s.currentUserId];
+    if (user) _hydrateSocialStats(user);
+  }
+
   function _wireClassroomForms(user) {
     document.getElementById('changeClassroomForm')?.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -5715,7 +5725,8 @@ const UIStudent = (() => {
       'ai-study':   { render: screenAIStudy,      wire: wireAIStudy },
       'join-classroom': { render: screenJoinClassroom, wire: wireJoinClassroom },
       'student-grades': { render: screenStudentGrades, wire: wireStudentGrades }
-    })
+    }),
+    liveRefreshSocialStats
   };
 })();
 
