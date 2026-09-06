@@ -3400,6 +3400,13 @@ const UIStudent = (() => {
         </div>`;
     }).join('');
     const prepPct = _calcPrep(user, sessions, acadProfile);
+    // Progreso de beca (Fase: Beca + Institución independientes): se calcula
+    // con la misma fórmula de _calcPrep pero acotada a las sesiones de las
+    // materias propias de la beca (ej. Comprensión Lectora, R. Verbal…), para
+    // que sea un número real y distinto del progreso de la institución.
+    const becaSubjectList = acadProfile.scholarshipSubjects || [];
+    const becaSessions = becaSubjectList.length ? sessions.filter(sx => becaSubjectList.includes(sx.subject)) : [];
+    const becaPct = acadProfile.scholarship ? _calcPrep(user, becaSessions, acadProfile) : 0;
     const nowMs = Date.now();
     const nearestExam = (acadProfile.examDates || [])
       .map(e => ({ ...e, days: Math.ceil((new Date(e.date) - nowMs) / 86400000) }))
@@ -3577,12 +3584,19 @@ const UIStudent = (() => {
               <div class="ph2-card-title">Objetivo Principal:</div>
               ${acadProfile.university ? `
                 <div class="ph2-obj-body">
-                  <div class="ph2-obj-row"><b>Beca/Meta:</b> ${esc(uniDisplayDash)}</div>
-                  ${acadProfile.institutionId ? `<div class="ph2-obj-row"><b>Institución:</b> ${esc(acadProfile.institutionId)}</div>` : ''}
+                  ${acadProfile.scholarship ? `<div class="ph2-obj-row"><b>Beca:</b> ${esc(acadProfile.scholarship)}</div>` : ''}
+                  <div class="ph2-obj-row"><b>${acadProfile.scholarship ? 'Institución' : 'Meta'}:</b> ${esc(uniDisplayDash)}</div>
                   <div class="ph2-obj-row"><b>Carrera:</b> ${esc(acadProfile.career || '—')}</div>
                   ${nearestExam ? `<div class="ph2-obj-row"><b>Fecha Objetivo:</b> ${esc(nearestExam.label)}</div>` : ''}
+                  ${acadProfile.scholarship ? `
+                  <div class="ph2-obj-row"><b>Progreso Beca:</b> ${becaPct}% Completado</div>
+                  <div class="ph2-obj-bar-wrap"><div class="ph2-obj-bar-fill" style="width:${becaPct}%;"></div></div>
+                  <div class="ph2-obj-row"><b>Progreso Institución:</b> ${prepPct}% Completado</div>
+                  <div class="ph2-obj-bar-wrap"><div class="ph2-obj-bar-fill" style="width:${prepPct}%;"></div></div>
+                  ` : `
                   <div class="ph2-obj-row"><b>Progreso:</b> ${prepPct}% Completado</div>
                   <div class="ph2-obj-bar-wrap"><div class="ph2-obj-bar-fill" style="width:${prepPct}%;"></div></div>
+                  `}
                   <button class="ghost ph2-obj-edit-btn pp-nav-item" data-panel="university">Editar Perfil</button>
                 </div>` : `
                 <div class="ph2-empty">
@@ -3693,6 +3707,11 @@ const UIStudent = (() => {
             <div class="ph-panel-hdr-icon">🎯</div>
             <div><div class="ph-panel-title">Meta Universitaria</div><div class="ph-panel-sub">Tu objetivo de ingreso</div></div>
           </div>
+          ${acadProfile.scholarship ? `
+          <div class="card" style="border-color:rgba(214,166,107,.25);margin-bottom:10px;">
+            <div class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;">🏆 Beca</div>
+            <div style="font-size:15px;font-weight:800;color:var(--text);">${esc(acadProfile.scholarship)}</div>
+          </div>` : ''}
           <div class="ph-meta-card card" style="border-color:rgba(214,166,107,.25);">
             <div style="font-size:17px;font-weight:800;margin-bottom:4px;color:var(--text);">${esc(uniDisplay)}</div>
             <div style="color:var(--primary);font-size:14px;font-weight:600;margin-bottom:12px;">${esc(acadProfile.career || '')}</div>
@@ -3712,8 +3731,19 @@ const UIStudent = (() => {
               Selecciona la institución a la que deseas ingresar para obtener una ruta personalizada.
             </p>
             <div style="display:flex;flex-direction:column;gap:10px;">
+              <div class="pp-inst-wrap" id="pp-beca-wrap">
+                <label class="muted" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Beca (opcional)</label>
+                <div class="pp-inst-row" style="margin-top:6px;">
+                  <span class="pp-inst-icon">🏆</span>
+                  <input type="text" id="pp-beca-search" class="pp-inst-input" autocomplete="off"
+                    spellcheck="false" placeholder="Busca: Beca 18, PRONABEC…" />
+                </div>
+                <div class="pp-inst-dropdown" id="pp-beca-dropdown" role="listbox" style="display:none;"></div>
+                <div class="pp-inst-chip" id="pp-beca-chip" style="display:none;"></div>
+              </div>
               <div class="pp-inst-wrap" id="pp-inst-wrap">
-                <div class="pp-inst-row">
+                <label class="muted" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Institución</label>
+                <div class="pp-inst-row" style="margin-top:6px;">
                   <span class="pp-inst-icon">🔍</span>
                   <input type="text" id="pp-inst-search" class="pp-inst-input" autocomplete="off"
                     spellcheck="false" placeholder="Busca: UNI, San Marcos, PUCP, PNP, Marina…" />
@@ -4652,27 +4682,101 @@ const UIStudent = (() => {
       const p = JSON.parse(localStorage.getItem('arv-academic-profile-v3') || '{}');
       delete p.university; delete p.career; delete p.enabledSubjects;
       delete p.institutionId; delete p.institutionCat;
+      delete p.scholarship; delete p.scholarshipId; delete p.scholarshipSubjects;
       localStorage.setItem('arv-academic-profile-v3', JSON.stringify(p));
       sessionStorage.setItem('arv-profile-panel', 'university');
       App.go('profile');
     }
 
-    // Institution search
-    let _selInst = null;
-    const searchInp = r().querySelector('#pp-inst-search');
-    const dropdown  = r().querySelector('#pp-inst-dropdown');
-    const chip      = r().querySelector('#pp-inst-chip');
+    function _esc_attr(s) { return String(s || '').replace(/"/g, '&quot;'); }
 
-    if (searchInp && dropdown && chip) {
-      const existingId = acadProfile.institutionId;
-      if (existingId) {
-        const ei = (typeof Institutions !== 'undefined') ? Institutions.getById(existingId) : null;
-        if (ei) { _selInst = ei; _renderChip(ei); }
+    // Buscador genérico de institución/beca (Fase: Beca + Institución
+    // independientes): se instancia dos veces con distinto `catFilter` para
+    // que el mismo patrón de búsqueda/chip sirva tanto para elegir la
+    // institución (excluyendo becas) como para elegir la beca (sólo becas).
+    function _makeInstPicker({ searchSel, dropdownSel, chipSel, catFilter, onSelect, onClear }) {
+      let selected = null;
+      const searchInp = r().querySelector(searchSel);
+      const dropdown  = r().querySelector(dropdownSel);
+      const chip      = r().querySelector(chipSel);
+      if (!searchInp || !dropdown || !chip) return { get: () => null, set: () => {} };
+
+      function _filterCat(list) { return catFilter ? list.filter(e => catFilter(e.cat)) : list; }
+
+      function _buildItem(inst) {
+        const meta = (typeof Institutions !== 'undefined') ? Institutions.getCatMeta(inst.cat) : {};
+        return `<div class="pp-inst-item" data-id="${_esc_attr(inst.id)}" role="option" tabindex="-1">
+          <span class="pp-inst-item-icon">${meta.icon || '🎓'}</span>
+          <div class="pp-inst-item-body">
+            <div class="pp-inst-item-name">${esc(inst.name)}</div>
+            <div class="pp-inst-item-meta">${esc(inst.abbr || inst.id)} · ${esc(inst.city)}</div>
+          </div>
+          ${meta.badge ? `<span class="pp-inst-badge pp-inst-badge-${meta.cls || ''}">${meta.badge}</span>` : ''}
+        </div>`;
       }
 
-      // Prevent blur from stealing focus when user clicks a dropdown item
-      dropdown.addEventListener('mousedown', e => e.preventDefault());
+      function _runSearch(q) {
+        if (typeof Institutions === 'undefined') return;
+        if (!q.trim()) { _showRecent(); return; }
+        const results = _filterCat(Institutions.search(q, 8));
+        if (!results.length) {
+          dropdown.innerHTML = '<div class="pp-inst-no-results">Sin resultados. Prueba con otro nombre o abreviatura.</div>';
+        } else {
+          dropdown.innerHTML = results.map(_buildItem).join('');
+          dropdown.querySelectorAll('.pp-inst-item').forEach(el => {
+            el.addEventListener('click', () => _select(el.dataset.id));
+          });
+        }
+        dropdown.style.display = 'block';
+      }
 
+      function _showRecent() {
+        if (typeof Institutions === 'undefined') return;
+        const recentIds = Institutions.getRecent();
+        const recent = _filterCat(recentIds.map(id => Institutions.getById(id)).filter(Boolean));
+        if (!recent.length) { dropdown.style.display = 'none'; return; }
+        dropdown.innerHTML = '<div class="pp-inst-recent-label">Búsquedas recientes</div>'
+          + recent.map(_buildItem).join('');
+        dropdown.querySelectorAll('.pp-inst-item').forEach(el => {
+          el.addEventListener('click', () => _select(el.dataset.id));
+        });
+        dropdown.style.display = 'block';
+      }
+
+      function _select(id) {
+        if (typeof Institutions === 'undefined') return;
+        const inst = Institutions.getById(id);
+        if (!inst) return;
+        selected = inst;
+        Institutions.saveRecent(id);
+        dropdown.style.display = 'none';
+        searchInp.value = '';
+        _renderChip(inst);
+        if (onSelect) onSelect(inst);
+      }
+
+      function _renderChip(inst) {
+        const meta = (typeof Institutions !== 'undefined') ? Institutions.getCatMeta(inst.cat) : {};
+        chip.innerHTML = `
+          <span class="pp-inst-chip-icon">${meta.icon || '🎓'}</span>
+          <div class="pp-inst-chip-body">
+            <div class="pp-inst-chip-name">${esc(inst.name)}</div>
+            <div class="pp-inst-chip-meta">${esc(inst.abbr || inst.id)} · ${esc(inst.city)}</div>
+          </div>
+          <span class="pp-inst-badge pp-inst-badge-${meta.cls || ''}">${meta.badge || ''}</span>
+          <button class="pp-inst-chip-change ghost" type="button">Cambiar</button>
+        `;
+        chip.style.display = 'flex';
+        chip.querySelector('.pp-inst-chip-change')?.addEventListener('click', () => {
+          selected = null;
+          chip.style.display = 'none';
+          searchInp.value = '';
+          if (onClear) onClear();
+          searchInp.focus();
+        });
+      }
+
+      dropdown.addEventListener('mousedown', e => e.preventDefault());
       let _searchTimer = null;
       searchInp.addEventListener('input', () => {
         clearTimeout(_searchTimer);
@@ -4685,91 +4789,38 @@ const UIStudent = (() => {
       searchInp.addEventListener('blur', () => {
         setTimeout(() => { if (dropdown) dropdown.style.display = 'none'; }, 200);
       });
+
+      return {
+        get: () => selected,
+        set: (inst) => { if (inst) { selected = inst; _renderChip(inst); if (onSelect) onSelect(inst); } }
+      };
     }
 
-    function _esc_attr(s) { return String(s || '').replace(/"/g, '&quot;'); }
-
-    function _buildItem(inst) {
-      const meta = (typeof Institutions !== 'undefined') ? Institutions.getCatMeta(inst.cat) : {};
-      const icon  = meta.icon  || '🎓';
-      const badge = meta.badge || '';
-      const cls   = meta.cls   || '';
-      return `<div class="pp-inst-item" data-id="${_esc_attr(inst.id)}" role="option" tabindex="-1">
-        <span class="pp-inst-item-icon">${icon}</span>
-        <div class="pp-inst-item-body">
-          <div class="pp-inst-item-name">${esc(inst.name)}</div>
-          <div class="pp-inst-item-meta">${esc(inst.abbr || inst.id)} · ${esc(inst.city)}</div>
-        </div>
-        ${badge ? `<span class="pp-inst-badge pp-inst-badge-${cls}">${badge}</span>` : ''}
-      </div>`;
-    }
-
-    function _runSearch(q) {
-      if (typeof Institutions === 'undefined') return;
-      if (!q.trim()) { _showRecent(); return; }
-      const results = Institutions.search(q, 8);
-      if (!results.length) {
-        dropdown.innerHTML = '<div class="pp-inst-no-results">Sin resultados. Prueba con otro nombre o abreviatura.</div>';
-      } else {
-        dropdown.innerHTML = results.map(_buildItem).join('');
-        dropdown.querySelectorAll('.pp-inst-item').forEach(el => {
-          el.addEventListener('click', () => _selectInst(el.dataset.id));
-        });
-      }
-      dropdown.style.display = 'block';
-    }
-
-    function _showRecent() {
-      if (typeof Institutions === 'undefined') return;
-      const recentIds = Institutions.getRecent();
-      const recent = recentIds.map(id => Institutions.getById(id)).filter(Boolean);
-      if (!recent.length) { dropdown.style.display = 'none'; return; }
-      dropdown.innerHTML = '<div class="pp-inst-recent-label">Búsquedas recientes</div>'
-        + recent.map(_buildItem).join('');
-      dropdown.querySelectorAll('.pp-inst-item').forEach(el => {
-        el.addEventListener('click', () => _selectInst(el.dataset.id));
-      });
-      dropdown.style.display = 'block';
-    }
-
-    function _selectInst(id) {
-      if (typeof Institutions === 'undefined') return;
-      const inst = Institutions.getById(id);
-      if (!inst) return;
-      _selInst = inst;
-      Institutions.saveRecent(id);
-      dropdown.style.display = 'none';
-      searchInp.value = '';
-      _renderChip(inst);
-    }
-
-    function _renderChip(inst) {
-      if (!chip) return;
-      const meta = (typeof Institutions !== 'undefined') ? Institutions.getCatMeta(inst.cat) : {};
-      chip.innerHTML = `
-        <span class="pp-inst-chip-icon">${meta.icon || '🎓'}</span>
-        <div class="pp-inst-chip-body">
-          <div class="pp-inst-chip-name">${esc(inst.name)}</div>
-          <div class="pp-inst-chip-meta">${esc(inst.abbr || inst.id)} · ${esc(inst.city)}</div>
-        </div>
-        <span class="pp-inst-badge pp-inst-badge-${meta.cls || ''}">${meta.badge || ''}</span>
-        <button class="pp-inst-chip-change ghost" type="button">Cambiar</button>
-      `;
-      chip.style.display = 'flex';
-      chip.querySelector('.pp-inst-chip-change')?.addEventListener('click', () => {
-        _selInst = null;
-        chip.style.display = 'none';
-        searchInp.value = '';
-        // Hide programs widget too
+    const _instPicker = _makeInstPicker({
+      searchSel: '#pp-inst-search', dropdownSel: '#pp-inst-dropdown', chipSel: '#pp-inst-chip',
+      catFilter: cat => cat !== 'beca',
+      onSelect: (inst) => _renderPrograms(inst),
+      onClear: () => {
         const pw = r().querySelector('#pp-prog-wrap');
         if (pw) pw.style.display = 'none';
         const pc = r().querySelector('#pp-prog-chip');
         if (pc) pc.style.display = 'none';
         const ci = r().querySelector('#pp-career-input');
         if (ci) { ci.value = ''; ci.style.display = 'none'; }
-        searchInp.focus();
-      });
-      _renderPrograms(inst);
+      }
+    });
+    if (acadProfile.institutionId && typeof Institutions !== 'undefined') {
+      const ei = Institutions.getById(acadProfile.institutionId);
+      if (ei) _instPicker.set(ei);
+    }
+
+    const _becaPicker = _makeInstPicker({
+      searchSel: '#pp-beca-search', dropdownSel: '#pp-beca-dropdown', chipSel: '#pp-beca-chip',
+      catFilter: cat => cat === 'beca'
+    });
+    if (acadProfile.scholarshipId && typeof Institutions !== 'undefined') {
+      const eb = Institutions.getById(acadProfile.scholarshipId);
+      if (eb) _becaPicker.set(eb);
     }
 
     function _renderPrograms(inst) {
@@ -4867,19 +4918,29 @@ const UIStudent = (() => {
     }
 
     r().querySelector('#pp-save-meta')?.addEventListener('click', () => {
-      if (!_selInst) return UI.flash('Selecciona una institución.', 'error');
+      const selInst = _instPicker.get();
+      if (!selInst) return UI.flash('Selecciona una institución.', 'error');
       const career = r().querySelector('#pp-career-input')?.value.trim();
       if (!career) return UI.flash('Escribe tu carrera o especialidad.', 'error');
-      const malla = (typeof Institutions !== 'undefined') ? Institutions.getMalla(_selInst.id) : [];
+      const malla = (typeof Institutions !== 'undefined') ? Institutions.getMalla(selInst.id) : [];
+      const selBeca = _becaPicker.get();
       const existing = JSON.parse(localStorage.getItem('arv-academic-profile-v3') || '{}');
-      localStorage.setItem('arv-academic-profile-v3', JSON.stringify({
+      const updated = {
         ...existing,
-        university:      _selInst.name,
-        institutionId:   _selInst.id,
-        institutionCat:  _selInst.cat,
+        university:      selInst.name,
+        institutionId:   selInst.id,
+        institutionCat:  selInst.cat,
         career,
         enabledSubjects: malla
-      }));
+      };
+      if (selBeca) {
+        updated.scholarship = selBeca.name;
+        updated.scholarshipId = selBeca.id;
+        updated.scholarshipSubjects = (typeof Institutions !== 'undefined') ? Institutions.getMalla(selBeca.id) : [];
+      } else {
+        delete updated.scholarship; delete updated.scholarshipId; delete updated.scholarshipSubjects;
+      }
+      localStorage.setItem('arv-academic-profile-v3', JSON.stringify(updated));
       UI.flash('¡Meta guardada! Tu ruta está lista.', 'success');
       sessionStorage.setItem('arv-profile-panel', 'route');
       App.go('profile');

@@ -142,13 +142,16 @@ window.Institutions = (() => {
     return 0;
   }
 
-  function search(query, limit) {
+  // cats (opcional): array de valores `cat` permitidos — ej. ['beca'] para
+  // buscar sólo becas, o para excluir becas de la búsqueda de instituciones.
+  function search(query, limit, cats) {
     limit = limit == null ? 8 : limit;
     if (!query || !query.trim()) return [];
+    const pool = cats ? DATA.filter(e => cats.includes(e.cat)) : DATA;
     const scored = [];
-    for (let i = 0; i < DATA.length; i++) {
-      const s = _score(DATA[i], query);
-      if (s > 0) scored.push({ entry: DATA[i], s });
+    for (let i = 0; i < pool.length; i++) {
+      const s = _score(pool[i], query);
+      if (s > 0) scored.push({ entry: pool[i], s });
     }
     scored.sort((a, b) => b.s - a.s);
     return scored.slice(0, limit).map(x => x.entry);
