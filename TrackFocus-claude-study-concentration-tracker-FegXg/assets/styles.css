@@ -2077,15 +2077,9 @@ body.pom-active .container { padding-top: 0; }
   .ai-metrics-col { width: 100%; position: static; }
 }
 
-/* min-height reservado para que la caja del formulario y la primera
-   tarjeta de métricas empiecen exactamente en la misma línea, aunque los
-   títulos de arriba tengan alturas distintas (h1 grande vs. etiqueta
-   pequeña). .ai-metrics-header usa el mismo valor. */
 .ai-intro {
   text-align: left;
   margin-bottom: 22px;
-  min-height: 96px;
-  box-sizing: border-box;
 }
 .ai-intro h1 {
   margin: 0 0 6px;
@@ -2515,20 +2509,23 @@ body.pom-active .container { padding-top: 0; }
 /* Título de la columna de métricas — le da al panel el mismo peso visual
    que "Estudio con TrackTutor" a la izquierda, en vez de flotar sin marco. */
 .ai-metrics-header {
-  min-height: 96px;
   margin-bottom: 22px;
-  box-sizing: border-box;
 }
 .ai-metrics-title {
-  margin: 0;
+  margin: 0 0 6px;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary, var(--muted));
   text-transform: uppercase;
   letter-spacing: .04em;
 }
+.ai-metrics-sub {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
 @media (max-width: 900px) {
-  .ai-metrics-header { min-height: 0; margin-bottom: 12px; }
+  .ai-metrics-header { margin-bottom: 12px; }
 }
 
 /* Progress grid — una sola columna en el panel angosto de la derecha (las
