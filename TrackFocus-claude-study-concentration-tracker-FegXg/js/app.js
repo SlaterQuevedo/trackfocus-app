@@ -571,8 +571,14 @@ const App = (() => {
     // #lpRolesSection, o del redirect de Google OAuth) — se hace DESPUÉS de
     // Auth.getSession() porque Supabase necesita leer el token de sesión del
     // hash antes de que lo borremos; limpiarlo antes rompe el login.
-    if (location.hash) {
-      history.replaceState(null, '', location.pathname + location.search);
+    // Nota: supabase-js suele limpiar el hash con `location.hash = ''`, lo
+    // que en el navegador deja un "#" vacío pero visible — por eso no basta
+    // con chequear `location.hash` (ya está vacío); comparamos la URL completa.
+    {
+      const _cleanUrl = location.pathname + location.search;
+      if (location.href !== location.origin + _cleanUrl) {
+        history.replaceState(null, '', _cleanUrl);
+      }
     }
 
     if (!authSession) return go('welcome');
